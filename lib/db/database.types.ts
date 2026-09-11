@@ -9,6 +9,135 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      dbd_records: {
+        Row: {
+          certificate_no: string | null
+          company_name_en: string | null
+          company_name_th: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          directors: Json
+          document_path: string | null
+          document_ref: string | null
+          extraction_raw: Json | null
+          extraction_status: string
+          head_office_address: string | null
+          id: string
+          issued_on: string | null
+          issuing_office: string | null
+          juristic_id: string | null
+          objectives_count: number | null
+          registered_capital: number | null
+          registered_on: string | null
+          registrar_name: string | null
+          signing_authority: string | null
+          structured_data: Json
+          updated_at: string
+        }
+        Insert: {
+          certificate_no?: string | null
+          company_name_en?: string | null
+          company_name_th?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          directors?: Json
+          document_path?: string | null
+          document_ref?: string | null
+          extraction_raw?: Json | null
+          extraction_status?: string
+          head_office_address?: string | null
+          id?: string
+          issued_on?: string | null
+          issuing_office?: string | null
+          juristic_id?: string | null
+          objectives_count?: number | null
+          registered_capital?: number | null
+          registered_on?: string | null
+          registrar_name?: string | null
+          signing_authority?: string | null
+          structured_data?: Json
+          updated_at?: string
+        }
+        Update: {
+          certificate_no?: string | null
+          company_name_en?: string | null
+          company_name_th?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          directors?: Json
+          document_path?: string | null
+          document_ref?: string | null
+          extraction_raw?: Json | null
+          extraction_status?: string
+          head_office_address?: string | null
+          id?: string
+          issued_on?: string | null
+          issuing_office?: string | null
+          juristic_id?: string | null
+          objectives_count?: number | null
+          registered_capital?: number | null
+          registered_on?: string | null
+          registrar_name?: string | null
+          signing_authority?: string | null
+          structured_data?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dbd_records_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dbd_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
