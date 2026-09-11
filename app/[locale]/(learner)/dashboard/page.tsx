@@ -1,51 +1,92 @@
 import { getTranslations } from 'next-intl/server';
+import { StageCard } from '@/components/stage-card';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
-import { createMyDocumentSignedUrl, getMyCompany, getMyEligibility } from '@/lib/db/learner';
+import { createMyDocumentSignedUrl, getMyCompany } from '@/lib/db/learner';
+import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import type { Director } from '@/lib/domain/dbd-record';
-import { isBankStageOpen } from '@/lib/domain/eligibility';
-import { formatDate, todayInBangkok } from '@/lib/domain/thai-date';
+import { STAGE_KEYS, stageStatuses, type StageInfo, type StageKey } from '@/lib/domain/progression';
+import { formatDate } from '@/lib/domain/thai-date';
 
 const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
+
+/** Routes exist only for stages whose slice has shipped; the rest show status without a link. */
+const STAGE_ROUTES: Partial<Record<StageKey, string>> = {};
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
   const t = await getTranslations('dashboard');
+  const ts = await getTranslations('stages');
   const db = await createSupabaseServerClient();
-  const mine = await getMyCompany(db, user.id);
+  const loc = locale as AppLocale;
+
+  const [mine, facts] = await Promise.all([
+    getMyCompany(db, user.id),
+    loadProgressionFacts(db, user.id),
+  ]);
+  const stages = stageStatuses(facts);
+
+  const detailFor = (key: StageKey, info: StageInfo): string | null => {
+    if (key === 'bank') {
+      if (info.reason === 'before_available_from' && facts.eligibility) {
+        return t('bank.lockedUntil', { date: formatDate(facts.eligibility.availableFrom, loc) });
+      }
+      if (info.reason === 'missing_issue_date') return t('bank.pending');
+      if (info.status === 'available') return t('bank.available');
+    }
+    if (info.reason) return ts(`reasons.${info.reason}`);
+    return null;
+  };
+
+  const stageCards = (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {STAGE_KEYS.map((key) => {
+        const info = stages[key];
+        const href =
+          info.status === 'locked' || info.status === 'pending'
+            ? null
+            : (STAGE_ROUTES[key] ?? null);
+        return (
+          <StageCard
+            key={key}
+            stage={key}
+            info={info}
+            title={ts(`titles.${key}`)}
+            statusLabel={ts(`status.${info.status}`)}
+            detail={detailFor(key, info)}
+            href={href}
+            actionLabel={ts('open')}
+          />
+        );
+      })}
+    </div>
+  );
 
   if (!mine) {
     return (
-      <section>
+      <section className="grid gap-6">
         <h1 className="text-2xl font-semibold">
           {t('welcome', { name: user.displayName ?? user.loginId })}
         </h1>
-        <p className="mt-2" data-testid="no-company">
-          {t('noCompany')}
-        </p>
+        <p data-testid="no-company">{t('noCompany')}</p>
+        {stageCards}
       </section>
     );
   }
 
   const record = mine.dbd_records;
-  const eligibility = await getMyEligibility(db, user.id, record.id);
   const documentUrl = await createMyDocumentSignedUrl(user.id, record.id);
   const directors = (record.directors as unknown as Director[] | null) ?? [];
-  const loc = locale as AppLocale;
-  const open = eligibility
-    ? isBankStageOpen(
-        { availableFrom: eligibility.available_from, expiresAt: eligibility.expires_at },
-        todayInBangkok(),
-      )
-    : false;
 
   return (
     <section className="grid gap-6">
       <h1 className="text-2xl font-semibold">
         {t('welcome', { name: user.displayName ?? user.loginId })}
       </h1>
+
+      {stageCards}
 
       <div className="rounded border p-4">
         <h2 className="font-semibold">{t('company.title')}</h2>
@@ -76,19 +117,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           >
             {t('company.openCertificate')}
           </a>
-        )}
-      </div>
-
-      <div className="rounded border p-4" data-testid="bank-stage">
-        <h2 className="font-semibold">{t('bank.title')}</h2>
-        {!eligibility && <p className="mt-2 text-sm">{t('bank.pending')}</p>}
-        {eligibility && open && (
-          <p className="mt-2 text-sm text-green-700">{t('bank.available')}</p>
-        )}
-        {eligibility && !open && (
-          <p className="mt-2 text-sm">
-            {t('bank.lockedUntil', { date: formatDate(eligibility.available_from, loc) })}
-          </p>
         )}
       </div>
     </section>

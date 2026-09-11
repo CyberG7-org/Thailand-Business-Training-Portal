@@ -59,7 +59,8 @@
       "resetPassword": "Reset password",
       "passwordUpdated": "Password updated",
       "disable": "Disable account",
-      "enable": "Enable account"
+      "enable": "Enable account",
+      "progression": "Progression"
     },
     "dbd": {
       "title": "DBD records",
@@ -110,5 +111,40 @@
         "not-confirmed": "Only confirmed records can be assigned"
       }
     }
+  },
+  "stages": {
+    "titles": {
+      "study": "Study material",
+      "quiz": "Evaluation quiz",
+      "exam": "Exam",
+      "nameCard": "Name card",
+      "bank": "Bank verification"
+    },
+    "status": {
+      "locked": "Locked",
+      "pending": "Pending",
+      "available": "Available",
+      "in_progress": "In progress",
+      "done": "Done"
+    },
+    "reasons": {
+      "no_assignment": "No company assigned yet",
+      "exam_required": "Pass the exam first",
+      "before_available_from": "Not yet available",
+      "expired": "Access period has ended",
+      "missing_issue_date": "Certificate issue date missing"
+    },
+    "open": "Open"
+  },
+  "progression": {
+    "UNASSIGNED": "Unassigned",
+    "PROVISIONED": "Provisioned",
+    "LEARNING": "Learning",
+    "EXAM_PENDING": "Exam pending",
+    "EXAM_PASSED": "Exam passed",
+    "WAITING_BANK_ELIGIBILITY": "Waiting for bank eligibility",
+    "BANK_ELIGIBLE": "Bank eligible",
+    "CALL_TRAINING_STARTED": "Call training started",
+    "CALL_TRAINING_COMPLETED": "Call training completed"
   }
 }

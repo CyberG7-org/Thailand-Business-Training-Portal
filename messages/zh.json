@@ -59,7 +59,8 @@
       "resetPassword": "重置密码",
       "passwordUpdated": "密码已更新",
       "disable": "停用账户",
-      "enable": "启用账户"
+      "enable": "启用账户",
+      "progression": "进度"
     },
     "dbd": {
       "title": "DBD 记录",
@@ -110,5 +111,40 @@
         "not-confirmed": "仅可分配已确认的记录"
       }
     }
+  },
+  "stages": {
+    "titles": {
+      "study": "学习资料",
+      "quiz": "评估测验",
+      "exam": "考试",
+      "nameCard": "名片",
+      "bank": "银行验证"
+    },
+    "status": {
+      "locked": "已锁定",
+      "pending": "待定",
+      "available": "可用",
+      "in_progress": "进行中",
+      "done": "已完成"
+    },
+    "reasons": {
+      "no_assignment": "尚未分配公司",
+      "exam_required": "请先通过考试",
+      "before_available_from": "尚未开放",
+      "expired": "访问期限已结束",
+      "missing_issue_date": "缺少证书签发日期"
+    },
+    "open": "打开"
+  },
+  "progression": {
+    "UNASSIGNED": "未分配",
+    "PROVISIONED": "已开通",
+    "LEARNING": "学习中",
+    "EXAM_PENDING": "待通过考试",
+    "EXAM_PASSED": "考试已通过",
+    "WAITING_BANK_ELIGIBILITY": "等待银行验证资格",
+    "BANK_ELIGIBLE": "可进行银行验证",
+    "CALL_TRAINING_STARTED": "已开始通话培训",
+    "CALL_TRAINING_COMPLETED": "通话培训已完成"
   }
 }

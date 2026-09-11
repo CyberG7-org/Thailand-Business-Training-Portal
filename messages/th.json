@@ -59,7 +59,8 @@
       "resetPassword": "ตั้งรหัสผ่านใหม่",
       "passwordUpdated": "อัปเดตรหัสผ่านแล้ว",
       "disable": "ระงับบัญชี",
-      "enable": "เปิดใช้บัญชี"
+      "enable": "เปิดใช้บัญชี",
+      "progression": "ความคืบหน้า"
     },
     "dbd": {
       "title": "ข้อมูล DBD",
@@ -110,5 +111,40 @@
         "not-confirmed": "มอบหมายได้เฉพาะข้อมูลที่ยืนยันแล้ว"
       }
     }
+  },
+  "stages": {
+    "titles": {
+      "study": "เอกสารเรียนรู้",
+      "quiz": "แบบทดสอบประเมิน",
+      "exam": "ข้อสอบ",
+      "nameCard": "นามบัตร",
+      "bank": "การยืนยันตัวตนกับธนาคาร"
+    },
+    "status": {
+      "locked": "ล็อก",
+      "pending": "รอดำเนินการ",
+      "available": "พร้อมใช้งาน",
+      "in_progress": "กำลังดำเนินการ",
+      "done": "เสร็จสิ้น"
+    },
+    "reasons": {
+      "no_assignment": "ยังไม่มีบริษัทที่มอบหมาย",
+      "exam_required": "ต้องสอบผ่านก่อน",
+      "before_available_from": "ยังไม่ถึงวันที่เปิดให้ทำ",
+      "expired": "หมดช่วงเวลาที่ทำได้",
+      "missing_issue_date": "ไม่มีวันที่ออกหนังสือรับรอง"
+    },
+    "open": "เปิด"
+  },
+  "progression": {
+    "UNASSIGNED": "ยังไม่มอบหมาย",
+    "PROVISIONED": "เตรียมบัญชีแล้ว",
+    "LEARNING": "กำลังเรียน",
+    "EXAM_PENDING": "รอสอบผ่าน",
+    "EXAM_PASSED": "สอบผ่านแล้ว",
+    "WAITING_BANK_ELIGIBILITY": "รอถึงวันที่ยืนยันกับธนาคาร",
+    "BANK_ELIGIBLE": "พร้อมยืนยันกับธนาคาร",
+    "CALL_TRAINING_STARTED": "เริ่มฝึกโทรแล้ว",
+    "CALL_TRAINING_COMPLETED": "ฝึกโทรเสร็จสิ้น"
   }
 }
