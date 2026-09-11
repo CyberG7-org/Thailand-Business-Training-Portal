@@ -1,6 +1,10 @@
 {
-  "app": { "name": "Business Training Portal" },
-  "home": { "title": "Thailand Business Training & Bank Verification Portal" },
+  "app": {
+    "name": "Business Training Portal"
+  },
+  "home": {
+    "title": "Thailand Business Training & Bank Verification Portal"
+  },
   "auth": {
     "title": "Sign in",
     "loginId": "Login ID",
@@ -10,6 +14,33 @@
     "accountDisabled": "This account is disabled. Please contact your administrator.",
     "signOut": "Sign out"
   },
-  "dashboard": { "title": "Dashboard", "welcome": "Welcome, {name}" },
-  "admin": { "title": "Administration", "nav": { "users": "Users" } }
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {name}"
+  },
+  "admin": {
+    "title": "Administration",
+    "nav": {
+      "users": "Users"
+    },
+    "users": {
+      "title": "Users",
+      "new": "New user",
+      "loginId": "Login ID",
+      "password": "Initial password",
+      "newPassword": "New password",
+      "displayName": "Display name",
+      "language": "Language",
+      "role": "Role",
+      "roleLearner": "Learner",
+      "roleAdmin": "Administrator",
+      "status": "Status",
+      "create": "Create user",
+      "created": "Created {loginId}",
+      "resetPassword": "Reset password",
+      "passwordUpdated": "Password updated",
+      "disable": "Disable account",
+      "enable": "Enable account"
+    }
+  }
 }
