@@ -12,7 +12,7 @@ import { formatDate } from '@/lib/domain/thai-date';
 const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
 
 /** Routes exist only for stages whose slice has shipped; the rest show status without a link. */
-const STAGE_ROUTES: Partial<Record<StageKey, string>> = {};
+const STAGE_ROUTES: Partial<Record<StageKey, string>> = { study: '/study' };
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

@@ -248,6 +248,133 @@ export type Database = {
         }
         Relationships: []
       }
+      study_material_localizations: {
+        Row: {
+          body: string | null
+          created_at: string
+          file_path: string | null
+          id: string
+          language: string
+          material_id: string
+          title: string
+          tts_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          language: string
+          material_id: string
+          title: string
+          tts_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          language?: string
+          material_id?: string
+          title?: string
+          tts_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_material_localizations_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "study_materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_materials: {
+        Row: {
+          active: boolean
+          content_key: string
+          created_at: string
+          created_by: string | null
+          id: string
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          content_key: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          content_key?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_materials_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_progress: {
+        Row: {
+          completed_at: string | null
+          first_viewed_at: string
+          id: string
+          last_viewed_at: string
+          material_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          material_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          first_viewed_at?: string
+          id?: string
+          last_viewed_at?: string
+          material_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_progress_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "study_materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_dbd_assignments: {
         Row: {
           active: boolean

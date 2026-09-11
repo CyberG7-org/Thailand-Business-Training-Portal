@@ -41,7 +41,8 @@
     "title": "Administration",
     "nav": {
       "users": "Users",
-      "dbdRecords": "DBD records"
+      "dbdRecords": "DBD records",
+      "content": "Study content"
     },
     "users": {
       "title": "Users",
@@ -127,6 +128,30 @@
         "already-assigned": "This learner already has an active assignment",
         "not-confirmed": "Only confirmed records can be assigned"
       }
+    },
+    "content": {
+      "title": "Study content",
+      "new": "New material",
+      "key": "Key",
+      "keyHint": "Stable identifier, e.g. dbd-certificate-basics",
+      "type": "Type",
+      "typeCard": "Card (Markdown)",
+      "typePdf": "PDF",
+      "sortOrder": "Sort order",
+      "active": "Active (visible to learners)",
+      "languages": "Languages",
+      "save": "Save",
+      "saved": "Saved",
+      "missing": "not yet written",
+      "body": "Body (Markdown)",
+      "bodyHint": "Headings, lists, bold and links are supported. No HTML.",
+      "ttsEnabled": "Enable Thai read-aloud (only approved text)",
+      "saveLanguage": "Save this language",
+      "pdfUploaded": "PDF uploaded",
+      "pdfMissing": "No PDF uploaded",
+      "uploadPdf": "Upload PDF",
+      "uploaded": "Uploaded",
+      "materialTitle": "Title"
     }
   },
   "stages": {
@@ -163,5 +188,26 @@
     "BANK_ELIGIBLE": "Bank eligible",
     "CALL_TRAINING_STARTED": "Call training started",
     "CALL_TRAINING_COMPLETED": "Call training completed"
+  },
+  "study": {
+    "title": "Study material",
+    "empty": "No study material yet.",
+    "card": "Card",
+    "notAvailable": "Not available in this language yet",
+    "openPdf": "Open PDF in a new tab",
+    "pdfMissing": "The PDF for this language has not been uploaded yet.",
+    "markCompleted": "Mark as completed",
+    "completed": "Completed",
+    "state": {
+      "new": "New",
+      "viewed": "Viewed",
+      "completed": "Completed"
+    },
+    "readAloud": {
+      "play": "Read aloud",
+      "pause": "Pause",
+      "loading": "Preparing audio…",
+      "error": "Audio is unavailable right now."
+    }
   }
 }

@@ -10,7 +10,7 @@ export type ExtractionProvider = 'claude' | 'fake' | 'off';
  * otherwise fake outside production and off in production.
  */
 export function resolveExtractionProvider(
-  env: NodeJS.ProcessEnv = process.env,
+  env: Record<string, string | undefined> = process.env,
 ): ExtractionProvider {
   const configured = env.EXTRACTION_PROVIDER;
   if (configured === 'claude' || configured === 'fake' || configured === 'off') return configured;

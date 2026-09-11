@@ -17,6 +17,11 @@ export default async function AdminHome() {
             {t('nav.dbdRecords')}
           </Link>
         </li>
+        <li>
+          <Link href="/admin/content" className="underline">
+            {t('nav.content')}
+          </Link>
+        </li>
       </ul>
     </section>
   );

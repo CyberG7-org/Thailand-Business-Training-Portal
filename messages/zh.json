@@ -41,7 +41,8 @@
     "title": "管理",
     "nav": {
       "users": "用户",
-      "dbdRecords": "DBD 记录"
+      "dbdRecords": "DBD 记录",
+      "content": "学习内容"
     },
     "users": {
       "title": "用户",
@@ -127,6 +128,30 @@
         "already-assigned": "该学员已有生效的分配",
         "not-confirmed": "仅可分配已确认的记录"
       }
+    },
+    "content": {
+      "title": "学习内容",
+      "new": "新建内容",
+      "key": "键",
+      "keyHint": "稳定标识符，例如 dbd-certificate-basics",
+      "type": "类型",
+      "typeCard": "课程（Markdown）",
+      "typePdf": "PDF",
+      "sortOrder": "排序",
+      "active": "启用（学员可见）",
+      "languages": "语言",
+      "save": "保存",
+      "saved": "已保存",
+      "missing": "尚未编写",
+      "body": "正文（Markdown）",
+      "bodyHint": "支持标题、列表、粗体和链接。不支持 HTML。",
+      "ttsEnabled": "启用泰语朗读（仅限已批准文本）",
+      "saveLanguage": "保存此语言",
+      "pdfUploaded": "PDF 已上传",
+      "pdfMissing": "尚未上传 PDF",
+      "uploadPdf": "上传 PDF",
+      "uploaded": "已上传",
+      "materialTitle": "标题"
     }
   },
   "stages": {
@@ -163,5 +188,26 @@
     "BANK_ELIGIBLE": "可进行银行验证",
     "CALL_TRAINING_STARTED": "已开始通话培训",
     "CALL_TRAINING_COMPLETED": "通话培训已完成"
+  },
+  "study": {
+    "title": "学习资料",
+    "empty": "暂无学习资料。",
+    "card": "课程",
+    "notAvailable": "此语言暂无内容",
+    "openPdf": "在新标签页打开 PDF",
+    "pdfMissing": "尚未上传此语言的 PDF。",
+    "markCompleted": "标记为已完成",
+    "completed": "已完成",
+    "state": {
+      "new": "新",
+      "viewed": "已查看",
+      "completed": "已完成"
+    },
+    "readAloud": {
+      "play": "朗读",
+      "pause": "暂停",
+      "loading": "正在准备音频…",
+      "error": "当前无法播放音频。"
+    }
   }
 }
