@@ -1,0 +1,29 @@
+# dependencies / build
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+
+# environment & secrets
+.env
+.env.*
+!.env.example
+
+# supabase local
+supabase/.branches/
+supabase/.temp/
+
+# editor / os
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# never commit real business documents (PII) — keep samples outside the repo
+*.pdf
+*.xlsx
+*.docx
+!docs/**/*.pdf
