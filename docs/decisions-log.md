@@ -46,3 +46,6 @@ or in `policy_config` (PRD section 24).
 | 2026-09-11 | D18 | Learners never read questions or write attempts/answers directly; server actions do it with the service role after ownership checks | P4 spec, migration 0006 |
 | 2026-09-11 | D19 | Only approved, active, pool-matching questions whose placeholders resolve on the confirmed record are selectable | P4 spec |
 | 2026-09-11 | D20 | One in-progress attempt per kind, resumed on reopen; quiz retries unlimited (policy seam) | P4 spec |
+| 2026-09-11 | D21 | Exam result page shows score, pass/fail and wrong questions, not the correct answers | P5 spec |
+| 2026-09-11 | D22 | Telegram/Email enabled by TELEGRAM_BOT_TOKEN / RESEND_API_KEY; fake in dev, off in prod; destinations from policy_config | P5 spec, `lib/integrations/notify` |
+| 2026-09-11 | D23 | Cron route guarded by CRON_SECRET; leased claims, 5 attempts with backoff, admin requeue | P5 spec, migration 0007 |
