@@ -78,6 +78,19 @@
         "registrarName": "登记官",
         "directors": "董事"
       }
+    },
+    "assignment": {
+      "title": "已分配公司",
+      "choose": "选择已确认的 DBD 记录…",
+      "assign": "分配",
+      "deactivate": "取消分配",
+      "availableFrom": "银行验证自 {date} 起可用",
+      "eligibilityPending": "资格日期待定 — 缺少证书签发日期",
+      "errors": {
+        "no-record": "请选择记录",
+        "already-assigned": "该学员已有生效的分配",
+        "not-confirmed": "仅可分配已确认的记录"
+      }
     }
   }
 }

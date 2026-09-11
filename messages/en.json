@@ -78,6 +78,19 @@
         "registrarName": "Registrar",
         "directors": "Directors"
       }
+    },
+    "assignment": {
+      "title": "Assigned company",
+      "choose": "Choose a confirmed DBD record…",
+      "assign": "Assign",
+      "deactivate": "Remove assignment",
+      "availableFrom": "Bank verification available from {date}",
+      "eligibilityPending": "Eligibility date pending — the certificate issue date is missing",
+      "errors": {
+        "no-record": "Choose a record",
+        "already-assigned": "This learner already has an active assignment",
+        "not-confirmed": "Only confirmed records can be assigned"
+      }
     }
   }
 }
