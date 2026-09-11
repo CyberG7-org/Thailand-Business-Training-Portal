@@ -97,6 +97,22 @@
         "issuingOffice": "Issuing office",
         "registrarName": "Registrar",
         "directors": "Directors"
+      },
+      "extract": "Extract from PDF",
+      "extracting": "Extracting…",
+      "extracted": "Extraction complete — review the suggested values below, then save and confirm.",
+      "extractHint": "Reads the uploaded certificate and suggests values for the form. Nothing is saved until you click Save.",
+      "extractionNotConfigured": "AI extraction is not configured (set ANTHROPIC_API_KEY).",
+      "reviewSuggestions": "Suggested values from the certificate are shown where the record is still empty. Check every field — especially highlighted ones — then Save and Confirm.",
+      "suggestedFromDocument": "Suggested from the document ({confidence}% confidence)",
+      "lowConfidenceHint": "low confidence, please verify",
+      "dateReading": "printed {raw} (Buddhist Era) → {iso}",
+      "extractErrors": {
+        "not_configured": "AI extraction is not configured.",
+        "provider": "The extraction service failed. Try again later.",
+        "invalid_output": "The extraction result was not usable.",
+        "no_document": "Upload the certificate PDF first.",
+        "not_allowed": "This record cannot be extracted."
       }
     },
     "assignment": {

@@ -97,6 +97,22 @@
         "issuingOffice": "签发机构",
         "registrarName": "登记官",
         "directors": "董事"
+      },
+      "extract": "从 PDF 提取",
+      "extracting": "提取中…",
+      "extracted": "提取完成 — 请检查下方建议值，然后保存并确认。",
+      "extractHint": "读取已上传的证书并为表单建议值。点击保存前不会写入任何内容。",
+      "extractionNotConfigured": "未配置 AI 提取（请设置 ANTHROPIC_API_KEY）。",
+      "reviewSuggestions": "证书中的建议值显示在仍为空的字段中。请逐项核对（尤其是高亮字段），然后保存并确认。",
+      "suggestedFromDocument": "来自文件的建议（置信度 {confidence}%）",
+      "lowConfidenceHint": "置信度较低，请核对",
+      "dateReading": "文件印为 {raw}（佛历）→ {iso}",
+      "extractErrors": {
+        "not_configured": "未配置 AI 提取。",
+        "provider": "提取服务失败，请稍后重试。",
+        "invalid_output": "提取结果不可用。",
+        "no_document": "请先上传证书 PDF。",
+        "not_allowed": "此记录无法提取。"
       }
     },
     "assignment": {

@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth/session';
+import { getDbdExtractor } from '@/lib/integrations/extraction';
+import { ExtractionError } from '@/lib/integrations/extraction/types';
 import {
   confirmDbdRecord,
   createDbdRecord,
@@ -10,6 +12,7 @@ import {
   updateDbdRecord,
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
+import { runExtraction } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
   dbdRecordInputSchema,
@@ -121,6 +124,26 @@ export async function uploadDocumentAction(
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+export async function extractDocumentAction(
+  _prev: ToolState,
+  formData: FormData,
+): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  await requireAdmin(locale);
+  const extractor = getDbdExtractor();
+  if (!extractor) return { ok: false, error: 'not_configured' };
+  const db = await createSupabaseServerClient();
+  try {
+    await runExtraction(db, id, extractor);
+    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+    return { ok: true, error: null };
+  } catch (e) {
+    if (e instanceof ExtractionError) return { ok: false, error: e.code };
     return { ok: false, error: errorMessage(e) };
   }
 }
