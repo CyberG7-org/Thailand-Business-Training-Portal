@@ -17,7 +17,8 @@
     "db:env": "node scripts/write-local-env.mjs",
     "db:types": "supabase gen types typescript --local --schema public > lib/db/database.types.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:secrets": "node scripts/check-client-secrets.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

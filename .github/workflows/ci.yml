@@ -40,6 +40,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Client bundle secret scan
+        run: pnpm check:secrets
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
