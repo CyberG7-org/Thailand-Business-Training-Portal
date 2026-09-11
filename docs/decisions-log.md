@@ -42,3 +42,7 @@ or in `policy_config` (PRD section 24).
 | 2026-09-11 | D14 | Study PDFs in a private `study-materials` bucket served by signed URLs | P3 spec |
 | 2026-09-11 | D15 | TTS default ElevenLabs when a key exists, otherwise fake (dev) / off (prod); `TTS_PROVIDER` overrides | P3 spec, `lib/integrations/tts` |
 | 2026-09-11 | D16 | Study progress: viewed on first open; "completed" only when `study_completion_tracking = "completed"` | P3 spec |
+| 2026-09-11 | D17 | Question personalization via `{field}` placeholders with deterministic variant distractors (`|x2`, `|+1m`, `|shuffle`) | P4 spec, `lib/domain/assessment` |
+| 2026-09-11 | D18 | Learners never read questions or write attempts/answers directly; server actions do it with the service role after ownership checks | P4 spec, migration 0006 |
+| 2026-09-11 | D19 | Only approved, active, pool-matching questions whose placeholders resolve on the confirmed record are selectable | P4 spec |
+| 2026-09-11 | D20 | One in-progress attempt per kind, resumed on reopen; quiz retries unlimited (policy seam) | P4 spec |
