@@ -1,10 +1,9 @@
-import { useTranslations } from 'next-intl';
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth/session';
 
-export default function HomePage() {
-  const t = useTranslations('home');
-  return (
-    <main className="p-8">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-    </main>
-  );
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const user = await getCurrentUser();
+  if (!user || user.status !== 'active') redirect(`/${locale}/login`);
+  redirect(`/${locale}/${user.role === 'admin' ? 'admin' : 'dashboard'}`);
 }

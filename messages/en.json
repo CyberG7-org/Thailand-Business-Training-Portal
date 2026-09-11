@@ -1,4 +1,15 @@
 {
   "app": { "name": "Business Training Portal" },
-  "home": { "title": "Thailand Business Training & Bank Verification Portal" }
+  "home": { "title": "Thailand Business Training & Bank Verification Portal" },
+  "auth": {
+    "title": "Sign in",
+    "loginId": "Login ID",
+    "password": "Password",
+    "submit": "Sign in",
+    "invalidCredentials": "Invalid login ID or password.",
+    "accountDisabled": "This account is disabled. Please contact your administrator.",
+    "signOut": "Sign out"
+  },
+  "dashboard": { "title": "Dashboard", "welcome": "Welcome, {name}" },
+  "admin": { "title": "Administration", "nav": { "users": "Users" } }
 }

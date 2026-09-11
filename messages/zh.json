@@ -1,4 +1,15 @@
 {
   "app": { "name": "商业培训门户" },
-  "home": { "title": "泰国商业培训与银行验证门户" }
+  "home": { "title": "泰国商业培训与银行验证门户" },
+  "auth": {
+    "title": "登录",
+    "loginId": "登录ID",
+    "password": "密码",
+    "submit": "登录",
+    "invalidCredentials": "登录ID或密码不正确。",
+    "accountDisabled": "此账户已被停用，请联系管理员。",
+    "signOut": "退出登录"
+  },
+  "dashboard": { "title": "首页", "welcome": "欢迎，{name}" },
+  "admin": { "title": "管理", "nav": { "users": "用户" } }
 }
