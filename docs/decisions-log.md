@@ -33,3 +33,12 @@ or in `policy_config` (PRD section 24).
 | #16 repeat calls | unlimited | P8 |
 | #17 admin roles | single `admin` role | post-MVP |
 | #18 retention | none automated; `retention_days` reserved | before production |
+
+## Slice decisions (made by Claude within the foundation guardrails; owner may revise)
+
+| Date | # | Decision | Where it lives |
+|---|---|---|---|
+| 2026-09-11 | D13 | Study cards are Markdown rendered with react-markdown (no raw HTML) | P3 spec |
+| 2026-09-11 | D14 | Study PDFs in a private `study-materials` bucket served by signed URLs | P3 spec |
+| 2026-09-11 | D15 | TTS default ElevenLabs when a key exists, otherwise fake (dev) / off (prod); `TTS_PROVIDER` overrides | P3 spec, `lib/integrations/tts` |
+| 2026-09-11 | D16 | Study progress: viewed on first open; "completed" only when `study_completion_tracking = "completed"` | P3 spec |
