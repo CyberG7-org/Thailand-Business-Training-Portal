@@ -22,6 +22,11 @@ export default async function AdminHome() {
             {t('nav.content')}
           </Link>
         </li>
+        <li>
+          <Link href="/admin/questions" className="underline">
+            {t('nav.questions')}
+          </Link>
+        </li>
       </ul>
     </section>
   );

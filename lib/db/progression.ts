@@ -9,8 +9,8 @@ type Db = SupabaseClient<Database>;
 
 /**
  * Builds the facts `deriveProgression` needs from what the database holds today.
- * Quiz, exam, name-card and call facts are constant here and are wired in by the
- * P4/P5/P6/P8 slices as their tables arrive.
+ * Exam, name-card and call facts are constant here and are wired in by the
+ * P5/P6/P8 slices.
  */
 export async function loadProgressionFacts(
   db: Db,
@@ -22,15 +22,21 @@ export async function loadProgressionFacts(
     getPolicy('require_exam_pass_for_bank_call'),
     getPolicy('require_exam_pass_for_name_card'),
   ]);
-  const [snapshot, studyRows] = await Promise.all([
+  const [snapshot, studyRows, quizRows] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    db
+      .from('assessment_attempts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('kind', 'quiz')
+      .eq('status', 'submitted'),
   ]);
 
   return {
     hasActiveAssignment: assignment !== null,
     studyOpened: (studyRows.count ?? 0) > 0,
-    quizAttempts: 0,
+    quizAttempts: quizRows.count ?? 0,
     examSubmitted: 0,
     examPassed: false,
     nameCardCreated: false,

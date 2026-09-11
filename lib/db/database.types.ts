@@ -9,6 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      assessment_answers: {
+        Row: {
+          answered_at: string | null
+          attempt_id: string
+          id: string
+          is_correct: boolean | null
+          position: number
+          presented_option_order: string[]
+          question_id: string
+          rendered_options: Json
+          rendered_prompt: string
+          selected_key: string | null
+        }
+        Insert: {
+          answered_at?: string | null
+          attempt_id: string
+          id?: string
+          is_correct?: boolean | null
+          position: number
+          presented_option_order: string[]
+          question_id: string
+          rendered_options: Json
+          rendered_prompt: string
+          selected_key?: string | null
+        }
+        Update: {
+          answered_at?: string | null
+          attempt_id?: string
+          id?: string
+          is_correct?: boolean | null
+          position?: number
+          presented_option_order?: string[]
+          question_id?: string
+          rendered_options?: Json
+          rendered_prompt?: string
+          selected_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "assessment_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assessment_attempts: {
+        Row: {
+          attempt_no: number
+          dbd_record_id: string | null
+          id: string
+          kind: string
+          language: string
+          max_score: number | null
+          passing_mark_snapshot: number | null
+          question_ids: string[]
+          result: string | null
+          score: number | null
+          shuffle_seed: string
+          started_at: string
+          status: string
+          submitted_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_no: number
+          dbd_record_id?: string | null
+          id?: string
+          kind: string
+          language: string
+          max_score?: number | null
+          passing_mark_snapshot?: number | null
+          question_ids: string[]
+          result?: string | null
+          score?: number | null
+          shuffle_seed: string
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_no?: number
+          dbd_record_id?: string | null
+          id?: string
+          kind?: string
+          language?: string
+          max_score?: number | null
+          passing_mark_snapshot?: number | null
+          question_ids?: string[]
+          result?: string | null
+          score?: number | null
+          shuffle_seed?: string
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_attempts_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -247,6 +370,103 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      question_localizations: {
+        Row: {
+          correct_key: string
+          created_at: string
+          explanation: string | null
+          id: string
+          language: string
+          options: Json
+          prompt: string
+          question_id: string
+          tts_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          correct_key: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          language: string
+          options: Json
+          prompt: string
+          question_id: string
+          tts_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          correct_key?: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          language?: string
+          options?: Json
+          prompt?: string
+          question_id?: string
+          tts_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_localizations_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          active: boolean
+          approval_status: string
+          created_at: string
+          created_by: string | null
+          dbd_field_dependencies: string[]
+          id: string
+          kind: string
+          pools: string[]
+          question_key: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          approval_status?: string
+          created_at?: string
+          created_by?: string | null
+          dbd_field_dependencies?: string[]
+          id?: string
+          kind: string
+          pools?: string[]
+          question_key: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          approval_status?: string
+          created_at?: string
+          created_by?: string | null
+          dbd_field_dependencies?: string[]
+          id?: string
+          kind?: string
+          pools?: string[]
+          question_key?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       study_material_localizations: {
         Row: {

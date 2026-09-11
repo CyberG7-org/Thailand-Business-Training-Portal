@@ -6,7 +6,9 @@ import { seedLearnerWithCompany } from './seed';
 test('admin writes a card in three languages; a learner reads it, progress is recorded, Thai read-aloud works', async ({
   page,
 }) => {
-  const key = `e2e-card-${Date.now()}`;
+  const stamp = Date.now();
+  const key = `e2e-card-${stamp}`;
+  const thTitle = `บทเรียนทดสอบ ${stamp}`;
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/content/new');
   await page.locator('input[name="contentKey"]').fill(key);
@@ -14,7 +16,7 @@ test('admin writes a card in three languages; a learner reads it, progress is re
   await page.waitForURL(/\/th\/admin\/content\/[0-9a-f-]{36}$/);
 
   const texts = {
-    th: { title: 'บทเรียนทดสอบ', body: '# หัวข้อ\n\nเนื้อหา **สำคัญ** ของบทเรียน' },
+    th: { title: thTitle, body: '# หัวข้อ\n\nเนื้อหา **สำคัญ** ของบทเรียน' },
     en: { title: 'Test lesson', body: '# Heading\n\nThe **important** content' },
     zh: { title: '测试课程', body: '# 标题\n\n**重要**内容' },
   } as const;
@@ -35,8 +37,8 @@ test('admin writes a card in three languages; a learner reads it, progress is re
   await expect(page).toHaveURL(/\/th\/study$/);
   await expect(page.getByTestId(`study-state-${key}`)).toHaveText('ใหม่');
 
-  await page.getByRole('link', { name: 'บทเรียนทดสอบ' }).click();
-  await expect(page.getByTestId('study-title')).toHaveText('บทเรียนทดสอบ');
+  await page.getByRole('link', { name: thTitle }).click();
+  await expect(page.getByTestId('study-title')).toHaveText(thTitle);
   await expect(page.getByTestId('study-body').getByRole('heading', { level: 1 })).toHaveText(
     'หัวข้อ',
   );

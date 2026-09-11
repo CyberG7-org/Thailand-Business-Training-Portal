@@ -42,7 +42,8 @@
     "nav": {
       "users": "Users",
       "dbdRecords": "DBD records",
-      "content": "Study content"
+      "content": "Study content",
+      "questions": "Question bank"
     },
     "users": {
       "title": "Users",
@@ -152,6 +153,31 @@
       "uploadPdf": "Upload PDF",
       "uploaded": "Uploaded",
       "materialTitle": "Title"
+    },
+    "questions": {
+      "title": "Question bank",
+      "new": "New question",
+      "key": "Key",
+      "kind": "Kind",
+      "pools": "Pools",
+      "poolQuiz": "Quiz",
+      "poolExam": "Exam",
+      "active": "Active",
+      "dependencies": "Uses record fields",
+      "status": "Status",
+      "languages": "Languages",
+      "setStatus": "Set status",
+      "approvalHint": "Approval requires Thai, English and Chinese versions. Only approved, active questions are served.",
+      "save": "Save",
+      "saved": "Saved",
+      "missing": "not yet written",
+      "prompt": "Question",
+      "option": "Option {key}",
+      "correctKey": "Correct option",
+      "explanation": "Explanation (shown when wrong)",
+      "ttsEnabled": "Enable Thai read-aloud",
+      "saveLanguage": "Save this language",
+      "placeholderHint": "Placeholders you can use (distractor variants after a pipe):"
     }
   },
   "stages": {
@@ -208,6 +234,33 @@
       "pause": "Pause",
       "loading": "Preparing audio…",
       "error": "Audio is unavailable right now."
+    }
+  },
+  "quiz": {
+    "title": "Evaluation quiz",
+    "intro": "Practice questions about your company and the process. You see whether each answer is right immediately, with an explanation, and a full review at the end.",
+    "start": "Start quiz",
+    "resume": "Resume quiz",
+    "history": "Previous attempts",
+    "attemptLine": "Attempt {no}: {score} / {max}",
+    "progress": "Question {position} of {total}",
+    "correct": "Correct!",
+    "incorrect": "Incorrect — the correct answer is {key}",
+    "saved": "Answer saved",
+    "next": "Next question",
+    "finish": "Finish",
+    "allAnswered": "You have answered every question.",
+    "submit": "Submit quiz",
+    "reviewTitle": "Quiz review",
+    "scoreLine": "Score: {score} / {max}",
+    "errors": {
+      "no_assignment": "No company is assigned to you yet.",
+      "no_questions": "No questions are available for your company yet.",
+      "not_found": "This attempt was not found.",
+      "not_in_progress": "This attempt is already closed.",
+      "already_answered": "This question is already answered.",
+      "unanswered": "Please answer every question first.",
+      "invalid_key": "Unknown option."
     }
   }
 }

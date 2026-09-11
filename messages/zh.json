@@ -42,7 +42,8 @@
     "nav": {
       "users": "用户",
       "dbdRecords": "DBD 记录",
-      "content": "学习内容"
+      "content": "学习内容",
+      "questions": "题库"
     },
     "users": {
       "title": "用户",
@@ -152,6 +153,31 @@
       "uploadPdf": "上传 PDF",
       "uploaded": "已上传",
       "materialTitle": "标题"
+    },
+    "questions": {
+      "title": "题库",
+      "new": "新建题目",
+      "key": "键",
+      "kind": "类型",
+      "pools": "用于",
+      "poolQuiz": "测验",
+      "poolExam": "考试",
+      "active": "启用",
+      "dependencies": "使用的公司字段",
+      "status": "状态",
+      "languages": "语言",
+      "setStatus": "设置状态",
+      "approvalHint": "批准需要泰文、英文和中文版本。仅提供已批准且启用的题目。",
+      "save": "保存",
+      "saved": "已保存",
+      "missing": "尚未编写",
+      "prompt": "题目",
+      "option": "选项 {key}",
+      "correctKey": "正确选项",
+      "explanation": "解释（答错时显示）",
+      "ttsEnabled": "启用泰语朗读",
+      "saveLanguage": "保存此语言",
+      "placeholderHint": "可用的占位符（干扰项变体写在竖线后）："
     }
   },
   "stages": {
@@ -208,6 +234,33 @@
       "pause": "暂停",
       "loading": "正在准备音频…",
       "error": "当前无法播放音频。"
+    }
+  },
+  "quiz": {
+    "title": "评估测验",
+    "intro": "练习关于您公司和流程的问题。每题作答后立即显示对错和解释，最后可查看完整回顾。",
+    "start": "开始测验",
+    "resume": "继续测验",
+    "history": "历史记录",
+    "attemptLine": "第 {no} 次：{score} / {max}",
+    "progress": "第 {position} 题，共 {total} 题",
+    "correct": "正确！",
+    "incorrect": "不正确 — 正确答案是 {key}",
+    "saved": "答案已保存",
+    "next": "下一题",
+    "finish": "完成",
+    "allAnswered": "您已回答所有问题。",
+    "submit": "提交测验",
+    "reviewTitle": "测验回顾",
+    "scoreLine": "得分：{score} / {max}",
+    "errors": {
+      "no_assignment": "尚未为您分配公司。",
+      "no_questions": "您的公司暂无可用题目。",
+      "not_found": "未找到该测验。",
+      "not_in_progress": "该测验已结束。",
+      "already_answered": "此题已作答。",
+      "unanswered": "请先回答所有问题。",
+      "invalid_key": "选项无效。"
     }
   }
 }
