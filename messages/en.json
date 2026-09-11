@@ -21,7 +21,8 @@
   "admin": {
     "title": "Administration",
     "nav": {
-      "users": "Users"
+      "users": "Users",
+      "dbdRecords": "DBD records"
     },
     "users": {
       "title": "Users",
@@ -41,6 +42,42 @@
       "passwordUpdated": "Password updated",
       "disable": "Disable account",
       "enable": "Enable account"
+    },
+    "dbd": {
+      "title": "DBD records",
+      "new": "New DBD record",
+      "untitled": "(no company name yet)",
+      "save": "Save",
+      "saved": "Saved",
+      "status": "Status",
+      "confirm": "Confirm record",
+      "missingForConfirmation": "Cannot confirm — missing: {fields}",
+      "dateHint": "DD/MM/YYYY (BE 2569 or CE 2026) or YYYY-MM-DD",
+      "directorsHint": "One director per line: Thai name | English name",
+      "documentMissing": "No certificate PDF uploaded",
+      "documentUploaded": "Certificate PDF uploaded",
+      "upload": "Upload PDF",
+      "uploaded": "Uploaded",
+      "errors": {
+        "no-file": "Choose a PDF file",
+        "invalid-file": "Only PDF files up to 10 MB are accepted"
+      },
+      "fields": {
+        "companyNameTh": "Company name (Thai)",
+        "companyNameEn": "Company name (English)",
+        "juristicId": "Juristic person ID (13 digits)",
+        "certificateNo": "Certificate no.",
+        "documentRef": "Document ref.",
+        "registeredOn": "Registration date",
+        "issuedOn": "Certificate issued on",
+        "registeredCapital": "Registered capital (THB)",
+        "headOfficeAddress": "Head office address",
+        "signingAuthority": "Signing authority",
+        "objectivesCount": "Number of objectives",
+        "issuingOffice": "Issuing office",
+        "registrarName": "Registrar",
+        "directors": "Directors"
+      }
     }
   }
 }

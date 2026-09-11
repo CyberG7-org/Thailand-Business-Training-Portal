@@ -21,7 +21,8 @@
   "admin": {
     "title": "ผู้ดูแลระบบ",
     "nav": {
-      "users": "ผู้ใช้งาน"
+      "users": "ผู้ใช้งาน",
+      "dbdRecords": "ข้อมูล DBD"
     },
     "users": {
       "title": "ผู้ใช้งาน",
@@ -41,6 +42,42 @@
       "passwordUpdated": "อัปเดตรหัสผ่านแล้ว",
       "disable": "ระงับบัญชี",
       "enable": "เปิดใช้บัญชี"
+    },
+    "dbd": {
+      "title": "ข้อมูล DBD",
+      "new": "เพิ่มข้อมูล DBD",
+      "untitled": "(ยังไม่มีชื่อบริษัท)",
+      "save": "บันทึก",
+      "saved": "บันทึกแล้ว",
+      "status": "สถานะ",
+      "confirm": "ยืนยันข้อมูล",
+      "missingForConfirmation": "ยังยืนยันไม่ได้ — ขาดข้อมูล: {fields}",
+      "dateHint": "วว/ดด/ปปปป (พ.ศ. 2569 หรือ ค.ศ. 2026) หรือ ปปปป-ดด-วว",
+      "directorsHint": "กรรมการหนึ่งคนต่อบรรทัด: ชื่อไทย | ชื่ออังกฤษ",
+      "documentMissing": "ยังไม่ได้อัปโหลดหนังสือรับรอง (PDF)",
+      "documentUploaded": "อัปโหลดหนังสือรับรอง (PDF) แล้ว",
+      "upload": "อัปโหลด PDF",
+      "uploaded": "อัปโหลดแล้ว",
+      "errors": {
+        "no-file": "กรุณาเลือกไฟล์ PDF",
+        "invalid-file": "รับเฉพาะไฟล์ PDF ขนาดไม่เกิน 10 MB"
+      },
+      "fields": {
+        "companyNameTh": "ชื่อบริษัท (ไทย)",
+        "companyNameEn": "ชื่อบริษัท (อังกฤษ)",
+        "juristicId": "เลขทะเบียนนิติบุคคล (13 หลัก)",
+        "certificateNo": "เลขที่หนังสือรับรอง",
+        "documentRef": "เลขอ้างอิงเอกสาร",
+        "registeredOn": "วันที่จดทะเบียน",
+        "issuedOn": "วันที่ออกหนังสือรับรอง",
+        "registeredCapital": "ทุนจดทะเบียน (บาท)",
+        "headOfficeAddress": "ที่ตั้งสำนักงานใหญ่",
+        "signingAuthority": "อำนาจกรรมการ",
+        "objectivesCount": "จำนวนวัตถุประสงค์",
+        "issuingOffice": "สำนักงานที่ออก",
+        "registrarName": "นายทะเบียน",
+        "directors": "กรรมการ"
+      }
     }
   }
 }

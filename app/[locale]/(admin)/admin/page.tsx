@@ -12,6 +12,11 @@ export default async function AdminHome() {
             {t('nav.users')}
           </Link>
         </li>
+        <li>
+          <Link href="/admin/dbd-records" className="underline">
+            {t('nav.dbdRecords')}
+          </Link>
+        </li>
       </ul>
     </section>
   );

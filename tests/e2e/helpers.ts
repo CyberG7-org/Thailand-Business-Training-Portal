@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 
 /** Submits the login form without waiting — use when the outcome is a failed login. */
 export async function login(page: Page, loginId: string, password: string) {
@@ -12,4 +12,20 @@ export async function login(page: Page, loginId: string, password: string) {
 export async function loginAs(page: Page, loginId: string, password: string) {
   await login(page, loginId, password);
   await page.waitForURL((url) => !/\/login$/.test(url.pathname));
+}
+
+/** Creates and confirms a DBD record through the admin UI; returns its id. Caller must be logged in as admin. */
+export async function createConfirmedRecord(
+  page: Page,
+  fields: { companyNameTh: string; juristicId: string; issuedOn: string },
+): Promise<string> {
+  await page.goto('/th/admin/dbd-records/new');
+  await page.locator('input[name="company_name_th"]').fill(fields.companyNameTh);
+  await page.locator('input[name="juristic_id"]').fill(fields.juristicId);
+  await page.locator('input[name="issued_on"]').fill(fields.issuedOn);
+  await page.getByRole('button', { name: 'บันทึก' }).click();
+  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
+  await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
+  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
+  return page.url().split('/').pop()!;
 }

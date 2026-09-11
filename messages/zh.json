@@ -21,7 +21,8 @@
   "admin": {
     "title": "管理",
     "nav": {
-      "users": "用户"
+      "users": "用户",
+      "dbdRecords": "DBD 记录"
     },
     "users": {
       "title": "用户",
@@ -41,6 +42,42 @@
       "passwordUpdated": "密码已更新",
       "disable": "停用账户",
       "enable": "启用账户"
+    },
+    "dbd": {
+      "title": "DBD 记录",
+      "new": "新建 DBD 记录",
+      "untitled": "（尚无公司名称）",
+      "save": "保存",
+      "saved": "已保存",
+      "status": "状态",
+      "confirm": "确认记录",
+      "missingForConfirmation": "无法确认 — 缺少：{fields}",
+      "dateHint": "日/月/年（佛历 2569 或公历 2026）或 年-月-日",
+      "directorsHint": "每行一位董事：泰文名 | 英文名",
+      "documentMissing": "尚未上传证书 PDF",
+      "documentUploaded": "证书 PDF 已上传",
+      "upload": "上传 PDF",
+      "uploaded": "已上传",
+      "errors": {
+        "no-file": "请选择 PDF 文件",
+        "invalid-file": "仅接受 10 MB 以内的 PDF 文件"
+      },
+      "fields": {
+        "companyNameTh": "公司名称（泰文）",
+        "companyNameEn": "公司名称（英文）",
+        "juristicId": "法人注册号（13 位）",
+        "certificateNo": "证书编号",
+        "documentRef": "文件参考号",
+        "registeredOn": "注册日期",
+        "issuedOn": "证书签发日期",
+        "registeredCapital": "注册资本（泰铢）",
+        "headOfficeAddress": "总部地址",
+        "signingAuthority": "签署权限",
+        "objectivesCount": "经营目的数量",
+        "issuingOffice": "签发机构",
+        "registrarName": "登记官",
+        "directors": "董事"
+      }
     }
   }
 }
