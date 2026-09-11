@@ -16,7 +16,7 @@ test('admin creates a learner who can then sign in', async ({ page }) => {
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
   await login(page, loginId, 'Learner-Pass-123');
   await expect(page).toHaveURL(/\/th\/dashboard$/);
-  await expect(page.getByText('ยินดีต้อนรับ E2E Learner')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'ยินดีต้อนรับ E2E Learner' })).toBeVisible();
 });
 
 test('admin can disable an account and it can no longer sign in', async ({ page }) => {

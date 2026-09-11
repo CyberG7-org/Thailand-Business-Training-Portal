@@ -16,7 +16,25 @@
   },
   "dashboard": {
     "title": "首页",
-    "welcome": "欢迎，{name}"
+    "welcome": "欢迎，{name}",
+    "noCompany": "尚未为您分配公司，请联系管理员。",
+    "company": {
+      "title": "您的公司",
+      "name": "公司",
+      "juristicId": "法人注册号",
+      "registeredCapital": "注册资本",
+      "baht": "泰铢",
+      "address": "总部",
+      "directors": "董事",
+      "issuedOn": "证书签发日期",
+      "openCertificate": "打开证书（PDF）"
+    },
+    "bank": {
+      "title": "银行验证",
+      "pending": "资格日期待定 — 缺少证书签发日期。",
+      "available": "现已开放。",
+      "lockedUntil": "自 {date} 起开放"
+    }
   },
   "admin": {
     "title": "管理",

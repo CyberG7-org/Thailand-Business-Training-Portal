@@ -14,7 +14,9 @@ test('wrong password and unknown account show the same generic error', async ({ 
 test('a learner lands on the dashboard and cannot open admin', async ({ page }) => {
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
   await expect(page).toHaveURL(/\/th\/dashboard$/);
-  await expect(page.getByText(`ยินดีต้อนรับ ${E2E_LEARNER.loginId}`)).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: `ยินดีต้อนรับ ${E2E_LEARNER.loginId}` }),
+  ).toBeVisible();
 
   await page.goto('/th/admin');
   await expect(page).toHaveURL(/\/th\/dashboard$/);

@@ -16,7 +16,25 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome, {name}"
+    "welcome": "Welcome, {name}",
+    "noCompany": "No company has been assigned to you yet. Please contact your administrator.",
+    "company": {
+      "title": "Your company",
+      "name": "Company",
+      "juristicId": "Juristic person ID",
+      "registeredCapital": "Registered capital",
+      "baht": "THB",
+      "address": "Head office",
+      "directors": "Directors",
+      "issuedOn": "Certificate issued on",
+      "openCertificate": "Open certificate (PDF)"
+    },
+    "bank": {
+      "title": "Bank verification",
+      "pending": "Eligibility date pending — the certificate issue date is missing.",
+      "available": "Available now.",
+      "lockedUntil": "Available from {date}"
+    }
   },
   "admin": {
     "title": "Administration",
