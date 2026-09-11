@@ -3,14 +3,14 @@ import { getPolicy } from '@/lib/config/policy';
 import type { ProgressionFacts } from '@/lib/domain/progression';
 import { todayInBangkok, type ISODate } from '@/lib/domain/thai-date';
 import { getActiveAssignmentForUser, getLatestEligibility } from './assignments';
+import { examPassedFor } from './exam';
 import type { Database } from './database.types';
 
 type Db = SupabaseClient<Database>;
 
 /**
  * Builds the facts `deriveProgression` needs from what the database holds today.
- * Exam, name-card and call facts are constant here and are wired in by the
- * P5/P6/P8 slices.
+ * Name-card and call facts are constant here and are wired in by the P6/P8 slices.
  */
 export async function loadProgressionFacts(
   db: Db,
@@ -22,7 +22,7 @@ export async function loadProgressionFacts(
     getPolicy('require_exam_pass_for_bank_call'),
     getPolicy('require_exam_pass_for_name_card'),
   ]);
-  const [snapshot, studyRows, quizRows] = await Promise.all([
+  const [snapshot, studyRows, quizRows, exam] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     db
@@ -31,14 +31,15 @@ export async function loadProgressionFacts(
       .eq('user_id', userId)
       .eq('kind', 'quiz')
       .eq('status', 'submitted'),
+    examPassedFor(userId),
   ]);
 
   return {
     hasActiveAssignment: assignment !== null,
     studyOpened: (studyRows.count ?? 0) > 0,
     quizAttempts: quizRows.count ?? 0,
-    examSubmitted: 0,
-    examPassed: false,
+    examSubmitted: exam.submitted,
+    examPassed: exam.passed,
     nameCardCreated: false,
     eligibility: snapshot
       ? { availableFrom: snapshot.available_from, expiresAt: snapshot.expires_at }

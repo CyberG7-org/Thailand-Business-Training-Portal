@@ -6,6 +6,8 @@ import { useActionState } from 'react';
 import type { QuestionOption } from '@/lib/domain/assessment/engine';
 import { answerQuizAction, type AnswerState } from './actions';
 
+type AnswerAction = (prev: AnswerState, formData: FormData) => Promise<AnswerState>;
+
 const initial: AnswerState = { feedback: null, selectedKey: null, error: null };
 
 export function QuestionCard({
@@ -16,6 +18,7 @@ export function QuestionCard({
   prompt,
   options,
   instantFeedback,
+  action = answerQuizAction,
 }: {
   attemptId: string;
   questionId: string;
@@ -25,11 +28,13 @@ export function QuestionCard({
   options: QuestionOption[];
   /** Quiz shows correctness immediately; the exam only confirms the answer was saved. */
   instantFeedback: boolean;
+  /** Defaults to the quiz action; the exam passes its non-revealing action. */
+  action?: AnswerAction;
 }) {
   const locale = useLocale();
   const router = useRouter();
   const t = useTranslations('quiz');
-  const [state, formAction, pending] = useActionState(answerQuizAction, initial);
+  const [state, formAction, pending] = useActionState(action, initial);
   const answered = state.feedback !== null;
 
   const optionClass = (key: string) => {

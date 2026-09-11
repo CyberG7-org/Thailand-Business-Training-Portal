@@ -27,6 +27,11 @@ export default async function AdminHome() {
             {t('nav.questions')}
           </Link>
         </li>
+        <li>
+          <Link href="/admin/notifications" className="underline">
+            {t('nav.notifications')}
+          </Link>
+        </li>
       </ul>
     </section>
   );

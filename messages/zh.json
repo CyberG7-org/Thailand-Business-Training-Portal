@@ -43,7 +43,8 @@
       "users": "用户",
       "dbdRecords": "DBD 记录",
       "content": "学习内容",
-      "questions": "题库"
+      "questions": "题库",
+      "notifications": "通知"
     },
     "users": {
       "title": "用户",
@@ -178,6 +179,16 @@
       "ttsEnabled": "启用泰语朗读",
       "saveLanguage": "保存此语言",
       "placeholderHint": "可用的占位符（干扰项变体写在竖线后）："
+    },
+    "notifications": {
+      "title": "通知",
+      "event": "事件",
+      "channel": "渠道",
+      "destination": "目标",
+      "status": "状态",
+      "attempts": "尝试次数",
+      "lastError": "最近错误",
+      "requeue": "重新排队"
     }
   },
   "stages": {
@@ -258,6 +269,33 @@
       "no_questions": "您的公司暂无可用题目。",
       "not_found": "未找到该测验。",
       "not_in_progress": "该测验已结束。",
+      "already_answered": "此题已作答。",
+      "unanswered": "请先回答所有问题。",
+      "invalid_key": "选项无效。"
+    }
+  },
+  "exam": {
+    "title": "考试",
+    "intro": "共 {count} 题。提交前不会显示答案对错。及格线：{passingMark}%。",
+    "start": "开始考试",
+    "resume": "继续考试",
+    "history": "历史记录",
+    "attemptLine": "第 {no} 次：{score} / {max} — {result}",
+    "noFeedbackNote": "答案会即时保存；结果仅在提交后显示。",
+    "allAnswered": "您已回答所有问题。",
+    "submit": "提交考试",
+    "resultTitle": "考试结果",
+    "pass": "通过",
+    "fail": "未通过",
+    "scoreLine": "得分：{score} / {max}（及格线 {passingMark}%）",
+    "resultNote": "标记 ✗ 的题目回答错误。",
+    "errors": {
+      "max_attempts": "您已用完允许的考试次数。",
+      "retry_wait": "请稍后再重考。",
+      "no_assignment": "尚未为您分配公司。",
+      "no_questions": "您的公司暂无可用考题。",
+      "not_found": "未找到该考试。",
+      "not_in_progress": "该考试已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。"

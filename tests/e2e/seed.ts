@@ -49,3 +49,11 @@ export async function seedLearnerWithCompany(
   if (assignError) throw assignError;
   return loginId;
 }
+
+/** Sets a policy_config value directly (service role). */
+export async function setPolicy(key: string, value: unknown): Promise<void> {
+  const { error } = await svc()
+    .from('policy_config')
+    .upsert({ key, value: value as never });
+  if (error) throw error;
+}

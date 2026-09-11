@@ -309,6 +309,51 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          attempts: number
+          channel: string
+          created_at: string
+          destination_ref: string | null
+          event_type: string
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          next_attempt_at: string
+          payload: Json
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          created_at?: string
+          destination_ref?: string | null
+          event_type: string
+          id?: string
+          idempotency_key: string
+          last_error?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          created_at?: string
+          destination_ref?: string | null
+          event_type?: string
+          id?: string
+          idempotency_key?: string
+          last_error?: string | null
+          next_attempt_at?: string
+          payload?: Json
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       policy_config: {
         Row: {
           key: string
@@ -652,9 +697,64 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_notifications: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          channel: string
+          created_at: string
+          destination_ref: string | null
+          event_type: string
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          next_attempt_at: string
+          payload: Json
+          sent_at: string | null
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "notifications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       compute_eligibility_snapshot: {
         Args: { p_reason: string; p_record_id: string; p_user_id: string }
         Returns: undefined
+      }
+      finalize_attempt: {
+        Args: {
+          p_attempt_id: string
+          p_max_score: number
+          p_notifications?: Json
+          p_result: string
+          p_score: number
+        }
+        Returns: {
+          attempt_no: number
+          dbd_record_id: string | null
+          id: string
+          kind: string
+          language: string
+          max_score: number | null
+          passing_mark_snapshot: number | null
+          question_ids: string[]
+          result: string | null
+          score: number | null
+          shuffle_seed: string
+          started_at: string
+          status: string
+          submitted_at: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "assessment_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       is_admin: { Args: never; Returns: boolean }
       policy_int: { Args: { p_key: string }; Returns: number }

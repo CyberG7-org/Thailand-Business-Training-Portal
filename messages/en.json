@@ -43,7 +43,8 @@
       "users": "Users",
       "dbdRecords": "DBD records",
       "content": "Study content",
-      "questions": "Question bank"
+      "questions": "Question bank",
+      "notifications": "Notifications"
     },
     "users": {
       "title": "Users",
@@ -178,6 +179,16 @@
       "ttsEnabled": "Enable Thai read-aloud",
       "saveLanguage": "Save this language",
       "placeholderHint": "Placeholders you can use (distractor variants after a pipe):"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "event": "Event",
+      "channel": "Channel",
+      "destination": "Destination",
+      "status": "Status",
+      "attempts": "Attempts",
+      "lastError": "Last error",
+      "requeue": "Requeue"
     }
   },
   "stages": {
@@ -256,6 +267,33 @@
     "errors": {
       "no_assignment": "No company is assigned to you yet.",
       "no_questions": "No questions are available for your company yet.",
+      "not_found": "This attempt was not found.",
+      "not_in_progress": "This attempt is already closed.",
+      "already_answered": "This question is already answered.",
+      "unanswered": "Please answer every question first.",
+      "invalid_key": "Unknown option."
+    }
+  },
+  "exam": {
+    "title": "Exam",
+    "intro": "{count} questions. You will not see whether an answer is right until you submit. Passing mark: {passingMark}%.",
+    "start": "Start exam",
+    "resume": "Resume exam",
+    "history": "Previous attempts",
+    "attemptLine": "Attempt {no}: {score} / {max} — {result}",
+    "noFeedbackNote": "Answers are saved as you go; results are shown only after you submit.",
+    "allAnswered": "You have answered every question.",
+    "submit": "Submit exam",
+    "resultTitle": "Exam result",
+    "pass": "Passed",
+    "fail": "Not passed",
+    "scoreLine": "Score: {score} / {max} (passing mark {passingMark}%)",
+    "resultNote": "Questions marked ✗ were answered incorrectly.",
+    "errors": {
+      "max_attempts": "You have used all allowed attempts.",
+      "retry_wait": "Please wait before retrying the exam.",
+      "no_assignment": "No company is assigned to you yet.",
+      "no_questions": "No exam questions are available for your company yet.",
       "not_found": "This attempt was not found.",
       "not_in_progress": "This attempt is already closed.",
       "already_answered": "This question is already answered.",

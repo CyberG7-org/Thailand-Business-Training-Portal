@@ -15,6 +15,7 @@ const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh
 const STAGE_ROUTES: Partial<Record<StageKey, string>> = {
   study: '/study',
   quiz: '/quiz',
+  exam: '/exam',
 };
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
