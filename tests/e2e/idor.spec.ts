@@ -47,3 +47,13 @@ test('a learner cannot open another learner’s attempts, results, calls, or adm
   expect(headers['x-content-type-options']).toBe('nosniff');
   expect(headers['permissions-policy']).toContain('microphone=(self)');
 });
+
+test('the health probe reports database reachability and provider names without secrets', async ({
+  request,
+}) => {
+  const response = await request.get('/api/health');
+  expect(response.status()).toBe(200);
+  const body = await response.json();
+  expect(body).toMatchObject({ ok: true, db: 'ok', providers: { vapi: 'fake' } });
+  expect(JSON.stringify(body)).not.toContain('local-vapi-webhook-secret');
+});
