@@ -37,6 +37,16 @@ export default async function AdminHome() {
             {t('nav.calls')}
           </Link>
         </li>
+        <li>
+          <Link href="/admin/settings" className="underline">
+            {t('nav.settings')}
+          </Link>
+        </li>
+        <li>
+          <Link href="/admin/audit" className="underline">
+            {t('nav.audit')}
+          </Link>
+        </li>
       </ul>
     </section>
   );

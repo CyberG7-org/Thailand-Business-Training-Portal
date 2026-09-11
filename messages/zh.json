@@ -45,7 +45,9 @@
       "content": "学习内容",
       "questions": "题库",
       "notifications": "通知",
-      "calls": "通话训练"
+      "calls": "通话训练",
+      "settings": "策略设置",
+      "audit": "审计日志"
     },
     "users": {
       "title": "用户",
@@ -208,6 +210,104 @@
       "transcript": "对话记录",
       "noTranscript": "没有对话记录",
       "open": "打开"
+    },
+    "settings": {
+      "title": "策略设置",
+      "intro": "这些值决定系统的业务规则（policy_config）。每次修改都会记录操作的管理员。",
+      "save": "保存",
+      "saved": "已保存",
+      "yes": "是",
+      "no": "否",
+      "unlimited": "不限",
+      "listHint": "每行一个",
+      "updatedAt": "最后修改 {at}",
+      "options": {
+        "exam_pass_rule": {
+          "any": "任一次通过即可",
+          "latest": "最近一次必须通过"
+        },
+        "study_completion_tracking": {
+          "viewed": "打开即算",
+          "completed": "标记完成后才算"
+        }
+      },
+      "errors": {
+        "required": "必须填写",
+        "not_a_number": "必须是数字",
+        "unknown_key": "未知设置"
+      },
+      "keys": {
+        "bank_eligibility_days": {
+          "label": "银行阶段开放前的天数",
+          "help": "从公司注册证明签发日起计算（BR-002，默认 45 天）。修改后会重新计算所有学员的日期。"
+        },
+        "bank_access_expiry_days": {
+          "label": "银行阶段开放的天数",
+          "help": "从开放日起计算；留空 = 永不过期"
+        },
+        "exam_passing_mark_percent": {
+          "label": "考试及格线（%）",
+          "help": "最低分数百分比"
+        },
+        "quiz_question_count": {
+          "label": "每次测验题数",
+          "help": "每次尝试"
+        },
+        "exam_question_count": {
+          "label": "每次考试题数",
+          "help": "每次尝试"
+        },
+        "exam_max_attempts": {
+          "label": "考试最多次数",
+          "help": "留空 = 不限"
+        },
+        "exam_retry_wait_hours": {
+          "label": "重考前需等待的小时数",
+          "help": "0 = 可立即重考"
+        },
+        "exam_pass_rule": {
+          "label": "考试通过规则",
+          "help": "以哪次结果判定通过状态"
+        },
+        "require_exam_pass_for_name_card": {
+          "label": "制作名片需先通过考试",
+          "help": ""
+        },
+        "require_exam_pass_for_bank_call": {
+          "label": "银行通话训练需先通过考试",
+          "help": ""
+        },
+        "call_max_sessions": {
+          "label": "练习通话最多次数",
+          "help": "留空 = 不限"
+        },
+        "telegram_admin_chat_ids": {
+          "label": "管理员 Telegram 聊天 ID",
+          "help": "每行一个"
+        },
+        "email_admin_recipients": {
+          "label": "管理员通知邮箱",
+          "help": "每行一个"
+        },
+        "study_completion_tracking": {
+          "label": "学习完成判定",
+          "help": "打开即算完成，或学员标记完成后才算"
+        }
+      }
+    },
+    "audit": {
+      "title": "审计日志",
+      "entity": "表",
+      "entityId": "记录 ID",
+      "actor": "操作者",
+      "filter": "筛选",
+      "all": "全部",
+      "empty": "没有记录",
+      "when": "时间",
+      "action": "操作",
+      "changes": "变更",
+      "changed": "{count} 个字段已变更",
+      "system": "系统"
     }
   },
   "stages": {

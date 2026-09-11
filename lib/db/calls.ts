@@ -47,8 +47,9 @@ export async function startCallSession(
   const provider = resolveVapiProvider(env);
   if (provider === 'off') throw new CallError('Call training is not configured', 'not_configured');
 
+  // Practice stays open once the stage is done; only call_max_sessions caps it.
   const gate = await bankGateFor(db, userId);
-  if (gate.status !== 'available' && gate.status !== 'in_progress') {
+  if (gate.status !== 'available' && gate.status !== 'in_progress' && gate.status !== 'done') {
     throw new CallError('Bank stage is not open', 'not_open', gate);
   }
   const admin = createSupabaseAdminClient();

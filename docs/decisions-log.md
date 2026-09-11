@@ -55,3 +55,6 @@ or in `policy_config` (PRD section 24).
 | 2026-09-11 | D27 | VAPI_PROVIDER=vapi/fake/off; fake modality completes sessions with a canned Thai transcript for tests | P8 spec |
 | 2026-09-11 | D28 | Vapi webhook authenticated by x-vapi-secret; events ledgered in webhook_events; recordings copied to a private bucket | P8 spec |
 | 2026-09-11 | D29 | A session is `completed` only with both transcript and stored recording; `partial` with one of them (provider URL kept in metadata); the bank stage counts `completed`/`partial` as done | P8, `lib/db/calls.ts` |
+| 2026-09-11 | D30 | Policy edits go through the admin's own session (RLS) so the audit trigger records the real actor | P9, `lib/db/settings.ts` |
+| 2026-09-11 | D31 | Changing `bank_eligibility_days` / `bank_access_expiry_days` appends a `policy_changed` eligibility snapshot for every active assignment; history is never rewritten | migration 0010 |
+| 2026-09-11 | D32 | Settings validation and form controls come from one zod map (`lib/config/policy-schema.ts`); further practice calls stay allowed after the bank stage is done, capped only by `call_max_sessions` | P9 |

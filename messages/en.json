@@ -45,7 +45,9 @@
       "content": "Study content",
       "questions": "Question bank",
       "notifications": "Notifications",
-      "calls": "Call training"
+      "calls": "Call training",
+      "settings": "Policy settings",
+      "audit": "Audit log"
     },
     "users": {
       "title": "Users",
@@ -208,6 +210,104 @@
       "transcript": "Transcript",
       "noTranscript": "No transcript",
       "open": "Open"
+    },
+    "settings": {
+      "title": "Policy settings",
+      "intro": "These values drive the business rules (policy_config). Every change is audited with the admin who made it.",
+      "save": "Save",
+      "saved": "Saved",
+      "yes": "Yes",
+      "no": "No",
+      "unlimited": "Unlimited",
+      "listHint": "One per line",
+      "updatedAt": "Last changed {at}",
+      "options": {
+        "exam_pass_rule": {
+          "any": "Any attempt passed",
+          "latest": "Latest attempt must pass"
+        },
+        "study_completion_tracking": {
+          "viewed": "When viewed",
+          "completed": "When marked completed"
+        }
+      },
+      "errors": {
+        "required": "A value is required",
+        "not_a_number": "Must be a number",
+        "unknown_key": "Unknown setting"
+      },
+      "keys": {
+        "bank_eligibility_days": {
+          "label": "Days before the bank stage opens",
+          "help": "Counted from the certificate issue date (BR-002, default 45). Changing it recomputes every learner's date."
+        },
+        "bank_access_expiry_days": {
+          "label": "Days the bank stage stays open",
+          "help": "Counted from the opening date; blank = never expires"
+        },
+        "exam_passing_mark_percent": {
+          "label": "Exam passing mark (%)",
+          "help": "Minimum score as a percentage"
+        },
+        "quiz_question_count": {
+          "label": "Questions per quiz",
+          "help": "Per attempt"
+        },
+        "exam_question_count": {
+          "label": "Questions per exam",
+          "help": "Per attempt"
+        },
+        "exam_max_attempts": {
+          "label": "Maximum exam attempts",
+          "help": "Blank = unlimited"
+        },
+        "exam_retry_wait_hours": {
+          "label": "Hours to wait before retaking the exam",
+          "help": "0 = retake immediately"
+        },
+        "exam_pass_rule": {
+          "label": "Exam pass rule",
+          "help": "Which result decides the passed status"
+        },
+        "require_exam_pass_for_name_card": {
+          "label": "Require exam pass for the name card",
+          "help": ""
+        },
+        "require_exam_pass_for_bank_call": {
+          "label": "Require exam pass for the bank call",
+          "help": ""
+        },
+        "call_max_sessions": {
+          "label": "Maximum practice calls",
+          "help": "Blank = unlimited"
+        },
+        "telegram_admin_chat_ids": {
+          "label": "Admin Telegram chat ids",
+          "help": "One per line"
+        },
+        "email_admin_recipients": {
+          "label": "Admin notification emails",
+          "help": "One per line"
+        },
+        "study_completion_tracking": {
+          "label": "Study completion rule",
+          "help": "Count a card when viewed, or only when the learner marks it completed"
+        }
+      }
+    },
+    "audit": {
+      "title": "Audit log",
+      "entity": "Table",
+      "entityId": "Record id",
+      "actor": "Actor",
+      "filter": "Filter",
+      "all": "All",
+      "empty": "No entries",
+      "when": "When",
+      "action": "Action",
+      "changes": "Changes",
+      "changed": "{count} field(s) changed",
+      "system": "system"
     }
   },
   "stages": {

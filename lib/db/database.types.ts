@@ -835,7 +835,20 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      audit_logs_with_actor: {
+        Row: {
+          action: string | null
+          actor_id: string | null
+          actor_login_id: string | null
+          after: Json | null
+          before: Json | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       claim_notifications: {
@@ -899,6 +912,10 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       policy_int: { Args: { p_key: string }; Returns: number }
+      recompute_eligibility_snapshots: {
+        Args: { p_reason: string }
+        Returns: number
+      }
       set_my_preferred_language: {
         Args: { p_lang: string }
         Returns: undefined
