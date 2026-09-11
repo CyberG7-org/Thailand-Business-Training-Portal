@@ -138,6 +138,83 @@ export type Database = {
           },
         ]
       }
+      eligibility_snapshots: {
+        Row: {
+          available_from: string
+          calculated_at: string
+          dbd_record_id: string
+          expires_at: string | null
+          id: string
+          issued_on_snapshot: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          available_from: string
+          calculated_at?: string
+          dbd_record_id: string
+          expires_at?: string | null
+          id?: string
+          issued_on_snapshot: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          available_from?: string
+          calculated_at?: string
+          dbd_record_id?: string
+          expires_at?: string | null
+          id?: string
+          issued_on_snapshot?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eligibility_snapshots_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eligibility_snapshots_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      policy_config: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_config_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -171,12 +248,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_dbd_assignments: {
+        Row: {
+          active: boolean
+          assigned_at: string
+          assigned_by: string | null
+          dbd_record_id: string
+          deactivated_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          assigned_at?: string
+          assigned_by?: string | null
+          dbd_record_id: string
+          deactivated_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          assigned_at?: string
+          assigned_by?: string | null
+          dbd_record_id?: string
+          deactivated_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_dbd_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_dbd_assignments_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_dbd_assignments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      compute_eligibility_snapshot: {
+        Args: { p_reason: string; p_record_id: string; p_user_id: string }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
+      policy_int: { Args: { p_key: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
