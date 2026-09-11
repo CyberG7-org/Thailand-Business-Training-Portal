@@ -309,6 +309,54 @@ export type Database = {
           },
         ]
       }
+      name_cards: {
+        Row: {
+          created_at: string
+          dbd_record_id: string
+          id: string
+          pdf_path: string
+          phone_number: string
+          telegram_sent_at: string | null
+          template_version: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dbd_record_id: string
+          id?: string
+          pdf_path: string
+          phone_number: string
+          telegram_sent_at?: string | null
+          template_version: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dbd_record_id?: string
+          id?: string
+          pdf_path?: string
+          phone_number?: string
+          telegram_sent_at?: string | null
+          template_version?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "name_cards_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "name_cards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           attempts: number

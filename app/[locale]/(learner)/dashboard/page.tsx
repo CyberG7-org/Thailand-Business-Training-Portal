@@ -16,6 +16,7 @@ const STAGE_ROUTES: Partial<Record<StageKey, string>> = {
   study: '/study',
   quiz: '/quiz',
   exam: '/exam',
+  nameCard: '/name-card',
 };
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {

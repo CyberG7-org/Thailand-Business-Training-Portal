@@ -18,6 +18,7 @@ function svc() {
 export async function seedLearnerWithCompany(
   companyNameTh: string,
   issuedOn: string | null,
+  extra: Record<string, unknown> = {},
 ): Promise<string> {
   const admin = svc();
   const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
@@ -36,6 +37,7 @@ export async function seedLearnerWithCompany(
       company_name_th: companyNameTh,
       juristic_id: '0105568233704',
       issued_on: issuedOn,
+      ...extra,
       extraction_status: 'confirmed',
       confirmed_by: user.user.id,
       confirmed_at: new Date().toISOString(),

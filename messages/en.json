@@ -300,5 +300,29 @@
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option."
     }
+  },
+  "nameCard": {
+    "title": "Name card",
+    "intro": "One fixed Thai design, filled from your company record plus the phone number you enter. Preview, download the PDF, or send it to Telegram.",
+    "phone": "Mobile phone number",
+    "phoneHint": "Thai mobile, e.g. 081-234-5678 or +66 81 234 5678",
+    "generate": "Create name card",
+    "regenerate": "Create a new version",
+    "generating": "Creating…",
+    "generated": "Name card created.",
+    "preview": "Preview",
+    "download": "Download PDF",
+    "send": "Send to Telegram",
+    "sendAgain": "Send to Telegram again",
+    "sentQueued": "Queued for {count} Telegram destination(s).",
+    "sentNoDestinations": "No Telegram destination is configured yet.",
+    "meta": "Template {version} · {phone}",
+    "errors": {
+      "no_assignment": "No company is assigned to you yet.",
+      "exam_required": "Pass the exam first to create your name card.",
+      "invalid_phone": "Enter a valid Thai mobile number.",
+      "missing_fields": "Your company record is missing: {fields}. Ask your administrator to complete it.",
+      "not_found": "Name card not found."
+    }
   }
 }

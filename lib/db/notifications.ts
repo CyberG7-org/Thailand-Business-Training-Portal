@@ -6,26 +6,53 @@ import {
   examResultMessage,
   type ExamResultPayload,
 } from '@/lib/domain/notifications';
-import type { Notifier, OutboundMessage } from '@/lib/integrations/notify/types';
+import type { Notifier, OutboundDocument, OutboundMessage } from '@/lib/integrations/notify/types';
 import { createSupabaseAdminClient } from './admin';
 import type { Database } from './database.types';
+import { downloadNameCardPdf } from './name-cards';
 
 type Db = SupabaseClient<Database>;
 export type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 
 export type NotifierResolver = (channel: 'telegram' | 'email') => Notifier | null;
 
-function renderMessage(row: NotificationRow): OutboundMessage {
-  if (row.event_type !== 'exam_result') {
-    throw new Error(`Unknown notification event: ${row.event_type}`);
-  }
-  const { subject, text } = examResultMessage(row.payload as unknown as ExamResultPayload);
-  return {
+type NameCardPayload = {
+  card_id: string;
+  pdf_path: string;
+  login_id: string;
+  display_name: string | null;
+  company_name_th: string | null;
+};
+
+async function render(
+  row: NotificationRow,
+): Promise<{ message: OutboundMessage; document: OutboundDocument | null }> {
+  const base = {
     channel: row.channel as OutboundMessage['channel'],
     destination: row.destination_ref ?? '',
-    subject,
-    text,
   };
+  if (row.event_type === 'exam_result') {
+    const { subject, text } = examResultMessage(row.payload as unknown as ExamResultPayload);
+    return { message: { ...base, subject, text }, document: null };
+  }
+  if (row.event_type === 'name_card') {
+    const p = row.payload as unknown as NameCardPayload;
+    const who = p.display_name ? `${p.display_name} (${p.login_id})` : p.login_id;
+    return {
+      message: {
+        ...base,
+        subject: `[Name card] ${who}`,
+        text: `นามบัตร: ${p.company_name_th ?? '-'}
+Name card for ${who}`,
+      },
+      document: {
+        filename: `name-card-${p.login_id}.pdf`,
+        contentType: 'application/pdf',
+        bytes: await downloadNameCardPdf(p.pdf_path),
+      },
+    };
+  }
+  throw new Error(`Unknown notification event: ${row.event_type}`);
 }
 
 export type ProcessSummary = { claimed: number; sent: number; failed: number; retried: number };
@@ -44,7 +71,13 @@ export async function processDueNotifications(
     const notifier = resolve(row.channel as 'telegram' | 'email');
     try {
       if (!notifier) throw new Error(`No ${row.channel} notifier configured`);
-      await notifier.send(renderMessage(row));
+      const { message, document } = await render(row);
+      if (document) {
+        if (!notifier.sendDocument) throw new Error(`${row.channel} cannot send documents`);
+        await notifier.sendDocument(message, document);
+      } else {
+        await notifier.send(message);
+      }
       await admin
         .from('notifications')
         .update({ status: 'sent', sent_at: new Date().toISOString(), last_error: null })

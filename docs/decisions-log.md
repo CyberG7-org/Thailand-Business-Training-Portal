@@ -49,3 +49,5 @@ or in `policy_config` (PRD section 24).
 | 2026-09-11 | D21 | Exam result page shows score, pass/fail and wrong questions, not the correct answers | P5 spec |
 | 2026-09-11 | D22 | Telegram/Email enabled by TELEGRAM_BOT_TOKEN / RESEND_API_KEY; fake in dev, off in prod; destinations from policy_config | P5 spec, `lib/integrations/notify` |
 | 2026-09-11 | D23 | Cron route guarded by CRON_SECRET; leased claims, 5 attempts with backoff, admin requeue | P5 spec, migration 0007 |
+| 2026-09-11 | D24 | Name card placeholder template `placeholder-v1`: company (TH/EN), holder = learner display name or first director, title "กรรมการผู้มีอำนาจลงนาม", address, phone, juristic id; Sarabun font (OFL) embedded; 90×54 mm | `lib/integrations/pdf/name-card.tsx` |
+| 2026-09-11 | D25 | Name card requires company_name_th + head_office_address on the record; Telegram delivery goes through the notification queue as a document | P6, `lib/db/name-cards.ts` |
