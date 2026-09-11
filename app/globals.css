@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
 body {
-  font-family: ui-sans-serif, system-ui, 'Segoe UI', 'Noto Sans Thai', 'Noto Sans', sans-serif;
+  font-family:
+    var(--font-thai), ui-sans-serif, system-ui, 'Segoe UI', 'Noto Sans SC', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
 }

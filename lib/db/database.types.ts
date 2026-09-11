@@ -311,6 +311,10 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       policy_int: { Args: { p_key: string }; Returns: number }
+      set_my_preferred_language: {
+        Args: { p_lang: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

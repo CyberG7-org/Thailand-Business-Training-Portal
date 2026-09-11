@@ -22,7 +22,7 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
   });
   // Any failure — malformed ID, unknown account, wrong password — yields the same message (AUTH-004).
   if (!parsed.success) return { error: 'invalid' };
-  const { loginId, password, locale } = parsed.data;
+  const { loginId, password } = parsed.data;
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -33,14 +33,14 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, status')
+    .select('role, status, preferred_language')
     .eq('id', data.user.id)
     .single();
   if (!profile || profile.status === 'disabled') {
     await supabase.auth.signOut();
     return { error: 'disabled' };
   }
-  redirect(`/${locale}/${profile.role === 'admin' ? 'admin' : 'dashboard'}`);
+  redirect(`/${profile.preferred_language}/${profile.role === 'admin' ? 'admin' : 'dashboard'}`);
 }
 
 export async function signOutAction(formData: FormData) {

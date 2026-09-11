@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "Business Training Portal"
+    "name": "Business Training Portal",
+    "language": "Language"
   },
   "home": {
     "title": "Thailand Business Training & Bank Verification Portal"

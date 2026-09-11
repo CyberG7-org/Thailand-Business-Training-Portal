@@ -5,5 +5,5 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user || user.status !== 'active') redirect(`/${locale}/login`);
-  redirect(`/${locale}/${user.role === 'admin' ? 'admin' : 'dashboard'}`);
+  redirect(`/${user.preferredLanguage}/${user.role === 'admin' ? 'admin' : 'dashboard'}`);
 }
