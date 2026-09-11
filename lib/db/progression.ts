@@ -10,7 +10,6 @@ type Db = SupabaseClient<Database>;
 
 /**
  * Builds the facts `deriveProgression` needs from what the database holds today.
- * Call facts are constant here and are wired in by the P8 slice.
  */
 export async function loadProgressionFacts(
   db: Db,
@@ -22,7 +21,7 @@ export async function loadProgressionFacts(
     getPolicy('require_exam_pass_for_bank_call'),
     getPolicy('require_exam_pass_for_name_card'),
   ]);
-  const [snapshot, studyRows, quizRows, exam, cardRows] = await Promise.all([
+  const [snapshot, studyRows, quizRows, exam, cardRows, callRows, callsDone] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     db
@@ -33,6 +32,12 @@ export async function loadProgressionFacts(
       .eq('status', 'submitted'),
     examPassedFor(userId),
     db.from('name_cards').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    db.from('call_sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    db
+      .from('call_sessions')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .in('status', ['completed', 'partial']),
   ]);
 
   return {
@@ -46,8 +51,8 @@ export async function loadProgressionFacts(
       ? { availableFrom: snapshot.available_from, expiresAt: snapshot.expires_at }
       : null,
     today: options.today ?? todayInBangkok(),
-    callSessions: 0,
-    callsCompleted: 0,
+    callSessions: callRows.count ?? 0,
+    callsCompleted: callsDone.count ?? 0,
     policy: { requireExamPassForBankCall, requireExamPassForNameCard },
   };
 }

@@ -165,6 +165,66 @@ export type Database = {
         }
         Relationships: []
       }
+      call_sessions: {
+        Row: {
+          created_at: string
+          dbd_record_id: string
+          ended_at: string | null
+          id: string
+          metadata: Json
+          modality: string
+          recording_path: string | null
+          started_at: string
+          status: string
+          transcript: string | null
+          user_id: string
+          vapi_call_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dbd_record_id: string
+          ended_at?: string | null
+          id?: string
+          metadata?: Json
+          modality: string
+          recording_path?: string | null
+          started_at?: string
+          status?: string
+          transcript?: string | null
+          user_id: string
+          vapi_call_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dbd_record_id?: string
+          ended_at?: string | null
+          id?: string
+          metadata?: Json
+          modality?: string
+          recording_path?: string | null
+          started_at?: string
+          status?: string
+          transcript?: string | null
+          user_id?: string
+          vapi_call_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sessions_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dbd_records: {
         Row: {
           certificate_no: string | null
@@ -739,6 +799,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      webhook_events: {
+        Row: {
+          error: string | null
+          event_type: string
+          external_id: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          provider: string
+          received_at: string
+        }
+        Insert: {
+          error?: string | null
+          event_type: string
+          external_id: string
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+        }
+        Update: {
+          error?: string | null
+          event_type?: string
+          external_id?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

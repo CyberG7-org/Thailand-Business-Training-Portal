@@ -59,3 +59,30 @@ export async function setPolicy(key: string, value: unknown): Promise<void> {
     .upsert({ key, value: value as never });
   if (error) throw error;
 }
+
+/** Records a submitted, passing exam attempt for a seeded learner (bypasses the UI). */
+export async function seedPassedExam(loginId: string): Promise<void> {
+  const admin = svc();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  if (!profile) throw new Error(`no profile for ${loginId}`);
+  const { data: question } = await admin.from('questions').select('id').limit(1).single();
+  const { error } = await admin.from('assessment_attempts').insert({
+    user_id: profile.id,
+    kind: 'exam',
+    language: 'th',
+    attempt_no: 1,
+    status: 'submitted',
+    question_ids: question ? [question.id] : [],
+    shuffle_seed: 'seed',
+    passing_mark_snapshot: 80,
+    score: 1,
+    max_score: 1,
+    result: 'pass',
+    submitted_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}

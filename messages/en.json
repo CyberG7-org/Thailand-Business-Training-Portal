@@ -44,7 +44,8 @@
       "dbdRecords": "DBD records",
       "content": "Study content",
       "questions": "Question bank",
-      "notifications": "Notifications"
+      "notifications": "Notifications",
+      "calls": "Call training"
     },
     "users": {
       "title": "Users",
@@ -189,6 +190,24 @@
       "attempts": "Attempts",
       "lastError": "Last error",
       "requeue": "Requeue"
+    },
+    "calls": {
+      "title": "Bank call training",
+      "detailTitle": "Call session",
+      "empty": "No call sessions yet",
+      "learner": "Learner",
+      "company": "Company",
+      "modality": "Modality",
+      "status": "Status",
+      "started": "Started",
+      "ended": "Ended",
+      "endedReason": "Ended reason",
+      "providerCallId": "Provider call id",
+      "recording": "Recording",
+      "noRecording": "No recording stored",
+      "transcript": "Transcript",
+      "noTranscript": "No transcript",
+      "open": "Open"
     }
   },
   "stages": {
@@ -323,6 +342,47 @@
       "invalid_phone": "Enter a valid Thai mobile number.",
       "missing_fields": "Your company record is missing: {fields}. Ask your administrator to complete it.",
       "not_found": "Name card not found."
+    }
+  },
+  "bankCall": {
+    "title": "Bank verification call training",
+    "intro": "A simulated bank officer calls you in Thai and asks about your company. Answer from your DBD certificate. The conversation is recorded for admin review.",
+    "tips": {
+      "quiet": "Find a quiet place and use headphones if you can",
+      "microphone": "Allow the browser to use your microphone when asked",
+      "facts": "Have the company name, head office address, registered capital and directors ready"
+    },
+    "start": "Start call",
+    "startAgain": "Start another call",
+    "hangUp": "Hang up",
+    "simulate": "Simulate the call to the end",
+    "fakeHint": "Test mode: no call provider is configured, so a sample transcript is stored instead.",
+    "assistantSpeaking": "Officer speaking",
+    "history": "Call history",
+    "transcript": "Show transcript",
+    "phase": {
+      "idle": "Ready to start",
+      "starting": "Preparing the call…",
+      "connecting": "Connecting…",
+      "live": "In call",
+      "ending": "Hanging up…",
+      "ended": "Call ended",
+      "error": "Something went wrong"
+    },
+    "status": {
+      "initiated": "Initiated",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "partial": "Completed (incomplete data)",
+      "failed": "Failed"
+    },
+    "errors": {
+      "not_open": "This stage is not open yet",
+      "max_sessions": "You have used all available practice calls",
+      "not_configured": "Call training is not configured. Please contact an admin.",
+      "no_assignment": "No company has been assigned to you",
+      "not_found": "Call session not found",
+      "call_failed": "The call failed. Please try again."
     }
   }
 }

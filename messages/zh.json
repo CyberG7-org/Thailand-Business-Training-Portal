@@ -44,7 +44,8 @@
       "dbdRecords": "DBD 记录",
       "content": "学习内容",
       "questions": "题库",
-      "notifications": "通知"
+      "notifications": "通知",
+      "calls": "通话训练"
     },
     "users": {
       "title": "用户",
@@ -189,6 +190,24 @@
       "attempts": "尝试次数",
       "lastError": "最近错误",
       "requeue": "重新排队"
+    },
+    "calls": {
+      "title": "银行通话训练",
+      "detailTitle": "通话记录",
+      "empty": "暂无通话记录",
+      "learner": "学员",
+      "company": "公司",
+      "modality": "方式",
+      "status": "状态",
+      "started": "开始时间",
+      "ended": "结束时间",
+      "endedReason": "结束原因",
+      "providerCallId": "服务商通话编号",
+      "recording": "录音",
+      "noRecording": "没有录音",
+      "transcript": "对话记录",
+      "noTranscript": "没有对话记录",
+      "open": "打开"
     }
   },
   "stages": {
@@ -323,6 +342,47 @@
       "invalid_phone": "请输入有效的泰国手机号。",
       "missing_fields": "您的公司记录缺少：{fields}。请联系管理员补全。",
       "not_found": "未找到名片。"
+    }
+  },
+  "bankCall": {
+    "title": "银行身份核实通话训练",
+    "intro": "系统会模拟银行工作人员用泰语致电询问您的公司信息。请按照公司注册证明作答。对话会被记录以供管理员审核。",
+    "tips": {
+      "quiet": "请在安静的环境中进行，尽量使用耳机",
+      "microphone": "浏览器请求时请允许使用麦克风",
+      "facts": "准备好公司名称、总部地址、注册资本和董事名单"
+    },
+    "start": "开始通话",
+    "startAgain": "再次开始通话",
+    "hangUp": "挂断",
+    "simulate": "模拟通话至结束",
+    "fakeHint": "测试模式：尚未配置通话服务商，系统将保存示例对话记录。",
+    "assistantSpeaking": "工作人员正在说话",
+    "history": "通话历史",
+    "transcript": "查看对话记录",
+    "phase": {
+      "idle": "准备开始",
+      "starting": "正在准备通话…",
+      "connecting": "正在连接…",
+      "live": "通话中",
+      "ending": "正在挂断…",
+      "ended": "通话已结束",
+      "error": "出现错误"
+    },
+    "status": {
+      "initiated": "已发起",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "partial": "已完成（数据不完整）",
+      "failed": "失败"
+    },
+    "errors": {
+      "not_open": "此阶段尚未开放",
+      "max_sessions": "您已用完可用的练习通话次数",
+      "not_configured": "通话训练尚未配置，请联系管理员。",
+      "no_assignment": "尚未为您分配公司",
+      "not_found": "未找到该通话记录",
+      "call_failed": "通话失败，请重试。"
     }
   }
 }

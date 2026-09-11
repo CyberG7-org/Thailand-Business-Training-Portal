@@ -51,3 +51,7 @@ or in `policy_config` (PRD section 24).
 | 2026-09-11 | D23 | Cron route guarded by CRON_SECRET; leased claims, 5 attempts with backoff, admin requeue | P5 spec, migration 0007 |
 | 2026-09-11 | D24 | Name card placeholder template `placeholder-v1`: company (TH/EN), holder = learner display name or first director, title "กรรมการผู้มีอำนาจลงนาม", address, phone, juristic id; Sarabun font (OFL) embedded; 90×54 mm | `lib/integrations/pdf/name-card.tsx` |
 | 2026-09-11 | D25 | Name card requires company_name_th + head_office_address on the record; Telegram delivery goes through the notification queue as a document | P6, `lib/db/name-cards.ts` |
+| 2026-09-11 | D26 | Call modality for the pilot: in-browser via @vapi-ai/web with a transient assistant; phone stays a later option | P8 spec |
+| 2026-09-11 | D27 | VAPI_PROVIDER=vapi/fake/off; fake modality completes sessions with a canned Thai transcript for tests | P8 spec |
+| 2026-09-11 | D28 | Vapi webhook authenticated by x-vapi-secret; events ledgered in webhook_events; recordings copied to a private bucket | P8 spec |
+| 2026-09-11 | D29 | A session is `completed` only with both transcript and stored recording; `partial` with one of them (provider URL kept in metadata); the bank stage counts `completed`/`partial` as done | P8, `lib/db/calls.ts` |
