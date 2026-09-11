@@ -2,9 +2,12 @@
 node_modules/
 .next/
 out/
+build/
 coverage/
 playwright-report/
 test-results/
+*.tsbuildinfo
+next-env.d.ts
 
 # environment & secrets
 .env
@@ -27,3 +30,4 @@ Thumbs.db
 *.xlsx
 *.docx
 !docs/**/*.pdf
+!tests/fixtures/*.pdf
