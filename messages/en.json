@@ -271,11 +271,11 @@
         },
         "require_exam_pass_for_name_card": {
           "label": "Require exam pass for the name card",
-          "help": ""
+          "help": "When on, learners must pass the exam before creating a card"
         },
         "require_exam_pass_for_bank_call": {
           "label": "Require exam pass for the bank call",
-          "help": ""
+          "help": "When on, learners must pass the exam before practising calls (default: on)"
         },
         "call_max_sessions": {
           "label": "Maximum practice calls",

@@ -271,11 +271,11 @@
         },
         "require_exam_pass_for_name_card": {
           "label": "制作名片需先通过考试",
-          "help": ""
+          "help": "开启后，学员须先通过考试才能制作名片"
         },
         "require_exam_pass_for_bank_call": {
           "label": "银行通话训练需先通过考试",
-          "help": ""
+          "help": "开启后，学员须先通过考试才能开始通话训练（默认开启）"
         },
         "call_max_sessions": {
           "label": "练习通话最多次数",
