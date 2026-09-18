@@ -30,6 +30,16 @@ const record: TemplateRecord = {
   directors: [{ name_th: 'นาย ก', name_en: null }],
   objectives_count: 14,
   signing_authority: null,
+  province: 'กรุงเทพมหานคร',
+  objectives: [
+    { no: 1, text: 'ค้าปลีก' },
+    { no: 2, text: 'นำเข้า-ส่งออก' },
+  ],
+  business_categories: ['ค้าปลีก', 'นำเข้า-ส่งออก'],
+  shareholders: [{ name: 'นาย ก', nationality: 'ไทย', shares: 19998, percent: null }],
+  promoters: [{ name: 'นาย ข', nationality: 'ไทย' }],
+  total_shares: 20000,
+  par_value: 100,
 };
 
 describe('seeded random', () => {
@@ -172,5 +182,22 @@ describe('scoring', () => {
     expect(evaluateResult(7, 10, 70)).toBe('pass');
     expect(evaluateResult(6, 10, 70)).toBe('fail');
     expect(evaluateResult(0, 0, 70)).toBe('fail');
+  });
+});
+
+describe('level 2 placeholders', () => {
+  it('renders lists and share numbers and supports numeric variants on shares', () => {
+    const out = renderTemplate(
+      '{province} / {objectives} / {business_categories} / {shareholders} / {promoters} / {total_shares} / {par_value|x2}',
+      record,
+      'seed',
+      'en',
+    );
+    expect(out).toBe(
+      'กรุงเทพมหานคร / ค้าปลีก; นำเข้า-ส่งออก / ค้าปลีก, นำเข้า-ส่งออก / นาย ก / นาย ข / 20,000 / 200',
+    );
+    expect(() =>
+      renderTemplate('{shareholders}', { ...record, shareholders: null }, 's', 'th'),
+    ).toThrow(MissingFieldError);
   });
 });

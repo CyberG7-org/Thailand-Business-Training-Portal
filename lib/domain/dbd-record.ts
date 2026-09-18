@@ -71,6 +71,7 @@ export const dbdRecordInputSchema = z
     issued_on: dateInput,
     registered_capital: numberInput(false),
     head_office_address: optionalText,
+    province: optionalText,
     signing_authority: optionalText,
     objectives_count: numberInput(true),
     issuing_office: optionalText,

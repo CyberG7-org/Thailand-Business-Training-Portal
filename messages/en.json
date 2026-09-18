@@ -102,7 +102,16 @@
         "objectivesCount": "Number of objectives",
         "issuingOffice": "Issuing office",
         "registrarName": "Registrar",
-        "directors": "Directors"
+        "directors": "Directors",
+        "province": "Province",
+        "objectives": "Business objectives",
+        "businessCategories": "Business categories",
+        "totalShares": "Total shares",
+        "parValue": "Par value (Baht per share)",
+        "paidUpCapital": "Paid-up capital (Baht)",
+        "shareType": "Share type",
+        "shareholders": "Shareholders",
+        "promoters": "Promoters"
       },
       "extract": "Extract from PDF",
       "extracting": "Extracting…",
@@ -118,19 +127,43 @@
         "provider": "The extraction service failed. Try again later.",
         "invalid_output": "The extraction result was not usable.",
         "no_document": "Upload the certificate PDF first.",
-        "not_allowed": "This record cannot be extracted."
+        "not_allowed": "This record cannot be extracted.",
+        "too_large": "The documents exceed 30 MB in total; split or compress them"
       },
       "uploadFirstTitle": "Upload the DBD certificate (Thai)",
-      "uploadFirstHint": "Choose the Thai certificate PDF. The document is read and the company fields are filled in automatically; you then review, correct if needed, and confirm.",
+      "uploadFirstHint": "Choose the Thai PDFs (several at once: certificate, objectives sheet, Bor.Or.Jor.5, Bor.Or.Jor.2). The documents are read and all three levels are filled in automatically; you then review, correct if needed, and confirm.",
       "uploadFirstNoExtraction": "Document reading is not configured (ANTHROPIC_API_KEY required). The file is stored and you fill in the fields below yourself.",
       "uploadAndFill": "Upload and fill automatically",
       "uploadingAndReading": "Uploading and reading the document… (about 20–40 s)",
-      "uploadFillsHint": "After upload the document is read and only empty fields are filled automatically.",
+      "uploadFillsHint": "Add more DBD documents (certificate, objectives sheet, Bor.Or.Jor.5, Bor.Or.Jor.2); every file is read and only empty fields are filled.",
       "orEnterManually": "Or enter the details manually without a file",
       "reExtract": "Read the document again",
       "autoFilled": "Document read; {count} field(s) filled. Review before confirming.",
       "autoFilledReview": "{count} field(s) were filled from the certificate. Check every field (especially highlighted ones), correct if needed, then click Confirm.",
-      "uploadedButNotRead": "The file was uploaded but could not be read ({reason}). Fill the fields yourself or try reading again."
+      "uploadedButNotRead": "The file was uploaded but could not be read ({reason}). Fill the fields yourself or try reading again.",
+      "levels": {
+        "identity": "Level 1 — Company identity (certificate)",
+        "business": "Level 2 — Business profile (objectives sheet / Bor.Or.Jor.5 / Bor.Or.Jor.2)",
+        "document": "Level 3 — DBD document metadata"
+      },
+      "documentTypes": {
+        "certificate": "Certificate",
+        "objectives_sheet": "Objectives sheet",
+        "shareholder_list": "Shareholder list (Bor.Or.Jor.5)",
+        "memorandum": "Memorandum (Bor.Or.Jor.2)",
+        "articles": "Articles of association",
+        "other": "Other",
+        "unknown": "Not classified yet"
+      },
+      "objectivesHint": "One objective per line; a leading number is kept, e.g. \"1. To operate…\"",
+      "onePerLine": "One per line",
+      "shareholdersHint": "One per line: name | nationality | shares",
+      "promotersHint": "One per line: name | nationality",
+      "documents": "Uploaded DBD documents",
+      "removeDocument": "Remove",
+      "sourceDocument": "from {name}",
+      "sourcePage": "page {page}",
+      "fileHint": "PDF, up to 30 MB per file"
     },
     "assignment": {
       "title": "Assigned company",

@@ -12,6 +12,7 @@ import {
   type SelectableQuestion,
 } from '@/lib/domain/assessment/engine';
 import { MissingFieldError, type TemplateRecord } from '@/lib/domain/assessment/template';
+import { EMPTY_BUSINESS_PROFILE, readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import { createSupabaseAdminClient } from './admin';
 import { getActiveAssignmentForUser } from './assignments';
@@ -44,6 +45,7 @@ export class AssessmentError extends Error {
 type BankQuestion = SelectableQuestion & { text: QuestionText };
 
 function toTemplateRecord(record: DbdRecordRow): TemplateRecord {
+  const business = readStructuredData(record.structured_data).business ?? EMPTY_BUSINESS_PROFILE;
   return {
     company_name_th: record.company_name_th,
     company_name_en: record.company_name_en,
@@ -56,6 +58,13 @@ function toTemplateRecord(record: DbdRecordRow): TemplateRecord {
     directors: (record.directors as unknown as Director[] | null) ?? null,
     objectives_count: record.objectives_count,
     signing_authority: record.signing_authority,
+    province: record.province,
+    objectives: business.objectives.length ? business.objectives : null,
+    business_categories: business.business_categories.length ? business.business_categories : null,
+    shareholders: business.shareholders.length ? business.shareholders : null,
+    promoters: business.promoters.length ? business.promoters : null,
+    total_shares: business.share_structure.total_shares,
+    par_value: business.share_structure.par_value,
   };
 }
 

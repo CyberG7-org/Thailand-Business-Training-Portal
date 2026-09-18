@@ -1,6 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createDbdRecord, uploadDbdDocument } from '@/lib/db/dbd-records';
+import {
+  createDbdRecord,
+  listDbdDocuments,
+  removeDbdDocument,
+  uploadDbdDocument,
+} from '@/lib/db/dbd-records';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { extractAndApply, runExtraction } from '@/lib/db/extraction';
 import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
 import { FakeDbdExtractor, SAMPLE_EXTRACTION } from '@/lib/integrations/extraction/fake';
@@ -116,9 +122,44 @@ describe('extractAndApply', () => {
     expect(record.issued_on).toBe('2026-07-13');
     expect(Number(record.registered_capital)).toBe(2000000);
     expect(record.directors).toEqual(SAMPLE_EXTRACTION.directors.value);
+    expect(record.province).toBe('ตัวอย่าง');
+
+    // Level 2 lands in structured_data, Level 3 provenance points at document/page.
+    const structured = readStructuredData(record.structured_data);
+    expect(structured.business?.objectives).toHaveLength(3);
+    expect(structured.business?.shareholders[0]).toMatchObject({ name: 'นางสาวตัวอย่าง ทดสอบ' });
+    expect(structured.business?.share_structure.total_shares).toBe(20000);
+    expect(structured.provenance?.juristic_id).toMatchObject({
+      source_document: 1,
+      source_page: 1,
+    });
+    expect(structured.document_type).toBe('certificate');
+    const docs = await listDbdDocuments(asAdmin, recordId);
+    expect(docs).toHaveLength(1);
+    expect(docs[0].document_type).toBe('certificate');
     expect(applied).toContain('juristic_id');
     expect(applied).not.toContain('company_name_th');
     expect(rejected).toEqual([]);
+
+    // A second document joins the pack; extraction reads both and classifies the new one.
+    const second = await uploadDbdDocument(
+      asAdmin,
+      recordId,
+      new File([readFileSync('tests/fixtures/tiny.pdf')], 'objectives.pdf', {
+        type: 'application/pdf',
+      }),
+      'objectives.pdf',
+    );
+    const withTwo = await extractAndApply(asAdmin, recordId, new FakeDbdExtractor());
+    expect(withTwo.applied).toEqual([]);
+    const twoDocs = await listDbdDocuments(asAdmin, recordId);
+    expect(twoDocs.map((d) => [d.position, d.original_name, d.document_type])).toEqual([
+      [1, 'certificate.pdf', 'certificate'],
+      [2, 'objectives.pdf', 'objectives_sheet'],
+    ]);
+    await removeDbdDocument(asAdmin, recordId, twoDocs[1].id);
+    expect((await listDbdDocuments(asAdmin, recordId)).map((d) => d.path)).toEqual([documentPath]);
+    expect(second).not.toBe(documentPath);
 
     // A second run has nothing left to fill and changes nothing.
     const again = await extractAndApply(asAdmin, recordId, new FakeDbdExtractor());

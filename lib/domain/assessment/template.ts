@@ -1,4 +1,5 @@
 import type { Director } from '../dbd-record';
+import type { Objective, Promoter, Shareholder } from '../dbd-profile';
 import { addCalendarDays, formatDate, type ISODate, type Locale } from '../thai-date';
 import { createRng, shuffleWith } from './random';
 
@@ -15,6 +16,14 @@ export const TEMPLATE_FIELDS = [
   'directors',
   'objectives_count',
   'signing_authority',
+  // Level 1/2 additions (decision D38)
+  'province',
+  'objectives',
+  'business_categories',
+  'shareholders',
+  'promoters',
+  'total_shares',
+  'par_value',
 ] as const;
 export type TemplateField = (typeof TEMPLATE_FIELDS)[number];
 
@@ -30,6 +39,13 @@ export type TemplateRecord = {
   directors: Director[] | null;
   objectives_count: number | null;
   signing_authority: string | null;
+  province: string | null;
+  objectives: Objective[] | null;
+  business_categories: string[] | null;
+  shareholders: Shareholder[] | null;
+  promoters: Promoter[] | null;
+  total_shares: number | null;
+  par_value: number | null;
 };
 
 export class MissingFieldError extends Error {
@@ -99,12 +115,22 @@ function shuffleDigits(value: string, rng: () => number): string {
 function formatValue(field: TemplateField, value: unknown, locale: Locale): string {
   switch (field) {
     case 'registered_capital':
+    case 'total_shares':
+    case 'par_value':
       return Number(value).toLocaleString(NUMBER_LOCALES[locale]);
     case 'registered_on':
     case 'issued_on':
       return formatDate(String(value), locale);
     case 'directors':
       return (value as Director[]).map((d) => d.name_th).join(', ');
+    case 'objectives':
+      return (value as Objective[]).map((o) => o.text).join('; ');
+    case 'business_categories':
+      return (value as string[]).join(', ');
+    case 'shareholders':
+      return (value as Shareholder[]).map((sh) => sh.name).join(', ');
+    case 'promoters':
+      return (value as Promoter[]).map((p) => p.name).join(', ');
     default:
       return String(value);
   }
@@ -131,7 +157,12 @@ export function renderTemplate(
     if (isEmpty(value)) throw new MissingFieldError(field);
     if (!variant) return formatValue(field, value, locale);
 
-    if (field === 'registered_capital' || field === 'objectives_count') {
+    if (
+      field === 'registered_capital' ||
+      field === 'objectives_count' ||
+      field === 'total_shares' ||
+      field === 'par_value'
+    ) {
       return formatValue(field, applyNumberVariant(Number(value), variant), locale);
     }
     if (field === 'registered_on' || field === 'issued_on') {

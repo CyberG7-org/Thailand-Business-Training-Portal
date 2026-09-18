@@ -28,6 +28,7 @@ export function UploadFirstForm({ extractionAvailable }: { extractionAvailable: 
         name="document"
         type="file"
         accept="application/pdf"
+        multiple
         required
         data-testid="upload-first-file"
         className="text-sm"

@@ -18,6 +18,7 @@ import {
   validateGenerated,
   type Rejection,
 } from '@/lib/integrations/question-gen/validate';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import type { Database } from './database.types';
 import { getQuestion, upsertQuestionLocalization } from './questions';
@@ -106,6 +107,8 @@ export async function loadReference(
     objectives_count: data.objectives_count,
     issuing_office: data.issuing_office,
     registrar_name: data.registrar_name,
+    province: data.province,
+    business: readStructuredData(data.structured_data).business ?? null,
   };
   let pdf: Uint8Array | null = null;
   if (data.document_path) {

@@ -1,3 +1,4 @@
+import type { BusinessProfile } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 
 /**
@@ -33,13 +34,18 @@ Placeholders that map to these particulars (the app fills each learner's own val
 {company_name_th} (item 1), {company_name_en} (item 1, translation), {juristic_id} (13-digit number),
 {certificate_no} (header), {registered_on} (registration date), {issued_on} (issue date), {registered_capital}
 (item 4, in Baht), {head_office_address} (item 5), {directors} (item 2, names), {signing_authority} (item 3),
-{objectives_count} (item 6).
+{objectives_count} (item 6), {province} (item 5, province only).
+Level 2 placeholders from the other DBD documents (empty for learners whose record lacks them — the app skips such
+questions for them): {objectives} (numbered objectives, joined), {business_categories}, {shareholders} (names),
+{promoters} (names), {total_shares}, {par_value} (Baht per share).
 
 Good personalised questions (kind "dbd_template") ask the learner for a fact from their own certificate and offer
 plausible distractors built with variants, e.g. "ทุนจดทะเบียนของ {company_name_th} คือเท่าใด" with options
 "{registered_capital} บาท", "{registered_capital|x2} บาท", "{registered_capital|x0.5} บาท", "{registered_capital|x10} บาท";
 or "บริษัทจดทะเบียนเมื่อใด" with "{registered_on}", "{registered_on|+1m}", "{registered_on|-1y}", "{issued_on}";
-or "กรรมการของบริษัทคือใคร" with "{directors}" against generic wrong names written out in the option text.
+or "กรรมการของบริษัทคือใคร" with "{directors}" against generic wrong names written out in the option text;
+or "บริษัทมีหุ้นทั้งหมดกี่หุ้น" with "{total_shares}", "{total_shares|x2}", "{total_shares|x0.5}", "{total_shares|x10}";
+or "ใครเป็นผู้ถือหุ้นของบริษัท" with "{shareholders}" against generic wrong names.
 Good generic questions (kind "generic") test understanding of the document itself: who issues it, what each numbered
 item means, what the issue date is used for, how long the QR verification is valid, what a bank officer checks.`;
 
@@ -57,6 +63,8 @@ export type DbdReferenceRecord = {
   objectives_count: number | null;
   issuing_office: string | null;
   registrar_name: string | null;
+  province?: string | null;
+  business?: BusinessProfile | null;
 };
 
 /**
@@ -73,6 +81,8 @@ export function bannedLiterals(record: DbdReferenceRecord): string[] {
     record.head_office_address,
     record.registrar_name,
     ...(record.directors ?? []).flatMap((d) => [d.name_th, d.name_en]),
+    ...(record.business?.shareholders ?? []).map((sh) => sh.name),
+    ...(record.business?.promoters ?? []).map((p) => p.name),
   ];
   const capital = record.registered_capital === null ? null : Number(record.registered_capital);
   if (capital !== null && Number.isFinite(capital) && capital > 0) {
@@ -99,6 +109,22 @@ export function describeReference(record: DbdReferenceRecord): string {
     `Objectives: ${record.objectives_count ?? '-'}`,
     `Issuing office: ${record.issuing_office ?? '-'}`,
     `Registrar: ${record.registrar_name ?? '-'}`,
+    `Province: ${record.province ?? '-'}`,
   ];
+  const b = record.business;
+  if (b) {
+    lines.push(
+      `Objectives (${b.objectives.length}): ${
+        b.objectives
+          .slice(0, 15)
+          .map((o) => (o.no === null ? o.text : `${o.no}. ${o.text}`))
+          .join(' | ') || '-'
+      }`,
+      `Business categories: ${b.business_categories.join(', ') || '-'}`,
+      `Share structure: total ${b.share_structure.total_shares ?? '-'} shares, par value ${b.share_structure.par_value ?? '-'}, paid-up ${b.share_structure.paid_up_capital ?? '-'}, type ${b.share_structure.share_type ?? '-'}`,
+      `Shareholders: ${b.shareholders.map((sh) => `${sh.name} (${sh.shares ?? '?'} shares)`).join(', ') || '-'}`,
+      `Promoters: ${b.promoters.map((p) => p.name).join(', ') || '-'}`,
+    );
+  }
   return lines.join('\n');
 }

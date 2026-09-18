@@ -1,11 +1,14 @@
 import type { Director } from '@/lib/domain/dbd-record';
+import type { DbdExtractionOutput } from './schema';
 
-/** One extracted value with the model's confidence and the text it was read from. */
+/** One extracted value with the model's confidence and where it was read (decision D38). */
 export type ExtractedField<T> = {
   value: T | null;
   /** 0–1; fields below 0.8 are highlighted for the admin (spec §11). */
   confidence: number;
   source_text: string | null;
+  source_page: number | null;
+  source_document: number | null;
 };
 
 export const EXTRACTION_TEXT_FIELDS = [
@@ -17,6 +20,7 @@ export const EXTRACTION_TEXT_FIELDS = [
   'registered_on',
   'issued_on',
   'head_office_address',
+  'province',
   'signing_authority',
   'issuing_office',
   'registrar_name',
@@ -26,21 +30,29 @@ export const EXTRACTION_NUMBER_FIELDS = ['registered_capital', 'objectives_count
 export type ExtractionTextField = (typeof EXTRACTION_TEXT_FIELDS)[number];
 export type ExtractionNumberField = (typeof EXTRACTION_NUMBER_FIELDS)[number];
 
-export type DbdExtraction = Record<ExtractionTextField, ExtractedField<string>> &
+/** The full three-level extraction; the flat text/number fields are typed for the merge code. */
+export type DbdExtraction = DbdExtractionOutput &
+  Record<ExtractionTextField, ExtractedField<string>> &
   Record<ExtractionNumberField, ExtractedField<number>> & {
     directors: ExtractedField<Director[]>;
   };
 
 export interface DbdExtractor {
   readonly name: string;
-  extract(pdf: Uint8Array): Promise<DbdExtraction>;
+  /** All of a record's uploaded documents, in upload order. */
+  extract(documents: Uint8Array[]): Promise<DbdExtraction>;
 }
 
 export class ExtractionError extends Error {
   constructor(
     message: string,
     public readonly code:
-      'not_configured' | 'provider' | 'invalid_output' | 'no_document' | 'not_allowed',
+      | 'not_configured'
+      | 'provider'
+      | 'invalid_output'
+      | 'no_document'
+      | 'not_allowed'
+      | 'too_large',
   ) {
     super(message);
     this.name = 'ExtractionError';

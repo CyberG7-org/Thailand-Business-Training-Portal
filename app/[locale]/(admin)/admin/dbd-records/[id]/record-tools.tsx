@@ -5,6 +5,7 @@ import { useActionState } from 'react';
 import {
   confirmDbdRecordAction,
   extractDocumentAction,
+  removeDocumentAction,
   uploadDocumentAction,
   type ToolState,
 } from '../actions';
@@ -17,7 +18,15 @@ const EXTRACT_ERROR_KEYS = [
   'invalid_output',
   'no_document',
   'not_allowed',
+  'too_large',
 ] as const;
+
+export type DocumentSummary = {
+  id: string;
+  name: string;
+  type: string | null;
+  sizeBytes: number;
+};
 
 function FillOutcome({ state }: { state: ToolState }) {
   const t = useTranslations('admin.dbd');
@@ -51,12 +60,12 @@ function FillOutcome({ state }: { state: ToolState }) {
 export function RecordTools({
   id,
   status,
-  documentPath,
+  documents,
   extractionAvailable,
 }: {
   id: string;
   status: string;
-  documentPath: string | null;
+  documents: DocumentSummary[];
   extractionAvailable: boolean;
 }) {
   const locale = useLocale();
@@ -69,50 +78,92 @@ export function RecordTools({
     : null;
   const uploadErrorKey = UPLOAD_ERROR_KEYS.find((k) => k === uploadState.error);
   const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === extractState.error);
-  const canExtract = documentPath !== null && status !== 'confirmed' && extractionAvailable;
+  const locked = status === 'confirmed';
+  const canExtract = documents.length > 0 && !locked && extractionAvailable;
+  const typeLabel = (type: string | null) =>
+    type ? t(`documentTypes.${type}` as 'documentTypes.certificate') : t('documentTypes.unknown');
 
   return (
     <div className="grid max-w-2xl gap-4">
-      <form action={uploadAction} className="grid gap-2 rounded border p-4">
-        <input type="hidden" name="locale" value={locale} />
-        <input type="hidden" name="id" value={id} />
-        <p className="text-sm">{documentPath ? t('documentUploaded') : t('documentMissing')}</p>
-        <p className="text-xs text-gray-600">
-          {extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
-        </p>
-        <input name="document" type="file" accept="application/pdf" required className="text-sm" />
-        {uploadState.error && (
-          <p role="alert" className="text-sm text-red-700">
-            {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
-          </p>
+      <div className="grid gap-3 rounded border p-4">
+        <p className="text-sm font-semibold">{t('documents')}</p>
+        {documents.length === 0 ? (
+          <p className="text-sm">{t('documentMissing')}</p>
+        ) : (
+          <ul className="grid gap-1 text-sm" data-testid="document-list">
+            {documents.map((doc, i) => (
+              <li key={doc.id} className="flex flex-wrap items-center gap-2">
+                <span className="text-gray-500">{i + 1}.</span>
+                <span>{doc.name}</span>
+                <span className="rounded bg-gray-100 px-1 text-xs" data-testid="document-type">
+                  {typeLabel(doc.type)}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
+                </span>
+                {!locked && (
+                  <form action={removeDocumentAction}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="id" value={id} />
+                    <input type="hidden" name="documentId" value={doc.id} />
+                    <button type="submit" className="text-xs text-red-700 underline">
+                      {t('removeDocument')}
+                    </button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
-        <FillOutcome state={uploadState} />
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="submit"
-            disabled={uploading || status === 'confirmed'}
-            className="rounded border px-4 py-2 disabled:opacity-50"
-          >
-            {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
-          </button>
-          <button
-            type="submit"
-            formAction={extractAction}
-            disabled={!canExtract || extracting || uploading}
-            data-testid="extract-button"
-            className="rounded border px-4 py-2 disabled:opacity-50"
-            title={t('extractHint')}
-          >
-            {extracting ? t('extracting') : t('reExtract')}
-          </button>
-        </div>
-        {extractState.error && (
-          <p role="alert" data-testid="extract-error" className="text-sm text-red-700">
-            {extractErrorKey ? t(`extractErrors.${extractErrorKey}`) : extractState.error}
+
+        <form action={uploadAction} className="grid gap-2 border-t pt-3">
+          <input type="hidden" name="locale" value={locale} />
+          <input type="hidden" name="id" value={id} />
+          <p className="text-xs text-gray-600">
+            {extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
           </p>
-        )}
-        <FillOutcome state={extractState} />
-      </form>
+          <input
+            name="document"
+            type="file"
+            accept="application/pdf"
+            multiple
+            required
+            className="text-sm"
+          />
+          {uploadState.error && (
+            <p role="alert" className="text-sm text-red-700">
+              {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
+            </p>
+          )}
+          <FillOutcome state={uploadState} />
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={uploading || locked}
+              className="rounded border px-4 py-2 disabled:opacity-50"
+            >
+              {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
+            </button>
+            <button
+              type="submit"
+              formAction={extractAction}
+              formNoValidate
+              disabled={!canExtract || extracting || uploading}
+              data-testid="extract-button"
+              className="rounded border px-4 py-2 disabled:opacity-50"
+              title={t('extractHint')}
+            >
+              {extracting ? t('extracting') : t('reExtract')}
+            </button>
+          </div>
+          {extractState.error && (
+            <p role="alert" data-testid="extract-error" className="text-sm text-red-700">
+              {extractErrorKey ? t(`extractErrors.${extractErrorKey}`) : extractState.error}
+            </p>
+          )}
+          <FillOutcome state={extractState} />
+        </form>
+      </div>
 
       <form action={confirmAction} className="grid gap-2 rounded border p-4">
         <input type="hidden" name="locale" value={locale} />
@@ -130,7 +181,7 @@ export function RecordTools({
             {confirmState.error}
           </p>
         )}
-        {status !== 'confirmed' && (
+        {!locked && (
           <button
             type="submit"
             disabled={confirming}

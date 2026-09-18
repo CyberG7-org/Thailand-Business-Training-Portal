@@ -14,7 +14,7 @@ describe('extractionToFormValues', () => {
   it('keeps a CE date as-is and marks it as not BE', () => {
     const out = extractionToFormValues({
       ...SAMPLE_EXTRACTION,
-      issued_on: { value: '2026-07-13', confidence: 1, source_text: null },
+      issued_on: { ...SAMPLE_EXTRACTION.issued_on, value: '2026-07-13', confidence: 1 },
     });
     expect(out.dateNotes.issued_on).toEqual({ raw: '2026-07-13', iso: '2026-07-13', wasBe: false });
   });
@@ -26,7 +26,7 @@ describe('extractionToFormValues', () => {
   });
 
   it('lists low-confidence fields that have a value, and never fabricates missing ones', () => {
-    expect(s.lowConfidence).toEqual(['head_office_address']);
+    expect(s.lowConfidence).toEqual(['head_office_address', 'province']);
     expect(s.values.document_ref).toBe('');
     expect(s.values.issuing_office).toBe('');
     expect(s.confidence.document_ref).toBe(0);
@@ -35,7 +35,7 @@ describe('extractionToFormValues', () => {
   it('leaves an unparseable printed date in place so the admin sees it', () => {
     const out = extractionToFormValues({
       ...SAMPLE_EXTRACTION,
-      issued_on: { value: 'thirteen July', confidence: 0.4, source_text: null },
+      issued_on: { ...SAMPLE_EXTRACTION.issued_on, value: 'thirteen July', confidence: 0.4 },
     });
     expect(out.values.issued_on).toBe('thirteen July');
     expect(out.dateNotes.issued_on.iso).toBeNull();

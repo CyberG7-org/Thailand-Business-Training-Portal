@@ -21,6 +21,30 @@ test('uploading a certificate creates the record and fills its fields automatica
   await expect(page.getByTestId('suggestion-head_office_address')).toContainText('ความมั่นใจต่ำ');
   await expect(page.getByTestId('record-status')).toHaveText('extracted');
 
+  // Level 2 arrived in the business profile, Level 3 classified the document and kept provenance.
+  await expect(page.locator('input[name="province"]')).toHaveValue('ตัวอย่าง');
+  const business = page.getByTestId('business-profile');
+  await expect(business.locator('textarea[name="objectives_text"]')).toHaveValue(
+    /^1\. ประกอบกิจการค้าปลีก/,
+  );
+  await expect(business.locator('textarea[name="shareholders_text"]')).toHaveValue(
+    /นางสาวตัวอย่าง ทดสอบ \| ไทย \| 19998/,
+  );
+  await expect(business.locator('input[name="total_shares"]')).toHaveValue('20000');
+  await expect(page.getByTestId('provenance-shareholders')).toContainText('90%');
+  await expect(page.getByTestId('document-list').getByTestId('document-type')).toHaveText(
+    'หนังสือรับรอง',
+  );
+  await expect(page.getByTestId('suggestion-juristic_id')).toContainText('หน้า 1');
+
+  // Level 2 is editable like everything else.
+  await business.locator('textarea[name="promoters_text"]').fill('นายแก้ไข ทดสอบ | ไทย');
+  await page.getByRole('button', { name: 'บันทึก' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'บันทึกแล้ว' })).toBeVisible();
+  await expect(business.locator('textarea[name="promoters_text"]')).toHaveValue(
+    'นายแก้ไข ทดสอบ | ไทย',
+  );
+
   // Confirm works straight away — no separate Save needed.
   await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');

@@ -9,11 +9,20 @@ import {
   confirmDbdRecord,
   createDbdRecord,
   getDbdRecord,
+  removeDbdDocument,
   updateDbdRecord,
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
 import { extractAndApply } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import {
+  businessProfileSchema,
+  parseListText,
+  parseObjectivesText,
+  parsePromotersText,
+  parseShareholdersText,
+  readStructuredData,
+} from '@/lib/domain/dbd-profile';
 import {
   dbdRecordInputSchema,
   missingFieldsForConfirmation,
@@ -43,6 +52,7 @@ const TEXT_FIELDS = [
   'issued_on',
   'registered_capital',
   'head_office_address',
+  'province',
   'signing_authority',
   'objectives_count',
   'issuing_office',
@@ -54,6 +64,40 @@ function formDataToInput(formData: FormData) {
   for (const f of TEXT_FIELDS) raw[f] = String(formData.get(f) ?? '');
   raw.directors = parseDirectorsText(String(formData.get('directors_text') ?? ''));
   return raw;
+}
+
+/** Level 2 textareas → business profile (decision D38); absent fields keep their stored value. */
+function formDataToBusiness(formData: FormData, stored: ReturnType<typeof readStructuredData>) {
+  const current = stored.business ?? businessProfileSchema.parse({});
+  const has = (name: string) => formData.has(name);
+  return businessProfileSchema.safeParse({
+    objectives: has('objectives_text')
+      ? parseObjectivesText(String(formData.get('objectives_text') ?? ''))
+      : current.objectives,
+    business_categories: has('business_categories_text')
+      ? parseListText(String(formData.get('business_categories_text') ?? ''))
+      : current.business_categories,
+    share_structure: {
+      total_shares: has('total_shares')
+        ? String(formData.get('total_shares') ?? '')
+        : current.share_structure.total_shares,
+      par_value: has('par_value')
+        ? String(formData.get('par_value') ?? '')
+        : current.share_structure.par_value,
+      paid_up_capital: has('paid_up_capital')
+        ? String(formData.get('paid_up_capital') ?? '')
+        : current.share_structure.paid_up_capital,
+      share_type: has('share_type')
+        ? String(formData.get('share_type') ?? '')
+        : current.share_structure.share_type,
+    },
+    shareholders: has('shareholders_text')
+      ? parseShareholdersText(String(formData.get('shareholders_text') ?? ''))
+      : current.shareholders,
+    promoters: has('promoters_text')
+      ? parsePromotersText(String(formData.get('promoters_text') ?? ''))
+      : current.promoters,
+  });
 }
 
 function errorMessage(e: unknown): string {
@@ -80,7 +124,18 @@ export async function saveDbdRecordAction(
   let createdId: string | null = null;
   try {
     if (id) {
-      await updateDbdRecord(db, id, parsed.data);
+      const existing = await getDbdRecord(db, id);
+      if (!existing) return { ok: false, error: 'not-found', fieldErrors: {} };
+      const stored = readStructuredData(existing.structured_data);
+      const business = formDataToBusiness(formData, stored);
+      if (!business.success) {
+        const fieldErrors: Record<string, string> = {};
+        for (const issue of business.error.issues) {
+          fieldErrors[String(issue.path[0] ?? 'business')] = issue.message;
+        }
+        return { ok: false, error: 'validation', fieldErrors };
+      }
+      await updateDbdRecord(db, id, parsed.data, { ...stored, business: business.data });
       revalidatePath(`/${locale}/admin/dbd-records/${id}`);
       return { ok: true, error: null, fieldErrors: {} };
     }
@@ -114,7 +169,21 @@ export async function confirmDbdRecordAction(
   }
 }
 
-const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_PDF_BYTES = 30 * 1024 * 1024;
+const MAX_FILES = 6;
+
+/** The "document" field may carry several PDFs (certificate, objectives sheet, บอจ.5, บอจ.2…). */
+function pdfFiles(formData: FormData): File[] | 'no-file' | 'invalid-file' {
+  const files = formData
+    .getAll('document')
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length === 0) return 'no-file';
+  if (files.length > MAX_FILES) return 'invalid-file';
+  for (const f of files) {
+    if (f.type !== 'application/pdf' || f.size > MAX_PDF_BYTES) return 'invalid-file';
+  }
+  return files;
+}
 
 export async function uploadDocumentAction(
   _prev: ToolState,
@@ -123,14 +192,11 @@ export async function uploadDocumentAction(
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
   await requireAdmin(locale);
-  const file = formData.get('document');
-  if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'no-file' };
-  if (file.type !== 'application/pdf' || file.size > MAX_PDF_BYTES) {
-    return { ok: false, error: 'invalid-file' };
-  }
+  const files = pdfFiles(formData);
+  if (files === 'no-file' || files === 'invalid-file') return { ok: false, error: files };
   const db = await createSupabaseServerClient();
   try {
-    await uploadDbdDocument(db, id, file);
+    for (const file of files) await uploadDbdDocument(db, id, file, file.name);
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -165,16 +231,13 @@ export async function createFromDocumentAction(
 ): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const admin = await requireAdmin(locale);
-  const file = formData.get('document');
-  if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'no-file' };
-  if (file.type !== 'application/pdf' || file.size > MAX_PDF_BYTES) {
-    return { ok: false, error: 'invalid-file' };
-  }
+  const files = pdfFiles(formData);
+  if (files === 'no-file' || files === 'invalid-file') return { ok: false, error: files };
   const db = await createSupabaseServerClient();
   let id: string;
   try {
     id = (await createDbdRecord(db, EMPTY_INPUT, admin.id)).id;
-    await uploadDbdDocument(db, id, file);
+    for (const file of files) await uploadDbdDocument(db, id, file, file.name);
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
@@ -203,4 +266,16 @@ export async function extractDocumentAction(
     if (e instanceof ExtractionError) return { ok: false, error: e.code };
     return { ok: false, error: errorMessage(e) };
   }
+}
+
+export async function removeDocumentAction(formData: FormData): Promise<void> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  const documentId = String(formData.get('documentId') ?? '');
+  await requireAdmin(locale);
+  const db = await createSupabaseServerClient();
+  const record = await getDbdRecord(db, id);
+  if (!record || record.extraction_status === 'confirmed') return;
+  await removeDbdDocument(db, id, documentId);
+  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
 }

@@ -225,6 +225,57 @@ export type Database = {
           },
         ]
       }
+      dbd_documents: {
+        Row: {
+          document_type: string | null
+          id: string
+          original_name: string
+          path: string
+          position: number
+          record_id: string
+          size_bytes: number
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          document_type?: string | null
+          id?: string
+          original_name: string
+          path: string
+          position: number
+          record_id: string
+          size_bytes: number
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          document_type?: string | null
+          id?: string
+          original_name?: string
+          path?: string
+          position?: number
+          record_id?: string
+          size_bytes?: number
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dbd_documents_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dbd_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dbd_records: {
         Row: {
           certificate_no: string | null
@@ -245,6 +296,7 @@ export type Database = {
           issuing_office: string | null
           juristic_id: string | null
           objectives_count: number | null
+          province: string | null
           registered_capital: number | null
           registered_on: string | null
           registrar_name: string | null
@@ -271,6 +323,7 @@ export type Database = {
           issuing_office?: string | null
           juristic_id?: string | null
           objectives_count?: number | null
+          province?: string | null
           registered_capital?: number | null
           registered_on?: string | null
           registrar_name?: string | null
@@ -297,6 +350,7 @@ export type Database = {
           issuing_office?: string | null
           juristic_id?: string | null
           objectives_count?: number | null
+          province?: string | null
           registered_capital?: number | null
           registered_on?: string | null
           registrar_name?: string | null

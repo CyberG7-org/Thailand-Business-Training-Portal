@@ -5,8 +5,13 @@ import { EXTRACTION_INSTRUCTIONS, dbdExtractionSchema } from './schema';
 import { ExtractionError, type DbdExtraction, type DbdExtractor } from './types';
 
 const MODEL = 'claude-opus-5';
+/** Request ceiling for document content (the API rejects larger payloads). */
+export const MAX_TOTAL_PDF_BYTES = 30 * 1024 * 1024;
 
-/** Real extractor: Claude reads the PDF as a document block and returns structured output. */
+/**
+ * Real extractor: every uploaded document travels as its own document block, in upload order,
+ * so `source_document` in the output refers to that order (decision D38).
+ */
 export class ClaudeDbdExtractor implements DbdExtractor {
   readonly name = 'claude';
   private readonly client: Anthropic;
@@ -15,28 +20,31 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     this.client = client;
   }
 
-  async extract(pdf: Uint8Array): Promise<DbdExtraction> {
+  async extract(documents: Uint8Array[]): Promise<DbdExtraction> {
+    if (documents.length === 0) throw new ExtractionError('No documents to read', 'no_document');
+    const total = documents.reduce((n, d) => n + d.byteLength, 0);
+    if (total > MAX_TOTAL_PDF_BYTES) {
+      throw new ExtractionError('The uploaded documents exceed 30 MB in total', 'too_large');
+    }
+    const content: Anthropic.ContentBlockParam[] = documents.flatMap((pdf, i) => [
+      { type: 'text' as const, text: `Document ${i + 1} of ${documents.length}:` },
+      {
+        type: 'document' as const,
+        source: {
+          type: 'base64' as const,
+          media_type: 'application/pdf' as const,
+          data: Buffer.from(pdf).toString('base64'),
+        },
+      },
+    ]);
+    content.push({ type: 'text', text: EXTRACTION_INSTRUCTIONS });
+
     let response;
     try {
       response = await this.client.messages.parse({
         model: MODEL,
-        max_tokens: 16000,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'document',
-                source: {
-                  type: 'base64',
-                  media_type: 'application/pdf',
-                  data: Buffer.from(pdf).toString('base64'),
-                },
-              },
-              { type: 'text', text: EXTRACTION_INSTRUCTIONS },
-            ],
-          },
-        ],
+        max_tokens: 24000,
+        messages: [{ role: 'user', content }],
         output_config: { format: zodOutputFormat(dbdExtractionSchema) },
       });
     } catch (error) {
@@ -54,6 +62,6 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     if (response.stop_reason === 'refusal' || !response.parsed_output) {
       throw new ExtractionError('The model did not return a valid extraction', 'invalid_output');
     }
-    return response.parsed_output;
+    return response.parsed_output as DbdExtraction;
   }
 }

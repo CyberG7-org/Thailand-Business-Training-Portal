@@ -102,7 +102,16 @@
         "objectivesCount": "经营目的数量",
         "issuingOffice": "签发机构",
         "registrarName": "登记官",
-        "directors": "董事"
+        "directors": "董事",
+        "province": "府",
+        "objectives": "经营目的",
+        "businessCategories": "业务类别",
+        "totalShares": "股份总数",
+        "parValue": "每股面值（泰铢）",
+        "paidUpCapital": "实缴资本（泰铢）",
+        "shareType": "股份类型",
+        "shareholders": "股东",
+        "promoters": "发起人"
       },
       "extract": "从 PDF 提取",
       "extracting": "提取中…",
@@ -118,19 +127,43 @@
         "provider": "提取服务失败，请稍后重试。",
         "invalid_output": "提取结果不可用。",
         "no_document": "请先上传证书 PDF。",
-        "not_allowed": "此记录无法提取。"
+        "not_allowed": "此记录无法提取。",
+        "too_large": "文件总大小超过 30 MB，请拆分或压缩"
       },
       "uploadFirstTitle": "上传 DBD 注册证明（泰文）",
-      "uploadFirstHint": "选择泰文注册证明 PDF。系统会读取文件并自动填写公司信息；然后由您检查、必要时修改并确认。",
+      "uploadFirstHint": "选择泰文 PDF（可多选：注册证明、经营目的表、บอจ.5、บอจ.2）。系统会读取文件并自动填写三个级别的信息；然后由您检查、必要时修改并确认。",
       "uploadFirstNoExtraction": "尚未配置文档读取 AI（需要 ANTHROPIC_API_KEY）。文件会被保存，请在下方自行填写。",
       "uploadAndFill": "上传并自动填写",
       "uploadingAndReading": "正在上传并读取文件…（约 20–40 秒）",
-      "uploadFillsHint": "上传后系统会读取文件，并只自动填写仍为空的字段。",
+      "uploadFillsHint": "可继续上传更多 DBD 文件（注册证明、经营目的表、บอจ.5、บอจ.2）；系统会读取所有文件，只填写仍为空的字段。",
       "orEnterManually": "或不使用文件，手动填写",
       "reExtract": "重新读取文件",
       "autoFilled": "已读取文件，填写了 {count} 个字段。请在确认前检查。",
       "autoFilledReview": "已从注册证明填写 {count} 个字段。请检查每个字段（尤其是高亮字段），必要时修改，然后点击\"确认\"。",
-      "uploadedButNotRead": "文件已上传，但无法读取（{reason}）。请自行填写或重新读取。"
+      "uploadedButNotRead": "文件已上传，但无法读取（{reason}）。请自行填写或重新读取。",
+      "levels": {
+        "identity": "第 1 级 — 公司信息（注册证明）",
+        "business": "第 2 级 — 业务信息（经营目的 / 股东名册 บอจ.5 / 备忘录 บอจ.2）",
+        "document": "第 3 级 — DBD 文件信息"
+      },
+      "documentTypes": {
+        "certificate": "注册证明",
+        "objectives_sheet": "经营目的表",
+        "shareholder_list": "股东名册（บอจ.5）",
+        "memorandum": "公司备忘录（บอจ.2）",
+        "articles": "公司章程",
+        "other": "其他",
+        "unknown": "尚未分类"
+      },
+      "objectivesHint": "每行一条，可带序号，如 \"1. 经营…\"",
+      "onePerLine": "每行一项",
+      "shareholdersHint": "每行一人：姓名 | 国籍 | 股数",
+      "promotersHint": "每行一人：姓名 | 国籍",
+      "documents": "已上传的 DBD 文件",
+      "removeDocument": "删除",
+      "sourceDocument": "来自 {name}",
+      "sourcePage": "第 {page} 页",
+      "fileHint": "PDF，每个文件最大 30 MB"
     },
     "assignment": {
       "title": "已分配公司",
