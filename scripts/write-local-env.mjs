@@ -50,7 +50,8 @@ const kept = existsSync('.env.local')
   : [];
 
 const lines = Object.entries(managed).map(([k, v]) => `${k}=${v}`);
-if (kept.length > 0) lines.push('', '# Your own additions (kept by scripts/write-local-env.mjs)', ...kept);
+if (kept.length > 0)
+  lines.push('', '# Your own additions (kept by scripts/write-local-env.mjs)', ...kept);
 writeFileSync('.env.local', lines.join('\n') + '\n');
 console.log(
   `.env.local written from the local Supabase stack${kept.length ? ` (${kept.length} extra line(s) kept)` : ''}`,
