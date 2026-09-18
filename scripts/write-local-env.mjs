@@ -38,6 +38,12 @@ writeFileSync(
     // Dev-only secrets so the cron and webhook routes are exercisable locally and in CI.
     'CRON_SECRET=local-cron-secret-for-dev',
     'VAPI_WEBHOOK_SECRET=local-vapi-webhook-secret',
+    // Explicit fakes so the production build used by CI e2e behaves like `next dev`.
+    'EXTRACTION_PROVIDER=fake',
+    'TTS_PROVIDER=fake',
+    'NOTIFY_PROVIDER=fake',
+    'VAPI_PROVIDER=fake',
+    'QUESTION_GEN_PROVIDER=fake',
     '',
   ].join('\n'),
 );

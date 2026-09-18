@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
+import { LanguageToggle } from '@/components/language-toggle';
 import { getCurrentUser } from '@/lib/auth/session';
 import { LoginForm } from './login-form';
 
@@ -16,9 +17,12 @@ export default async function LoginPage({
   if (user && user.status === 'active') {
     redirect(`/${locale}/${user.role === 'admin' ? 'admin' : 'dashboard'}`);
   }
-  const t = await getTranslations('auth');
+  const [t, ta] = await Promise.all([getTranslations('auth'), getTranslations('app')]);
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center p-6">
+      <div className="fixed top-4 right-4">
+        <LanguageToggle label={ta('language')} />
+      </div>
       <h1 className="mb-6 text-2xl font-semibold">{t('title')}</h1>
       {reason === 'disabled' && (
         <p role="alert" className="mb-4 text-sm text-red-700">

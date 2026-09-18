@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { LanguageToggle } from '@/components/language-toggle';
 import { SignOutButton } from '@/components/sign-out-button';
 import type { CurrentUser } from '@/lib/auth/session';
 
@@ -12,7 +12,7 @@ export async function AppHeader({ user, admin = false }: { user: CurrentUser; ad
         {admin ? ' · Admin' : ''}
       </span>
       <div className="flex items-center gap-4 text-sm">
-        <LanguageSwitcher label={t('language')} />
+        <LanguageToggle label={t('language')} />
         <span>{user.displayName ?? user.loginId}</span>
         <SignOutButton />
       </div>

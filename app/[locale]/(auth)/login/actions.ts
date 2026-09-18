@@ -1,6 +1,10 @@
 'use server';
 
+import { cookies } from 'next/headers';
+import { hasLocale } from 'next-intl';
 import { redirect } from 'next/navigation';
+import { LANGUAGE_CHOICE_COOKIE } from '@/i18n/language-choice';
+import { routing } from '@/i18n/routing';
 import { z } from 'zod';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
 import { serverEnv } from '@/lib/db/env';
@@ -40,7 +44,19 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     await supabase.auth.signOut();
     return { error: 'disabled' };
   }
-  redirect(`/${profile.preferred_language}/${profile.role === 'admin' ? 'admin' : 'dashboard'}`);
+  // A language picked on the login page is a deliberate choice: it wins over the stored
+  // preference and becomes the new preference. Otherwise the stored preference wins.
+  const jar = await cookies();
+  const chosen = jar.get(LANGUAGE_CHOICE_COOKIE)?.value;
+  let language = profile.preferred_language;
+  if (chosen && hasLocale(routing.locales, chosen)) {
+    jar.delete(LANGUAGE_CHOICE_COOKIE);
+    if (chosen !== language) {
+      await supabase.rpc('set_my_preferred_language', { p_lang: chosen });
+      language = chosen;
+    }
+  }
+  redirect(`/${language}/${profile.role === 'admin' ? 'admin' : 'dashboard'}`);
 }
 
 export async function signOutAction(formData: FormData) {
