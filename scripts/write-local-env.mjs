@@ -1,5 +1,5 @@
 import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 // `supabase status -o env` prints KEY="value" lines for the running local stack.
 const out = execSync('pnpm exec supabase status -o env', { encoding: 'utf8' });
@@ -28,23 +28,30 @@ if (!vars.API_URL || !anonKey || !serviceKey) {
   process.exit(1);
 }
 
-writeFileSync(
-  '.env.local',
-  [
-    `NEXT_PUBLIC_SUPABASE_URL=${vars.API_URL}`,
-    `NEXT_PUBLIC_SUPABASE_ANON_KEY=${anonKey}`,
-    `SUPABASE_SERVICE_ROLE_KEY=${serviceKey}`,
-    'APP_INTERNAL_EMAIL_DOMAIN=learner.portal.internal',
-    // Dev-only secrets so the cron and webhook routes are exercisable locally and in CI.
-    'CRON_SECRET=local-cron-secret-for-dev',
-    'VAPI_WEBHOOK_SECRET=local-vapi-webhook-secret',
-    // Explicit fakes so the production build used by CI e2e behaves like `next dev`.
-    'EXTRACTION_PROVIDER=fake',
-    'TTS_PROVIDER=fake',
-    'NOTIFY_PROVIDER=fake',
-    'VAPI_PROVIDER=fake',
-    'QUESTION_GEN_PROVIDER=fake',
-    '',
-  ].join('\n'),
+// Lines this script owns. Anything else already in .env.local (e.g. your own provider keys)
+// is preserved below the managed block.
+const managed = {
+  NEXT_PUBLIC_SUPABASE_URL: vars.API_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey,
+  SUPABASE_SERVICE_ROLE_KEY: serviceKey,
+  APP_INTERNAL_EMAIL_DOMAIN: 'learner.portal.internal',
+  // Dev-only secrets so the cron and webhook routes are exercisable locally and in CI.
+  CRON_SECRET: 'local-cron-secret-for-dev',
+  VAPI_WEBHOOK_SECRET: 'local-vapi-webhook-secret',
+};
+
+const kept = existsSync('.env.local')
+  ? readFileSync('.env.local', 'utf8')
+      .split('\n')
+      .filter((line) => {
+        const key = line.split('=')[0]?.trim();
+        return line.trim() !== '' && !line.startsWith('#') && key && !(key in managed);
+      })
+  : [];
+
+const lines = Object.entries(managed).map(([k, v]) => `${k}=${v}`);
+if (kept.length > 0) lines.push('', '# Your own additions (kept by scripts/write-local-env.mjs)', ...kept);
+writeFileSync('.env.local', lines.join('\n') + '\n');
+console.log(
+  `.env.local written from the local Supabase stack${kept.length ? ` (${kept.length} extra line(s) kept)` : ''}`,
 );
-console.log('.env.local written from the local Supabase stack');
