@@ -39,7 +39,7 @@ test('uploading a certificate creates the record and fills its fields automatica
 
   // Level 2 is editable like everything else.
   await business.locator('textarea[name="promoters_text"]').fill('นายแก้ไข ทดสอบ | ไทย');
-  await page.getByRole('button', { name: 'บันทึก' }).click();
+  await page.getByRole('button', { name: 'บันทึก', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'บันทึกแล้ว' })).toBeVisible();
   await expect(business.locator('textarea[name="promoters_text"]')).toHaveValue(
     'นายแก้ไข ทดสอบ | ไทย',

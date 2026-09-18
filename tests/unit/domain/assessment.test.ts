@@ -14,6 +14,7 @@ import {
   MissingFieldError,
   placeholderFields,
   renderTemplate,
+  renderTemplateLenient,
   TemplateSyntaxError,
   type TemplateRecord,
 } from '@/lib/domain/assessment/template';
@@ -40,6 +41,21 @@ const record: TemplateRecord = {
   promoters: [{ name: 'นาย ข', nationality: 'ไทย' }],
   total_shares: 20000,
   par_value: 100,
+  directors_count: 1,
+  shareholders_count: 3,
+  account_purpose: 'รับชำระค่าสินค้าจากลูกค้า',
+  monthly_volume: '500,000 บาท',
+  clients_location: 'กรุงเทพฯ',
+  suppliers_location: 'จีน',
+  source_of_funds: 'ทุนจากผู้ถือหุ้น',
+  business_address: '99/9 หมู่ 1',
+  operations_status: 'เริ่มดำเนินการแล้ว',
+  my_name: 'นาย ก',
+  my_position: 'กรรมการ',
+  my_responsibilities: 'บริหารงานทั่วไป',
+  my_relationship: 'เพื่อนร่วมธุรกิจ',
+  my_shares: 19998,
+  my_share_percent: 99.99,
 };
 
 describe('seeded random', () => {
@@ -199,5 +215,30 @@ describe('level 2 placeholders', () => {
     expect(() =>
       renderTemplate('{shareholders}', { ...record, shareholders: null }, 's', 'th'),
     ).toThrow(MissingFieldError);
+  });
+});
+
+describe('bank-interview placeholders', () => {
+  it('renders the learner role and interview answers, with numeric variants on counts', () => {
+    expect(
+      renderTemplate(
+        '{my_name}: {my_position}, {my_shares} หุ้น ({my_share_percent}%) / {directors_count} / {shareholders_count|x2} / {monthly_volume}',
+        record,
+        'seed',
+        'th',
+      ),
+    ).toBe('นาย ก: กรรมการ, 19,998 หุ้น (99.99%) / 1 / 6 / 500,000 บาท');
+  });
+
+  it('lenient rendering shows a dash for missing values and keeps unknown placeholders', () => {
+    const out = renderTemplateLenient(
+      'ชื่อ {company_name_th} · หุ้นของคุณ {my_shares} · {unknown_thing} · {registered_capital|x2}',
+      { ...record, my_shares: null },
+      'th',
+    );
+    expect(out).toBe(
+      'ชื่อ บริษัท ทดสอบ จำกัด · หุ้นของคุณ — · {unknown_thing} · {registered_capital|x2}',
+    );
+    expect(renderTemplateLenient('{company_name_th}', null, 'en')).toBe('—');
   });
 });

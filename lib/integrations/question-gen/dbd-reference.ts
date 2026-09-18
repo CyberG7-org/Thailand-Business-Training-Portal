@@ -1,3 +1,5 @@
+import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
+import type { InterviewProfile } from '@/lib/domain/bank-interview';
 import type { BusinessProfile } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 
@@ -46,6 +48,18 @@ or "บริษัทจดทะเบียนเมื่อใด" with "{r
 or "กรรมการของบริษัทคือใคร" with "{directors}" against generic wrong names written out in the option text;
 or "บริษัทมีหุ้นทั้งหมดกี่หุ้น" with "{total_shares}", "{total_shares|x2}", "{total_shares|x0.5}", "{total_shares|x10}";
 or "ใครเป็นผู้ถือหุ้นของบริษัท" with "{shareholders}" against generic wrong names.
+Derived and interview placeholders: {directors_count}, {shareholders_count}, {account_purpose}, {monthly_volume},
+{clients_location}, {suppliers_location}, {source_of_funds}, {business_address}, {operations_status}, and the learner's own
+role {my_name}, {my_position}, {my_responsibilities}, {my_relationship}, {my_shares}, {my_share_percent} (numeric variants
+work on the counts and shares, e.g. {my_shares|x2}).
+
+THE BANK'S INTERVIEW — every quiz/exam must be built around these concepts (the bank's actual question list; vary the
+wording, keep the ground):
+${BANK_INTERVIEW_CONCEPTS.map((c, i) => `${i + 1}. [${c.group}] ${c.question.en} — placeholders: ${c.placeholders.map((p) => `{${p}}`).join(', ') || 'none'}`).join('\n')}
+Spread a batch across these concepts. For the identity/ownership concepts ask for the fact through placeholders. For the
+business-plan and personal concepts, when the placeholder exists ask for the fact the same way; otherwise write a
+judgement question about the RIGHT WAY to answer (consistent with the company's registered facts, concise, no guessing).
+
 Good generic questions (kind "generic") test understanding of the document itself: who issues it, what each numbered
 item means, what the issue date is used for, how long the QR verification is valid, what a bank officer checks.`;
 
@@ -65,6 +79,7 @@ export type DbdReferenceRecord = {
   registrar_name: string | null;
   province?: string | null;
   business?: BusinessProfile | null;
+  interview?: InterviewProfile | null;
 };
 
 /**
@@ -124,6 +139,12 @@ export function describeReference(record: DbdReferenceRecord): string {
       `Share structure: total ${b.share_structure.total_shares ?? '-'} shares, par value ${b.share_structure.par_value ?? '-'}, paid-up ${b.share_structure.paid_up_capital ?? '-'}, type ${b.share_structure.share_type ?? '-'}`,
       `Shareholders: ${b.shareholders.map((sh) => `${sh.name} (${sh.shares ?? '?'} shares)`).join(', ') || '-'}`,
       `Promoters: ${b.promoters.map((p) => p.name).join(', ') || '-'}`,
+    );
+  }
+  const iv = record.interview;
+  if (iv) {
+    lines.push(
+      `Bank-interview answers: purpose ${iv.account_purpose ?? '-'}; monthly volume ${iv.monthly_volume ?? '-'}; clients ${iv.clients_location ?? '-'}; suppliers ${iv.suppliers_location ?? '-'}; source of funds ${iv.source_of_funds ?? '-'}; place of business ${iv.business_address ?? '-'}; operations ${iv.operations_status ?? '-'}`,
     );
   }
   return lines.join('\n');

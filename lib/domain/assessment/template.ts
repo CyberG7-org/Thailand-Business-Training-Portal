@@ -24,6 +24,23 @@ export const TEMPLATE_FIELDS = [
   'promoters',
   'total_shares',
   'par_value',
+  // Bank-interview concepts (decision D39): derived counts, company interview answers, the
+  // learner's own role
+  'directors_count',
+  'shareholders_count',
+  'account_purpose',
+  'monthly_volume',
+  'clients_location',
+  'suppliers_location',
+  'source_of_funds',
+  'business_address',
+  'operations_status',
+  'my_name',
+  'my_position',
+  'my_responsibilities',
+  'my_relationship',
+  'my_shares',
+  'my_share_percent',
 ] as const;
 export type TemplateField = (typeof TEMPLATE_FIELDS)[number];
 
@@ -46,6 +63,21 @@ export type TemplateRecord = {
   promoters: Promoter[] | null;
   total_shares: number | null;
   par_value: number | null;
+  directors_count: number | null;
+  shareholders_count: number | null;
+  account_purpose: string | null;
+  monthly_volume: string | null;
+  clients_location: string | null;
+  suppliers_location: string | null;
+  source_of_funds: string | null;
+  business_address: string | null;
+  operations_status: string | null;
+  my_name: string | null;
+  my_position: string | null;
+  my_responsibilities: string | null;
+  my_relationship: string | null;
+  my_shares: number | null;
+  my_share_percent: number | null;
 };
 
 export class MissingFieldError extends Error {
@@ -117,6 +149,10 @@ function formatValue(field: TemplateField, value: unknown, locale: Locale): stri
     case 'registered_capital':
     case 'total_shares':
     case 'par_value':
+    case 'directors_count':
+    case 'shareholders_count':
+    case 'my_shares':
+    case 'my_share_percent':
       return Number(value).toLocaleString(NUMBER_LOCALES[locale]);
     case 'registered_on':
     case 'issued_on':
@@ -161,7 +197,11 @@ export function renderTemplate(
       field === 'registered_capital' ||
       field === 'objectives_count' ||
       field === 'total_shares' ||
-      field === 'par_value'
+      field === 'par_value' ||
+      field === 'directors_count' ||
+      field === 'shareholders_count' ||
+      field === 'my_shares' ||
+      field === 'my_share_percent'
     ) {
       return formatValue(field, applyNumberVariant(Number(value), variant), locale);
     }
@@ -170,5 +210,23 @@ export function renderTemplate(
     }
     if (variant === 'shuffle') return shuffleDigits(String(value), rng);
     throw new TemplateSyntaxError(`Variant ${variant} is not valid for ${field}`);
+  });
+}
+
+/**
+ * Study-card variant of renderTemplate: a missing value renders as an em dash and unknown
+ * placeholders are left as written, so a card never fails for a learner whose record is partial.
+ */
+export function renderTemplateLenient(
+  text: string,
+  record: TemplateRecord | null,
+  locale: Locale,
+): string {
+  return text.replace(PLACEHOLDER, (match, rawField: string, variant?: string) => {
+    const field = rawField as TemplateField;
+    if (!(TEMPLATE_FIELDS as readonly string[]).includes(field) || variant) return match;
+    const value = record?.[field];
+    if (isEmpty(value)) return '—';
+    return formatValue(field, value, locale);
   });
 }

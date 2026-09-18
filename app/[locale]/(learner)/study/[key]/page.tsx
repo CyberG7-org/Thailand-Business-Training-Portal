@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { ReadAloudPlayer } from '@/components/read-aloud-player';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
@@ -9,6 +10,9 @@ import { getPolicy } from '@/lib/config/policy';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { getMyStudyProgress, getStudyMaterialByKey, pickLocalization } from '@/lib/db/study';
+import { getActiveAssignmentForUser } from '@/lib/db/assignments';
+import { toTemplateRecord } from '@/lib/db/assessment';
+import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { getTtsProvider } from '@/lib/integrations/tts';
 import { markCompletedAction } from '../actions';
 import { ViewTracker } from '../view-tracker';
@@ -37,10 +41,14 @@ export default async function StudyMaterialPage({
     );
   }
 
-  const [progress, completionTracking] = await Promise.all([
+  const [progress, completionTracking, assignment] = await Promise.all([
     getMyStudyProgress(db, user.id),
     getPolicy('study_completion_tracking'),
+    getActiveAssignmentForUser(db, user.id),
   ]);
+  // Cards may carry {placeholders}: each learner reads their own company facts (decision D39).
+  const templateRecord = assignment ? toTemplateRecord(assignment.dbd_records, assignment) : null;
+  const body = renderTemplateLenient(loc.body ?? '', templateRecord, locale as AppLocale);
   const mine = progress.find((p) => p.material_id === material.id) ?? null;
   const ttsAvailable = locale === 'th' && loc.tts_enabled && getTtsProvider() !== null;
 
@@ -74,7 +82,7 @@ export default async function StudyMaterialPage({
       )}
       {material.type === 'card' && (
         <article className="prose max-w-2xl" data-testid="study-body">
-          <ReactMarkdown>{loc.body ?? ''}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
         </article>
       )}
       {material.type === 'pdf' &&

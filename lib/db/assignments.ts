@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { LearnerRole } from '@/lib/domain/bank-interview';
 import type { Database } from './database.types';
 import type { DbdRecordRow } from './dbd-records';
 
@@ -33,6 +34,24 @@ export async function assignDbdRecord(
     .single();
   if (error) throw error;
   return data;
+}
+
+/** The learner's own role in the company (decision D39): feeds {my_*} placeholders. */
+export async function updateAssignmentRole(
+  db: Db,
+  assignmentId: string,
+  role: LearnerRole,
+): Promise<void> {
+  const { error } = await db
+    .from('user_dbd_assignments')
+    .update({
+      holder_name: role.holder_name,
+      position: role.position,
+      responsibilities: role.responsibilities,
+      relationship_to_shareholders: role.relationship_to_shareholders,
+    })
+    .eq('id', assignmentId);
+  if (error) throw error;
 }
 
 export async function deactivateAssignment(db: Db, assignmentId: string): Promise<void> {

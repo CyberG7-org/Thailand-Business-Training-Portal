@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { AppLocale } from '@/i18n/routing';
+import type { StarterCard } from '@/lib/content/bank-interview-cards';
 import type { Database } from './database.types';
 
 type Db = SupabaseClient<Database>;
@@ -157,4 +158,37 @@ export async function getMyStudyProgress(db: Db, userId: string): Promise<StudyP
   const { data, error } = await db.from('study_progress').select('*').eq('user_id', userId);
   if (error) throw error;
   return data;
+}
+
+/** Loads the bank-interview starter cards (decision D39); existing keys are left untouched. */
+export async function loadStarterCards(
+  db: Db,
+  cards: StarterCard[],
+  createdBy: string,
+): Promise<{ created: string[]; skipped: string[] }> {
+  const existing = new Set((await listStudyMaterials(db)).map((m) => m.content_key));
+  const created: string[] = [];
+  const skipped: string[] = [];
+  for (const card of cards) {
+    if (existing.has(card.contentKey)) {
+      skipped.push(card.contentKey);
+      continue;
+    }
+    const material = await createStudyMaterial(
+      db,
+      { contentKey: card.contentKey, type: 'card', sortOrder: card.sortOrder, active: true },
+      createdBy,
+    );
+    for (const language of Object.keys(card.localizations) as AppLocale[]) {
+      const loc = card.localizations[language];
+      await upsertLocalization(db, material.id, {
+        language,
+        title: loc.title,
+        body: loc.body,
+        ttsEnabled: false,
+      });
+    }
+    created.push(card.contentKey);
+  }
+  return { created, skipped };
 }

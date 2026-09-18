@@ -144,7 +144,8 @@
       "levels": {
         "identity": "第 1 级 — 公司信息（注册证明）",
         "business": "第 2 级 — 业务信息（经营目的 / 股东名册 บอจ.5 / 备忘录 บอจ.2）",
-        "document": "第 3 级 — DBD 文件信息"
+        "document": "第 3 级 — DBD 文件信息",
+        "interview": "第 4 级 — 银行面谈答案（DBD 文件中没有的信息）"
       },
       "documentTypes": {
         "certificate": "注册证明",
@@ -163,7 +164,18 @@
       "removeDocument": "删除",
       "sourceDocument": "来自 {name}",
       "sourcePage": "第 {page} 页",
-      "fileHint": "PDF，每个文件最大 30 MB"
+      "fileHint": "PDF，每个文件最大 30 MB",
+      "interviewHint": "银行也会问这些问题，但 DBD 文件中没有答案。请填写公司准备的答案；它们会用于学习卡片、测验、考试和通话练习。",
+      "interviewFields": {
+        "account_purpose": "公司为什么需要开设银行账户？",
+        "monthly_volume": "预计每月资金进出金额",
+        "clients_location": "主要客户来自哪里？",
+        "suppliers_location": "主要供应商来自哪里？",
+        "source_of_funds": "资金来源",
+        "business_address": "实际经营地址",
+        "operations_status": "公司是否已开始经营？"
+      },
+      "saveInterview": "保存面谈答案"
     },
     "assignment": {
       "title": "已分配公司",
@@ -200,7 +212,9 @@
       "pdfMissing": "尚未上传 PDF",
       "uploadPdf": "上传 PDF",
       "uploaded": "已上传",
-      "materialTitle": "标题"
+      "materialTitle": "标题",
+      "loadStarterCards": "加载银行面谈入门卡片（5 张）",
+      "starterLoaded": "新增 {count} 张卡片（已有的未改动）"
     },
     "questions": {
       "title": "题库",
@@ -407,6 +421,17 @@
       "reference": "参考的 DBD 注册证明",
       "referenceNone": "通用证明结构（不指定公司）",
       "referenceHint": "AI 会阅读该证明的各项内容（以及已上传的 PDF）来设计贴合真实信息的题目，但绝不会把其中的值写入题目——所有题目都使用变量，让每位学员回答自己公司的信息。"
+    },
+    "role": {
+      "title": "学员在公司中的角色",
+      "hint": "银行会问\"您持有多少股份？\"\"您担任什么职位？\"——系统需要知道该学员在 DBD 文件中是谁。",
+      "holderName": "DBD 文件中的姓名",
+      "holderHint": "从董事/股东中选择或手动输入；用于匹配学员的持股。",
+      "position": "公司职位",
+      "responsibilities": "主要职责",
+      "relationship": "与其他股东的关系",
+      "save": "保存角色",
+      "saved": "已保存"
     }
   },
   "stages": {

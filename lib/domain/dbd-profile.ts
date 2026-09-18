@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { interviewProfileSchema, type InterviewProfile } from './bank-interview';
 
 /**
  * Level 2 of the three-level DBD model (decision D38): the business profile that comes from the
@@ -72,6 +73,8 @@ export type Provenance = Record<
 
 export type StructuredData = {
   business?: BusinessProfile;
+  /** Bank-interview answers the DBD cannot supply (decision D39). */
+  interview?: InterviewProfile;
   document_type?: string | null;
   provenance?: Provenance;
 };
@@ -81,8 +84,10 @@ export function readStructuredData(raw: unknown): StructuredData {
   if (!raw || typeof raw !== 'object') return {};
   const data = raw as Record<string, unknown>;
   const business = businessProfileSchema.safeParse(data.business ?? {});
+  const interview = interviewProfileSchema.safeParse(data.interview ?? {});
   return {
     business: business.success ? business.data : EMPTY_BUSINESS_PROFILE,
+    interview: interview.success ? interview.data : interviewProfileSchema.parse({}),
     document_type: typeof data.document_type === 'string' ? data.document_type : null,
     provenance:
       data.provenance && typeof data.provenance === 'object' ? (data.provenance as Provenance) : {},

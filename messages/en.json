@@ -144,7 +144,8 @@
       "levels": {
         "identity": "Level 1 — Company identity (certificate)",
         "business": "Level 2 — Business profile (objectives sheet / Bor.Or.Jor.5 / Bor.Or.Jor.2)",
-        "document": "Level 3 — DBD document metadata"
+        "document": "Level 3 — DBD document metadata",
+        "interview": "Level 4 — Bank interview answers (facts the DBD does not hold)"
       },
       "documentTypes": {
         "certificate": "Certificate",
@@ -163,7 +164,18 @@
       "removeDocument": "Remove",
       "sourceDocument": "from {name}",
       "sourcePage": "page {page}",
-      "fileHint": "PDF, up to 30 MB per file"
+      "fileHint": "PDF, up to 30 MB per file",
+      "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, quiz, exam and call practice.",
+      "interviewFields": {
+        "account_purpose": "Why does the company need a bank account?",
+        "monthly_volume": "Projected monthly inflows/outflows",
+        "clients_location": "Where are the main clients?",
+        "suppliers_location": "Where are the main suppliers?",
+        "source_of_funds": "Source of funds",
+        "business_address": "Actual place of business",
+        "operations_status": "Has the company commenced operations?"
+      },
+      "saveInterview": "Save interview answers"
     },
     "assignment": {
       "title": "Assigned company",
@@ -200,7 +212,9 @@
       "pdfMissing": "No PDF uploaded",
       "uploadPdf": "Upload PDF",
       "uploaded": "Uploaded",
-      "materialTitle": "Title"
+      "materialTitle": "Title",
+      "loadStarterCards": "Load bank-interview starter cards (5)",
+      "starterLoaded": "{count} new card(s) added (existing ones were left unchanged)"
     },
     "questions": {
       "title": "Question bank",
@@ -407,6 +421,17 @@
       "reference": "Reference DBD certificate",
       "referenceNone": "Generic certificate structure (no company)",
       "referenceHint": "The AI reads this certificate's particulars (and its PDF when uploaded) to ask about the real facts, but never copies its values into a question — every question uses variables so each learner is asked about their own company."
+    },
+    "role": {
+      "title": "The learner's role in the company",
+      "hint": "The bank asks \"how many shares do you hold?\", \"what is your position?\" — the portal needs to know who this learner is in the DBD documents.",
+      "holderName": "Name as in the DBD documents",
+      "holderHint": "Pick from the directors/shareholders or type it; used to match the learner's shareholding.",
+      "position": "Position in the company",
+      "responsibilities": "Main responsibilities",
+      "relationship": "Relationship to the other shareholders",
+      "save": "Save role",
+      "saved": "Saved"
     }
   },
   "stages": {

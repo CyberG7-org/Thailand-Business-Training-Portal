@@ -10,7 +10,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    pnpm exec supabase link --project-ref <ref>
    pnpm exec supabase db push
    ```
-   All ten migrations apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`, `recordings`) are created private by the migrations.
+   All migrations (0001–0014) apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`, `recordings`) are created private by the migrations.
 3. **Do not** run `seed.sql` / `seed_questions.sql` in production (they hold sample content only). Load real content through the admin UI.
 4. Auth settings (Dashboard → Authentication):
    - Providers → Email: enabled; **Confirm email: off** (accounts are provisioned by admins with `email_confirm`).
@@ -73,7 +73,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
 ## 4. Content before go-live
 
-- Study cards in TH/EN/ZH (Admin → Study content), PDFs uploaded where used, Thai TTS enabled per card after review.
+- Study cards in TH/EN/ZH (Admin → Study content): click **Load bank-interview starter cards** once (five cards built around the 16 questions the bank asks; safe to click again — existing cards are left alone), then add your own; PDFs uploaded where used, Thai TTS enabled per card after review.
+- Per DBD record: fill the **Level 4 — interview answers** form (why the account, monthly volume, clients, suppliers, source of funds, actual place of business, operations status). Per learner (Admin → Users → learner): fill the **role** form (name exactly as in the DBD documents, position, responsibilities, relationship to the other shareholders) so `{my_shares}`, `{my_position}` … resolve on cards, questions and the call script.
 - Question bank: at least `quiz_question_count` + `exam_question_count` approved questions per pool, each with all three languages (the approval trigger enforces it). Fastest route: **Admin → Question bank → Generate with AI** — pick one of your confirmed DBD records as the reference (upload the certificate plus the objectives sheet / บอจ.5 / บอจ.2 on the record first so Level 2 facts are available), generate a personalised batch, then review/approve; Thai-only drafts get EN/ZH via **Fill missing languages**.
 - Policy settings reviewed (`/admin/settings`): eligibility days, passing mark, counts, exam-pass gates, chat ids/emails.
 - Name-card template: replace `placeholder-v1` in `lib/integrations/pdf/name-card.tsx` with the owner's design (open item #13) — one Thai layout, Sarabun font already embedded.

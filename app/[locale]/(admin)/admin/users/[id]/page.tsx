@@ -11,7 +11,10 @@ import {
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { formatDate } from '@/lib/domain/thai-date';
 import { AccountControls } from './account-controls';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
+import type { Director } from '@/lib/domain/dbd-record';
 import { AssignmentPanel } from './assignment-panel';
+import { RoleForm } from './role-form';
 
 export default async function UserDetailPage({
   params,
@@ -38,6 +41,17 @@ export default async function UserDetailPage({
       }
     : null;
 
+  const people = active
+    ? [
+        ...((active.dbd_records.directors as unknown as Director[] | null) ?? []).map(
+          (d) => d.name_th,
+        ),
+        ...(
+          readStructuredData(active.dbd_records.structured_data).business?.shareholders ?? []
+        ).map((sh) => sh.name),
+      ].filter((name, i, all) => name && all.indexOf(name) === i)
+    : [];
+
   const t = await getTranslations('admin.users');
   return (
     <section className="grid gap-6">
@@ -56,6 +70,19 @@ export default async function UserDetailPage({
         <dd data-testid="account-status">{user.status}</dd>
       </dl>
       <AssignmentPanel userId={user.id} current={current} options={options} />
+      {active && (
+        <RoleForm
+          userId={user.id}
+          assignmentId={active.id}
+          role={{
+            holder_name: active.holder_name,
+            position: active.position,
+            responsibilities: active.responsibilities,
+            relationship_to_shareholders: active.relationship_to_shareholders,
+          }}
+          people={people}
+        />
+      )}
       <AccountControls userId={user.id} status={user.status as 'active' | 'disabled'} />
     </section>
   );

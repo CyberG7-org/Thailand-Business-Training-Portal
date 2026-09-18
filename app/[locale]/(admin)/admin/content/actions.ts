@@ -5,8 +5,10 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import {
   createStudyMaterial,
+  loadStarterCards,
   updateStudyMaterial,
   uploadStudyPdf,
   upsertLocalization,
@@ -113,4 +115,17 @@ export async function uploadStudyPdfAction(
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
+}
+
+/** One click loads the bank-interview starter cards (decision D39); existing keys are kept. */
+export async function loadStarterCardsAction(formData: FormData): Promise<void> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const admin = await requireAdmin(locale);
+  const { created } = await loadStarterCards(
+    await createSupabaseServerClient(),
+    BANK_INTERVIEW_CARDS,
+    admin.id,
+  );
+  revalidatePath(`/${locale}/admin/content`);
+  redirect(`/${locale}/admin/content?loaded=${created.length}`);
 }

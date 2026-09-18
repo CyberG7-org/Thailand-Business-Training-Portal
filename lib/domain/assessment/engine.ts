@@ -100,6 +100,21 @@ export function renderQuestion(
     promoters: null,
     total_shares: null,
     par_value: null,
+    directors_count: null,
+    shareholders_count: null,
+    account_purpose: null,
+    monthly_volume: null,
+    clients_location: null,
+    suppliers_location: null,
+    source_of_funds: null,
+    business_address: null,
+    operations_status: null,
+    my_name: null,
+    my_position: null,
+    my_responsibilities: null,
+    my_relationship: null,
+    my_shares: null,
+    my_share_percent: null,
   };
   const rec = record ?? emptyRecord;
   const render = (s: string) => renderTemplate(s, rec, `${seed}:${questionId}`, locale);

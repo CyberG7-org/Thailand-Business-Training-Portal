@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireAdmin } from '@/lib/auth/session';
-import { loadProgressionFacts } from '@/lib/db/progression';
+import { loadProgressionFactsForUsers } from '@/lib/db/progression';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { deriveProgression } from '@/lib/domain/progression';
 import { NewUserForm } from './new-user-form';
@@ -17,13 +17,12 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
   const t = await getTranslations('admin.users');
   const tp = await getTranslations('progression');
 
-  const rows = await Promise.all(
-    (users ?? []).map(async (u) => ({
-      ...u,
-      progression:
-        u.role === 'learner' ? deriveProgression(await loadProgressionFacts(supabase, u.id)) : null,
-    })),
-  );
+  const learnerIds = (users ?? []).filter((u) => u.role === 'learner').map((u) => u.id);
+  const facts = await loadProgressionFactsForUsers(supabase, learnerIds);
+  const rows = (users ?? []).map((u) => {
+    const f = facts.get(u.id);
+    return { ...u, progression: f ? deriveProgression(f) : null };
+  });
 
   return (
     <section className="grid gap-6">

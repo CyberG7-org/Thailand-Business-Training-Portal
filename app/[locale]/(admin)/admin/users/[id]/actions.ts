@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth/session';
-import { assignDbdRecord, deactivateAssignment } from '@/lib/db/assignments';
+import { assignDbdRecord, deactivateAssignment, updateAssignmentRole } from '@/lib/db/assignments';
+import { learnerRoleSchema } from '@/lib/domain/bank-interview';
 import { ProvisioningError, setAccountPassword, setAccountStatus } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
@@ -81,6 +82,32 @@ export async function deactivateAssignmentAction(
     await deactivateAssignment(await createSupabaseServerClient(), assignmentId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'deactivated', error: null };
+  } catch (e) {
+    return { message: null, error: errorMessage(e) };
+  }
+}
+
+export async function updateAssignmentRoleAction(
+  _prev: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const userId = String(formData.get('userId') ?? '');
+  const assignmentId = String(formData.get('assignmentId') ?? '');
+  await requireAdmin(locale);
+  const parsed = learnerRoleSchema.safeParse({
+    holder_name: formData.get('holder_name'),
+    position: formData.get('position'),
+    responsibilities: formData.get('responsibilities'),
+    relationship_to_shareholders: formData.get('relationship_to_shareholders'),
+  });
+  if (!parsed.success) {
+    return { message: null, error: parsed.error.issues[0]?.message ?? 'Invalid' };
+  }
+  try {
+    await updateAssignmentRole(await createSupabaseServerClient(), assignmentId, parsed.data);
+    revalidatePath(`/${locale}/admin/users/${userId}`);
+    return { message: 'role-saved', error: null };
   } catch (e) {
     return { message: null, error: errorMessage(e) };
   }

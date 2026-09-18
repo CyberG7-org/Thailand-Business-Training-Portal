@@ -1,22 +1,56 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
-import type { Director } from '@/lib/domain/dbd-record';
 import { stageStatuses, type StageInfo } from '@/lib/domain/progression';
 import { FAKE_TRANSCRIPT, resolveVapiProvider } from '@/lib/integrations/vapi';
 import {
   buildWebCallConfig,
   companyVariables,
+  type CallCompanyFacts,
   type WebCallConfig,
 } from '@/lib/integrations/vapi/config';
 import type { ParsedVapiMessage } from '@/lib/integrations/vapi/webhook';
 import { createSupabaseAdminClient } from './admin';
+import { toTemplateRecord } from './assessment';
 import { getActiveAssignmentForUser } from './assignments';
+import type { DbdRecordRow } from './dbd-records';
+import type { LearnerRole } from '@/lib/domain/bank-interview';
 import type { Database, Json } from './database.types';
 import { loadProgressionFacts } from './progression';
 
 type Db = SupabaseClient<Database>;
 export type CallSessionRow = Database['public']['Tables']['call_sessions']['Row'];
+
+/** Every fact the bank-interview script may check (decision D39). */
+export function callFacts(record: DbdRecordRow, role: LearnerRole | null): CallCompanyFacts {
+  const t = toTemplateRecord(record, role);
+  return {
+    company_name_th: t.company_name_th,
+    company_name_en: t.company_name_en,
+    juristic_id: t.juristic_id,
+    registered_capital: t.registered_capital,
+    head_office_address: t.head_office_address,
+    directors: t.directors,
+    registered_on: t.registered_on,
+    province: t.province,
+    business_categories: t.business_categories,
+    total_shares: t.total_shares,
+    shareholders_count: t.shareholders_count,
+    account_purpose: t.account_purpose,
+    monthly_volume: t.monthly_volume,
+    clients_location: t.clients_location,
+    suppliers_location: t.suppliers_location,
+    source_of_funds: t.source_of_funds,
+    business_address: t.business_address,
+    operations_status: t.operations_status,
+    my_name: t.my_name,
+    my_position: t.my_position,
+    my_responsibilities: t.my_responsibilities,
+    my_relationship: t.my_relationship,
+    my_shares: t.my_shares,
+    my_share_percent: t.my_share_percent,
+  };
+}
 
 export class CallError extends Error {
   constructor(
@@ -65,14 +99,7 @@ export async function startCallSession(
   const assignment = await getActiveAssignmentForUser(admin, userId);
   if (!assignment) throw new CallError('No active assignment', 'no_assignment');
   const r = assignment.dbd_records;
-  const facts = {
-    company_name_th: r.company_name_th,
-    company_name_en: r.company_name_en,
-    juristic_id: r.juristic_id,
-    registered_capital: r.registered_capital,
-    head_office_address: r.head_office_address,
-    directors: (r.directors as unknown as Director[] | null) ?? null,
-  };
+  const facts = callFacts(r, assignment);
 
   const { data: session, error } = await admin
     .from('call_sessions')
@@ -132,15 +159,10 @@ export async function completeFakeSession(
     .maybeSingle();
   if (!session || session.modality !== 'fake')
     throw new CallError('Session not found', 'not_found');
-  const r = session.dbd_records as unknown as {
-    company_name_th: string | null;
-    company_name_en: string | null;
-    juristic_id: string | null;
-    registered_capital: number | string | null;
-    head_office_address: string | null;
-    directors: Director[] | null;
-  };
-  const vars = companyVariables(r);
+  const assignment = await getActiveAssignmentForUser(admin, userId);
+  const vars = companyVariables(
+    callFacts(session.dbd_records as unknown as DbdRecordRow, assignment),
+  );
   const transcript = FAKE_TRANSCRIPT.replace(/\{\{(\w+)\}\}/g, (_m, k: string) => vars[k] ?? '-');
   const { data, error } = await admin
     .from('call_sessions')

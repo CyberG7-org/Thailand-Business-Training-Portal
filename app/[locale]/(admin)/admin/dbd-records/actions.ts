@@ -15,6 +15,7 @@ import {
 } from '@/lib/db/dbd-records';
 import { extractAndApply } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
 import {
   businessProfileSchema,
   parseListText,
@@ -98,6 +99,18 @@ function formDataToBusiness(formData: FormData, stored: ReturnType<typeof readSt
       ? parsePromotersText(String(formData.get('promoters_text') ?? ''))
       : current.promoters,
   });
+}
+
+/** Bank-interview answers (decision D39); absent fields keep their stored value. */
+function formDataToInterview(formData: FormData, stored: ReturnType<typeof readStructuredData>) {
+  const current = stored.interview ?? interviewProfileSchema.parse({});
+  const raw: Record<string, unknown> = {};
+  for (const field of INTERVIEW_FIELDS) {
+    raw[field] = formData.has(`interview_${field}`)
+      ? String(formData.get(`interview_${field}`) ?? '')
+      : current[field];
+  }
+  return interviewProfileSchema.parse(raw);
 }
 
 function errorMessage(e: unknown): string {
@@ -278,4 +291,31 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
   if (!record || record.extraction_status === 'confirmed') return;
   await removeDbdDocument(db, id, documentId);
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+}
+
+/** Level 4 answers stay editable after confirmation: they are prepared answers, not DBD facts. */
+export async function saveInterviewAnswersAction(
+  _prev: ToolState,
+  formData: FormData,
+): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  await requireAdmin(locale);
+  const db = await createSupabaseServerClient();
+  const record = await getDbdRecord(db, id);
+  if (!record) return { ok: false, error: 'not-found' };
+  const stored = readStructuredData(record.structured_data);
+  try {
+    const { error } = await db
+      .from('dbd_records')
+      .update({
+        structured_data: { ...stored, interview: formDataToInterview(formData, stored) } as never,
+      })
+      .eq('id', id);
+    if (error) throw error;
+    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+    return { ok: true, error: null };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
 }

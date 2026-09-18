@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { updateAssignmentRole } from '@/lib/db/assignments';
 import {
   adminClient,
   clientFor,
@@ -109,6 +110,38 @@ describe('assignments and eligibility snapshots', () => {
       .from('user_dbd_assignments')
       .insert({ user_id: learnerA.id, dbd_record_id: id });
     expect(error?.code).toBe(UNIQUE_VIOLATION);
+  });
+
+  it('stores the learner role on the assignment; only admins write it, the learner reads it (P13)', async () => {
+    const { data: active } = await asAdmin
+      .from('user_dbd_assignments')
+      .select('id')
+      .eq('user_id', learnerA.id)
+      .eq('active', true)
+      .single();
+    const role = {
+      holder_name: 'นางสาวผู้เรียน ทดสอบ',
+      position: 'กรรมการผู้จัดการ',
+      responsibilities: 'ดูแลลูกค้าและอนุมัติการชำระเงิน',
+      relationship_to_shareholders: null,
+    };
+    await updateAssignmentRole(asAdmin, active!.id, role);
+
+    const { data: mine } = await asA
+      .from('user_dbd_assignments')
+      .select('holder_name, position, responsibilities, relationship_to_shareholders')
+      .eq('id', active!.id)
+      .single();
+    expect(mine).toEqual(role);
+
+    // RLS: a learner's update matches no rows, so nothing changes.
+    await asA.from('user_dbd_assignments').update({ position: 'เจ้าของ' }).eq('id', active!.id);
+    const { data: after } = await asAdmin
+      .from('user_dbd_assignments')
+      .select('position')
+      .eq('id', active!.id)
+      .single();
+    expect(after?.position).toBe('กรรมการผู้จัดการ');
   });
 
   it('re-snapshots every active assignment when issued_on changes, keeping history', async () => {

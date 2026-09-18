@@ -12,6 +12,11 @@ import {
   type SelectableQuestion,
 } from '@/lib/domain/assessment/engine';
 import { MissingFieldError, type TemplateRecord } from '@/lib/domain/assessment/template';
+import {
+  EMPTY_INTERVIEW_PROFILE,
+  myShareholding,
+  type LearnerRole,
+} from '@/lib/domain/bank-interview';
 import { EMPTY_BUSINESS_PROFILE, readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import { createSupabaseAdminClient } from './admin';
@@ -44,8 +49,15 @@ export class AssessmentError extends Error {
 
 type BankQuestion = SelectableQuestion & { text: QuestionText };
 
-function toTemplateRecord(record: DbdRecordRow): TemplateRecord {
-  const business = readStructuredData(record.structured_data).business ?? EMPTY_BUSINESS_PROFILE;
+export function toTemplateRecord(
+  record: DbdRecordRow,
+  role: LearnerRole | null = null,
+): TemplateRecord {
+  const structured = readStructuredData(record.structured_data);
+  const business = structured.business ?? EMPTY_BUSINESS_PROFILE;
+  const interview = structured.interview ?? EMPTY_INTERVIEW_PROFILE;
+  const directors = (record.directors as unknown as Director[] | null) ?? null;
+  const mine = myShareholding(business, role?.holder_name ?? null);
   return {
     company_name_th: record.company_name_th,
     company_name_en: record.company_name_en,
@@ -65,6 +77,21 @@ function toTemplateRecord(record: DbdRecordRow): TemplateRecord {
     promoters: business.promoters.length ? business.promoters : null,
     total_shares: business.share_structure.total_shares,
     par_value: business.share_structure.par_value,
+    directors_count: directors && directors.length > 0 ? directors.length : null,
+    shareholders_count: business.shareholders.length > 0 ? business.shareholders.length : null,
+    account_purpose: interview.account_purpose,
+    monthly_volume: interview.monthly_volume,
+    clients_location: interview.clients_location,
+    suppliers_location: interview.suppliers_location,
+    source_of_funds: interview.source_of_funds,
+    business_address: interview.business_address,
+    operations_status: interview.operations_status,
+    my_name: role?.holder_name ?? null,
+    my_position: role?.position ?? null,
+    my_responsibilities: role?.responsibilities ?? null,
+    my_relationship: role?.relationship_to_shareholders ?? null,
+    my_shares: mine.shares,
+    my_share_percent: mine.percent,
   };
 }
 
@@ -137,7 +164,7 @@ export async function getOrStartAttempt(args: {
 
   const assignment = await getActiveAssignmentForUser(admin, args.userId);
   if (!assignment) throw new AssessmentError('No active assignment', 'no_assignment');
-  const record = toTemplateRecord(assignment.dbd_records);
+  const record = toTemplateRecord(assignment.dbd_records, assignment);
 
   const seed = `${args.userId}:${args.kind}:${Date.now()}`;
   const bank = await loadQuestionBank(admin, args.kind, args.language);

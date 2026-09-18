@@ -863,7 +863,11 @@ export type Database = {
           assigned_by: string | null
           dbd_record_id: string
           deactivated_at: string | null
+          holder_name: string | null
           id: string
+          position: string | null
+          relationship_to_shareholders: string | null
+          responsibilities: string | null
           user_id: string
         }
         Insert: {
@@ -872,7 +876,11 @@ export type Database = {
           assigned_by?: string | null
           dbd_record_id: string
           deactivated_at?: string | null
+          holder_name?: string | null
           id?: string
+          position?: string | null
+          relationship_to_shareholders?: string | null
+          responsibilities?: string | null
           user_id: string
         }
         Update: {
@@ -881,7 +889,11 @@ export type Database = {
           assigned_by?: string | null
           dbd_record_id?: string
           deactivated_at?: string | null
+          holder_name?: string | null
           id?: string
+          position?: string | null
+          relationship_to_shareholders?: string | null
+          responsibilities?: string | null
           user_id?: string
         }
         Relationships: [

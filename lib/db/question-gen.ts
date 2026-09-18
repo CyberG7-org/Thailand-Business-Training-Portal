@@ -109,6 +109,7 @@ export async function loadReference(
     registrar_name: data.registrar_name,
     province: data.province,
     business: readStructuredData(data.structured_data).business ?? null,
+    interview: readStructuredData(data.structured_data).interview ?? null,
   };
   let pdf: Uint8Array | null = null;
   if (data.document_path) {

@@ -4,11 +4,13 @@ import { Link } from '@/i18n/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { parseStoredExtraction } from '@/lib/db/extraction';
+import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
+import { InterviewForm } from './interview-form';
 import { RecordTools } from './record-tools';
 
 // Upload + extraction run inside the page's server actions; allow the full serverless window.
@@ -90,6 +92,10 @@ export default async function DbdRecordPage({
         business={structured.business ?? null}
         provenance={structured.provenance ?? {}}
         documentNames={documents.map((d) => d.original_name)}
+      />
+      <InterviewForm
+        recordId={record.id}
+        answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
       />
     </section>
   );
