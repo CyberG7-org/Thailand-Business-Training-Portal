@@ -19,6 +19,35 @@ const EXTRACT_ERROR_KEYS = [
   'not_allowed',
 ] as const;
 
+function FillOutcome({ state }: { state: ToolState }) {
+  const t = useTranslations('admin.dbd');
+  if (!state.ok) return null;
+  const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === state.extractionError);
+  if (state.extraction === 'filled') {
+    return (
+      <p role="status" data-testid="extract-status" className="text-sm text-green-700">
+        {t('autoFilled', { count: state.applied?.length ?? 0 })}
+      </p>
+    );
+  }
+  if (state.extraction === 'failed') {
+    return (
+      <p role="alert" data-testid="extract-error" className="text-sm text-amber-700">
+        {t('uploadedButNotRead', {
+          reason: extractErrorKey
+            ? t(`extractErrors.${extractErrorKey}`)
+            : (state.extractionError ?? ''),
+        })}
+      </p>
+    );
+  }
+  return (
+    <p role="status" className="text-sm text-green-700">
+      {t('uploaded')}
+    </p>
+  );
+}
+
 export function RecordTools({
   id,
   status,
@@ -48,50 +77,41 @@ export function RecordTools({
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="id" value={id} />
         <p className="text-sm">{documentPath ? t('documentUploaded') : t('documentMissing')}</p>
+        <p className="text-xs text-gray-600">
+          {extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
+        </p>
         <input name="document" type="file" accept="application/pdf" required className="text-sm" />
         {uploadState.error && (
           <p role="alert" className="text-sm text-red-700">
             {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
           </p>
         )}
-        {uploadState.ok && (
-          <p role="status" className="text-sm text-green-700">
-            {t('uploaded')}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={uploading}
-          className="rounded border px-4 py-2 disabled:opacity-50"
-        >
-          {t('upload')}
-        </button>
-      </form>
-
-      <form action={extractAction} className="grid gap-2 rounded border p-4">
-        <input type="hidden" name="locale" value={locale} />
-        <input type="hidden" name="id" value={id} />
-        <p className="text-sm">
-          {extractionAvailable ? t('extractHint') : t('extractionNotConfigured')}
-        </p>
+        <FillOutcome state={uploadState} />
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="submit"
+            disabled={uploading || status === 'confirmed'}
+            className="rounded border px-4 py-2 disabled:opacity-50"
+          >
+            {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
+          </button>
+          <button
+            type="submit"
+            formAction={extractAction}
+            disabled={!canExtract || extracting || uploading}
+            data-testid="extract-button"
+            className="rounded border px-4 py-2 disabled:opacity-50"
+            title={t('extractHint')}
+          >
+            {extracting ? t('extracting') : t('reExtract')}
+          </button>
+        </div>
         {extractState.error && (
           <p role="alert" data-testid="extract-error" className="text-sm text-red-700">
             {extractErrorKey ? t(`extractErrors.${extractErrorKey}`) : extractState.error}
           </p>
         )}
-        {extractState.ok && (
-          <p role="status" data-testid="extract-status" className="text-sm text-green-700">
-            {t('extracted')}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={!canExtract || extracting}
-          data-testid="extract-button"
-          className="rounded border px-4 py-2 disabled:opacity-50"
-        >
-          {extracting ? t('extracting') : t('extract')}
-        </button>
+        <FillOutcome state={extractState} />
       </form>
 
       <form action={confirmAction} className="grid gap-2 rounded border p-4">

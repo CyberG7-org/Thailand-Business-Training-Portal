@@ -10,12 +10,18 @@ import { dbdExtractionSchema } from '@/lib/integrations/extraction/schema';
 import { DbdRecordForm } from '../dbd-record-form';
 import { RecordTools } from './record-tools';
 
+// Upload + extraction run inside the page's server actions; allow the full serverless window.
+export const maxDuration = 60;
+
 export default async function DbdRecordPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ extraction?: string; applied?: string; extractionError?: string }>;
 }) {
   const { locale, id } = await params;
+  const { extraction, applied, extractionError } = await searchParams;
   await requireAdmin(locale);
   const record = await getDbdRecord(await createSupabaseServerClient(), id);
   if (!record) notFound();
@@ -40,7 +46,31 @@ export default async function DbdRecordPage({
         documentPath={record.document_path}
         extractionAvailable={getDbdExtractor() !== null}
       />
-      {suggestions && (
+      {extraction === 'filled' && (
+        <p
+          data-testid="autofill-banner"
+          className="max-w-2xl rounded border border-green-300 bg-green-50 p-3 text-sm"
+        >
+          {t('autoFilledReview', { count: Number(applied ?? 0) })}
+        </p>
+      )}
+      {extraction === 'failed' && (
+        <p
+          data-testid="autofill-banner"
+          className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm"
+        >
+          {t('uploadedButNotRead', { reason: extractionError ?? '' })}
+        </p>
+      )}
+      {extraction === 'skipped' && (
+        <p
+          data-testid="autofill-banner"
+          className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
+        >
+          {t('extractionNotConfigured')}
+        </p>
+      )}
+      {suggestions && extraction !== 'filled' && (
         <p className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm">
           {t('reviewSuggestions')}
         </p>

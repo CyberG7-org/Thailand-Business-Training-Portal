@@ -107,7 +107,7 @@
       "extract": "Extract from PDF",
       "extracting": "Extracting…",
       "extracted": "Extraction complete — review the suggested values below, then save and confirm.",
-      "extractHint": "Reads the uploaded certificate and suggests values for the form. Nothing is saved until you click Save.",
+      "extractHint": "Reads the uploaded certificate again and fills only fields that are still empty.",
       "extractionNotConfigured": "AI extraction is not configured (set ANTHROPIC_API_KEY).",
       "reviewSuggestions": "Suggested values from the certificate are shown where the record is still empty. Check every field — especially highlighted ones — then Save and Confirm.",
       "suggestedFromDocument": "Suggested from the document ({confidence}% confidence)",
@@ -119,7 +119,18 @@
         "invalid_output": "The extraction result was not usable.",
         "no_document": "Upload the certificate PDF first.",
         "not_allowed": "This record cannot be extracted."
-      }
+      },
+      "uploadFirstTitle": "Upload the DBD certificate (Thai)",
+      "uploadFirstHint": "Choose the Thai certificate PDF. The document is read and the company fields are filled in automatically; you then review, correct if needed, and confirm.",
+      "uploadFirstNoExtraction": "Document reading is not configured (ANTHROPIC_API_KEY required). The file is stored and you fill in the fields below yourself.",
+      "uploadAndFill": "Upload and fill automatically",
+      "uploadingAndReading": "Uploading and reading the document… (about 20–40 s)",
+      "uploadFillsHint": "After upload the document is read and only empty fields are filled automatically.",
+      "orEnterManually": "Or enter the details manually without a file",
+      "reExtract": "Read the document again",
+      "autoFilled": "Document read; {count} field(s) filled. Review before confirming.",
+      "autoFilledReview": "{count} field(s) were filled from the certificate. Check every field (especially highlighted ones), correct if needed, then click Confirm.",
+      "uploadedButNotRead": "The file was uploaded but could not be read ({reason}). Fill the fields yourself or try reading again."
     },
     "assignment": {
       "title": "Assigned company",

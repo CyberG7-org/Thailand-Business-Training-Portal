@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractionToFormValues } from '@/lib/domain/extraction-merge';
+import { applyExtractionToRecord, extractionToFormValues } from '@/lib/domain/extraction-merge';
 import { SAMPLE_EXTRACTION } from '@/lib/integrations/extraction/fake';
 
 describe('extractionToFormValues', () => {
@@ -40,5 +40,30 @@ describe('extractionToFormValues', () => {
     expect(out.values.issued_on).toBe('thirteen July');
     expect(out.dateNotes.issued_on.iso).toBeNull();
     expect(out.lowConfidence).toContain('issued_on');
+  });
+});
+
+describe('applyExtractionToRecord', () => {
+  it('fills only empty fields, keeps admin values, and normalizes dates and numbers', () => {
+    const current = { company_name_th: 'บริษัท ที่แอดมินพิมพ์ จำกัด', juristic_id: '' };
+    const { input, applied, rejected } = applyExtractionToRecord(SAMPLE_EXTRACTION, current);
+    expect(input.company_name_th).toBe('บริษัท ที่แอดมินพิมพ์ จำกัด');
+    expect(input.juristic_id).toBe('0105569000123');
+    expect(input.issued_on).toBe('2026-07-13');
+    expect(input.registered_capital).toBe(2000000);
+    expect(input.directors.length).toBeGreaterThan(0);
+    expect(applied).toContain('juristic_id');
+    expect(applied).not.toContain('company_name_th');
+    expect(rejected).toEqual([]);
+  });
+
+  it('drops an invalid extracted value on its own and keeps the rest', () => {
+    const broken = structuredClone(SAMPLE_EXTRACTION);
+    broken.juristic_id.value = '12345'; // not 13 digits
+    const { input, applied, rejected } = applyExtractionToRecord(broken, {});
+    expect(input.juristic_id).toBeNull();
+    expect(input.company_name_th).toBe('บริษัท ตัวอย่างการสกัด จำกัด');
+    expect(rejected).toEqual(['juristic_id']);
+    expect(applied).not.toContain('juristic_id');
   });
 });

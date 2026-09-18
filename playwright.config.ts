@@ -12,6 +12,16 @@ export default defineConfig({
     url: 'http://localhost:3000/th/login',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Real provider keys in .env.local must never be used by the suite (cost, and the fixtures
+    // are blank documents); every adapter runs its fake.
+    env: {
+      ...process.env,
+      EXTRACTION_PROVIDER: 'fake',
+      TTS_PROVIDER: 'fake',
+      NOTIFY_PROVIDER: 'fake',
+      VAPI_PROVIDER: 'fake',
+      QUESTION_GEN_PROVIDER: 'fake',
+    },
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
 });

@@ -12,7 +12,7 @@ import {
   updateDbdRecord,
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
-import { runExtraction } from '@/lib/db/extraction';
+import { extractAndApply } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
   dbdRecordInputSchema,
@@ -21,7 +21,17 @@ import {
 } from '@/lib/domain/dbd-record';
 
 export type SaveState = { ok: boolean; error: string | null; fieldErrors: Record<string, string> };
-export type ToolState = { ok: boolean; error: string | null };
+export type ToolState = {
+  ok: boolean;
+  error: string | null;
+  /** Fields filled from the document by the last upload/extract (P1.5, decision D37). */
+  applied?: string[];
+  /** Extraction outcome after an upload that itself succeeded. */
+  extraction?: 'filled' | 'skipped' | 'failed';
+  extractionError?: string;
+};
+
+const EMPTY_INPUT = dbdRecordInputSchema.parse({});
 
 const TEXT_FIELDS = [
   'juristic_id',
@@ -121,11 +131,58 @@ export async function uploadDocumentAction(
   const db = await createSupabaseServerClient();
   try {
     await uploadDbdDocument(db, id, file);
-    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return { ok: true, error: null };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
+  const outcome = await fillFromDocument(db, id);
+  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+  return { ok: true, error: null, ...outcome };
+}
+
+/** Runs extraction + auto-fill; an extraction failure never undoes a successful upload. */
+async function fillFromDocument(
+  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  id: string,
+): Promise<Pick<ToolState, 'applied' | 'extraction' | 'extractionError'>> {
+  const extractor = getDbdExtractor();
+  if (!extractor) return { extraction: 'skipped', applied: [] };
+  try {
+    const { applied } = await extractAndApply(db, id, extractor);
+    return { extraction: 'filled', applied };
+  } catch (e) {
+    return {
+      extraction: 'failed',
+      applied: [],
+      extractionError: e instanceof ExtractionError ? e.code : errorMessage(e),
+    };
+  }
+}
+
+/** Upload-first creation: new record + PDF + automatic fill, then straight to the review page. */
+export async function createFromDocumentAction(
+  _prev: ToolState,
+  formData: FormData,
+): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const admin = await requireAdmin(locale);
+  const file = formData.get('document');
+  if (!(file instanceof File) || file.size === 0) return { ok: false, error: 'no-file' };
+  if (file.type !== 'application/pdf' || file.size > MAX_PDF_BYTES) {
+    return { ok: false, error: 'invalid-file' };
+  }
+  const db = await createSupabaseServerClient();
+  let id: string;
+  try {
+    id = (await createDbdRecord(db, EMPTY_INPUT, admin.id)).id;
+    await uploadDbdDocument(db, id, file);
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+  const outcome = await fillFromDocument(db, id);
+  const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
+  if (outcome.applied?.length) query.set('applied', String(outcome.applied.length));
+  if (outcome.extractionError) query.set('extractionError', outcome.extractionError);
+  redirect(`/${locale}/admin/dbd-records/${id}?${query.toString()}`);
 }
 
 export async function extractDocumentAction(
@@ -139,9 +196,9 @@ export async function extractDocumentAction(
   if (!extractor) return { ok: false, error: 'not_configured' };
   const db = await createSupabaseServerClient();
   try {
-    await runExtraction(db, id, extractor);
+    const { applied } = await extractAndApply(db, id, extractor);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return { ok: true, error: null };
+    return { ok: true, error: null, applied, extraction: 'filled' };
   } catch (e) {
     if (e instanceof ExtractionError) return { ok: false, error: e.code };
     return { ok: false, error: errorMessage(e) };

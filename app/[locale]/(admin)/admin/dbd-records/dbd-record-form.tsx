@@ -39,15 +39,20 @@ export function DbdRecordForm({
   const [state, formAction, pending] = useActionState(saveDbdRecordAction, initial);
   const locked = record?.extraction_status === 'confirmed';
 
-  /** Record value wins; otherwise the extraction suggestion (if any). */
+  /**
+   * Record value wins; otherwise the extraction suggestion (if any). A stored value that equals
+   * the extraction's reading is shown with its confidence too — that is how auto-filled fields
+   * (decision D37) keep their provenance visible until the record is confirmed.
+   */
   const defaultFor = (
     name: string,
     recordValue: unknown,
   ): { value: string; suggested: boolean } => {
-    if (recordValue !== null && recordValue !== undefined && recordValue !== '') {
-      return { value: String(recordValue), suggested: false };
-    }
     const suggestion = suggestions?.values[name];
+    if (recordValue !== null && recordValue !== undefined && recordValue !== '') {
+      const value = String(recordValue);
+      return { value, suggested: !!suggestion && suggestion === value };
+    }
     return suggestion ? { value: suggestion, suggested: true } : { value: '', suggested: false };
   };
 

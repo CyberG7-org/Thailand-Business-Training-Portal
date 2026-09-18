@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { createConfirmedRecord, loginAs } from './helpers';
+import { createConfirmedRecord, loginAs, openManualRecordForm } from './helpers';
 
 test('admin creates a record with a BE date, sees it stored as CE, and confirms it', async ({
   page,
@@ -16,7 +16,7 @@ test('admin creates a record with a BE date, sees it stored as CE, and confirms 
 
 test('confirmation is blocked while the juristic id is missing', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/dbd-records/new');
+  await openManualRecordForm(page);
   await page.locator('input[name="company_name_th"]').fill('บริษัท ไม่ครบ จำกัด');
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);

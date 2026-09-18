@@ -15,11 +15,18 @@ export async function loginAs(page: Page, loginId: string, password: string) {
 }
 
 /** Creates and confirms a DBD record through the admin UI; returns its id. Caller must be logged in as admin. */
+/** The upload-first page keeps the manual form collapsed; open it before filling fields. */
+export async function openManualRecordForm(page: Page) {
+  await page.goto('/th/admin/dbd-records/new');
+  await page.getByTestId('manual-form-toggle').click();
+  await expect(page.locator('input[name="company_name_th"]')).toBeVisible();
+}
+
 export async function createConfirmedRecord(
   page: Page,
   fields: { companyNameTh: string; juristicId: string; issuedOn: string },
 ): Promise<string> {
-  await page.goto('/th/admin/dbd-records/new');
+  await openManualRecordForm(page);
   await page.locator('input[name="company_name_th"]').fill(fields.companyNameTh);
   await page.locator('input[name="juristic_id"]').fill(fields.juristicId);
   await page.locator('input[name="issued_on"]').fill(fields.issuedOn);

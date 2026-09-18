@@ -107,7 +107,7 @@
       "extract": "从 PDF 提取",
       "extracting": "提取中…",
       "extracted": "提取完成 — 请检查下方建议值，然后保存并确认。",
-      "extractHint": "读取已上传的证书并为表单建议值。点击保存前不会写入任何内容。",
+      "extractHint": "重新读取已上传的注册证明，只填写仍为空的字段。",
       "extractionNotConfigured": "未配置 AI 提取（请设置 ANTHROPIC_API_KEY）。",
       "reviewSuggestions": "证书中的建议值显示在仍为空的字段中。请逐项核对（尤其是高亮字段），然后保存并确认。",
       "suggestedFromDocument": "来自文件的建议（置信度 {confidence}%）",
@@ -119,7 +119,18 @@
         "invalid_output": "提取结果不可用。",
         "no_document": "请先上传证书 PDF。",
         "not_allowed": "此记录无法提取。"
-      }
+      },
+      "uploadFirstTitle": "上传 DBD 注册证明（泰文）",
+      "uploadFirstHint": "选择泰文注册证明 PDF。系统会读取文件并自动填写公司信息；然后由您检查、必要时修改并确认。",
+      "uploadFirstNoExtraction": "尚未配置文档读取 AI（需要 ANTHROPIC_API_KEY）。文件会被保存，请在下方自行填写。",
+      "uploadAndFill": "上传并自动填写",
+      "uploadingAndReading": "正在上传并读取文件…（约 20–40 秒）",
+      "uploadFillsHint": "上传后系统会读取文件，并只自动填写仍为空的字段。",
+      "orEnterManually": "或不使用文件，手动填写",
+      "reExtract": "重新读取文件",
+      "autoFilled": "已读取文件，填写了 {count} 个字段。请在确认前检查。",
+      "autoFilledReview": "已从注册证明填写 {count} 个字段。请检查每个字段（尤其是高亮字段），必要时修改，然后点击\"确认\"。",
+      "uploadedButNotRead": "文件已上传，但无法读取（{reason}）。请自行填写或重新读取。"
     },
     "assignment": {
       "title": "已分配公司",

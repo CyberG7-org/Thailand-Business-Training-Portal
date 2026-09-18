@@ -49,9 +49,3 @@ jobs:
         run: pnpm test:e2e
         env:
           CI: 'true'
-          # The production build resolves keyless adapters to "off"; the suite needs the fakes.
-          EXTRACTION_PROVIDER: fake
-          TTS_PROVIDER: fake
-          NOTIFY_PROVIDER: fake
-          VAPI_PROVIDER: fake
-          QUESTION_GEN_PROVIDER: fake
