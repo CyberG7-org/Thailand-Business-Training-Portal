@@ -181,7 +181,24 @@
       "explanation": "Explanation (shown when wrong)",
       "ttsEnabled": "Enable Thai read-aloud",
       "saveLanguage": "Save this language",
-      "placeholderHint": "Placeholders you can use (distractor variants after a pipe):"
+      "placeholderHint": "Placeholders you can use (distractor variants after a pipe):",
+      "generate": "Generate with AI",
+      "all": "All",
+      "batch": "Batch",
+      "filter": "Filter",
+      "preview": "Question",
+      "approve": "Approve",
+      "batchSummary": "This batch produced {produced} question(s); {rejected} rejected (provider: {provider})",
+      "fillMissing": "Fill missing languages with AI",
+      "filling": "Translating…",
+      "fillMissingHint": "Missing: {languages}. Translated from the existing language, keeping '{...}' variables and options unchanged.",
+      "fillDone": "Added {count} language(s). Review before approving.",
+      "fillErrors": {
+        "not_configured": "AI is not configured (ANTHROPIC_API_KEY required)",
+        "provider": "The AI provider returned an error. Try again.",
+        "invalid_output": "The AI returned an invalid result. Try again.",
+        "no_material": "Write at least one language first"
+      }
     },
     "notifications": {
       "title": "Notifications",
@@ -308,6 +325,41 @@
       "changes": "Changes",
       "changed": "{count} field(s) changed",
       "system": "system"
+    },
+    "generate": {
+      "title": "Generate questions with AI",
+      "back": "Question bank",
+      "intro": "Pick source material and a count; the model drafts multiple-choice questions with Thai, English and Chinese versions in one go. Everything stays a draft until you review and approve it.",
+      "fakeNotice": "Test mode: no ANTHROPIC_API_KEY, so sample questions are generated instead.",
+      "material": "Source material",
+      "materialHint": "Tick existing study cards, paste text, or upload a file (they can be combined).",
+      "pastedText": "Paste text",
+      "pastedHint": "Paste notes, lesson content, or your existing draft questions…",
+      "file": "Upload a file",
+      "fileHint": "PDF, DOCX, TXT or MD (max 20 MB)",
+      "count": "Number of questions",
+      "templateCount": "Of which company-specific",
+      "templateHint": "Use certificate variables such as '{company_name_th}'",
+      "difficulty": "Difficulty",
+      "difficultyEasy": "Easy",
+      "difficultyMedium": "Medium",
+      "difficultyHard": "Hard",
+      "pools": "Use in",
+      "poolQuiz": "Quiz",
+      "poolExam": "Exam",
+      "focus": "Focus (optional)",
+      "focusHint": "e.g. emphasise what bank officers ask",
+      "generate": "Generate questions",
+      "generating": "Generating… (about 30–60 s)",
+      "errors": {
+        "not_configured": "AI is not configured (ANTHROPIC_API_KEY required). Contact an admin.",
+        "provider": "The AI provider returned an error. Try again.",
+        "invalid_output": "The AI returned an invalid result. Try again.",
+        "no_material": "Pick a study card, paste text, or upload a file",
+        "pools_required": "Choose at least one pool",
+        "file_too_large": "The file exceeds 20 MB",
+        "nothing_produced": "No question passed validation. Try again."
+      }
     }
   },
   "stages": {

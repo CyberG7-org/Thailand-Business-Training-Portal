@@ -6,9 +6,11 @@ import type { AppLocale } from '@/i18n/routing';
 import type { QuestionLocalizationRow, QuestionRow } from '@/lib/db/questions';
 import type { QuestionOption } from '@/lib/domain/assessment/engine';
 import {
+  fillMissingLanguagesAction,
   saveQuestionAction,
   saveQuestionLocalizationAction,
   setApprovalAction,
+  type FillState,
   type QuestionState,
 } from './actions';
 
@@ -222,6 +224,59 @@ export function QuestionLocalizationForm({
       >
         {t('saveLanguage')}
       </button>
+    </form>
+  );
+}
+
+const fillInitial: FillState = { ok: false, error: null, written: [] };
+const FILL_ERRORS = ['not_configured', 'provider', 'invalid_output', 'no_material'];
+
+/** Translates the written language(s) into the missing ones with the question generator (P11). */
+export function FillMissingLanguagesForm({
+  questionId,
+  missing,
+}: {
+  questionId: string;
+  missing: AppLocale[];
+}) {
+  const locale = useLocale();
+  const t = useTranslations('admin.questions');
+  const [state, formAction, pending] = useActionState(fillMissingLanguagesAction, fillInitial);
+  // Once everything is filled the form only needs to keep showing what it just did.
+  if (missing.length === 0 && !state.ok) return null;
+  return (
+    <form action={formAction} className="grid max-w-md gap-2 rounded border p-4">
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="questionId" value={questionId} />
+      {missing.length > 0 && (
+        <p className="text-sm">
+          {t('fillMissingHint', {
+            languages: missing.map((l) => LANGUAGE_LABELS[l]).join(', '),
+          })}
+        </p>
+      )}
+      {state.error && (
+        <p role="alert" data-testid="fill-error" className="text-sm text-red-700">
+          {FILL_ERRORS.includes(state.error)
+            ? t(`fillErrors.${state.error}` as 'fillErrors.not_configured')
+            : state.error}
+        </p>
+      )}
+      {state.ok && (
+        <p role="status" data-testid="fill-done" className="text-sm text-green-700">
+          {t('fillDone', { count: state.written.length })}
+        </p>
+      )}
+      {missing.length > 0 && (
+        <button
+          type="submit"
+          disabled={pending}
+          data-testid="fill-missing"
+          className="justify-self-start rounded border px-4 py-2 disabled:opacity-50"
+        >
+          {pending ? t('filling') : t('fillMissing')}
+        </button>
+      )}
     </form>
   );
 }

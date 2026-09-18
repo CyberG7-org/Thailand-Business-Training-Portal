@@ -18,6 +18,7 @@ Verdict per item of the foundation spec §13 "Security" row plus what the slices
 | 12 | Hardening headers (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) | ✅ | `next.config.ts`; `tests/e2e/idor.spec.ts` |
 | 13 | Server actions re-check ownership/gates instead of trusting the client (attempt ownership, bank gate, `call_max_sessions`) | ✅ | `tests/integration/{assessment,exam,calls}.test.ts` |
 | 14 | Extraction output is never auto-confirmed; admin review is mandatory | ✅ | `tests/e2e/extraction.spec.ts`, `tests/integration/extraction.test.ts` |
+| 14b | AI-generated questions land as drafts only; approval still needs an admin and three languages; generation runs under the admin's own RLS session | ✅ | `tests/integration/question-gen.test.ts`, `tests/e2e/ai-questions.spec.ts` |
 | 15 | Content-Security-Policy | ⏳ deferred | Not set for the pilot: `@vapi-ai/web` (Daily WebRTC) and Supabase signed URLs need an allow-list that must be validated against the production domains first. Track in P10. |
 | 16 | Rate limiting on login / webhook | ⏳ deferred | Supabase Auth applies its own login rate limits; app-level limits are a P10 item once the hosting platform is fixed. |
 | 17 | Dependency audit | ⏳ manual | Run `pnpm audit --prod` before each release (P10 checklist). |

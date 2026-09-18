@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth/session';
+import { fillMissingLanguages } from '@/lib/db/question-gen';
 import {
   createQuestion,
   setApprovalStatus,
@@ -13,6 +14,7 @@ import {
 import { createSupabaseServerClient } from '@/lib/db/server';
 import type { OptionKey, QuestionOption } from '@/lib/domain/assessment/engine';
 import { TemplateSyntaxError } from '@/lib/domain/assessment/template';
+import { QuestionGenError } from '@/lib/integrations/question-gen/types';
 
 export type QuestionState = { ok: boolean; error: string | null };
 
@@ -123,5 +125,41 @@ export async function setApprovalAction(
     return { ok: true, error: null };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
+  }
+}
+
+/** Inline approve from the list; keeps the current filters in the URL. */
+export async function approveQuestionAction(formData: FormData): Promise<void> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const questionId = String(formData.get('questionId') ?? '');
+  await requireAdmin(locale);
+  await setApprovalStatus(await createSupabaseServerClient(), questionId, 'approved');
+  revalidatePath(`/${locale}/admin/questions`);
+  const query = new URLSearchParams();
+  const batch = String(formData.get('batch') ?? '');
+  const status = String(formData.get('status') ?? '');
+  if (batch) query.set('batch', batch);
+  if (status) query.set('status', status);
+  const suffix = query.toString();
+  redirect(`/${locale}/admin/questions${suffix ? `?${suffix}` : ''}`);
+}
+
+export type FillState = { ok: boolean; error: string | null; written: string[] };
+
+/** Translates the question's existing language(s) into the missing ones (P11). */
+export async function fillMissingLanguagesAction(
+  _prev: FillState,
+  formData: FormData,
+): Promise<FillState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const questionId = String(formData.get('questionId') ?? '');
+  await requireAdmin(locale);
+  try {
+    const written = await fillMissingLanguages(await createSupabaseServerClient(), questionId);
+    revalidatePath(`/${locale}/admin/questions/${questionId}`);
+    return { ok: true, error: null, written };
+  } catch (e) {
+    if (e instanceof QuestionGenError) return { ok: false, error: e.code, written: [] };
+    return { ok: false, error: errorMessage(e), written: [] };
   }
 }

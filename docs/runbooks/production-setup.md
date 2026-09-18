@@ -39,7 +39,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `APP_INTERNAL_EMAIL_DOMAIN` | e.g. `learner.<your-domain>` | maps login ids to auth emails; never receives mail |
    | `NEXT_PUBLIC_APP_URL` | `https://<your-domain>` | builds the Vapi webhook URL |
    | `CRON_SECRET` | long random string | Vercel Cron sends it automatically as a bearer token |
-   | `ANTHROPIC_API_KEY` | Anthropic key | DBD extraction; `EXTRACTION_PROVIDER=off` to disable |
+   | `ANTHROPIC_API_KEY` | Anthropic key | DBD extraction and AI question authoring; `EXTRACTION_PROVIDER=off` / `QUESTION_GEN_PROVIDER=off` to disable either |
    | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | ElevenLabs | Thai read-aloud; `TTS_PROVIDER=off` to disable |
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |
@@ -74,7 +74,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 ## 4. Content before go-live
 
 - Study cards in TH/EN/ZH (Admin → Study content), PDFs uploaded where used, Thai TTS enabled per card after review.
-- Question bank: at least `quiz_question_count` + `exam_question_count` approved questions per pool, each with all three languages (the approval trigger enforces it).
+- Question bank: at least `quiz_question_count` + `exam_question_count` approved questions per pool, each with all three languages (the approval trigger enforces it). Fastest route: **Admin → Question bank → Generate with AI** from the study cards or your draft document, then review/approve the batch; Thai-only drafts get EN/ZH via **Fill missing languages**.
 - Policy settings reviewed (`/admin/settings`): eligibility days, passing mark, counts, exam-pass gates, chat ids/emails.
 - Name-card template: replace `placeholder-v1` in `lib/integrations/pdf/name-card.tsx` with the owner's design (open item #13) — one Thai layout, Sarabun font already embedded.
 

@@ -181,7 +181,24 @@
       "explanation": "解释（答错时显示）",
       "ttsEnabled": "启用泰语朗读",
       "saveLanguage": "保存此语言",
-      "placeholderHint": "可用的占位符（干扰项变体写在竖线后）："
+      "placeholderHint": "可用的占位符（干扰项变体写在竖线后）：",
+      "generate": "用 AI 生成",
+      "all": "全部",
+      "batch": "生成批次",
+      "filter": "筛选",
+      "preview": "题目",
+      "approve": "批准",
+      "batchSummary": "本批次生成 {produced} 题，剔除 {rejected} 题（服务商：{provider}）",
+      "fillMissing": "用 AI 补全缺少的语言",
+      "filling": "翻译中…",
+      "fillMissingHint": "缺少：{languages}。将从现有语言翻译，保留 '{...}' 变量和选项不变。",
+      "fillDone": "已添加 {count} 种语言，请审核后再批准。",
+      "fillErrors": {
+        "not_configured": "尚未配置 AI（需要 ANTHROPIC_API_KEY）",
+        "provider": "AI 服务商返回错误，请重试。",
+        "invalid_output": "AI 返回的结果无效，请重试。",
+        "no_material": "请先至少填写一种语言"
+      }
     },
     "notifications": {
       "title": "通知",
@@ -308,6 +325,41 @@
       "changes": "变更",
       "changed": "{count} 个字段已变更",
       "system": "系统"
+    },
+    "generate": {
+      "title": "用 AI 生成题目",
+      "back": "题库",
+      "intro": "选择素材并设置数量，模型将一次生成含泰文、英文和中文版本的选择题。所有题目在您审核并批准前均为草稿。",
+      "fakeNotice": "测试模式：未配置 ANTHROPIC_API_KEY，将生成示例题目。",
+      "material": "素材来源",
+      "materialHint": "勾选现有学习卡片、粘贴文本或上传文件（可组合使用）。",
+      "pastedText": "粘贴文本",
+      "pastedHint": "粘贴笔记、课程内容或现有题目草稿…",
+      "file": "上传文件",
+      "fileHint": "PDF、DOCX、TXT 或 MD（最大 20 MB）",
+      "count": "题目数量",
+      "templateCount": "其中公司信息题",
+      "templateHint": "使用注册证明变量，如 '{company_name_th}'",
+      "difficulty": "难度",
+      "difficultyEasy": "简单",
+      "difficultyMedium": "中等",
+      "difficultyHard": "困难",
+      "pools": "用于",
+      "poolQuiz": "测验",
+      "poolExam": "考试",
+      "focus": "侧重点（可选）",
+      "focusHint": "例如：侧重银行工作人员常问的问题",
+      "generate": "生成题目",
+      "generating": "生成中…（约 30–60 秒）",
+      "errors": {
+        "not_configured": "尚未配置 AI（需要 ANTHROPIC_API_KEY），请联系管理员。",
+        "provider": "AI 服务商返回错误，请重试。",
+        "invalid_output": "AI 返回的结果无效，请重试。",
+        "no_material": "请选择学习卡片、粘贴文本或上传文件",
+        "pools_required": "至少选择一个用途",
+        "file_too_large": "文件超过 20 MB",
+        "nothing_produced": "没有题目通过校验，请重试。"
+      }
     }
   },
   "stages": {

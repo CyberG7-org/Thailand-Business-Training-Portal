@@ -524,6 +524,50 @@ export type Database = {
         }
         Relationships: []
       }
+      question_generation_batches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          material_summary: string
+          model: string | null
+          produced: number
+          provider: string
+          rejected: number
+          requested: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          material_summary: string
+          model?: string | null
+          produced?: number
+          provider: string
+          rejected?: number
+          requested: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          material_summary?: string
+          model?: string | null
+          produced?: number
+          provider?: string
+          rejected?: number
+          requested?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_generation_batches_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_localizations: {
         Row: {
           correct_key: string
@@ -578,6 +622,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           dbd_field_dependencies: string[]
+          generation_batch_id: string | null
           id: string
           kind: string
           pools: string[]
@@ -591,6 +636,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dbd_field_dependencies?: string[]
+          generation_batch_id?: string | null
           id?: string
           kind: string
           pools?: string[]
@@ -604,6 +650,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dbd_field_dependencies?: string[]
+          generation_batch_id?: string | null
           id?: string
           kind?: string
           pools?: string[]
@@ -617,6 +664,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_generation_batch_id_fkey"
+            columns: ["generation_batch_id"]
+            isOneToOne: false
+            referencedRelation: "question_generation_batches"
             referencedColumns: ["id"]
           },
         ]
