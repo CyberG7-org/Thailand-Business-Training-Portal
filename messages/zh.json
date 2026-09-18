@@ -329,17 +329,17 @@
     "generate": {
       "title": "用 AI 生成题目",
       "back": "题库",
-      "intro": "选择素材并设置数量，模型将一次生成含泰文、英文和中文版本的选择题。所有题目在您审核并批准前均为草稿。",
+      "intro": "题目以 DBD 公司注册证明为依据。选择参考证明并设置数量，模型会生成含泰文、英文和中文的选择题，并使用变量让每位学员回答自己公司的信息。所有题目在您审核并批准前均为草稿。",
       "fakeNotice": "测试模式：未配置 ANTHROPIC_API_KEY，将生成示例题目。",
       "material": "素材来源",
-      "materialHint": "勾选现有学习卡片、粘贴文本或上传文件（可组合使用）。",
+      "materialHint": "可选的补充素材（用于常识题）：勾选学习卡片、粘贴文本或上传文件。",
       "pastedText": "粘贴文本",
       "pastedHint": "粘贴笔记、课程内容或现有题目草稿…",
       "file": "上传文件",
       "fileHint": "PDF、DOCX、TXT 或 MD（最大 20 MB）",
       "count": "题目数量",
-      "templateCount": "其中公司信息题",
-      "templateHint": "使用注册证明变量，如 '{company_name_th}'",
+      "templateCount": "其中询问学员证明信息的题数",
+      "templateHint": "默认全部；其余题目考查对证明文件本身的理解。",
       "difficulty": "难度",
       "difficultyEasy": "简单",
       "difficultyMedium": "中等",
@@ -359,7 +359,10 @@
         "pools_required": "至少选择一个用途",
         "file_too_large": "文件超过 20 MB",
         "nothing_produced": "没有题目通过校验，请重试。"
-      }
+      },
+      "reference": "参考的 DBD 注册证明",
+      "referenceNone": "通用证明结构（不指定公司）",
+      "referenceHint": "AI 会阅读该证明的各项内容（以及已上传的 PDF）来设计贴合真实信息的题目，但绝不会把其中的值写入题目——所有题目都使用变量，让每位学员回答自己公司的信息。"
     }
   },
   "stages": {

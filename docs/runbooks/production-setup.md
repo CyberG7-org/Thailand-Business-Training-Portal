@@ -74,7 +74,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 ## 4. Content before go-live
 
 - Study cards in TH/EN/ZH (Admin → Study content), PDFs uploaded where used, Thai TTS enabled per card after review.
-- Question bank: at least `quiz_question_count` + `exam_question_count` approved questions per pool, each with all three languages (the approval trigger enforces it). Fastest route: **Admin → Question bank → Generate with AI** from the study cards or your draft document, then review/approve the batch; Thai-only drafts get EN/ZH via **Fill missing languages**.
+- Question bank: at least `quiz_question_count` + `exam_question_count` approved questions per pool, each with all three languages (the approval trigger enforces it). Fastest route: **Admin → Question bank → Generate with AI** — pick one of your confirmed DBD certificates as the reference (upload its PDF on the record first for best results), generate a personalised batch, then review/approve; Thai-only drafts get EN/ZH via **Fill missing languages**.
 - Policy settings reviewed (`/admin/settings`): eligibility days, passing mark, counts, exam-pass gates, chat ids/emails.
 - Name-card template: replace `placeholder-v1` in `lib/integrations/pdf/name-card.tsx` with the owner's design (open item #13) — one Thai layout, Sarabun font already embedded.
 

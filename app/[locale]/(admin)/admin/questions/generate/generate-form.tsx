@@ -15,16 +15,41 @@ const KNOWN_ERRORS = [
   'nothing_produced',
 ];
 
-export function GenerateForm({ cards }: { cards: { id: string; title: string }[] }) {
+export function GenerateForm({
+  cards,
+  references,
+}: {
+  cards: { id: string; title: string }[];
+  references: { id: string; label: string }[];
+}) {
   const locale = useLocale();
   const t = useTranslations('admin.generate');
   const [state, formAction, pending] = useActionState(generateQuestionsAction, initial);
   const [count, setCount] = useState(10);
+  const [templateCount, setTemplateCount] = useState(10);
   const inputClass = 'mt-1 w-full rounded border px-2 py-1';
 
   return (
     <form action={formAction} className="grid max-w-2xl gap-4 rounded border p-4">
       <input type="hidden" name="locale" value={locale} />
+
+      <label className="text-sm">
+        {t('reference')}
+        <select
+          name="reference_record_id"
+          defaultValue={references[0]?.id ?? ''}
+          data-testid="reference-record"
+          className={inputClass}
+        >
+          <option value="">{t('referenceNone')}</option>
+          {references.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-gray-500">{t('referenceHint')}</span>
+      </label>
 
       <fieldset className="grid gap-2">
         <legend className="text-sm font-medium">{t('material')}</legend>
@@ -69,7 +94,11 @@ export function GenerateForm({ cards }: { cards: { id: string; title: string }[]
             min={1}
             max={40}
             value={count}
-            onChange={(e) => setCount(Math.max(1, Math.min(40, Number(e.target.value) || 1)))}
+            onChange={(e) => {
+              const next = Math.max(1, Math.min(40, Number(e.target.value) || 1));
+              setCount(next);
+              setTemplateCount((current) => Math.min(current, next));
+            }}
             className={inputClass}
           />
         </label>
@@ -80,7 +109,11 @@ export function GenerateForm({ cards }: { cards: { id: string; title: string }[]
             type="number"
             min={0}
             max={count}
-            defaultValue={Math.min(3, count)}
+            value={templateCount}
+            onChange={(e) =>
+              setTemplateCount(Math.max(0, Math.min(count, Number(e.target.value) || 0)))
+            }
+            data-testid="template-count"
             className={inputClass}
           />
           <span className="text-xs text-gray-500">{t('templateHint')}</span>

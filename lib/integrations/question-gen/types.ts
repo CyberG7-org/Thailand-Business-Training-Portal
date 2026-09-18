@@ -1,4 +1,5 @@
 import type { AppLocale } from '@/i18n/routing';
+import type { DbdReferenceRecord } from './dbd-reference';
 
 export type GeneratedOption = { key: 'A' | 'B' | 'C' | 'D'; text: string };
 
@@ -23,6 +24,8 @@ export type MaterialBundle = {
 };
 
 export type GenerateInput = {
+  /** A confirmed DBD record (and its certificate PDF when stored) the run is modelled on. */
+  reference: { record: DbdReferenceRecord; pdf: Uint8Array | null } | null;
   material: MaterialBundle;
   count: number;
   templateCount: number;

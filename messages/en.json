@@ -329,17 +329,17 @@
     "generate": {
       "title": "Generate questions with AI",
       "back": "Question bank",
-      "intro": "Pick source material and a count; the model drafts multiple-choice questions with Thai, English and Chinese versions in one go. Everything stays a draft until you review and approve it.",
+      "intro": "Questions are grounded in the DBD company certificate. Pick a reference certificate and a count; the model drafts multiple-choice questions in Thai, English and Chinese, using variables so each learner is asked about their own company. Everything stays a draft until you review and approve it.",
       "fakeNotice": "Test mode: no ANTHROPIC_API_KEY, so sample questions are generated instead.",
       "material": "Source material",
-      "materialHint": "Tick existing study cards, paste text, or upload a file (they can be combined).",
+      "materialHint": "Optional extra material for general-knowledge questions: tick study cards, paste text, or upload a file.",
       "pastedText": "Paste text",
       "pastedHint": "Paste notes, lesson content, or your existing draft questions…",
       "file": "Upload a file",
       "fileHint": "PDF, DOCX, TXT or MD (max 20 MB)",
       "count": "Number of questions",
-      "templateCount": "Of which company-specific",
-      "templateHint": "Use certificate variables such as '{company_name_th}'",
+      "templateCount": "Of which ask facts from the learner's certificate",
+      "templateHint": "Defaults to all; the rest test understanding of the document itself.",
       "difficulty": "Difficulty",
       "difficultyEasy": "Easy",
       "difficultyMedium": "Medium",
@@ -359,7 +359,10 @@
         "pools_required": "Choose at least one pool",
         "file_too_large": "The file exceeds 20 MB",
         "nothing_produced": "No question passed validation. Try again."
-      }
+      },
+      "reference": "Reference DBD certificate",
+      "referenceNone": "Generic certificate structure (no company)",
+      "referenceHint": "The AI reads this certificate's particulars (and its PDF when uploaded) to ask about the real facts, but never copies its values into a question — every question uses variables so each learner is asked about their own company."
     }
   },
   "stages": {

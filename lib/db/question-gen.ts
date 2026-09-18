@@ -4,6 +4,10 @@ import { LOCALES, type AppLocale } from '@/i18n/routing';
 import type { OptionKey, QuestionOption } from '@/lib/domain/assessment/engine';
 import { getQuestionGenerator } from '@/lib/integrations/question-gen';
 import {
+  bannedLiterals,
+  type DbdReferenceRecord,
+} from '@/lib/integrations/question-gen/dbd-reference';
+import {
   QuestionGenError,
   type GeneratedLocalization,
   type MaterialBundle,
@@ -14,6 +18,7 @@ import {
   validateGenerated,
   type Rejection,
 } from '@/lib/integrations/question-gen/validate';
+import type { Director } from '@/lib/domain/dbd-record';
 import type { Database } from './database.types';
 import { getQuestion, upsertQuestionLocalization } from './questions';
 
@@ -21,6 +26,8 @@ type Db = SupabaseClient<Database>;
 export type GenerationBatchRow = Database['public']['Tables']['question_generation_batches']['Row'];
 
 export type GenerateBankInput = {
+  /** Confirmed DBD record the questions are modelled on (decision D36); null = structure only. */
+  referenceRecordId: string | null;
   studyMaterialIds: string[];
   pastedText: string;
   upload: { name: string; bytes: Uint8Array; mimeType: string } | null;
@@ -77,6 +84,37 @@ export async function studyCardsToText(db: Db, materialIds: string[]): Promise<s
   return parts.join('\n\n');
 }
 
+/** The reference record's particulars plus its stored certificate PDF, when one was uploaded. */
+export async function loadReference(
+  db: Db,
+  recordId: string,
+): Promise<{ record: DbdReferenceRecord; pdf: Uint8Array | null }> {
+  const { data, error } = await db.from('dbd_records').select('*').eq('id', recordId).maybeSingle();
+  if (error) throw error;
+  if (!data) throw new QuestionGenError('Reference record not found', 'no_material');
+  const record: DbdReferenceRecord = {
+    company_name_th: data.company_name_th,
+    company_name_en: data.company_name_en,
+    juristic_id: data.juristic_id,
+    certificate_no: data.certificate_no,
+    registered_on: data.registered_on,
+    issued_on: data.issued_on,
+    registered_capital: data.registered_capital,
+    head_office_address: data.head_office_address,
+    directors: (data.directors as unknown as Director[] | null) ?? null,
+    signing_authority: data.signing_authority,
+    objectives_count: data.objectives_count,
+    issuing_office: data.issuing_office,
+    registrar_name: data.registrar_name,
+  };
+  let pdf: Uint8Array | null = null;
+  if (data.document_path) {
+    const { data: blob } = await db.storage.from('dbd-documents').download(data.document_path);
+    if (blob) pdf = new Uint8Array(await blob.arrayBuffer());
+  }
+  return { record, pdf };
+}
+
 export async function buildMaterial(db: Db, input: GenerateBankInput): Promise<MaterialBundle> {
   const [cards, uploaded] = await Promise.all([
     studyCardsToText(db, input.studyMaterialIds),
@@ -117,21 +155,25 @@ export async function generateQuestionsIntoBank(
     throw new QuestionGenError('Question generation is not configured', 'not_configured');
   const count = Math.max(1, Math.min(MAX_COUNT, Math.floor(input.count)));
   const templateCount = Math.max(0, Math.min(count, Math.floor(input.templateCount)));
-  const material = await buildMaterial(db, input);
-  if (!material.text && !material.pdf && templateCount < count) {
-    throw new QuestionGenError('Provide study cards, text or a document', 'no_material');
-  }
+  const [material, reference] = await Promise.all([
+    buildMaterial(db, input),
+    input.referenceRecordId ? loadReference(db, input.referenceRecordId) : null,
+  ]);
 
   const generated = await generator.generate({
+    reference,
     material,
     count,
     templateCount,
     difficulty: input.difficulty,
     focus: input.focus,
   });
-  const { accepted, rejected } = validateGenerated(generated);
+  const { accepted, rejected } = validateGenerated(generated, {
+    bannedLiterals: reference ? bannedLiterals(reference.record) : [],
+  });
 
   const summary = [
+    reference ? `DBD ${reference.record.juristic_id ?? input.referenceRecordId}` : null,
     input.studyMaterialIds.length ? `${input.studyMaterialIds.length} study card(s)` : null,
     input.pastedText.trim() ? `${input.pastedText.trim().length} chars pasted` : null,
     input.upload ? `file ${input.upload.name}` : null,
@@ -145,7 +187,7 @@ export async function generateQuestionsIntoBank(
       created_by: adminId,
       provider: generator.name,
       model: generator.model,
-      material_summary: summary || 'template questions only',
+      material_summary: summary || 'DBD certificate structure only',
       requested: count,
       produced: accepted.length,
       rejected: rejected.length,

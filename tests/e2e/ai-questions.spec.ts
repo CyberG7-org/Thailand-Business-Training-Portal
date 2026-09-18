@@ -1,21 +1,31 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs } from './helpers';
+import { createConfirmedRecord, loginAs } from './helpers';
 
-test('admin generates a batch of draft questions with AI (fake), reviews the list and approves one', async ({
+test('admin generates DBD-grounded draft questions with AI (fake), reviews the list and approves one', async ({
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  // The reference certificate the batch is modelled on (its values never reach the questions).
+  const recordId = await createConfirmedRecord(page, {
+    companyNameTh: 'บริษัท ต้นแบบเจน จำกัด',
+    juristicId: '0105569000888',
+    issuedOn: '13/07/2569',
+  });
   await page.goto('/th/admin/questions');
   await page.getByTestId('generate-link').click();
   await expect(page).toHaveURL(/\/th\/admin\/questions\/generate$/);
+  await page.getByTestId('reference-record').selectOption(recordId);
+  await expect(page.getByTestId('reference-record').locator('option:checked')).toContainText(
+    '0105569000888',
+  );
 
-  // Pasted material + the seeded study cards; 4 questions, 2 of them company-specific.
+  // Extra material + the seeded study cards; 4 questions, 3 personalised + 1 about the document.
   const picker = page.getByTestId('study-card-picker');
   if (await picker.isVisible()) await picker.locator('input[type="checkbox"]').first().check();
   await page.locator('textarea[name="pasted_text"]').fill('E2E material\nกรมพัฒนาธุรกิจการค้า');
   await page.locator('input[name="count"]').fill('4');
-  await page.locator('input[name="templateCount"]').fill('2');
+  await page.getByTestId('template-count').fill('3');
   await page.getByTestId('generate-submit').click();
 
   await page.waitForURL(/\/th\/admin\/questions\?batch=[0-9a-f-]{36}$/);
@@ -25,6 +35,12 @@ test('admin generates a batch of draft questions with AI (fake), reviews the lis
   await expect(rows.first().getByTestId('row-status')).toHaveText('draft');
   await expect(rows.first()).toContainText('en, th, zh');
   await expect(rows.first()).toContainText('dbd_template');
+  await expect(rows.nth(2)).toContainText('dbd_template');
+  await expect(rows.nth(3)).toContainText('generic');
+  await expect(page.getByTestId('batch-summary')).toBeVisible();
+  // No literal reference value leaked into any preview.
+  await expect(page.locator('tbody')).not.toContainText('ต้นแบบเจน');
+  await expect(page.locator('tbody')).not.toContainText('0105569000888');
 
   // Inline approve keeps the batch filter and flips the status.
   await rows.first().getByTestId('approve-row').click();

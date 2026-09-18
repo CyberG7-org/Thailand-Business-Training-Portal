@@ -31,11 +31,15 @@ function checkLocalization(loc: GeneratedLocalization): string | null {
  * a valid correct key shared by all languages, known placeholders used identically per language,
  * and template questions must actually use a placeholder.
  */
-export function validateGenerated(questions: GeneratedQuestion[]): ValidationResult {
+export function validateGenerated(
+  questions: GeneratedQuestion[],
+  options: { bannedLiterals?: string[] } = {},
+): ValidationResult {
   const accepted: GeneratedQuestion[] = [];
   const rejected: Rejection[] = [];
+  const banned = (options.bannedLiterals ?? []).map((v) => v.toLowerCase());
   questions.forEach((q, index) => {
-    const reason = reasonToReject(q);
+    const reason = reasonToReject(q) ?? literalLeak(q, banned);
     if (reason) rejected.push({ index, reason });
     else accepted.push(trim(q));
   });
@@ -66,6 +70,20 @@ function reasonToReject(q: GeneratedQuestion): string | null {
   const signatures = new Set(LOCALES.map((l) => placeholderSignature(q.localizations[l])));
   if (signatures.size !== 1) return 'placeholders differ between languages';
   if (q.kind === 'dbd_template' && fields === 0) return 'template question uses no placeholder';
+  return null;
+}
+
+/** A shared question must not carry one learner's real data (decision D36). */
+function literalLeak(q: GeneratedQuestion, banned: string[]): string | null {
+  if (banned.length === 0) return null;
+  for (const lang of LOCALES) {
+    const loc = q.localizations[lang];
+    const haystack = [loc.prompt, loc.explanation, ...loc.options.map((o) => o.text)]
+      .join('\n')
+      .toLowerCase();
+    const hit = banned.find((v) => haystack.includes(v));
+    if (hit) return `${lang}: contains reference value "${hit}"`;
+  }
   return null;
 }
 

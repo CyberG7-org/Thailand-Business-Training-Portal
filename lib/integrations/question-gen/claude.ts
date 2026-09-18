@@ -1,6 +1,7 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { describeReference } from './dbd-reference';
 import {
   GENERATION_INSTRUCTIONS,
   TRANSLATION_INSTRUCTIONS,
@@ -44,6 +45,16 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
 
   async generate(input: GenerateInput): Promise<GeneratedQuestion[]> {
     const content: Anthropic.ContentBlockParam[] = [];
+    if (input.reference?.pdf) {
+      content.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: Buffer.from(input.reference.pdf).toString('base64'),
+        },
+      });
+    }
     if (input.material.pdf) {
       content.push({
         type: 'document',
@@ -59,8 +70,15 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
       `Create ${input.count} ${input.difficulty} question(s); ${input.templateCount} of them must be kind "dbd_template" ` +
       `(using placeholders) and ${input.count - input.templateCount} kind "generic".` +
       (input.focus ? `\nFocus: ${input.focus}` : '') +
+      (input.reference
+        ? `\n\nREFERENCE CERTIFICATE (example only; its values must NOT appear literally — use placeholders):\n` +
+          describeReference(input.reference.record) +
+          (input.reference.pdf
+            ? '\nThe first attached document is this reference certificate.'
+            : '')
+        : '') +
       (text ? `\n\nMATERIAL (ground generic questions strictly in this):\n${text}` : '') +
-      (input.material.pdf ? '\n\nAlso use the attached document as material.' : '');
+      (input.material.pdf ? '\n\nAlso use the attached study document as material.' : '');
     content.push({ type: 'text', text: request });
 
     let response;

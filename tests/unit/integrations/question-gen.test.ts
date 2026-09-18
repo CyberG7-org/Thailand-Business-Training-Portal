@@ -3,6 +3,7 @@ import { FakeQuestionGenerator } from '@/lib/integrations/question-gen/fake';
 import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen/index';
 import { generationOutputSchema } from '@/lib/integrations/question-gen/schema';
 import type { GeneratedQuestion } from '@/lib/integrations/question-gen/types';
+import { bannedLiterals } from '@/lib/integrations/question-gen/dbd-reference';
 import { validateGenerated } from '@/lib/integrations/question-gen/validate';
 
 function question(overrides: Partial<GeneratedQuestion> = {}): GeneratedQuestion {
@@ -79,6 +80,7 @@ describe('FakeQuestionGenerator', () => {
   it('produces the requested mix in three languages that passes validation and the output schema', async () => {
     const gen = new FakeQuestionGenerator();
     const questions = await gen.generate({
+      reference: null,
       material: { text: 'DBD basics\nmore', pdf: null },
       count: 3,
       templateCount: 1,
@@ -97,6 +99,68 @@ describe('FakeQuestionGenerator', () => {
     });
     expect(Object.keys(translated).sort()).toEqual(['en', 'zh']);
     expect(translated.en?.options[1].text).toContain('{registered_capital|x2}');
+  });
+});
+
+describe('reference record safety', () => {
+  const record = {
+    company_name_th: 'บริษัท ตัวอย่างจริง จำกัด',
+    company_name_en: 'Real Example Co., Ltd.',
+    juristic_id: '0105569000123',
+    certificate_no: 'E5300192000',
+    registered_on: '2026-04-10',
+    issued_on: '2026-07-13',
+    registered_capital: 2000000,
+    head_office_address: '194/3 หมู่ 2 ตำบลวังใหญ่',
+    directors: [{ name_th: 'นางสาวภมรรัตน์ ตัวอย่าง', name_en: 'Miss Pamonrat Example' }],
+    signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อ',
+    objectives_count: 14,
+    issuing_office: 'สำนักงานทะเบียนหุ้นส่วนบริษัทจังหวัดอุตรดิตถ์',
+    registrar_name: 'นางสายฝน ตัวอย่าง',
+  };
+
+  it('bans the record values that would identify one learner, but not short numbers', () => {
+    const banned = bannedLiterals(record);
+    expect(banned).toEqual(
+      expect.arrayContaining([
+        'บริษัท ตัวอย่างจริง จำกัด',
+        'Real Example Co., Ltd.',
+        '0105569000123',
+        '194/3 หมู่ 2 ตำบลวังใหญ่',
+        'นางสาวภมรรัตน์ ตัวอย่าง',
+        '2000000',
+        '2,000,000',
+      ]),
+    );
+    expect(banned).not.toContain('14');
+  });
+
+  it('rejects generated questions that embed a reference value instead of a placeholder', () => {
+    const leaking = question();
+    leaking.localizations.en.options[2].text = 'c 0105569000123';
+    const result = validateGenerated([leaking, question()], {
+      bannedLiterals: bannedLiterals(record),
+    });
+    expect(result.accepted).toHaveLength(1);
+    expect(result.rejected[0].reason).toBe('en: contains reference value "0105569000123"');
+  });
+
+  it('the fake generator cycles through the certificate particulars', async () => {
+    const questions = await new FakeQuestionGenerator().generate({
+      reference: { record, pdf: null },
+      material: { text: '', pdf: null },
+      count: 6,
+      templateCount: 6,
+      difficulty: 'medium',
+      focus: null,
+    });
+    const prompts = questions.map((q) => q.localizations.th.prompt);
+    expect(prompts.some((p) => p.includes('ทุนจดทะเบียน'))).toBe(true);
+    expect(prompts.some((p) => p.includes('สำนักงานใหญ่'))).toBe(true);
+    expect(prompts.some((p) => p.includes('กรรมการ'))).toBe(true);
+    expect(
+      validateGenerated(questions, { bannedLiterals: bannedLiterals(record) }).rejected,
+    ).toEqual([]);
   });
 });
 

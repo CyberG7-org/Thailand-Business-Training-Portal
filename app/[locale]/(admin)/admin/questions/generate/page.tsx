@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireAdmin } from '@/lib/auth/session';
+import { listDbdRecords } from '@/lib/db/dbd-records';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listStudyMaterials } from '@/lib/db/study';
 import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen';
@@ -16,7 +17,14 @@ export default async function GenerateQuestionsPage({
 }) {
   const { locale } = await params;
   await requireAdmin(locale);
-  const materials = await listStudyMaterials(await createSupabaseServerClient());
+  const db = await createSupabaseServerClient();
+  const [materials, records] = await Promise.all([listStudyMaterials(db), listDbdRecords(db)]);
+  const references = records
+    .filter((r) => r.extraction_status === 'confirmed')
+    .map((r) => ({
+      id: r.id,
+      label: `${r.company_name_th ?? r.company_name_en ?? r.id} · ${r.juristic_id ?? '—'}${r.document_path ? ' · PDF' : ''}`,
+    }));
   const cards = materials
     .filter((m) => m.type === 'card' && m.active)
     .map((m) => {
@@ -46,7 +54,7 @@ export default async function GenerateQuestionsPage({
               {t('fakeNotice')}
             </p>
           )}
-          <GenerateForm cards={cards} />
+          <GenerateForm cards={cards} references={references} />
         </>
       )}
     </section>

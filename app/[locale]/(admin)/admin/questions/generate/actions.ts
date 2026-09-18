@@ -47,6 +47,7 @@ export async function generateQuestionsAction(
   let result;
   try {
     result = await generateQuestionsIntoBank(await createSupabaseServerClient(), admin.id, {
+      referenceRecordId: String(formData.get('reference_record_id') ?? '') || null,
       studyMaterialIds: formData.getAll('study_material_ids').map(String),
       pastedText: String(formData.get('pasted_text') ?? ''),
       upload,

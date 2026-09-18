@@ -28,6 +28,7 @@ describe('AI question authoring', () => {
   let asAdmin: Client;
   let asLearner: Client;
   let materialId: string;
+  let recordId: string;
   const createdQuestionIds: string[] = [];
   const batchIds: string[] = [];
 
@@ -40,6 +41,24 @@ describe('AI question authoring', () => {
       .select()
       .single();
     materialId = data!.id;
+    const { data: record } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท อ้างอิงเจน จำกัด',
+        company_name_en: 'Gen Reference Co., Ltd.',
+        juristic_id: '0105569000777',
+        registered_capital: 3000000,
+        head_office_address: '77/7 หมู่ 7 ตำบลอ้างอิง',
+        directors: [{ name_th: 'นายอ้างอิง ทดสอบ', name_en: null }],
+        issued_on: '2026-07-13',
+        registered_on: '2026-04-10',
+        extraction_status: 'confirmed',
+        confirmed_by: admin.id,
+        confirmed_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+    recordId = record!.id;
     await svc.from('study_material_localizations').insert([
       {
         material_id: materialId,
@@ -60,6 +79,7 @@ describe('AI question authoring', () => {
     await svc.from('questions').delete().in('id', createdQuestionIds);
     await svc.from('question_generation_batches').delete().in('id', batchIds);
     await svc.from('study_materials').delete().eq('id', materialId);
+    await svc.from('dbd_records').delete().eq('id', recordId);
     await Promise.all([admin, learner].map((u) => deleteTestUser(u.id)));
   });
 
@@ -68,6 +88,7 @@ describe('AI question authoring', () => {
       asAdmin,
       admin.id,
       {
+        referenceRecordId: recordId,
         studyMaterialIds: [materialId],
         pastedText: '',
         upload: null,
@@ -112,7 +133,7 @@ describe('AI question authoring', () => {
       requested: 3,
       produced: 3,
       rejected: 0,
-      material_summary: '1 study card(s)',
+      material_summary: 'DBD 0105569000777; 1 study card(s)',
     });
     const { data: learnerView } = await asLearner.from('question_generation_batches').select('id');
     expect(learnerView).toEqual([]);
@@ -125,6 +146,7 @@ describe('AI question authoring', () => {
       async generate() {
         const good = (
           await new FakeQuestionGenerator().generate({
+            reference: null,
             material: { text: 'x', pdf: null },
             count: 1,
             templateCount: 0,
@@ -134,7 +156,9 @@ describe('AI question authoring', () => {
         )[0];
         const bad: GeneratedQuestion = JSON.parse(JSON.stringify(good));
         bad.localizations.zh.correct_key = 'B';
-        return [good, bad];
+        const leak: GeneratedQuestion = JSON.parse(JSON.stringify(good));
+        leak.localizations.th.prompt = 'ทุนจดทะเบียนของ บริษัท อ้างอิงเจน จำกัด คือเท่าใด';
+        return [good, bad, leak];
       },
       async translate() {
         return {};
@@ -144,10 +168,11 @@ describe('AI question authoring', () => {
       asAdmin,
       admin.id,
       {
+        referenceRecordId: recordId,
         studyMaterialIds: [],
         pastedText: 'some notes',
         upload: null,
-        count: 2,
+        count: 3,
         templateCount: 0,
         pools: ['quiz', 'exam'],
         difficulty: 'easy',
@@ -160,12 +185,13 @@ describe('AI question authoring', () => {
     expect(result.produced).toBe(1);
     expect(result.rejected).toEqual([
       { index: 1, reason: 'correct key differs between languages' },
+      { index: 2, reason: 'th: contains reference value "บริษัท อ้างอิงเจน จำกัด"' },
     ]);
     const batch = (await listGenerationBatches(asAdmin)).find((b) => b.id === result.batchId);
     expect(batch).toMatchObject({
       produced: 1,
-      rejected: 1,
-      material_summary: '10 chars pasted; focus: banking',
+      rejected: 2,
+      material_summary: 'DBD 0105569000777; 10 chars pasted; focus: banking',
     });
   });
 
