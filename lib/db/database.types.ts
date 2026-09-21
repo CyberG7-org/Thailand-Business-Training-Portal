@@ -834,6 +834,7 @@ export type Database = {
           pools: string[]
           question_key: string
           source: string
+          source_refs: Json
           updated_at: string
         }
         Insert: {
@@ -848,6 +849,7 @@ export type Database = {
           pools?: string[]
           question_key: string
           source?: string
+          source_refs?: Json
           updated_at?: string
         }
         Update: {
@@ -862,6 +864,7 @@ export type Database = {
           pools?: string[]
           question_key?: string
           source?: string
+          source_refs?: Json
           updated_at?: string
         }
         Relationships: [
