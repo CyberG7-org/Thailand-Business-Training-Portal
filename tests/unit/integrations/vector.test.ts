@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Chunk } from '@/lib/domain/rag/chunk';
 import { getVectorStore, resolveVectorProvider } from '@/lib/integrations/vector';
 import { FakeVectorStore } from '@/lib/integrations/vector/fake';
-import { pineconeConfig } from '@/lib/integrations/vector/pinecone';
+import { pineconeConfig, toVectorError } from '@/lib/integrations/vector/pinecone';
+import { Errors } from '@pinecone-database/pinecone';
 
 describe('resolveVectorProvider', () => {
   it('follows the explicit setting, then the key, then the environment', () => {
@@ -58,5 +59,27 @@ describe('FakeVectorStore', () => {
     });
     expect(typed).toEqual([]);
     expect(await store.search({ recordId: 'other', query: 'ทุนจดทะเบียน' })).toEqual([]);
+  });
+});
+
+describe('toVectorError', () => {
+  it('treats outages, timeouts and exhausted retries as unavailable, bad keys as not configured', () => {
+    expect(toVectorError(new Errors.PineconeAuthorizationError({ status: 401 })).code).toBe(
+      'not_configured',
+    );
+    expect(toVectorError(new Errors.PineconeConnectionError(new Error('ECONNRESET'))).code).toBe(
+      'unavailable',
+    );
+    expect(toVectorError(new Errors.PineconeUnavailableError({ status: 503 })).code).toBe(
+      'unavailable',
+    );
+    expect(toVectorError(new Errors.PineconeTimeoutError('idx', 1000)).code).toBe('unavailable');
+    expect(toVectorError(new Errors.PineconeMaxRetriesExceededError(3)).code).toBe('unavailable');
+    expect(toVectorError(new Errors.PineconeInternalServerError({ status: 500 })).code).toBe(
+      'unavailable',
+    );
+    expect(toVectorError(new Errors.PineconeBadRequestError({ status: 400 })).code).toBe(
+      'provider',
+    );
   });
 });

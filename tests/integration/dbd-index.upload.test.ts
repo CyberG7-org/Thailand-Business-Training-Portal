@@ -7,6 +7,8 @@ import {
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
 import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
+import { FakeVectorStore } from '@/lib/integrations/vector/fake';
+import { VectorError } from '@/lib/integrations/vector/types';
 import {
   adminClient,
   clientFor,
@@ -86,6 +88,30 @@ describe('upload → index status', () => {
     const docs = await listDbdDocuments(asAdmin, recordId);
     const doc = docs[docs.length - 1];
     expect(doc).toMatchObject({ page_count: 3, index_status: 'skipped' });
+  });
+
+  it('keeps the document when its vectors cannot be removed (no orphans in the store)', async () => {
+    const docs = await listDbdDocuments(asAdmin, recordId);
+    const doc = docs[docs.length - 1];
+    await svc.from('dbd_chunks').insert({
+      id: `${doc.id}#1#7`,
+      record_id: recordId,
+      document_id: doc.id,
+      page: 1,
+      chunk_index: 7,
+      chunk_text: 'x',
+      char_count: 1,
+    });
+    const dead = new FakeVectorStore(async () => []);
+    dead.remove = async () => {
+      throw new VectorError('Pinecone is unreachable', 'unavailable');
+    };
+    await expect(removeDbdDocument(asAdmin, recordId, doc.id, dead)).rejects.toMatchObject({
+      code: 'unavailable',
+    });
+    const remaining = await listDbdDocuments(asAdmin, recordId);
+    expect(remaining.some((d) => d.id === doc.id)).toBe(true);
+    await svc.from('dbd_chunks').delete().eq('id', `${doc.id}#1#7`);
   });
 
   it('removing a document also removes its rows', async () => {

@@ -189,7 +189,8 @@
         "retry": "Retry",
         "reindex": "Re-index",
         "hint": "Documents are read five pages at a time in the background (about a minute per run); reload to refresh the status.",
-        "start": "Index"
+        "start": "Index",
+        "removeUnavailable": "The document was kept: the search index (Pinecone) is unreachable, so its vectors could not be removed first. Try again later."
       },
       "ask": {
         "title": "Ask the documents",

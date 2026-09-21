@@ -38,13 +38,17 @@ type ChunkMetadata = {
   chunk_index: number;
 };
 
-function toVectorError(error: unknown): VectorError {
+/** SDK failures → our three codes: retry later (unavailable), fix the key, or a real bug. */
+export function toVectorError(error: unknown): VectorError {
   if (error instanceof Errors.PineconeAuthorizationError) {
     return new VectorError('Pinecone API key is missing or invalid', 'not_configured');
   }
   if (
     error instanceof Errors.PineconeConnectionError ||
-    error instanceof Errors.PineconeUnavailableError
+    error instanceof Errors.PineconeUnavailableError ||
+    error instanceof Errors.PineconeTimeoutError ||
+    error instanceof Errors.PineconeMaxRetriesExceededError ||
+    error instanceof Errors.PineconeInternalServerError
   ) {
     return new VectorError('Pinecone is unreachable', 'unavailable');
   }

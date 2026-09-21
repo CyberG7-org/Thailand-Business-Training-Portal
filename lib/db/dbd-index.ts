@@ -11,7 +11,7 @@ import {
 } from '@/lib/domain/rag/transcript';
 import { transcriptionModel } from '@/lib/integrations/extraction/transcribe';
 import type { DbdExtractor } from '@/lib/integrations/extraction/types';
-import type { Passage, VectorStore } from '@/lib/integrations/vector/types';
+import { VectorError, type Passage, type VectorStore } from '@/lib/integrations/vector/types';
 import { slicePdf } from '@/lib/pdf/slice';
 import { createSupabaseAdminClient } from './admin';
 import type { Database } from './database.types';
@@ -78,6 +78,71 @@ export async function searchRecordPassages(
 ): Promise<Passage[] | null> {
   if (!vector) return null;
   return vector.search({ recordId, query, ...options });
+}
+
+export type AskResult = {
+  question: string;
+  answer: string | null;
+  passages: { document: string; page: number; text: string }[];
+  error: 'empty' | 'not_indexed' | 'unavailable' | null;
+};
+
+/**
+ * "Ask the documents" (spec §8): retrieval over the record's index plus an answer grounded only in
+ * the passages. A dead store reports `unavailable`; a failed answer still shows the passages.
+ */
+export async function askRecordDocuments(
+  db: Db,
+  vector: VectorStore | null,
+  input: {
+    recordId: string;
+    question: string;
+    answer?: (
+      question: string,
+      passages: Passage[],
+      documentNames: Map<string, string>,
+    ) => Promise<string | null>;
+  },
+): Promise<AskResult> {
+  const question = input.question.trim().slice(0, 300);
+  const empty: AskResult = { question, answer: null, passages: [], error: null };
+  if (question.length < 2) return { ...empty, error: 'empty' };
+  if (!vector) return { ...empty, error: 'unavailable' };
+  const { data: docs, error } = await db
+    .from('dbd_documents')
+    .select('id, original_name, index_status')
+    .eq('record_id', input.recordId);
+  if (error) throw error;
+  if (!(docs ?? []).some((d) => d.index_status === 'ready')) {
+    return { ...empty, error: 'not_indexed' };
+  }
+  const names = new Map((docs ?? []).map((d) => [d.id, d.original_name]));
+  let passages: Passage[];
+  try {
+    passages = await vector.search({ recordId: input.recordId, query: question, topK: 5 });
+  } catch (e) {
+    if (e instanceof VectorError) return { ...empty, error: 'unavailable' };
+    throw e;
+  }
+  let answer: string | null = null;
+  if (input.answer) {
+    try {
+      answer = await input.answer(question, passages, names);
+    } catch (e) {
+      console.error('askRecordDocuments: answer failed', e);
+      answer = null;
+    }
+  }
+  return {
+    question,
+    answer,
+    passages: passages.map((p) => ({
+      document: names.get(p.documentId) ?? '',
+      page: p.page,
+      text: p.text,
+    })),
+    error: null,
+  };
 }
 
 export type IndexWorkerDeps = {

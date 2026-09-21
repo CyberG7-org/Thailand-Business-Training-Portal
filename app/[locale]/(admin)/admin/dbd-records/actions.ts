@@ -14,11 +14,11 @@ import {
   updateDbdRecord,
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
-import { enqueueIndexJob, searchRecordPassages } from '@/lib/db/dbd-index';
+import { askRecordDocuments, enqueueIndexJob, type AskResult } from '@/lib/db/dbd-index';
 import { extractAndApply } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
-import { getVectorStore } from '@/lib/integrations/vector';
+import { VectorError, getVectorStore } from '@/lib/integrations/vector';
 import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
@@ -294,8 +294,16 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record || record.extraction_status === 'confirmed') return;
-  await removeDbdDocument(db, id, documentId);
+  let unavailable = false;
+  try {
+    await removeDbdDocument(db, id, documentId);
+  } catch (e) {
+    // The store refused to drop the vectors, so the row was kept (no orphans); tell the admin.
+    if (!(e instanceof VectorError)) throw e;
+    unavailable = true;
+  }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+  if (unavailable) redirect(`/${locale}/admin/dbd-records/${id}?error=vector_unavailable`);
 }
 
 /** Level 4 answers stay editable after confirmation: they are prepared answers, not DBD facts. */
@@ -338,39 +346,17 @@ export async function retryIndexAction(formData: FormData): Promise<void> {
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
 }
 
-export type AskState = {
-  question: string;
-  answer: string | null;
-  passages: { document: string; page: number; text: string }[];
-  error: 'empty' | 'not_indexed' | 'unavailable' | null;
-};
+export type AskState = AskResult;
 
 /** "Ask the documents": retrieval + a grounded answer, never free-form knowledge (spec §8). */
 export async function askDocumentsAction(_prev: AskState, formData: FormData): Promise<AskState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  const question = String(formData.get('question') ?? '')
-    .trim()
-    .slice(0, 300);
   await requireAdmin(locale);
-  const empty: AskState = { question, answer: null, passages: [], error: null };
-  if (question.length < 2) return { ...empty, error: 'empty' };
-  const vector = getVectorStore();
-  if (!vector) return { ...empty, error: 'unavailable' };
   const db = await createSupabaseServerClient();
-  const docs = await listDbdDocuments(db, id);
-  if (!docs.some((d) => d.index_status === 'ready')) return { ...empty, error: 'not_indexed' };
-  const names = new Map(docs.map((d) => [d.id, d.original_name]));
-  const passages = (await searchRecordPassages(vector, id, question, { topK: 5 })) ?? [];
-  const answer = await answerFromPassages(question, passages, names);
-  return {
-    question,
-    answer,
-    passages: passages.map((p) => ({
-      document: names.get(p.documentId) ?? '',
-      page: p.page,
-      text: p.text,
-    })),
-    error: null,
-  };
+  return askRecordDocuments(db, getVectorStore(), {
+    recordId: id,
+    question: String(formData.get('question') ?? ''),
+    answer: answerFromPassages,
+  });
 }

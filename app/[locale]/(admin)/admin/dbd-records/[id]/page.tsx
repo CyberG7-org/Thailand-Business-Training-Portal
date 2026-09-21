@@ -22,10 +22,15 @@ export default async function DbdRecordPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ extraction?: string; applied?: string; extractionError?: string }>;
+  searchParams: Promise<{
+    extraction?: string;
+    applied?: string;
+    extractionError?: string;
+    error?: string;
+  }>;
 }) {
   const { locale, id } = await params;
-  const { extraction, applied, extractionError } = await searchParams;
+  const { extraction, applied, extractionError, error } = await searchParams;
   await requireAdmin(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
@@ -62,6 +67,15 @@ export default async function DbdRecordPage({
         }))}
         extractionAvailable={getDbdExtractor() !== null}
       />
+      {error === 'vector_unavailable' && (
+        <p
+          role="alert"
+          data-testid="vector-unavailable-banner"
+          className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm"
+        >
+          {t('index.removeUnavailable')}
+        </p>
+      )}
       {extraction === 'filled' && (
         <p
           data-testid="autofill-banner"

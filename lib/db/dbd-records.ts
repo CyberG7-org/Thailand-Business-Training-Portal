@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DbdRecordInput } from '@/lib/domain/dbd-record';
 import type { StructuredData } from '@/lib/domain/dbd-profile';
-import { getVectorStore, resolveVectorProvider } from '@/lib/integrations/vector';
+import { getVectorStore, resolveVectorProvider, type VectorStore } from '@/lib/integrations/vector';
 import { countPages } from '@/lib/pdf/slice';
 import type { Database, Json } from './database.types';
 import { enqueueIndexJob, listChunkIds } from './dbd-index';
@@ -153,6 +153,7 @@ export async function removeDbdDocument(
   db: Db,
   recordId: string,
   documentId: string,
+  vector: VectorStore | null = getVectorStore(),
 ): Promise<void> {
   const { data: doc, error } = await db
     .from('dbd_documents')
@@ -164,7 +165,7 @@ export async function removeDbdDocument(
   if (!doc) return;
   // Vectors first, then the row (pages and chunks cascade) — decision D40.
   const ids = await listChunkIds(db, doc.id);
-  if (ids.length > 0) await getVectorStore()?.remove(ids);
+  if (ids.length > 0) await vector?.remove(ids);
   await db.storage.from('dbd-documents').remove([doc.path]);
   const { error: delError } = await db.from('dbd_documents').delete().eq('id', doc.id);
   if (delError) throw delError;
