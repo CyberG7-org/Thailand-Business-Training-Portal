@@ -26,11 +26,12 @@ export default async function DbdRecordPage({
     extraction?: string;
     applied?: string;
     extractionError?: string;
+    transcripts?: string;
     error?: string;
   }>;
 }) {
   const { locale, id } = await params;
-  const { extraction, applied, extractionError, error } = await searchParams;
+  const { extraction, applied, extractionError, transcripts, error } = await searchParams;
   await requireAdmin(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
@@ -92,12 +93,20 @@ export default async function DbdRecordPage({
           {t('uploadedButNotRead', { reason: extractionError ?? '' })}
         </p>
       )}
-      {extraction === 'deferred' && (
+      {(extraction === 'deferred' || extraction === 'queued') && (
         <p
           data-testid="autofill-banner"
           className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
         >
-          {t('deferredFill')}
+          {t(extraction === 'queued' ? 'queuedFill' : 'deferredFill')}
+        </p>
+      )}
+      {extraction === 'filled' && (transcripts === 'queued' || transcripts === 'pending_index') && (
+        <p
+          data-testid="transcripts-note"
+          className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
+        >
+          {t(transcripts === 'queued' ? 'queuedFill' : 'deferredFill')}
         </p>
       )}
       {extraction === 'skipped' && (

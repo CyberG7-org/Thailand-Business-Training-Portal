@@ -470,6 +470,38 @@ export type Database = {
           },
         ]
       }
+      dbd_sweeps: {
+        Row: {
+          created_at: string
+          document_id: string
+          first_page: number
+          last_page: number
+          result: Json
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          first_page: number
+          last_page: number
+          result: Json
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          first_page?: number
+          last_page?: number
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dbd_sweeps_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eligibility_snapshots: {
         Row: {
           available_from: string

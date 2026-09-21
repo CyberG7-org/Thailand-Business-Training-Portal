@@ -68,6 +68,8 @@ Runs when an oversized document becomes `ready`, and from **Read the document ag
 
 The direct path and the transcript path share `applyExtractionToRecord`; nothing the admin typed is ever overwritten.
 
+**As implemented (P14c, after review — D42):** the transcript path is a resumable `transcript` job on the same queue (queued when an oversized document becomes ready, and by *Read the document again*), not an inline call: sweep batches are cached in `dbd_sweeps`, each list is taken only from the document kind authoritative for it (the บอจ.2's subscriber table never becomes the shareholder list), lists are validated and capped before storing, and every write is conditional (still-empty field, unconfirmed record, `updated_at` compare-and-swap). Directors come from the retrieval call rather than a certificate sweep.
+
 ## 7. Vector adapter (`lib/integrations/vector/`)
 
 ```ts

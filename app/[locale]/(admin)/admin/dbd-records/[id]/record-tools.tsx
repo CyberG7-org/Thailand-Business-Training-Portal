@@ -40,17 +40,25 @@ function FillOutcome({ state }: { state: ToolState }) {
   const t = useTranslations('admin.dbd');
   if (!state.ok) return null;
   const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === state.extractionError);
+  const background = state.transcripts && (
+    <p role="status" data-testid="transcripts-note" className="text-sm text-gray-700">
+      {t(state.transcripts === 'queued' ? 'queuedFill' : 'deferredFill')}
+    </p>
+  );
   if (state.extraction === 'filled') {
     return (
-      <p role="status" data-testid="extract-status" className="text-sm text-green-700">
-        {t('autoFilled', { count: state.applied?.length ?? 0 })}
-      </p>
+      <>
+        <p role="status" data-testid="extract-status" className="text-sm text-green-700">
+          {t('autoFilled', { count: state.applied?.length ?? 0 })}
+        </p>
+        {background}
+      </>
     );
   }
-  if (state.extraction === 'deferred') {
+  if (state.extraction === 'deferred' || state.extraction === 'queued') {
     return (
       <p role="status" data-testid="extract-status" className="text-sm text-gray-700">
-        {t('deferredFill')}
+        {t(state.extraction === 'queued' ? 'queuedFill' : 'deferredFill')}
       </p>
     );
   }

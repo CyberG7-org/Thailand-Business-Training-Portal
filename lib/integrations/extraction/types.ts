@@ -49,7 +49,7 @@ export interface DbdExtractor {
    * Throws `MissingPagesError` when the model skipped a page.
    */
   transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]>;
-  /** Document kind from its first transcribed page (P14c); "other" when unsure. */
+  /** Document kind from its first transcribed pages (P14c; a cover sheet may come first); "other" when unsure. */
   classify(firstPageText: string): Promise<DocumentType>;
   /** Level 1/3 particulars (+ directors) from retrieved passages; list fields stay empty. */
   extractFacts(passages: TranscriptPassage[]): Promise<DbdExtraction>;

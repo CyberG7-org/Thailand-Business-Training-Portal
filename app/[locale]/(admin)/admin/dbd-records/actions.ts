@@ -15,7 +15,7 @@ import {
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
 import { askRecordDocuments, enqueueIndexJob, type AskResult } from '@/lib/db/dbd-index';
-import { extractAndApply } from '@/lib/db/extraction';
+import { extractAndApply, type ExtractAndApplyResult } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
@@ -42,9 +42,22 @@ export type ToolState = {
   /** Fields filled from the document by the last upload/extract (P1.5, decision D37). */
   applied?: string[];
   /** Extraction outcome after an upload that itself succeeded. */
-  extraction?: 'filled' | 'skipped' | 'failed' | 'deferred';
+  extraction?: 'filled' | 'skipped' | 'failed' | 'deferred' | 'queued';
   extractionError?: string;
+  /** Oversized documents: a background fill is queued, or waits for their index (P14c). */
+  transcripts?: 'queued' | 'pending_index';
 };
+
+/** What the admin is told after a read: what was filled now, and what fills in the background. */
+function fillOutcome(
+  result: ExtractAndApplyResult,
+): Pick<ToolState, 'applied' | 'extraction' | 'transcripts'> {
+  const transcripts = result.transcripts === 'none' ? undefined : result.transcripts;
+  const filledNow = result.applied.length > 0 || result.businessFilled;
+  const extraction =
+    filledNow || !transcripts ? 'filled' : transcripts === 'queued' ? 'queued' : 'deferred';
+  return { applied: result.applied, extraction, transcripts };
+}
 
 const EMPTY_INPUT = dbdRecordInputSchema.parse({});
 
@@ -227,16 +240,12 @@ export async function uploadDocumentAction(
 async function fillFromDocument(
   db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   id: string,
-): Promise<Pick<ToolState, 'applied' | 'extraction' | 'extractionError'>> {
+): Promise<Pick<ToolState, 'applied' | 'extraction' | 'extractionError' | 'transcripts'>> {
   const extractor = getDbdExtractor();
   if (!extractor) return { extraction: 'skipped', applied: [] };
   try {
-    const { applied, fromTranscripts } = await extractAndApply(db, id, extractor);
-    return { extraction: 'filled', applied: [...applied, ...(fromTranscripts?.applied ?? [])] };
+    return fillOutcome(await extractAndApply(db, id, extractor));
   } catch (e) {
-    if (e instanceof ExtractionError && e.code === 'deferred') {
-      return { extraction: 'deferred', applied: [] };
-    }
     return {
       extraction: 'failed',
       applied: [],
@@ -266,6 +275,7 @@ export async function createFromDocumentAction(
   const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
   if (outcome.applied?.length) query.set('applied', String(outcome.applied.length));
   if (outcome.extractionError) query.set('extractionError', outcome.extractionError);
+  if (outcome.transcripts) query.set('transcripts', outcome.transcripts);
   redirect(`/${locale}/admin/dbd-records/${id}?${query.toString()}`);
 }
 
@@ -280,14 +290,9 @@ export async function extractDocumentAction(
   if (!extractor) return { ok: false, error: 'not_configured' };
   const db = await createSupabaseServerClient();
   try {
-    const { applied, fromTranscripts } = await extractAndApply(db, id, extractor);
+    const outcome = fillOutcome(await extractAndApply(db, id, extractor));
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return {
-      ok: true,
-      error: null,
-      applied: [...applied, ...(fromTranscripts?.applied ?? [])],
-      extraction: 'filled',
-    };
+    return { ok: true, error: null, ...outcome };
   } catch (e) {
     if (e instanceof ExtractionError) return { ok: false, error: e.code };
     return { ok: false, error: errorMessage(e) };

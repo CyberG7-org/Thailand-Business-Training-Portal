@@ -207,7 +207,8 @@
         },
         "noAnswer": "No model answer available; showing the passages found"
       },
-      "deferredFill": "The documents are too long to read in one pass; they are being read in the background and the fields will fill in when the index status is \"Ready\" (reload to see them)."
+      "deferredFill": "The documents are too long to read in one pass; they are being read in the background and the fields will fill in when the index status is \"Ready\" (reload to see them).",
+      "queuedFill": "The long documents are being read in the background, a few pages at a time; reload the page in a minute to see the fields they filled."
     },
     "assignment": {
       "title": "Assigned company",

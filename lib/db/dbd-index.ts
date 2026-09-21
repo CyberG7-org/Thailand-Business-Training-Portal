@@ -1,7 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { chunkPage, type Chunk } from '@/lib/domain/rag/chunk';
-import { MAX_INDEX_ATTEMPTS, retryDelayMinutes } from '@/lib/domain/rag/jobs';
+import { MAX_INDEX_ATTEMPTS, directReadMaxPages, retryDelayMinutes } from '@/lib/domain/rag/jobs';
 import {
   DEFAULT_SLICE_PAGES,
   MissingPagesError,
@@ -56,6 +56,51 @@ export async function enqueueIndexJob(
     .update({ index_status: 'queued', indexed_pages: 0, index_error: null })
     .eq('id', input.documentId);
   if (docError) throw docError;
+}
+
+/**
+ * Queues the transcript fill of a record (P14c), keyed by the oversized document that makes it
+ * due. A live index job on that document wins (its completion queues the fill); a live
+ * transcript job is reused, re-reading the particulars only when asked. Document status is
+ * untouched: the fill is about the record, not the index.
+ */
+export async function enqueueTranscriptJob(
+  db: Db,
+  input: { recordId: string; documentId: string; rereadFacts?: boolean },
+): Promise<'queued' | 'already_live' | 'index_in_progress'> {
+  const { data: live, error } = await db
+    .from('index_jobs')
+    .select('id, kind')
+    .eq('document_id', input.documentId)
+    .in('status', ['queued', 'running'])
+    .maybeSingle();
+  if (error) throw error;
+  if (live) {
+    if (live.kind !== 'transcript') return 'index_in_progress';
+    if (input.rereadFacts) {
+      const { error: e } = await db
+        .from('index_jobs')
+        .update({
+          status: 'queued',
+          next_page: 1,
+          attempts: 0,
+          locked_until: null,
+          last_error: null,
+        })
+        .eq('id', live.id);
+      if (e) throw e;
+    }
+    return 'already_live';
+  }
+  const { error: e } = await db.from('index_jobs').insert({
+    record_id: input.recordId,
+    document_id: input.documentId,
+    kind: 'transcript',
+    // For transcript jobs next_page is a phase: 1 = particulars to (re)read, 2 = only if unread.
+    next_page: input.rereadFacts ? 1 : 2,
+  });
+  if (e) throw e;
+  return 'queued';
 }
 
 export async function listChunkIds(db: Db, documentId: string): Promise<string[]> {
@@ -145,6 +190,16 @@ export async function askRecordDocuments(
   };
 }
 
+/** Runs one transcript fill for a record (the worker's `transcript` dependency, P14c). */
+export type TranscriptRunner = (input: {
+  recordId: string;
+  documentId: string;
+  /** What is left of the run's budget; the runner reads at least one batch regardless. */
+  budgetMs: number;
+  /** `force` re-reads the particulars (a "Read again"); `auto` only when none are stored. */
+  facts: 'auto' | 'force';
+}) => Promise<{ status: 'done' | 'released' | 'skipped'; factsSettled: boolean }>;
+
 export type IndexWorkerDeps = {
   extractor: DbdExtractor | null;
   vector: VectorStore | null;
@@ -153,8 +208,10 @@ export type IndexWorkerDeps = {
   slicePages?: number;
   now?: () => number;
   download?: (path: string) => Promise<Uint8Array>;
-  /** Called after a document reaches `ready` (the transcript path hangs off this); errors are logged. */
-  onDocumentReady?: (recordId: string, documentId: string) => Promise<void>;
+  /** Fills a record from its transcripts; without it, transcript jobs are closed unread. */
+  transcript?: TranscriptRunner;
+  /** Documents with more pages get a transcript fill when they become ready (default from env). */
+  directReadMaxPages?: number;
 };
 
 export type IndexRunSummary = {
@@ -165,6 +222,8 @@ export type IndexRunSummary = {
   skipped: number;
   /** Jobs put back in the queue with work left (budget) or after a failed attempt (backoff). */
   released: number;
+  /** Transcript fills that finished (or had nothing to do). */
+  transcripts: number;
 };
 
 async function downloadFromStorage(admin: Db, path: string): Promise<Uint8Array> {
@@ -281,6 +340,34 @@ async function relabelChunks(
   );
 }
 
+/** The first pages with any text, joined with page markers (a cover sheet alone says little). */
+export function classificationText(pages: TranscribedPage[], count = 2): string {
+  return pages
+    .filter((p) => p.text.trim() !== '')
+    .slice(0, count)
+    .map((p) => `=== PAGE ${p.page} ===\n${p.text}`)
+    .join('\n');
+}
+
+/** Spec §5.6: an untyped document is classified from its first pages; a known type stays. */
+async function classifyDocument(
+  admin: Db,
+  extractor: DbdExtractor,
+  doc: { id: string; document_type: string | null },
+  pages: TranscribedPage[],
+): Promise<void> {
+  const text = classificationText(pages, doc.document_type === null ? 2 : 3);
+  if (text === '') return;
+  try {
+    const type = await extractor.classify(text);
+    if (type === 'other' && doc.document_type !== null) return; // no better answer than before
+    await setDocument(admin, doc.id, { document_type: type });
+    doc.document_type = type;
+  } catch (e) {
+    console.error('classify failed; leaving the type as it was', e);
+  }
+}
+
 async function setDocument(
   admin: Db,
   documentId: string,
@@ -299,16 +386,49 @@ async function setJob(
   if (error) throw error;
 }
 
+/** Backs a failed attempt off, or fails the job at the ceiling (`onFail` marks the document). */
+async function failAttempt(
+  admin: Db,
+  job: IndexJobRow,
+  message: string,
+  now: () => number,
+  summary: IndexRunSummary,
+  onFail?: () => Promise<void>,
+): Promise<void> {
+  const attempts = message === 'unreadable_pdf' ? MAX_INDEX_ATTEMPTS : job.attempts + 1;
+  if (attempts >= MAX_INDEX_ATTEMPTS) {
+    await setJob(admin, job.id, {
+      status: 'failed',
+      attempts,
+      locked_until: null,
+      last_error: message,
+    });
+    if (onFail) await onFail();
+    summary.failed++;
+  } else {
+    await setJob(admin, job.id, {
+      status: 'queued',
+      attempts,
+      last_error: message,
+      locked_until: new Date(now() + retryDelayMinutes(attempts) * 60_000).toISOString(),
+    });
+    summary.released++;
+  }
+}
+
 /**
  * One worker run (cron): claims one job at a time and reads slices until the budget is spent.
  * A job is released with `next_page` advanced when the budget runs out, backed off after a
- * failed attempt, and marked `done` (document `ready`) after its last page.
+ * failed attempt, and marked `done` (document `ready`) after its last page. A document with
+ * more pages than the direct read takes then gets a `transcript` job, which fills its record
+ * from the transcripts in the same resumable way (P14c).
  */
 export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunSummary> {
   const admin = createSupabaseAdminClient();
   const now = deps.now ?? Date.now;
   const budgetMs = deps.budgetMs ?? 240_000;
   const slicePages = deps.slicePages ?? DEFAULT_SLICE_PAGES;
+  const maxDirectPages = deps.directReadMaxPages ?? directReadMaxPages();
   const download = deps.download ?? ((path: string) => downloadFromStorage(admin, path));
   const started = now();
   const summary: IndexRunSummary = {
@@ -318,6 +438,7 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     failed: 0,
     skipped: 0,
     released: 0,
+    transcripts: 0,
   };
 
   while (now() - started < budgetMs || summary.claimed === 0) {
@@ -326,14 +447,57 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     const job = claimed?.[0];
     if (!job) break;
     summary.claimed++;
+    const isTranscript = job.kind === 'transcript';
 
     // The claim counts an expired `running` lease as a failed attempt (the run was killed before
     // it could report); the worker's own catch counts the rest. Both meet the same ceiling.
     if (job.attempts >= MAX_INDEX_ATTEMPTS) {
       const message = 'worker died repeatedly (lease expired)';
       await setJob(admin, job.id, { status: 'failed', locked_until: null, last_error: message });
-      await setDocument(admin, job.document_id, { index_status: 'failed', index_error: message });
+      if (!isTranscript) {
+        await setDocument(admin, job.document_id, { index_status: 'failed', index_error: message });
+      }
       summary.failed++;
+      continue;
+    }
+
+    if (isTranscript) {
+      if (!deps.transcript || !deps.extractor || !deps.vector) {
+        await setJob(admin, job.id, {
+          status: 'done',
+          locked_until: null,
+          last_error: 'no provider',
+        });
+        summary.skipped++;
+        continue;
+      }
+      try {
+        const run = await deps.transcript({
+          recordId: job.record_id,
+          documentId: job.document_id,
+          budgetMs: Math.max(0, budgetMs - (now() - started)),
+          facts: job.next_page === 1 ? 'force' : 'auto',
+        });
+        if (run.status === 'released') {
+          await setJob(admin, job.id, {
+            status: 'queued',
+            locked_until: null,
+            ...(run.factsSettled ? { next_page: 2 } : {}),
+          });
+          summary.released++;
+          break; // the run's budget is what the fill used up; the next run continues it
+        } else {
+          await setJob(admin, job.id, {
+            status: 'done',
+            locked_until: null,
+            last_error: null,
+            next_page: 2,
+          });
+          summary.transcripts++;
+        }
+      } catch (e) {
+        await failAttempt(admin, job, e instanceof Error ? e.message : String(e), now, summary);
+      }
       continue;
     }
 
@@ -361,6 +525,14 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
       let nextPage = job.next_page;
       let done = false;
       await setDocument(admin, doc.id, { index_status: 'indexing' });
+      if (nextPage === 1) {
+        // The transcripts are being (re)written: cached sweeps of the old ones are stale.
+        const { error: sweepError } = await admin
+          .from('dbd_sweeps')
+          .delete()
+          .eq('document_id', doc.id);
+        if (sweepError) throw sweepError;
+      }
       do {
         const slice = planSlice(doc.page_count, nextPage, slicePages);
         if (!slice) {
@@ -368,15 +540,8 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
           break;
         }
         const pages = await transcribeWithRetry(deps.extractor, bytes, slice);
-        // Spec §5.6: an untyped document is classified from its first page; a known type stays.
         if (slice.firstPage === 1 && doc.document_type === null) {
-          try {
-            const type = await deps.extractor.classify(pages[0]?.text ?? '');
-            await setDocument(admin, doc.id, { document_type: type });
-            doc.document_type = type;
-          } catch (e) {
-            console.error('classify failed; leaving the type unknown', e);
-          }
+          await classifyDocument(admin, deps.extractor, doc, pages);
         }
         const model = deps.extractor.name === 'claude' ? transcriptionModel() : deps.extractor.name;
         await storeSlice(admin, deps.vector, job, doc.document_type, pages, model);
@@ -393,8 +558,21 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
           .select('document_type')
           .eq('id', doc.id)
           .single();
-        if (fresh && fresh.document_type !== doc.document_type) {
-          await relabelChunks(admin, deps.vector, doc.id, fresh.document_type);
+        let finalType = fresh?.document_type ?? doc.document_type;
+        if (finalType === null || finalType === 'other') {
+          // A cover sheet or a failed call left the document untyped: try again with more pages.
+          const { data: firstPages } = await admin
+            .from('dbd_pages')
+            .select('page, text')
+            .eq('document_id', doc.id)
+            .order('page')
+            .limit(6);
+          const probe = { id: doc.id, document_type: finalType };
+          await classifyDocument(admin, deps.extractor, probe, firstPages ?? []);
+          finalType = probe.document_type;
+        }
+        if (finalType !== doc.document_type) {
+          await relabelChunks(admin, deps.vector, doc.id, finalType);
         }
         await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
         await setDocument(admin, doc.id, {
@@ -403,12 +581,9 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
           index_error: null,
         });
         summary.completed++;
-        if (deps.onDocumentReady) {
-          try {
-            await deps.onDocumentReady(job.record_id, doc.id);
-          } catch (e) {
-            console.error('onDocumentReady failed', e);
-          }
+        // Spec §5.5: an oversized document fills its record from the transcripts once ready.
+        if (doc.page_count > maxDirectPages) {
+          await enqueueTranscriptJob(admin, { recordId: job.record_id, documentId: doc.id });
         }
       } else {
         await setJob(admin, job.id, { status: 'queued', locked_until: null });
@@ -416,25 +591,9 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      const attempts = message === 'unreadable_pdf' ? MAX_INDEX_ATTEMPTS : job.attempts + 1;
-      if (attempts >= MAX_INDEX_ATTEMPTS) {
-        await setJob(admin, job.id, {
-          status: 'failed',
-          attempts,
-          locked_until: null,
-          last_error: message,
-        });
-        await setDocument(admin, job.document_id, { index_status: 'failed', index_error: message });
-        summary.failed++;
-      } else {
-        await setJob(admin, job.id, {
-          status: 'queued',
-          attempts,
-          last_error: message,
-          locked_until: new Date(now() + retryDelayMinutes(attempts) * 60_000).toISOString(),
-        });
-        summary.released++;
-      }
+      await failAttempt(admin, job, message, now, summary, () =>
+        setDocument(admin, job.document_id, { index_status: 'failed', index_error: message }),
+      );
     }
   }
   return summary;

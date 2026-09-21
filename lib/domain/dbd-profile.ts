@@ -45,17 +45,31 @@ export const shareStructureSchema = z.object({
   share_type: optionalText,
 });
 
+/**
+ * Row ceilings of the stored lists. A big บอจ.5 runs to thousands of holders; anything past a
+ * ceiling makes the whole stored profile unreadable, so writers cap before storing (P14c).
+ */
+export const PROFILE_LIST_LIMITS = {
+  objectives: 1000,
+  business_categories: 50,
+  shareholders: 5000,
+  promoters: 100,
+} as const;
+
 export const businessProfileSchema = z.object({
-  objectives: z.array(objectiveSchema).max(500).default([]),
-  business_categories: z.array(z.string().trim().min(1).max(200)).max(50).default([]),
+  objectives: z.array(objectiveSchema).max(PROFILE_LIST_LIMITS.objectives).default([]),
+  business_categories: z
+    .array(z.string().trim().min(1).max(200))
+    .max(PROFILE_LIST_LIMITS.business_categories)
+    .default([]),
   share_structure: shareStructureSchema.default({
     total_shares: null,
     par_value: null,
     paid_up_capital: null,
     share_type: null,
   }),
-  shareholders: z.array(shareholderSchema).max(500).default([]),
-  promoters: z.array(promoterSchema).max(100).default([]),
+  shareholders: z.array(shareholderSchema).max(PROFILE_LIST_LIMITS.shareholders).default([]),
+  promoters: z.array(promoterSchema).max(PROFILE_LIST_LIMITS.promoters).default([]),
 });
 
 export type BusinessProfile = z.output<typeof businessProfileSchema>;

@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { processIndexJobs } from '@/lib/db/dbd-index';
-import { extractFromTranscripts } from '@/lib/db/transcript-extraction';
+import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
+import { sweepPagesFromEnv } from '@/lib/integrations/extraction/transcript-schema';
 import { getVectorStore } from '@/lib/integrations/vector';
 
 // A 5-page slice of dense Thai can take 1–2 minutes; stop starting new slices at half the
@@ -35,10 +36,16 @@ export async function GET(request: NextRequest) {
       vector,
       budgetMs: WORK_BUDGET_MS,
       slicePages: slicePages(),
-      // Oversized documents fill the record from their transcripts once ready (spec §6, D42).
-      onDocumentReady: async (recordId) => {
-        await extractFromTranscripts(createSupabaseAdminClient(), recordId, { extractor, vector });
-      },
+      // Oversized documents fill their record from the transcripts once ready (spec §6, D42):
+      // a resumable job of its own, sharing this run's budget.
+      transcript: (input) =>
+        fillRecordFromTranscripts(createSupabaseAdminClient(), input.recordId, {
+          extractor,
+          vector,
+          budgetMs: input.budgetMs,
+          facts: input.facts,
+          sweepPages: sweepPagesFromEnv(),
+        }),
     });
     return NextResponse.json(summary);
   } catch (e) {

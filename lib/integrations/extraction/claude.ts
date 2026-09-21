@@ -29,6 +29,12 @@ export const MAX_TOTAL_PDF_BYTES = 30 * 1024 * 1024;
 const TRANSCRIPTION_MAX_TOKENS = 32000;
 /** A transcription call that has not finished by then is treated as a failed attempt. */
 export const TRANSCRIPTION_TIMEOUT_MS = 150_000;
+/** Output ceiling of one list sweep; a batch that still overflows is re-read page by page. */
+const SWEEP_MAX_TOKENS = 32000;
+
+function tooLong(): ExtractionError {
+  return new ExtractionError('The answer did not fit the output limit', 'too_large');
+}
 
 /** Maps SDK failures to ExtractionError codes (shared by extract and transcribe). */
 function toExtractionError(error: unknown): ExtractionError {
@@ -140,12 +146,12 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     return parsePageMarkers(text, range);
   }
 
-  async classify(firstPageText: string): Promise<DocumentType> {
-    if (firstPageText.trim() === '') return 'other';
+  async classify(firstPagesText: string): Promise<DocumentType> {
+    if (firstPagesText.trim() === '') return 'other';
     const output = await this.structured(
       classifyApiSchema,
       CLASSIFY_INSTRUCTIONS,
-      `PAGE 1:\n${firstPageText.slice(0, 6000)}`,
+      firstPagesText.slice(0, 8000),
       400,
     );
     return output.document_type;
@@ -165,7 +171,7 @@ export class ClaudeDbdExtractor implements DbdExtractor {
       sweepApiSchema,
       `${SWEEP_INSTRUCTIONS}\nDocument type: ${documentType}.`,
       text,
-      16000,
+      SWEEP_MAX_TOKENS,
     );
     return fromSweepApi(output);
   }
@@ -177,23 +183,34 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     text: string,
     maxTokens: number,
   ): Promise<z.infer<T>> {
+    const stream = this.client.messages.stream(
+      {
+        model: transcriptionModel(),
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content: text }],
+        output_config: { format: zodOutputFormat(schema) },
+      },
+      { timeout: TRANSCRIPTION_TIMEOUT_MS },
+    );
+    // An answer cut off by max_tokens fails to parse inside finalMessage(); the stop reason
+    // arrives before that, so remember it to tell "too long" from a real provider failure.
+    let stopReason: string | null = null;
+    if (typeof stream.on === 'function') {
+      stream.on('streamEvent', (event) => {
+        if (event.type === 'message_delta' && event.delta.stop_reason) {
+          stopReason = event.delta.stop_reason;
+        }
+      });
+    }
     let response;
     try {
-      response = await this.client.messages
-        .stream(
-          {
-            model: transcriptionModel(),
-            max_tokens: maxTokens,
-            system,
-            messages: [{ role: 'user', content: text }],
-            output_config: { format: zodOutputFormat(schema) },
-          },
-          { timeout: TRANSCRIPTION_TIMEOUT_MS },
-        )
-        .finalMessage();
+      response = await stream.finalMessage();
     } catch (error) {
+      if (stopReason === 'max_tokens') throw tooLong();
       throw toExtractionError(error);
     }
+    if (response.stop_reason === 'max_tokens') throw tooLong();
     if (response.stop_reason === 'refusal' || !response.parsed_output) {
       throw new ExtractionError('The model did not return a valid answer', 'invalid_output');
     }

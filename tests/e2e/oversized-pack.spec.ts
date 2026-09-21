@@ -15,7 +15,8 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('');
   await expect(page.getByTestId('index-status').first()).toHaveAttribute('data-status', 'queued');
 
-  // Five slices; the cron reads them all in one run and the transcript path fills the record.
+  // Five slices; the cron reads them all in one run, then claims the transcript job the last
+  // slice queued and fills the record from the transcripts.
   const run = await request.get('/api/cron/index', {
     headers: { Authorization: 'Bearer local-cron-secret-for-dev' },
   });
@@ -33,5 +34,17 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
   await expect(
     page.getByTestId('business-profile').locator('textarea[name="objectives_text"]'),
   ).toHaveValue(/^1\. ประกอบกิจการค้าปลีก/);
+  await expect(page.getByTestId('record-status')).toHaveText('extracted');
+
+  // "Read the document again" queues a background re-read instead of blocking the page; the
+  // next cron run performs it and finds nothing new to fill.
+  await page.getByTestId('extract-button').click();
+  await expect(page.getByTestId('extract-status')).toContainText('เบื้องหลัง');
+  const again = await request.get('/api/cron/index', {
+    headers: { Authorization: 'Bearer local-cron-secret-for-dev' },
+  });
+  expect((await again.json()).transcripts).toBe(1);
+  await page.reload();
+  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
   await expect(page.getByTestId('record-status')).toHaveText('extracted');
 });

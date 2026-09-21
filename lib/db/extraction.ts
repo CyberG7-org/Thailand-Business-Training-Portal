@@ -7,7 +7,8 @@ import {
   type StructuredData,
 } from '@/lib/domain/dbd-profile';
 import { applyExtractionToRecord } from '@/lib/domain/extraction-merge';
-import { planDirectRead } from '@/lib/domain/extraction-plan';
+import { DIRECT_READ_HARD_MAX_PAGES, planDirectRead } from '@/lib/domain/extraction-plan';
+import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
 import {
   dbdExtractionSchema,
@@ -19,9 +20,9 @@ import {
   type DbdExtractor,
 } from '@/lib/integrations/extraction/types';
 import type { Database, Json } from './database.types';
+import { enqueueTranscriptJob } from './dbd-index';
 import { getDbdRecord, listDbdDocuments, updateDbdRecord, type DbdRecordRow } from './dbd-records';
 import { recordToFormValues } from './record-form-values';
-import { extractFromTranscripts } from './transcript-extraction';
 
 type Db = SupabaseClient<Database>;
 
@@ -32,14 +33,17 @@ export function parseStoredExtraction(raw: unknown): DbdExtraction | null {
 }
 
 /**
- * Runs the extractor over every uploaded document of the record (upload order) and stores the
- * raw result in `extraction_raw` (status `extracted`). Record columns are untouched here; the
- * fill step lives in `extractAndApply` (decision D37).
+ * Runs the extractor over the record's documents that may travel whole (upload order) and stores
+ * the raw result in `extraction_raw` (status `extracted`). Record columns are untouched here; the
+ * fill step lives in `extractAndApply` (decision D37). With an index configured, documents over
+ * `DIRECT_READ_MAX_PAGES` wait for the transcript path (`deferred`); without one they travel
+ * whole up to the model's own page limit, beyond which they are `too_large`.
  */
 export async function runExtraction(
   db: Db,
   recordId: string,
   extractor: DbdExtractor,
+  vector: VectorStore | null = getVectorStore(),
 ): Promise<DbdRecordRow> {
   const record = await getDbdRecord(db, recordId);
   if (!record) throw new ExtractionError('Record not found', 'not_allowed');
@@ -51,9 +55,13 @@ export async function runExtraction(
     throw new ExtractionError('Upload the certificate PDF first', 'no_document');
   }
   // Only small documents travel whole (spec §5.1, D42); the rest wait for the transcript path.
-  const plan = planDirectRead(documents);
+  const plan = planDirectRead(documents, {
+    maxPages: vector ? directReadMaxPages() : DIRECT_READ_HARD_MAX_PAGES,
+  });
   if (plan.direct.length === 0) {
-    throw new ExtractionError('Every document is too large to read whole', 'deferred');
+    throw vector
+      ? new ExtractionError('Every document is too large to read whole', 'deferred')
+      : new ExtractionError('The documents exceed the pages one read can take', 'too_large');
   }
   const readable = documents.filter((d) => plan.direct.includes(d.id));
 
@@ -100,8 +108,6 @@ export async function runExtraction(
   }
 }
 
-export { recordToFormValues } from './record-form-values';
-
 export type ExtractAndApplyResult = {
   record: DbdRecordRow;
   /** Form fields (Level 1/3) the extraction filled. */
@@ -110,8 +116,11 @@ export type ExtractAndApplyResult = {
   rejected: string[];
   /** Whether the Level 2 business profile was filled from the documents. */
   businessFilled: boolean;
-  /** What the transcript path filled for oversized documents (null when it did not run). */
-  fromTranscripts: { applied: string[]; lists: string[] } | null;
+  /**
+   * Oversized documents: `queued` = a background fill from their transcripts was scheduled;
+   * `pending_index` = it will be once their index is ready; `none` = there are none.
+   */
+  transcripts: 'queued' | 'pending_index' | 'none';
 };
 
 /** Level 2 as the extractor returned it, in the stored shape. */
@@ -165,7 +174,8 @@ function extractedProvenance(extraction: DbdExtraction): Provenance {
 /**
  * Runs the extractor and fills the record from what it read (decisions D37/D38): Level 1/3
  * columns only where empty, the Level 2 business profile only when nothing was entered yet,
- * provenance always refreshed. Confirmation stays explicit.
+ * provenance merged. Confirmation stays explicit. Oversized documents are never read here: their
+ * fill runs as a background job once their index is ready (D42), which this schedules.
  */
 export async function extractAndApply(
   db: Db,
@@ -173,43 +183,58 @@ export async function extractAndApply(
   extractor: DbdExtractor,
   vector: VectorStore | null = getVectorStore(),
 ): Promise<ExtractAndApplyResult> {
-  // Small documents are read whole now; oversized ones are filled from their transcripts once
-  // indexed (D42). A pack with nothing small enough is "deferred" unless the transcripts already
-  // supplied something.
-  let direct: ExtractAndApplyResult | null = null;
+  let direct: DirectPassResult | null = null;
   try {
-    direct = await directPass(db, recordId, extractor);
+    direct = await directPass(db, recordId, extractor, vector);
   } catch (e) {
     if (!(e instanceof ExtractionError) || e.code !== 'deferred') throw e;
   }
-  const transcripts = await extractFromTranscripts(db, recordId, { extractor, vector });
-  const fromTranscripts = transcripts.skipped
-    ? null
-    : { applied: transcripts.applied, lists: transcripts.lists };
-  if (
-    !direct &&
-    (!fromTranscripts ||
-      (fromTranscripts.applied.length === 0 && fromTranscripts.lists.length === 0))
-  ) {
-    throw new ExtractionError('Every document is too large to read whole', 'deferred');
-  }
-  const record = (await getDbdRecord(db, recordId)) ?? direct?.record;
+  // A "Read again" with nothing small enough re-reads the particulars from the transcripts too.
+  const transcripts = vector
+    ? await scheduleTranscriptFill(db, recordId, { rereadFacts: direct === null })
+    : 'none';
+  const record = direct?.record ?? (await getDbdRecord(db, recordId));
   if (!record) throw new ExtractionError('Record not found', 'not_allowed');
   return {
     record,
     applied: direct?.applied ?? [],
     rejected: direct?.rejected ?? [],
     businessFilled: direct?.businessFilled ?? false,
-    fromTranscripts,
+    transcripts,
   };
 }
+
+/** Queues the transcript fill for the record's oversized documents, if any is ready. */
+async function scheduleTranscriptFill(
+  db: Db,
+  recordId: string,
+  options: { rereadFacts: boolean },
+): Promise<ExtractAndApplyResult['transcripts']> {
+  const maxPages = directReadMaxPages();
+  const oversized = (await listDbdDocuments(db, recordId)).filter(
+    (d) => d.page_count !== null && d.page_count > maxPages,
+  );
+  if (oversized.length === 0) return 'none';
+  const ready = oversized.find((d) => d.index_status === 'ready');
+  if (!ready) return 'pending_index';
+  const queued = await enqueueTranscriptJob(db, {
+    recordId,
+    documentId: ready.id,
+    rereadFacts: options.rereadFacts,
+  });
+  // A re-index in flight queues the fill itself when it finishes.
+  return queued === 'index_in_progress' ? 'pending_index' : 'queued';
+}
+
+type DirectPassResult = Omit<ExtractAndApplyResult, 'transcripts'>;
 
 async function directPass(
   db: Db,
   recordId: string,
   extractor: DbdExtractor,
-): Promise<ExtractAndApplyResult> {
-  const extracted = await runExtraction(db, recordId, extractor);
+  vector: VectorStore | null,
+): Promise<DirectPassResult> {
+  const extracted = await runExtraction(db, recordId, extractor, vector);
   const extraction = parseStoredExtraction(extracted.extraction_raw);
   if (!extraction) {
     throw new ExtractionError('The stored extraction is not readable', 'invalid_output');
@@ -225,17 +250,20 @@ async function directPass(
   const businessFilled =
     (currentBusiness === null || isBusinessProfileEmpty(currentBusiness)) &&
     !isBusinessProfileEmpty(business);
+  // Everything else in the column (interview answers, provenance written by the transcript
+  // path) is kept; this pass only adds what it read.
   const structured: StructuredData = {
+    ...current,
     business: businessFilled ? business : (currentBusiness ?? undefined),
     document_type: extraction.documents?.[0]?.document_type ?? current.document_type ?? null,
-    provenance: extractedProvenance(extraction),
+    provenance: { ...(current.provenance ?? {}), ...extractedProvenance(extraction) },
   };
 
   const record =
     applied.length > 0
       ? await updateDbdRecord(db, recordId, input, structured)
       : await updateStructuredData(db, recordId, structured);
-  return { record, applied, rejected, businessFilled, fromTranscripts: null };
+  return { record, applied, rejected, businessFilled };
 }
 
 async function updateStructuredData(

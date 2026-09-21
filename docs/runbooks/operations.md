@@ -36,6 +36,8 @@ Set the uptime monitor to alert on non-200 from `/api/health` for 3 consecutive 
 - *Failed* with `unreadable_pdf`: the file is not a standard PDF (encrypted/corrupt) — re-export and upload again.
 - *Failed* with "missing page": the model skipped pages twice; click **Retry**. Persistent failures on scans: set `TRANSCRIPTION_MODEL=claude-opus-5` and retry.
 - Pinecone down: jobs back off (1–16 min) and resume by themselves; uploads keep working.
+- Index *Ready* but the record's fields stay empty (a pack over 20 pages): the fill is a `transcript` job on the same queue (`index_jobs.kind = 'transcript'`; `next_page` 1 = particulars still to read). It runs a sweep per `TRANSCRIPT_SWEEP_PAGES` pages and caches each batch in `dbd_sweeps`, so a run cut by the 300 s limit continues next minute. Check `select status, attempts, last_error from index_jobs where kind = 'transcript' and record_id = …`; a `failed` one is re-queued by **Read the document again**. A sweep `too_large` error means one batch of rows did not fit the model's output: lower `TRANSCRIPT_SWEEP_PAGES`.
+- A record confirmed while the fill runs takes nothing from it; nothing an admin typed is overwritten (each field is written only while still empty).
 - Deleting a record with SQL leaves its vectors behind — remove its documents from the record page first.
 
 ## Data handling

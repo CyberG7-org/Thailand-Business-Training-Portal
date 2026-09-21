@@ -2,6 +2,8 @@ import { directReadMaxPages } from './rag/jobs';
 
 /** Request ceiling for document content in one model call (the API rejects larger payloads). */
 export const DIRECT_READ_MAX_BYTES = 30 * 1024 * 1024;
+/** The model's own ceiling per request; without an index there is no other way to read a document. */
+export const DIRECT_READ_HARD_MAX_PAGES = 100;
 
 export type DirectReadPlan = { direct: string[]; deferred: string[] };
 

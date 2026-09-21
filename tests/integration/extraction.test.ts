@@ -208,6 +208,7 @@ describe('extractAndApply', () => {
       .update({ company_name_th: null, juristic_id: null })
       .eq('id', recordId);
     const [doc] = await listDbdDocuments(svc, recordId);
+    await svc.from('index_jobs').update({ status: 'done' }).eq('document_id', doc.id);
     await svc
       .from('dbd_documents')
       .update({ index_status: 'ready', indexed_pages: 1, document_type: 'certificate' })
@@ -235,7 +236,51 @@ describe('extractAndApply', () => {
       new FakeDbdExtractor(),
       new FakeVectorStore(loadChunksFromDb),
     );
-    expect(result.fromTranscripts?.applied).toContain('company_name_th');
-    expect(result.record.company_name_th).toBe('บริษัท ตัวอย่างการสกัด จำกัด');
+    // Nothing is read inline: the fill is queued for the worker, asked to re-read the particulars.
+    expect(result.applied).toEqual([]);
+    expect(result.transcripts).toBe('queued');
+    expect(result.record.company_name_th).toBeNull();
+    const { data: job } = await svc
+      .from('index_jobs')
+      .select('kind, status, next_page')
+      .eq('document_id', doc.id)
+      .in('status', ['queued', 'running'])
+      .single();
+    expect(job).toMatchObject({ kind: 'transcript', status: 'queued', next_page: 1 });
+    await svc.from('index_jobs').delete().eq('document_id', doc.id).eq('kind', 'transcript');
+    await svc.from('dbd_documents').update({ page_count: 1 }).eq('record_id', recordId);
+  });
+
+  it('reports a pack whose oversized documents are still indexing as pending', async () => {
+    const svc = adminClient();
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await svc
+      .from('dbd_documents')
+      .update({ page_count: 25, index_status: 'indexing' })
+      .eq('id', doc.id);
+    const result = await extractAndApply(
+      asAdmin,
+      recordId,
+      new FakeDbdExtractor(),
+      new FakeVectorStore(loadChunksFromDb),
+    );
+    expect(result.transcripts).toBe('pending_index');
+    await svc
+      .from('dbd_documents')
+      .update({ page_count: 1, index_status: 'ready' })
+      .eq('id', doc.id);
+  });
+
+  it('without an index reads documents whole up to the model limit, and refuses beyond it', async () => {
+    const svc = adminClient();
+    await svc.from('dbd_documents').update({ page_count: 60 }).eq('record_id', recordId);
+    const whole = await extractAndApply(asAdmin, recordId, new FakeDbdExtractor(), null);
+    expect(whole.transcripts).toBe('none');
+    expect(whole.record.extraction_raw).not.toBeNull();
+    await svc.from('dbd_documents').update({ page_count: 101 }).eq('record_id', recordId);
+    await expect(
+      extractAndApply(asAdmin, recordId, new FakeDbdExtractor(), null),
+    ).rejects.toMatchObject({ code: 'too_large' });
+    await svc.from('dbd_documents').update({ page_count: 1 }).eq('record_id', recordId);
   });
 });

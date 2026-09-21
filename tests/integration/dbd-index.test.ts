@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   enqueueIndexJob,
+  enqueueTranscriptJob,
   listChunkIds,
   processIndexJobs,
   searchRecordPassages,
@@ -10,7 +11,7 @@ import { createDbdRecord, listDbdDocuments, uploadDbdDocument } from '@/lib/db/d
 import { MissingPagesError, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
 import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
 import type { Chunk } from '@/lib/domain/rag/chunk';
-import { FakeDbdExtractor } from '@/lib/integrations/extraction/fake';
+import { FakeDbdExtractor, fakePageText } from '@/lib/integrations/extraction/fake';
 import type { DbdExtractor } from '@/lib/integrations/extraction/types';
 import { FakeVectorStore } from '@/lib/integrations/vector/fake';
 import { loadChunksFromDb } from '@/lib/integrations/vector/fake-loader';
@@ -274,25 +275,143 @@ describe('index jobs and the worker', () => {
     expect(after.document_type).toBe('memorandum');
   });
 
-  it('tells the caller when a document becomes ready (the transcript path hangs off this)', async () => {
+  it('classifies past a cover sheet, and again at the end when the first slice said nothing', async () => {
     const [doc] = await listDbdDocuments(svc, recordId);
+    // Page 1 is a cover sheet, page 2 the บอจ.5: a one-page first slice cannot tell, the end can.
+    const coverThenList = transcriberWith((range) => {
+      const pages: TranscribedPage[] = [];
+      for (let page = range.firstPage; page <= range.lastPage; page++) {
+        pages.push({ page, text: page === 1 ? '   ' : fakePageText(3) });
+      }
+      return pages;
+    });
+    await svc.from('dbd_documents').update({ document_type: null }).eq('id', doc.id);
     await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
-    const ready: string[] = [];
     await processIndexJobs({
+      extractor: coverThenList,
+      vector: store,
+      budgetMs: 60_000,
+      slicePages: 1,
+    });
+    let [after] = await listDbdDocuments(svc, recordId);
+    expect(after).toMatchObject({ index_status: 'ready', document_type: 'shareholder_list' });
+
+    // A first slice of two pages reads past the cover sheet at once.
+    await svc.from('dbd_documents').update({ document_type: null }).eq('id', doc.id);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    await processIndexJobs({
+      extractor: coverThenList,
+      vector: store,
+      budgetMs: 60_000,
+      slicePages: 2,
+    });
+    [after] = await listDbdDocuments(svc, recordId);
+    expect(after.document_type).toBe('shareholder_list');
+
+    // Restore the certificate transcripts for the tests that follow.
+    await svc.from('dbd_documents').update({ document_type: null }).eq('id', doc.id);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    await processIndexJobs({ extractor: new FakeDbdExtractor(), vector: store, budgetMs: 60_000 });
+    [after] = await listDbdDocuments(svc, recordId);
+    expect(after.document_type).toBe('certificate');
+  });
+
+  it('queues a transcript fill when an oversized document becomes ready, and none for a small one', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    const transcriptJobs = async () => {
+      const { data } = await svc
+        .from('index_jobs')
+        .select('kind, status, next_page')
+        .eq('document_id', doc.id)
+        .eq('kind', 'transcript')
+        .in('status', ['queued', 'running']);
+      return data ?? [];
+    };
+    // 3 pages against a direct-read limit of 20: small, read whole on upload, no fill queued.
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    await processIndexJobs({ extractor: new FakeDbdExtractor(), vector: store, budgetMs: 60_000 });
+    expect(await transcriptJobs()).toEqual([]);
+
+    // The same document against a limit of 2 is oversized: its record fills from the transcripts.
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    const run = await processIndexJobs({
       extractor: new FakeDbdExtractor(),
       vector: store,
       budgetMs: 60_000,
-      onDocumentReady: async (r, d) => {
-        ready.push(`${r}:${d}`);
+      directReadMaxPages: 2,
+      transcript: async () => ({ status: 'done', factsSettled: true }),
+    });
+    expect(run).toMatchObject({ completed: 1, transcripts: 1 });
+    expect(await transcriptJobs()).toEqual([]); // claimed and finished within the same run
+  });
+
+  it('runs a transcript job through its runner: released jobs wait, finished ones close, failures back off', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    expect(
+      await enqueueTranscriptJob(svc, { recordId, documentId: doc.id, rereadFacts: true }),
+    ).toBe('queued');
+    const seen: { budgetMs: number; facts: string }[] = [];
+    const released = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      transcript: async (input) => {
+        seen.push({ budgetMs: input.budgetMs, facts: input.facts });
+        return { status: 'released', factsSettled: true };
       },
     });
-    expect(ready).toEqual([`${recordId}:${doc.id}`]);
+    expect(released).toMatchObject({ claimed: 1, released: 1, transcripts: 0 });
+    expect(seen[0]?.facts).toBe('force');
+    expect(seen[0]?.budgetMs).toBeGreaterThan(0);
+    let job = await latestJob(doc.id);
+    expect(job).toMatchObject({ kind: 'transcript', status: 'queued', next_page: 2, attempts: 0 });
+
+    const failed = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      transcript: async () => {
+        throw new Error('provider down');
+      },
+    });
+    expect(failed).toMatchObject({ claimed: 1, released: 1 });
+    job = await latestJob(doc.id);
+    expect(job).toMatchObject({ status: 'queued', attempts: 1, last_error: 'provider down' });
+    expect(job.locked_until).not.toBeNull();
+    const [untouched] = await listDbdDocuments(svc, recordId);
+    expect(untouched.index_status).toBe('ready'); // the fill is about the record, not the index
+
+    await svc.from('index_jobs').update({ locked_until: null }).eq('id', job.id);
+    const done = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      transcript: async (input) => {
+        seen.push({ budgetMs: input.budgetMs, facts: input.facts });
+        return { status: 'done', factsSettled: true };
+      },
+    });
+    expect(done).toMatchObject({ claimed: 1, transcripts: 1 });
+    expect(seen[1]?.facts).toBe('auto'); // the particulars were settled by the first run
+    job = await latestJob(doc.id);
+    expect(job).toMatchObject({ status: 'done', last_error: null });
+  });
+
+  it('closes a transcript job it cannot run (no runner or provider) without touching the document', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await enqueueTranscriptJob(svc, { recordId, documentId: doc.id });
+    const run = await processIndexJobs({ extractor: null, vector: store, budgetMs: 60_000 });
+    expect(run).toMatchObject({ claimed: 1, skipped: 1 });
+    expect(await latestJob(doc.id)).toMatchObject({ status: 'done', last_error: 'no provider' });
+    const [after] = await listDbdDocuments(svc, recordId);
+    expect(after.index_status).toBe('ready');
   });
 
   it('fails a job whose runs keep dying before the worker can report an error', async () => {
     // A lease that expired while `running` means the previous run was killed (timeout, OOM);
     // the claim counts it as an attempt and the worker must honour the ceiling.
     const [doc] = await listDbdDocuments(svc, recordId);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
     const job = await latestJob(doc.id);
     await svc
       .from('index_jobs')

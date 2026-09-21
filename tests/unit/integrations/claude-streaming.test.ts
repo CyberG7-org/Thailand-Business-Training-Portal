@@ -87,3 +87,52 @@ describe('long structured calls stream', () => {
     expect(out.en?.prompt).toBe('EN');
   });
 });
+
+describe('transcript-path calls stream too', () => {
+  it('classify, extractFacts and sweep read parsed output from streamed responses', async () => {
+    const calls: Record<string, unknown>[] = [];
+    const classifier = new ClaudeDbdExtractor(
+      streamOnlyClient({ document_type: 'shareholder_list' }, calls),
+    );
+    expect(await classifier.classify('บัญชีรายชื่อผู้ถือหุ้น')).toBe('shareholder_list');
+    expect(await classifier.classify('   ')).toBe('other'); // no call for a blank page
+    expect(calls).toHaveLength(1);
+
+    const facts = new ClaudeDbdExtractor(streamOnlyClient(SAMPLE_API_EXTRACTION));
+    const out = await facts.extractFacts([{ documentPosition: 1, page: 1, text: 'x' }]);
+    expect(out.company_name_th.value).toBe('บริษัท ทดสอบ จำกัด');
+
+    const sweeper = new ClaudeDbdExtractor(
+      streamOnlyClient({
+        objectives: [{ no: 1, text: 'ค้าปลีก' }],
+        shareholders: [{ name: 'นาย ก', nationality: '', shares: 0, percent: 0 }],
+        promoters: [],
+        share_structure: { total_shares: 0, par_value: 0, paid_up_capital: 0, share_type: '' },
+      }),
+    );
+    const swept = await sweeper.sweep([{ page: 1, text: 'x' }], 'shareholder_list');
+    expect(swept.shareholders[0]).toEqual({
+      name: 'นาย ก',
+      nationality: null,
+      shares: null,
+      percent: null,
+    });
+  });
+
+  it('reports a sweep cut off by the output limit as too_large instead of a provider error', async () => {
+    const client = {
+      messages: {
+        stream: () => ({
+          finalMessage: async () => ({
+            stop_reason: 'max_tokens',
+            content: [],
+            parsed_output: null,
+          }),
+        }),
+      },
+    } as unknown as Anthropic;
+    await expect(
+      new ClaudeDbdExtractor(client).sweep([{ page: 1, text: 'x' }], 'shareholder_list'),
+    ).rejects.toMatchObject({ code: 'too_large' });
+  });
+});
