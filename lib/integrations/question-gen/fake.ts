@@ -221,12 +221,14 @@ export class FakeQuestionGenerator implements QuestionGenerator {
   readonly model = null;
 
   async generate(input: GenerateInput): Promise<GeneratedQuestion[]> {
+    const passages = input.passages ?? [];
     const topic = input.material.text.trim().split('\n')[0]?.slice(0, 40) || 'material';
     const out: GeneratedQuestion[] = [];
     for (let n = 1; n <= input.count; n++) {
       const template = n <= input.templateCount;
       out.push({
         kind: template ? 'dbd_template' : 'generic',
+        sources: passages.length > 0 ? [((n - 1) % passages.length) + 1] : [],
         localizations: template
           ? DBD_TEMPLATES[(n - 1) % DBD_TEMPLATES.length](n)
           : { th: GENERIC.th(n, topic), en: GENERIC.en(n, topic), zh: GENERIC.zh(n, topic) },

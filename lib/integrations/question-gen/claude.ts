@@ -2,6 +2,7 @@ import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { describeReference } from './dbd-reference';
+import { passagesBlock } from './passages';
 import {
   GENERATION_INSTRUCTIONS,
   TRANSLATION_INSTRUCTIONS,
@@ -44,8 +45,10 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
   }
 
   async generate(input: GenerateInput): Promise<GeneratedQuestion[]> {
+    const passages = input.passages ?? [];
     const content: Anthropic.ContentBlockParam[] = [];
-    if (input.reference?.pdf) {
+    // Passages stand in for the whole PDF (spec §8); big packs never travel as a document.
+    if (input.reference?.pdf && passages.length === 0) {
       content.push({
         type: 'document',
         source: {
@@ -73,9 +76,13 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
       (input.reference
         ? `\n\nREFERENCE CERTIFICATE (example only; its values must NOT appear literally — use placeholders):\n` +
           describeReference(input.reference.record) +
-          (input.reference.pdf
+          (input.reference.pdf && passages.length === 0
             ? '\nThe first attached document is this reference certificate.'
             : '')
+        : '') +
+      (passages.length > 0
+        ? `\n\nREFERENCE PASSAGES (verbatim text of the reference company's own DBD documents, retrieved per interview concept; use them to see what the documents literally say and which particulars to ask about; their values must NOT appear literally — use placeholders; cite the numbers you used in "sources"):\n` +
+          passagesBlock(passages)
         : '') +
       (text ? `\n\nMATERIAL (ground generic questions strictly in this):\n${text}` : '') +
       (input.material.pdf ? '\n\nAlso use the attached study document as material.' : '');

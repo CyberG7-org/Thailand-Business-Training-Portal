@@ -13,6 +13,7 @@ export const localizationSchema = z.object({
 
 export const generatedQuestionSchema = z.object({
   kind: z.enum(['generic', 'dbd_template']),
+  sources: z.array(z.number().int()),
   localizations: z.object({
     th: localizationSchema,
     en: localizationSchema,
@@ -61,6 +62,8 @@ Rules:
   do not invent facts. When a reference example is given, use it only to understand the layout and typical values.
 - No trick questions, no "all/none of the above", no ambiguous wording.
 - explanation: one or two sentences shown to a learner who answered wrongly (in that language).
+- sources: the numbers of the REFERENCE PASSAGES (when any are given) the question is grounded in; [] when none apply.
+  Never copy a passage's company-specific values — use placeholders.
 
 ${PLACEHOLDER_GUIDE}`;
 

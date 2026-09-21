@@ -98,7 +98,7 @@ function trim(q: GeneratedQuestion): GeneratedQuestion {
       explanation: loc.explanation.trim(),
     };
   }
-  return { kind: q.kind, localizations };
+  return { kind: q.kind, localizations, sources: q.sources ?? [] };
 }
 
 /**

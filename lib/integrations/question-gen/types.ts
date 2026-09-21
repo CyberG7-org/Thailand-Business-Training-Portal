@@ -1,5 +1,6 @@
 import type { AppLocale } from '@/i18n/routing';
 import type { DbdReferenceRecord } from './dbd-reference';
+import type { ReferencePassage } from './passages';
 
 export type GeneratedOption = { key: 'A' | 'B' | 'C' | 'D'; text: string };
 
@@ -14,6 +15,8 @@ export type GeneratedLocalization = {
 export type GeneratedQuestion = {
   kind: 'generic' | 'dbd_template';
   localizations: Record<AppLocale, GeneratedLocalization>;
+  /** 1-based numbers of the reference passages the question is grounded in ([] when none). */
+  sources?: number[];
 };
 
 export type MaterialBundle = {
@@ -26,6 +29,8 @@ export type MaterialBundle = {
 export type GenerateInput = {
   /** A confirmed DBD record (and its certificate PDF when stored) the run is modelled on. */
   reference: { record: DbdReferenceRecord; pdf: Uint8Array | null } | null;
+  /** Retrieved passages of the reference record (spec §8); when present the reference PDF is not attached. */
+  passages?: ReferencePassage[];
   material: MaterialBundle;
   count: number;
   templateCount: number;
