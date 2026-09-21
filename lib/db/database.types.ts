@@ -225,11 +225,66 @@ export type Database = {
           },
         ]
       }
+      dbd_chunks: {
+        Row: {
+          char_count: number
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          document_id: string
+          document_type: string | null
+          id: string
+          page: number
+          record_id: string
+        }
+        Insert: {
+          char_count: number
+          chunk_index: number
+          chunk_text: string
+          created_at?: string
+          document_id: string
+          document_type?: string | null
+          id: string
+          page: number
+          record_id: string
+        }
+        Update: {
+          char_count?: number
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          document_id?: string
+          document_type?: string | null
+          id?: string
+          page?: number
+          record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dbd_chunks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dbd_chunks_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dbd_documents: {
         Row: {
           document_type: string | null
           id: string
+          index_error: string | null
+          index_status: string
+          indexed_pages: number
           original_name: string
+          page_count: number | null
           path: string
           position: number
           record_id: string
@@ -240,7 +295,11 @@ export type Database = {
         Insert: {
           document_type?: string | null
           id?: string
+          index_error?: string | null
+          index_status?: string
+          indexed_pages?: number
           original_name: string
+          page_count?: number | null
           path: string
           position: number
           record_id: string
@@ -251,7 +310,11 @@ export type Database = {
         Update: {
           document_type?: string | null
           id?: string
+          index_error?: string | null
+          index_status?: string
+          indexed_pages?: number
           original_name?: string
+          page_count?: number | null
           path?: string
           position?: number
           record_id?: string
@@ -272,6 +335,38 @@ export type Database = {
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dbd_pages: {
+        Row: {
+          document_id: string
+          model: string | null
+          page: number
+          text: string
+          transcribed_at: string
+        }
+        Insert: {
+          document_id: string
+          model?: string | null
+          page: number
+          text: string
+          transcribed_at?: string
+        }
+        Update: {
+          document_id?: string
+          model?: string | null
+          page?: number
+          text?: string
+          transcribed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dbd_pages_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -419,6 +514,63 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      index_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          document_id: string
+          id: string
+          kind: string
+          last_error: string | null
+          locked_until: string | null
+          next_page: number
+          record_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          document_id: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          locked_until?: string | null
+          next_page?: number
+          record_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          document_id?: string
+          id?: string
+          kind?: string
+          last_error?: string | null
+          locked_until?: string | null
+          next_page?: number
+          record_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "index_jobs_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "index_jobs_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
             referencedColumns: ["id"]
           },
         ]
@@ -971,6 +1123,28 @@ export type Database = {
       }
     }
     Functions: {
+      claim_index_jobs: {
+        Args: { p_limit?: number }
+        Returns: {
+          attempts: number
+          created_at: string
+          document_id: string
+          id: string
+          kind: string
+          last_error: string | null
+          locked_until: string | null
+          next_page: number
+          record_id: string
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "index_jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       claim_notifications: {
         Args: { p_limit?: number }
         Returns: {

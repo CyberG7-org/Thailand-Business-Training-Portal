@@ -37,6 +37,8 @@ describe('function grants', () => {
         p_result: 'fail',
       }),
       asLearner.rpc('claim_notifications', { p_limit: 1 }),
+      asLearner.rpc('claim_index_jobs', { p_limit: 1 }),
+      anon.rpc('claim_index_jobs', { p_limit: 1 }),
       asLearner.rpc('policy_int', { p_key: 'bank_eligibility_days' }),
       anon.rpc('is_admin'),
       anon.rpc('set_my_preferred_language', { p_lang: 'en' }),
