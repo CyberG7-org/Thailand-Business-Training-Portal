@@ -92,6 +92,14 @@ export default async function DbdRecordPage({
           {t('uploadedButNotRead', { reason: extractionError ?? '' })}
         </p>
       )}
+      {extraction === 'deferred' && (
+        <p
+          data-testid="autofill-banner"
+          className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
+        >
+          {t('deferredFill')}
+        </p>
+      )}
       {extraction === 'skipped' && (
         <p
           data-testid="autofill-banner"

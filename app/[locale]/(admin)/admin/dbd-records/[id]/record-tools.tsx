@@ -47,6 +47,13 @@ function FillOutcome({ state }: { state: ToolState }) {
       </p>
     );
   }
+  if (state.extraction === 'deferred') {
+    return (
+      <p role="status" data-testid="extract-status" className="text-sm text-gray-700">
+        {t('deferredFill')}
+      </p>
+    );
+  }
   if (state.extraction === 'failed') {
     return (
       <p role="alert" data-testid="extract-error" className="text-sm text-amber-700">

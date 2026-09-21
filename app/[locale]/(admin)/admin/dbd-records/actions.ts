@@ -42,7 +42,7 @@ export type ToolState = {
   /** Fields filled from the document by the last upload/extract (P1.5, decision D37). */
   applied?: string[];
   /** Extraction outcome after an upload that itself succeeded. */
-  extraction?: 'filled' | 'skipped' | 'failed';
+  extraction?: 'filled' | 'skipped' | 'failed' | 'deferred';
   extractionError?: string;
 };
 
@@ -234,6 +234,9 @@ async function fillFromDocument(
     const { applied } = await extractAndApply(db, id, extractor);
     return { extraction: 'filled', applied };
   } catch (e) {
+    if (e instanceof ExtractionError && e.code === 'deferred') {
+      return { extraction: 'deferred', applied: [] };
+    }
     return {
       extraction: 'failed',
       applied: [],

@@ -59,7 +59,9 @@ export class ExtractionError extends Error {
       | 'invalid_output'
       | 'no_document'
       | 'not_allowed'
-      | 'too_large',
+      | 'too_large'
+      /** Nothing small enough to read whole; the transcript path fills the record when its index is ready. */
+      | 'deferred',
   ) {
     super(message);
     this.name = 'ExtractionError';

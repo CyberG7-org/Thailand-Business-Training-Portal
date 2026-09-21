@@ -8,6 +8,7 @@ import {
   type StructuredData,
 } from '@/lib/domain/dbd-profile';
 import { applyExtractionToRecord, type RecordFormValues } from '@/lib/domain/extraction-merge';
+import { planDirectRead } from '@/lib/domain/extraction-plan';
 import {
   dbdExtractionSchema,
   normalizeStoredExtraction,
@@ -47,6 +48,12 @@ export async function runExtraction(
   if (documents.length === 0) {
     throw new ExtractionError('Upload the certificate PDF first', 'no_document');
   }
+  // Only small documents travel whole (spec §5.1, D42); the rest wait for the transcript path.
+  const plan = planDirectRead(documents);
+  if (plan.direct.length === 0) {
+    throw new ExtractionError('Every document is too large to read whole', 'deferred');
+  }
+  const readable = documents.filter((d) => plan.direct.includes(d.id));
 
   const previousStatus = record.extraction_status;
   const { error: pendingError } = await db
@@ -57,7 +64,7 @@ export async function runExtraction(
 
   try {
     const bytes: Uint8Array[] = [];
-    for (const doc of documents) {
+    for (const doc of readable) {
       const { data: blob, error } = await db.storage.from('dbd-documents').download(doc.path);
       if (error || !blob) {
         throw new ExtractionError(`Could not download ${doc.original_name}`, 'provider');
@@ -68,7 +75,7 @@ export async function runExtraction(
 
     // Level 3: remember what each uploaded document turned out to be.
     for (const info of extraction.documents ?? []) {
-      const doc = documents[info.index - 1];
+      const doc = readable[info.index - 1];
       if (doc && doc.document_type !== info.document_type) {
         await db
           .from('dbd_documents')

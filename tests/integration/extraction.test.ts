@@ -82,6 +82,21 @@ describe('runExtraction', () => {
       .single();
     expect(data?.extraction_status).toBe('extracted');
   });
+
+  it('defers the pass when every document is too large to read whole (P14c)', async () => {
+    const svc = adminClient();
+    await svc.from('dbd_documents').update({ page_count: 25 }).eq('record_id', recordId);
+    await expect(runExtraction(asAdmin, recordId, new FakeDbdExtractor())).rejects.toMatchObject({
+      code: 'deferred',
+    });
+    const { data } = await asAdmin
+      .from('dbd_records')
+      .select('extraction_status')
+      .eq('id', recordId)
+      .single();
+    expect(data?.extraction_status).toBe('extracted'); // unchanged by a deferred pass
+    await svc.from('dbd_documents').update({ page_count: 1 }).eq('record_id', recordId);
+  });
 });
 
 describe('extractAndApply', () => {

@@ -206,7 +206,8 @@
           "unavailable": "搜索已停用（未配置 VECTOR_PROVIDER）"
         },
         "noAnswer": "模型未返回答案，仅显示找到的原文"
-      }
+      },
+      "deferredFill": "文件页数较多，系统正在后台分段读取；索引状态为“就绪”后字段会自动填入（刷新页面查看）。"
     },
     "assignment": {
       "title": "已分配公司",

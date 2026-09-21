@@ -206,7 +206,8 @@
           "unavailable": "Search is disabled (VECTOR_PROVIDER not configured)"
         },
         "noAnswer": "No model answer available; showing the passages found"
-      }
+      },
+      "deferredFill": "The documents are too long to read in one pass; they are being read in the background and the fields will fill in when the index status is \"Ready\" (reload to see them)."
     },
     "assignment": {
       "title": "Assigned company",
