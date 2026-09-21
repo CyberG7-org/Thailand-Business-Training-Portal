@@ -35,29 +35,20 @@ export type DocumentSummary = {
   indexError: string | null;
 };
 
+/** What the documents card says about the reading in progress (D46). */
+export type ReadingState = {
+  status: 'queued' | 'running' | 'failed' | 'deferred';
+  error: string | null;
+};
+
 function FillOutcome({ state }: { state: ToolState }) {
   const t = useTranslations('admin.dbd');
   if (!state.ok) return null;
   const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === state.extractionError);
-  const background = state.transcripts && (
-    <p role="status" data-testid="transcripts-note" className="text-sm text-gray-700">
-      {t(state.transcripts === 'queued' ? 'queuedFill' : 'deferredFill')}
-    </p>
-  );
-  if (state.extraction === 'filled') {
-    return (
-      <>
-        <p role="status" data-testid="extract-status" className="text-sm text-green-700">
-          {t('autoFilled', { count: state.applied?.length ?? 0 })}
-        </p>
-        {background}
-      </>
-    );
-  }
-  if (state.extraction === 'deferred' || state.extraction === 'queued') {
+  if (state.extraction === 'queued') {
     return (
       <p role="status" data-testid="extract-status" className="text-sm text-gray-700">
-        {t(state.extraction === 'queued' ? 'queuedFill' : 'deferredFill')}
+        {t('readingQueued')}
       </p>
     );
   }
@@ -83,15 +74,18 @@ export function RecordTools({
   id,
   status,
   documents,
+  reading,
   extractionAvailable,
 }: {
   id: string;
   status: string;
   documents: DocumentSummary[];
+  reading: ReadingState | null;
   extractionAvailable: boolean;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
+  const readingErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === reading?.error);
   const [confirmState, confirmAction, confirming] = useActionState(confirmDbdRecordAction, initial);
   const {
     state: uploadState,
@@ -177,6 +171,28 @@ export function RecordTools({
           </ul>
         )}
         {documents.length > 0 && <p className="text-xs text-gray-600">{t('index.hint')}</p>}
+        {reading && (
+          <p
+            role={reading.status === 'failed' ? 'alert' : 'status'}
+            data-testid="reading-status"
+            data-state={reading.status}
+            className={`rounded p-2 text-sm ${
+              reading.status === 'failed'
+                ? 'bg-amber-50 text-amber-800'
+                : 'bg-gray-50 text-gray-700'
+            }`}
+          >
+            {reading.status === 'failed'
+              ? t('readingFailed', {
+                  reason: readingErrorKey
+                    ? t(`extractErrors.${readingErrorKey}`)
+                    : (reading.error ?? ''),
+                })
+              : reading.status === 'deferred'
+                ? t('deferredFill')
+                : t('readingQueued')}
+          </p>
+        )}
 
         <div className="grid gap-2 border-t pt-3">
           <p className="text-xs text-gray-600">

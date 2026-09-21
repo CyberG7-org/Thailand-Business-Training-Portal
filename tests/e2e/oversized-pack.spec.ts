@@ -10,13 +10,13 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
   await page.goto('/th/admin/dbd-records/new');
   await page.getByTestId('upload-first-file').setInputFiles('tests/fixtures/twenty-five-pages.pdf');
   await page.getByTestId('upload-first-submit').click();
-  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=deferred/);
-  await expect(page.getByTestId('autofill-banner')).toContainText('เบื้องหลัง');
+  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=queued/);
+  await expect(page.getByTestId('reading-status')).toContainText('เบื้องหลัง');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('');
   await expect(page.getByTestId('index-status').first()).toHaveAttribute('data-status', 'queued');
 
-  // Five slices; the cron reads them all in one run, then claims the transcript job the last
-  // slice queued and fills the record from the transcripts.
+  // Five slices; the cron reads them all in one run, then the direct-read job finds the pack
+  // too big and defers to the transcript job the last slice queued, which fills the record.
   const run = await request.get('/api/cron/index', {
     headers: { Authorization: 'Bearer local-cron-secret-for-dev' },
   });
@@ -43,6 +43,7 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
   const again = await request.get('/api/cron/index', {
     headers: { Authorization: 'Bearer local-cron-secret-for-dev' },
   });
+  expect((await again.json()).extractions).toBe(1);
   expect((await again.json()).transcripts).toBe(1);
   await page.reload();
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');

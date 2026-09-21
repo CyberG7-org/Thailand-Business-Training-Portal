@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
-import { ExtractionError } from '@/lib/integrations/extraction/types';
 import {
   DocumentUploadError,
   confirmDbdRecord,
@@ -16,8 +15,12 @@ import {
   removeDbdDocument,
   updateDbdRecord,
 } from '@/lib/db/dbd-records';
-import { askRecordDocuments, enqueueIndexJob, type AskResult } from '@/lib/db/dbd-index';
-import { extractAndApply, type ExtractAndApplyResult } from '@/lib/db/extraction';
+import {
+  askRecordDocuments,
+  enqueueExtractJob,
+  enqueueIndexJob,
+  type AskResult,
+} from '@/lib/db/dbd-index';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
@@ -44,23 +47,13 @@ export type ToolState = {
   error: string | null;
   /** Fields filled from the document by the last upload/extract (P1.5, decision D37). */
   applied?: string[];
-  /** Extraction outcome after an upload that itself succeeded. */
-  extraction?: 'filled' | 'skipped' | 'failed' | 'deferred' | 'queued';
+  /**
+   * What happened to the reading after an upload that itself succeeded: `queued` = the cron
+   * reads the documents in the background (D46), `skipped` = no extraction provider.
+   */
+  extraction?: 'queued' | 'skipped' | 'failed';
   extractionError?: string;
-  /** Oversized documents: a background fill is queued, or waits for their index (P14c). */
-  transcripts?: 'queued' | 'pending_index';
 };
-
-/** What the admin is told after a read: what was filled now, and what fills in the background. */
-function fillOutcome(
-  result: ExtractAndApplyResult,
-): Pick<ToolState, 'applied' | 'extraction' | 'transcripts'> {
-  const transcripts = result.transcripts === 'none' ? undefined : result.transcripts;
-  const filledNow = result.applied.length > 0 || result.businessFilled;
-  const extraction =
-    filledNow || !transcripts ? 'filled' : transcripts === 'queued' ? 'queued' : 'deferred';
-  return { applied: result.applied, extraction, transcripts };
-}
 
 const EMPTY_INPUT = dbdRecordInputSchema.parse({});
 
@@ -257,13 +250,11 @@ export async function registerUploadsAction(input: {
   } catch (e) {
     return { ok: false, error: e instanceof DocumentUploadError ? e.code : errorMessage(e) };
   }
-  const outcome = await fillFromDocument(db, id);
+  const outcome = await queueReading(db, id);
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   if (input.redirect) {
     const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
-    if (outcome.applied?.length) query.set('applied', String(outcome.applied.length));
     if (outcome.extractionError) query.set('extractionError', outcome.extractionError);
-    if (outcome.transcripts) query.set('transcripts', outcome.transcripts);
     return {
       ok: true,
       error: null,
@@ -274,21 +265,24 @@ export async function registerUploadsAction(input: {
   return { ok: true, error: null, ...outcome };
 }
 
-/** Runs extraction + auto-fill; an extraction failure never undoes a successful upload. */
-async function fillFromDocument(
+/**
+ * Queues the reading of the record's documents (D46): the model needs longer than a request may
+ * last, so the cron reads them and the page shows the fields on reload. A queueing failure never
+ * undoes a successful upload.
+ */
+async function queueReading(
   db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   id: string,
-): Promise<Pick<ToolState, 'applied' | 'extraction' | 'extractionError' | 'transcripts'>> {
-  const extractor = getDbdExtractor();
-  if (!extractor) return { extraction: 'skipped', applied: [] };
+): Promise<Pick<ToolState, 'applied' | 'extraction' | 'extractionError'>> {
+  if (!getDbdExtractor()) return { extraction: 'skipped', applied: [] };
   try {
-    return fillOutcome(await extractAndApply(db, id, extractor));
+    const queued = await enqueueExtractJob(db, id);
+    if (queued === 'no_document') {
+      return { extraction: 'failed', applied: [], extractionError: 'no_document' };
+    }
+    return { extraction: 'queued', applied: [] };
   } catch (e) {
-    return {
-      extraction: 'failed',
-      applied: [],
-      extractionError: e instanceof ExtractionError ? e.code : errorMessage(e),
-    };
+    return { extraction: 'failed', applied: [], extractionError: errorMessage(e) };
   }
 }
 
@@ -299,17 +293,17 @@ export async function extractDocumentAction(
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
   await requireAdmin(locale);
-  const extractor = getDbdExtractor();
-  if (!extractor) return { ok: false, error: 'not_configured' };
+  if (!getDbdExtractor()) return { ok: false, error: 'not_configured' };
   const db = await createSupabaseServerClient();
-  try {
-    const outcome = fillOutcome(await extractAndApply(db, id, extractor));
-    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return { ok: true, error: null, ...outcome };
-  } catch (e) {
-    if (e instanceof ExtractionError) return { ok: false, error: e.code };
-    return { ok: false, error: errorMessage(e) };
+  const record = await getDbdRecord(db, id);
+  if (!record) return { ok: false, error: 'not_allowed' };
+  if (record.extraction_status === 'confirmed') return { ok: false, error: 'not_allowed' };
+  const outcome = await queueReading(db, id);
+  if (outcome.extraction === 'failed') {
+    return { ok: false, error: outcome.extractionError ?? 'failed' };
   }
+  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+  return { ok: true, error: null, ...outcome };
 }
 
 export async function removeDocumentAction(formData: FormData): Promise<void> {

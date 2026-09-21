@@ -1,15 +1,20 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { processIndexJobs } from '@/lib/db/dbd-index';
+import { extractAndApply } from '@/lib/db/extraction';
 import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
+import { ExtractionError } from '@/lib/integrations/extraction/types';
 import { sweepPagesFromEnv } from '@/lib/integrations/extraction/transcript-schema';
 import { getVectorStore } from '@/lib/integrations/vector';
 
-// A 5-page slice of dense Thai can take 1–2 minutes; stop starting new slices at half the
-// 300 s ceiling so the slice in flight always has room to finish and be persisted.
+// A 5-page slice of dense Thai can take 1–2 minutes and a whole-pack read up to 140 s; stop
+// starting new work at 140 s of the 300 s ceiling so the call in flight always has room to
+// finish and be persisted.
 export const maxDuration = 300;
-const WORK_BUDGET_MS = 150_000;
+const WORK_BUDGET_MS = 140_000;
+/** Outcomes a retry cannot change; the job is closed with the code as its reason. */
+const TERMINAL_EXTRACTION = new Set(['not_allowed', 'no_document', 'too_large']);
 const MAX_SLICE_PAGES = 100; // Anthropic's per-request page limit
 
 function slicePages(): number | undefined {
@@ -36,6 +41,19 @@ export async function GET(request: NextRequest) {
       vector,
       budgetMs: WORK_BUDGET_MS,
       slicePages: slicePages(),
+      // The direct read of a pack runs here too (D46): a request cannot wait for the model.
+      extract: async ({ recordId }) => {
+        if (!extractor) return { status: 'skipped' };
+        try {
+          await extractAndApply(createSupabaseAdminClient(), recordId, extractor, vector);
+          return { status: 'done' };
+        } catch (e) {
+          if (e instanceof ExtractionError && TERMINAL_EXTRACTION.has(e.code)) {
+            return { status: 'failed', error: e.code };
+          }
+          throw e;
+        }
+      },
       // Oversized documents fill their record from the transcripts once ready (spec §6, D42):
       // a resumable job of its own, sharing this run's budget.
       transcript: (input) =>

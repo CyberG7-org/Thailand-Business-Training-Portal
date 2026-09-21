@@ -6,13 +6,14 @@ import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
+import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
-import { RecordTools, type DocumentSummary } from './record-tools';
+import { RecordTools, type DocumentSummary, type ReadingState } from './record-tools';
 
 // Upload + extraction run inside the page's server actions; allow the full serverless window.
 export const maxDuration = 60;
@@ -24,14 +25,12 @@ export default async function DbdRecordPage({
   params: Promise<{ locale: string; id: string }>;
   searchParams: Promise<{
     extraction?: string;
-    applied?: string;
     extractionError?: string;
-    transcripts?: string;
     error?: string;
   }>;
 }) {
   const { locale, id } = await params;
-  const { extraction, applied, extractionError, transcripts, error } = await searchParams;
+  const { extraction, extractionError, error } = await searchParams;
   await requireAdmin(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
@@ -39,6 +38,33 @@ export default async function DbdRecordPage({
   const documents = await listDbdDocuments(db, id);
   const structured = readStructuredData(record.structured_data);
   const t = await getTranslations('admin.dbd');
+
+  // The reading runs in the background (D46): show the latest extract job, or that oversized
+  // documents are still being indexed before their transcripts can fill the record.
+  const { data: extractJob } = await db
+    .from('index_jobs')
+    .select('status, last_error')
+    .eq('record_id', id)
+    .eq('kind', 'extract')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  let reading: ReadingState | null = null;
+  if (extractJob?.status === 'queued' || extractJob?.status === 'running') {
+    reading = { status: extractJob.status, error: null };
+  } else if (extractJob?.status === 'failed') {
+    reading = { status: 'failed', error: extractJob.last_error };
+  } else if (
+    record.extraction_raw === null &&
+    documents.some(
+      (d) =>
+        d.page_count !== null &&
+        d.page_count > directReadMaxPages() &&
+        !['ready', 'failed', 'skipped'].includes(d.index_status),
+    )
+  ) {
+    reading = { status: 'deferred', error: null };
+  }
 
   // Suggestions only pre-fill the form; the stored extraction is validated before use.
   let suggestions: ExtractionSuggestions | null = null;
@@ -66,6 +92,7 @@ export default async function DbdRecordPage({
           indexedPages: d.indexed_pages,
           indexError: d.index_error,
         }))}
+        reading={reading}
         extractionAvailable={getDbdExtractor() !== null}
       />
       {error === 'vector_unavailable' && (
@@ -77,36 +104,12 @@ export default async function DbdRecordPage({
           {t('index.removeUnavailable')}
         </p>
       )}
-      {extraction === 'filled' && (
-        <p
-          data-testid="autofill-banner"
-          className="max-w-2xl rounded border border-green-300 bg-green-50 p-3 text-sm"
-        >
-          {t('autoFilledReview', { count: Number(applied ?? 0) })}
-        </p>
-      )}
       {extraction === 'failed' && (
         <p
           data-testid="autofill-banner"
           className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm"
         >
           {t('uploadedButNotRead', { reason: extractionError ?? '' })}
-        </p>
-      )}
-      {(extraction === 'deferred' || extraction === 'queued') && (
-        <p
-          data-testid="autofill-banner"
-          className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
-        >
-          {t(extraction === 'queued' ? 'queuedFill' : 'deferredFill')}
-        </p>
-      )}
-      {extraction === 'filled' && (transcripts === 'queued' || transcripts === 'pending_index') && (
-        <p
-          data-testid="transcripts-note"
-          className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
-        >
-          {t(transcripts === 'queued' ? 'queuedFill' : 'deferredFill')}
         </p>
       )}
       {extraction === 'skipped' && (
@@ -117,7 +120,7 @@ export default async function DbdRecordPage({
           {t('extractionNotConfigured')}
         </p>
       )}
-      {suggestions && extraction !== 'filled' && (
+      {suggestions && (
         <p className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm">
           {t('reviewSuggestions')}
         </p>

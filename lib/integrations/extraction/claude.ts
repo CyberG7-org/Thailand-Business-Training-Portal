@@ -29,6 +29,8 @@ export const MAX_TOTAL_PDF_BYTES = 30 * 1024 * 1024;
 const TRANSCRIPTION_MAX_TOKENS = 32000;
 /** A transcription call that has not finished by then is treated as a failed attempt. */
 export const TRANSCRIPTION_TIMEOUT_MS = 150_000;
+/** A whole-pack read that has not finished by then is retried by the cron (D46). */
+export const EXTRACTION_TIMEOUT_MS = 140_000;
 /** Output ceiling of one list sweep; a batch that still overflows is re-read page by page. */
 const SWEEP_MAX_TOKENS = 32000;
 
@@ -82,12 +84,15 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     try {
       // Streamed: the SDK refuses non-streaming requests this long (max_tokens ≥ ~21k).
       response = await this.client.messages
-        .stream({
-          model: MODEL,
-          max_tokens: 24000,
-          messages: [{ role: 'user', content }],
-          output_config: { format: zodOutputFormat(dbdExtractionApiSchema) },
-        })
+        .stream(
+          {
+            model: MODEL,
+            max_tokens: 24000,
+            messages: [{ role: 'user', content }],
+            output_config: { format: zodOutputFormat(dbdExtractionApiSchema) },
+          },
+          { timeout: EXTRACTION_TIMEOUT_MS },
+        )
         .finalMessage();
     } catch (error) {
       throw toExtractionError(error);

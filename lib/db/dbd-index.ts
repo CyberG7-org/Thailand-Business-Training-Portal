@@ -19,7 +19,7 @@ import type { Database } from './database.types';
 type Db = SupabaseClient<Database>;
 export type IndexJobRow = Database['public']['Tables']['index_jobs']['Row'];
 
-/** Queues (or resets) the one live job of a document and marks it `queued` (decision D41). */
+/** Queues (or resets) the one live index job of a document and marks it `queued` (decision D41). */
 export async function enqueueIndexJob(
   db: Db,
   input: { recordId: string; documentId: string; kind?: 'index' | 'reindex' },
@@ -29,6 +29,7 @@ export async function enqueueIndexJob(
     .from('index_jobs')
     .select('id')
     .eq('document_id', input.documentId)
+    .in('kind', ['index', 'reindex'])
     .in('status', ['queued', 'running'])
     .maybeSingle();
   if (error) throw error;
@@ -68,15 +69,17 @@ export async function enqueueTranscriptJob(
   db: Db,
   input: { recordId: string; documentId: string; rereadFacts?: boolean },
 ): Promise<'queued' | 'already_live' | 'index_in_progress'> {
-  const { data: live, error } = await db
+  const { data: liveJobs, error } = await db
     .from('index_jobs')
     .select('id, kind')
     .eq('document_id', input.documentId)
-    .in('status', ['queued', 'running'])
-    .maybeSingle();
+    .in('status', ['queued', 'running']);
   if (error) throw error;
+  if ((liveJobs ?? []).some((j) => j.kind === 'index' || j.kind === 'reindex')) {
+    return 'index_in_progress';
+  }
+  const live = (liveJobs ?? []).find((j) => j.kind === 'transcript');
   if (live) {
-    if (live.kind !== 'transcript') return 'index_in_progress';
     if (input.rereadFacts) {
       const { error: e } = await db
         .from('index_jobs')
@@ -99,6 +102,40 @@ export async function enqueueTranscriptJob(
     // For transcript jobs next_page is a phase: 1 = particulars to (re)read, 2 = only if unread.
     next_page: input.rereadFacts ? 1 : 2,
   });
+  if (e) throw e;
+  return 'queued';
+}
+
+/**
+ * Queues the direct read of a record's documents (decision D46) — one live extract job per
+ * record, keyed through its first document. A job already queued is left alone; a running one
+ * finishes first (its result is the same documents).
+ */
+export async function enqueueExtractJob(
+  db: Db,
+  recordId: string,
+): Promise<'queued' | 'already_live' | 'no_document'> {
+  const { data: live, error } = await db
+    .from('index_jobs')
+    .select('id')
+    .eq('record_id', recordId)
+    .eq('kind', 'extract')
+    .in('status', ['queued', 'running'])
+    .maybeSingle();
+  if (error) throw error;
+  if (live) return 'already_live';
+  const { data: first, error: docError } = await db
+    .from('dbd_documents')
+    .select('id')
+    .eq('record_id', recordId)
+    .order('position')
+    .limit(1)
+    .maybeSingle();
+  if (docError) throw docError;
+  if (!first) return 'no_document';
+  const { error: e } = await db
+    .from('index_jobs')
+    .insert({ record_id: recordId, document_id: first.id, kind: 'extract' });
   if (e) throw e;
   return 'queued';
 }
@@ -200,6 +237,15 @@ export type TranscriptRunner = (input: {
   facts: 'auto' | 'force';
 }) => Promise<{ status: 'done' | 'released' | 'skipped'; factsSettled: boolean }>;
 
+/**
+ * Reads a record's documents whole and fills it (the worker's `extract` dependency, D46).
+ * `failed` is for outcomes a retry cannot change (confirmed record, nothing to read, too big).
+ */
+export type ExtractRunner = (input: {
+  recordId: string;
+  documentId: string;
+}) => Promise<{ status: 'done' | 'skipped' | 'failed'; error?: string }>;
+
 export type IndexWorkerDeps = {
   extractor: DbdExtractor | null;
   vector: VectorStore | null;
@@ -210,6 +256,8 @@ export type IndexWorkerDeps = {
   download?: (path: string) => Promise<Uint8Array>;
   /** Fills a record from its transcripts; without it, transcript jobs are closed unread. */
   transcript?: TranscriptRunner;
+  /** Reads a record's documents whole; without it, extract jobs are closed unread. */
+  extract?: ExtractRunner;
   /** Documents with more pages get a transcript fill when they become ready (default from env). */
   directReadMaxPages?: number;
 };
@@ -224,6 +272,8 @@ export type IndexRunSummary = {
   released: number;
   /** Transcript fills that finished (or had nothing to do). */
   transcripts: number;
+  /** Direct reads that finished (or had nothing to do). */
+  extractions: number;
 };
 
 async function downloadFromStorage(admin: Db, path: string): Promise<Uint8Array> {
@@ -439,6 +489,7 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     skipped: 0,
     released: 0,
     transcripts: 0,
+    extractions: 0,
   };
 
   while (now() - started < budgetMs || summary.claimed === 0) {
@@ -448,16 +499,46 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     if (!job) break;
     summary.claimed++;
     const isTranscript = job.kind === 'transcript';
+    const isExtract = job.kind === 'extract';
 
     // The claim counts an expired `running` lease as a failed attempt (the run was killed before
     // it could report); the worker's own catch counts the rest. Both meet the same ceiling.
     if (job.attempts >= MAX_INDEX_ATTEMPTS) {
       const message = 'worker died repeatedly (lease expired)';
       await setJob(admin, job.id, { status: 'failed', locked_until: null, last_error: message });
-      if (!isTranscript) {
+      if (!isTranscript && !isExtract) {
         await setDocument(admin, job.document_id, { index_status: 'failed', index_error: message });
       }
       summary.failed++;
+      continue;
+    }
+
+    if (isExtract) {
+      if (!deps.extract || !deps.extractor) {
+        await setJob(admin, job.id, {
+          status: 'done',
+          locked_until: null,
+          last_error: 'no provider',
+        });
+        summary.skipped++;
+        continue;
+      }
+      try {
+        const run = await deps.extract({ recordId: job.record_id, documentId: job.document_id });
+        if (run.status === 'failed') {
+          await setJob(admin, job.id, {
+            status: 'failed',
+            locked_until: null,
+            last_error: run.error ?? 'failed',
+          });
+          summary.failed++;
+        } else {
+          await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
+          summary.extractions++;
+        }
+      } catch (e) {
+        await failAttempt(admin, job, e instanceof Error ? e.message : String(e), now, summary);
+      }
       continue;
     }
 

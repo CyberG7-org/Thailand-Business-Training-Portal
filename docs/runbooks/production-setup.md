@@ -76,7 +76,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 2. Locally: put `PINECONE_API_KEY=…` in `.env.local` and run `pnpm vector:setup` once (creates `thai-portal-dbd` with integrated embedding; idempotent). `pnpm vector:smoke` proves search + rerank work.
 3. Vercel env vars: `PINECONE_API_KEY`, `PINECONE_NAMESPACE=production` (staging uses `staging`), optionally `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES`. Redeploy; `/api/health` shows `vector: "pinecone"`.
 4. Every document uploaded before this step shows *Not indexed*; open its record and click **Re-index**.
-5. Uploads never pass through Vercel (D45): the browser sends each PDF straight to the `dbd-documents` bucket, so the `NEXT_PUBLIC_SUPABASE_URL` must be reachable from admins' browsers (it is, by design) and the bucket's `file_size_limit` (30 MB) is the only size cap.
+5. After an upload the fields fill in within about 1–3 minutes (D46: the cron reads the pack; reload the record page) — the page says *reading in the background* meanwhile.
+6. Uploads never pass through Vercel (D45): the browser sends each PDF straight to the `dbd-documents` bucket, so the `NEXT_PUBLIC_SUPABASE_URL` must be reachable from admins' browsers (it is, by design) and the bucket's `file_size_limit` (30 MB) is the only size cap.
 
 ### Vapi (bank-call training)
 - Create the account, copy the **public** key. The assistant is transient (built per call by the app), so no dashboard assistant is required; the webhook URL and `x-vapi-secret` header travel with each call config.

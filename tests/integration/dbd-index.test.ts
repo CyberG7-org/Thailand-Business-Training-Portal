@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  enqueueExtractJob,
   enqueueIndexJob,
   enqueueTranscriptJob,
   listChunkIds,
@@ -395,6 +396,82 @@ describe('index jobs and the worker', () => {
     expect(seen[1]?.facts).toBe('auto'); // the particulars were settled by the first run
     job = await latestJob(doc.id);
     expect(job).toMatchObject({ status: 'done', last_error: null });
+  });
+
+  it("queues one extract job per record beside the document's own index job, and the worker runs both", async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    expect(await enqueueExtractJob(asAdmin, recordId)).toBe('queued');
+    expect(await enqueueExtractJob(asAdmin, recordId)).toBe('already_live');
+    const liveKinds = async () => {
+      const { data } = await svc
+        .from('index_jobs')
+        .select('kind')
+        .eq('document_id', doc.id)
+        .in('status', ['queued', 'running']);
+      return (data ?? []).map((j) => j.kind).sort();
+    };
+    expect(await liveKinds()).toEqual(['extract', 'reindex']);
+    // Re-queueing the index job resets only the index job.
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    expect(await liveKinds()).toEqual(['extract', 'reindex']);
+
+    const seen: string[] = [];
+    const run = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      extract: async (input) => {
+        seen.push(`${input.recordId}:${input.documentId}`);
+        return { status: 'done' };
+      },
+    });
+    expect(run).toMatchObject({ completed: 1, extractions: 1 });
+    expect(seen).toEqual([`${recordId}:${doc.id}`]);
+    expect(await liveKinds()).toEqual([]);
+    const [after] = await listDbdDocuments(svc, recordId);
+    expect(after.index_status).toBe('ready');
+  });
+
+  it('an extract job that cannot succeed is closed as failed; a transient failure backs off', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await enqueueExtractJob(asAdmin, recordId);
+    const transient = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      extract: async () => {
+        throw new Error('provider down');
+      },
+    });
+    expect(transient).toMatchObject({ claimed: 1, released: 1 });
+    let job = await latestJob(doc.id);
+    expect(job).toMatchObject({ kind: 'extract', status: 'queued', attempts: 1 });
+    expect(job.locked_until).not.toBeNull();
+
+    await svc.from('index_jobs').update({ locked_until: null }).eq('id', job.id);
+    const terminal = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      extract: async () => ({ status: 'failed', error: 'not_allowed' }),
+    });
+    expect(terminal).toMatchObject({ claimed: 1, failed: 1 });
+    job = await latestJob(doc.id);
+    expect(job).toMatchObject({ status: 'failed', last_error: 'not_allowed' });
+    const [untouched] = await listDbdDocuments(svc, recordId);
+    expect(untouched.index_status).toBe('ready'); // reading is about the record, not the index
+  });
+
+  it('closes an extract job it cannot run (no runner or provider), and refuses to queue one without documents', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await enqueueExtractJob(asAdmin, recordId);
+    const run = await processIndexJobs({ extractor: null, vector: store, budgetMs: 60_000 });
+    expect(run).toMatchObject({ claimed: 1, skipped: 1 });
+    expect(await latestJob(doc.id)).toMatchObject({ status: 'done', last_error: 'no provider' });
+    const empty = await createDbdRecord(asAdmin, dbdRecordInputSchema.parse({}), admin.id);
+    expect(await enqueueExtractJob(asAdmin, empty.id)).toBe('no_document');
+    await svc.from('dbd_records').delete().eq('id', empty.id);
   });
 
   it('closes a transcript job it cannot run (no runner or provider) without touching the document', async () => {

@@ -2,18 +2,28 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs, openManualRecordForm } from './helpers';
 
+const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
+
 // The dev server runs without ANTHROPIC_API_KEY, so the fake extractor answers.
-test('uploading a certificate creates the record and fills its fields automatically; admin reviews and confirms', async ({
+test('uploading a certificate creates the record and fills its fields in the background; admin reviews and confirms', async ({
   page,
+  request,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
   await page.getByTestId('upload-first-file').setInputFiles('tests/fixtures/tiny.pdf');
   await page.getByTestId('upload-first-submit').click();
-  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=filled/);
+  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=queued/);
 
-  // The record already carries the values read from the document, with their provenance.
-  await expect(page.getByTestId('autofill-banner')).toContainText('ช่อง');
+  // The reading is a job the cron runs (D46): the page says so until the fields arrive.
+  await expect(page.getByTestId('reading-status')).toContainText('เบื้องหลัง');
+  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('');
+  const run = await request.get('/api/cron/index', CRON);
+  expect((await run.json()).extractions).toBeGreaterThanOrEqual(1);
+  await page.reload();
+  await expect(page.getByTestId('reading-status')).toHaveCount(0);
+
+  // The record now carries the values read from the document, with their provenance.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
   await expect(page.locator('input[name="issued_on"]')).toHaveValue('2026-07-13');
@@ -51,7 +61,7 @@ test('uploading a certificate creates the record and fills its fields automatica
   await expect(page.locator('input[name="juristic_id"]')).toHaveAttribute('readonly', '');
 });
 
-test('uploading on an existing record fills only the empty fields', async ({ page }) => {
+test('uploading on an existing record fills only the empty fields', async ({ page, request }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await openManualRecordForm(page);
   await page.locator('input[name="company_name_th"]').fill('บริษัท ชื่อที่พิมพ์เอง จำกัด');
@@ -61,7 +71,9 @@ test('uploading on an existing record fills only the empty fields', async ({ pag
   await expect(page.getByTestId('extract-button')).toBeDisabled();
   await page.locator('input[name="document"]').setInputFiles('tests/fixtures/tiny.pdf');
   await page.getByRole('button', { name: 'อัปโหลดและกรอกอัตโนมัติ' }).click();
-  await expect(page.getByTestId('extract-status')).toContainText('ช่อง');
+  await expect(page.getByTestId('extract-status')).toContainText('เบื้องหลัง');
+  await request.get('/api/cron/index', CRON);
+  await page.reload();
   await expect(page.locator('input[name="company_name_th"]')).toHaveValue(
     'บริษัท ชื่อที่พิมพ์เอง จำกัด',
   );
