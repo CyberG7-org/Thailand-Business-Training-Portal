@@ -1,3 +1,4 @@
+import type { Slice, TranscribedPage } from '@/lib/domain/rag/transcript';
 import type { DbdExtraction, DbdExtractor } from './types';
 
 const at = (page: number | null, doc: number | null = 1) => ({
@@ -143,6 +144,35 @@ export const SAMPLE_EXTRACTION: DbdExtraction = {
   objectives_count: { value: 14, confidence: 0.85, source_text: 'วัตถุประสงค์ 14 ข้อ', ...at(1) },
 };
 
+/** Fictional page text matching SAMPLE_EXTRACTION; page 1 certificate, 2 objectives, 3+ บอจ.5. */
+export function fakePageText(page: number): string {
+  if (page === 1) {
+    return [
+      'หนังสือรับรอง',
+      'ชื่อบริษัท บริษัท ตัวอย่างการสกัด จำกัด',
+      'ทะเบียนเลขที่ 0105569000123',
+      'จดทะเบียนเมื่อวันที่ 10 เมษายน 2569',
+      'ทุนจดทะเบียน 2,000,000 บาท',
+      'สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง',
+    ].join('\n');
+  }
+  if (page === 2) {
+    return [
+      'วัตถุที่ประสงค์',
+      '1. ประกอบกิจการค้าปลีกและค้าส่งสินค้าอุปโภคบริโภค',
+      '2. ประกอบกิจการนำเข้าและส่งออกสินค้าทุกชนิด',
+      '3. ประกอบกิจการให้บริการคำปรึกษาทางธุรกิจ',
+    ].join('\n');
+  }
+  return [
+    'บัญชีรายชื่อผู้ถือหุ้น (บอจ.5)',
+    'ลำดับ | ชื่อ | สัญชาติ | จำนวนหุ้น',
+    '1 | นางสาวตัวอย่าง ทดสอบ | ไทย | 19,998',
+    '2 | นายสอง ทดสอบ | ไทย | 1',
+    `หน้า ${page}`,
+  ].join('\n');
+}
+
 export class FakeDbdExtractor implements DbdExtractor {
   readonly name = 'fake';
   constructor(private readonly result: DbdExtraction = SAMPLE_EXTRACTION) {}
@@ -151,5 +181,13 @@ export class FakeDbdExtractor implements DbdExtractor {
     // Only claim the documents that were actually uploaded.
     result.documents = result.documents.slice(0, Math.max(1, documents.length));
     return result;
+  }
+
+  async transcribe(_slice: Uint8Array, range: Slice): Promise<TranscribedPage[]> {
+    const pages: TranscribedPage[] = [];
+    for (let page = range.firstPage; page <= range.lastPage; page++) {
+      pages.push({ page, text: fakePageText(page) });
+    }
+    return pages;
   }
 }

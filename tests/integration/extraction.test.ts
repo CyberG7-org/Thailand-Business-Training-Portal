@@ -25,6 +25,9 @@ const failing: DbdExtractor = {
   async extract() {
     throw new ExtractionError('boom', 'provider');
   },
+  async transcribe() {
+    throw new ExtractionError('boom', 'provider');
+  },
 };
 
 describe('runExtraction', () => {

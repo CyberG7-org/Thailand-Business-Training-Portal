@@ -1,12 +1,25 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { parsePageMarkers, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
 import { EXTRACTION_INSTRUCTIONS, dbdExtractionSchema } from './schema';
+import { transcriptionModel, transcriptionPrompt } from './transcribe';
 import { ExtractionError, type DbdExtraction, type DbdExtractor } from './types';
 
 const MODEL = 'claude-opus-5';
 /** Request ceiling for document content (the API rejects larger payloads). */
 export const MAX_TOTAL_PDF_BYTES = 30 * 1024 * 1024;
+
+/** Maps SDK failures to ExtractionError codes (shared by extract and transcribe). */
+function toExtractionError(error: unknown): ExtractionError {
+  if (error instanceof Anthropic.AuthenticationError) {
+    return new ExtractionError('Anthropic API key is missing or invalid', 'not_configured');
+  }
+  if (error instanceof Anthropic.APIError) {
+    return new ExtractionError(`Anthropic API error ${error.status}: ${error.message}`, 'provider');
+  }
+  return new ExtractionError(error instanceof Error ? error.message : String(error), 'provider');
+}
 
 /**
  * Real extractor: every uploaded document travels as its own document block, in upload order,
@@ -48,20 +61,43 @@ export class ClaudeDbdExtractor implements DbdExtractor {
         output_config: { format: zodOutputFormat(dbdExtractionSchema) },
       });
     } catch (error) {
-      if (error instanceof Anthropic.AuthenticationError) {
-        throw new ExtractionError('Anthropic API key is missing or invalid', 'not_configured');
-      }
-      if (error instanceof Anthropic.APIError) {
-        throw new ExtractionError(
-          `Anthropic API error ${error.status}: ${error.message}`,
-          'provider',
-        );
-      }
-      throw new ExtractionError(error instanceof Error ? error.message : String(error), 'provider');
+      throw toExtractionError(error);
     }
     if (response.stop_reason === 'refusal' || !response.parsed_output) {
       throw new ExtractionError('The model did not return a valid extraction', 'invalid_output');
     }
     return response.parsed_output as DbdExtraction;
+  }
+
+  async transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]> {
+    let text: string;
+    try {
+      // Streaming keeps long Thai transcripts clear of request timeouts.
+      text = await this.client.messages
+        .stream({
+          model: transcriptionModel(),
+          max_tokens: 16000,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'document',
+                  source: {
+                    type: 'base64',
+                    media_type: 'application/pdf',
+                    data: Buffer.from(slice).toString('base64'),
+                  },
+                },
+                { type: 'text', text: transcriptionPrompt(range) },
+              ],
+            },
+          ],
+        })
+        .finalText();
+    } catch (error) {
+      throw toExtractionError(error);
+    }
+    return parsePageMarkers(text, range);
   }
 }

@@ -1,4 +1,5 @@
 import type { Director } from '@/lib/domain/dbd-record';
+import type { Slice, TranscribedPage } from '@/lib/domain/rag/transcript';
 import type { DbdExtractionOutput } from './schema';
 
 /** One extracted value with the model's confidence and where it was read (decision D38). */
@@ -41,6 +42,12 @@ export interface DbdExtractor {
   readonly name: string;
   /** All of a record's uploaded documents, in upload order. */
   extract(documents: Uint8Array[]): Promise<DbdExtraction>;
+  /**
+   * Page-by-page transcript of one slice of a document (P14, decision D41). `slice` is a PDF
+   * holding only pages `range.firstPage..lastPage`; pages come back numbered as in the original.
+   * Throws `MissingPagesError` when the model skipped a page.
+   */
+  transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]>;
 }
 
 export class ExtractionError extends Error {
