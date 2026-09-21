@@ -86,3 +86,23 @@ export async function seedPassedExam(loginId: string): Promise<void> {
   });
   if (error) throw error;
 }
+
+/** Creates a learner assigned to an existing confirmed record. Returns the login id. */
+export async function seedLearnerForRecord(recordId: string): Promise<string> {
+  const admin = svc();
+  const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
+  const loginId = `e2e-rag-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const { data: user, error } = await admin.auth.admin.createUser({
+    email: `${loginId}@${domain}`,
+    password: E2E_PASSWORD,
+    email_confirm: true,
+    user_metadata: { login_id: loginId, display_name: loginId, preferred_language: 'th' },
+    app_metadata: { role: 'learner' },
+  });
+  if (error) throw error;
+  const { error: assignError } = await admin
+    .from('user_dbd_assignments')
+    .insert({ user_id: user.user.id, dbd_record_id: recordId });
+  if (assignError) throw assignError;
+  return loginId;
+}

@@ -521,6 +521,11 @@
       "pause": "Pause",
       "loading": "Preparing audio…",
       "error": "Audio is unavailable right now."
+    },
+    "evidence": {
+      "title": "From your documents",
+      "hint": "The actual text of your company's DBD documents for this topic — compare it with your prepared answers.",
+      "source": "{document} · page {page}"
     }
   },
   "quiz": {
