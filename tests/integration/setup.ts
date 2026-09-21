@@ -11,3 +11,17 @@ for (const name of [
     throw new Error(`${name} is missing. Run: pnpm db:start && pnpm db:env`);
   }
 }
+
+// Real provider keys in .env.local must never be used by the suite (cost, and the fixtures are
+// fictional): every adapter that a test does not inject explicitly resolves to its fake, as the
+// Playwright config does for the e2e suite.
+for (const name of [
+  'EXTRACTION_PROVIDER',
+  'TTS_PROVIDER',
+  'NOTIFY_PROVIDER',
+  'VAPI_PROVIDER',
+  'QUESTION_GEN_PROVIDER',
+  'VECTOR_PROVIDER',
+]) {
+  process.env[name] = 'fake';
+}
