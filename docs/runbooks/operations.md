@@ -30,6 +30,14 @@ Set the uptime monitor to alert on non-200 from `/api/health` for 3 consecutive 
 | Wrong bank date for a learner | `eligibility_snapshots` latest row for the user; DBD record `issued_on` | correct `issued_on` on the record (trigger recomputes) or the policy days in `/admin/settings` (recomputes for everyone) |
 | Extraction refuses / hallucinates | provider `claude` in health; the review screen highlights unmatched fields | admin corrects fields before confirming — extraction never auto-confirms |
 
+### Index stuck or failed
+
+- Status stays *Queued*: check Vercel → Cron Jobs → `/api/cron/index` runs every minute and returns 200; `CRON_SECRET` must be set.
+- *Failed* with `unreadable_pdf`: the file is not a standard PDF (encrypted/corrupt) — re-export and upload again.
+- *Failed* with "missing page": the model skipped pages twice; click **Retry**. Persistent failures on scans: set `TRANSCRIPTION_MODEL=claude-opus-5` and retry.
+- Pinecone down: jobs back off (1–16 min) and resume by themselves; uploads keep working.
+- Deleting a record with SQL leaves its vectors behind — remove its documents from the record page first.
+
 ## Data handling
 
 - DBD certificates, recordings and transcripts hold personal data. Buckets are private; access is by signed URL (≤10 min) and admin role only. Learner deletion cascades profiles → assignments/attempts/cards/sessions; storage objects must be removed by an admin (Supabase Storage UI) — retention automation is post-MVP (`retention_days` reserved).

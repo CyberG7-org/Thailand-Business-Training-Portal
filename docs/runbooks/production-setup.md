@@ -10,7 +10,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    pnpm exec supabase link --project-ref <ref>
    pnpm exec supabase db push
    ```
-   All migrations (0001–0014) apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`, `recordings`) are created private by the migrations.
+   All migrations (0001–0015) apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`, `recordings`) are created private by the migrations.
 3. **Do not** run `seed.sql` / `seed_questions.sql` in production (they hold sample content only). Load real content through the admin UI.
 4. Auth settings (Dashboard → Authentication):
    - Providers → Email: enabled; **Confirm email: off** (accounts are provisioned by admins with `email_confirm`).
@@ -46,11 +46,13 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `VAPI_PUBLIC_KEY` | Vapi *public* key | sent to the browser per call |
    | `VAPI_WEBHOOK_SECRET` | long random string | Vapi sends it as `x-vapi-secret` |
    | `VAPI_*` overrides | optional | transcriber/voice/LLM (see `.env.example`) |
+   | `PINECONE_API_KEY`, `PINECONE_NAMESPACE` | Pinecone key; namespace `production` (staging: `staging`) | DBD retrieval index (P14); `VECTOR_PROVIDER=off` to disable; optional `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES` |
 
    In production every adapter is **off** unless its key is present (never "fake"). The `/api/health` endpoint reports which provider each adapter resolved to.
-3. Cron: `vercel.json` already schedules `/api/cron/notifications` every minute. Confirm it appears under Project → Settings → Cron Jobs after the first deploy.
-4. Domain: attach `<your-domain>`; Supabase Site URL must match.
-5. Deploy, then open `https://<your-domain>/api/health` — expect `ok: true`, `db: "ok"`, and the intended provider names.
+3. Cron: `vercel.json` schedules `/api/cron/notifications` and `/api/cron/index` every minute. Confirm both appear under Project → Settings → Cron Jobs after the first deploy.
+4. Node.js: Project → Settings → General → Node.js Version = **22.x** (the Pinecone SDK requires Node ≥ 22).
+5. Domain: attach `<your-domain>`; Supabase Site URL must match.
+6. Deploy, then open `https://<your-domain>/api/health` — expect `ok: true`, `db: "ok"`, and the intended provider names.
 
 ## 3. External providers
 
@@ -65,6 +67,13 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
 ### Resend
 - Verify the sending domain; set `EMAIL_FROM` (e.g. `Portal <portal@<your-domain>>`); put recipients into **Admin → Policy settings → Admin notification emails**.
+
+### Pinecone (DBD retrieval index)
+
+1. Create a Pinecone project; note the API key. Starter plan = AWS us-east-1 only; Singapore (ap-southeast-1) needs the Builder plan.
+2. Locally: put `PINECONE_API_KEY=…` in `.env.local` and run `pnpm vector:setup` once (creates `thai-portal-dbd` with integrated embedding; idempotent). `pnpm vector:smoke` proves search + rerank work.
+3. Vercel env vars: `PINECONE_API_KEY`, `PINECONE_NAMESPACE=production` (staging uses `staging`), optionally `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES`. Redeploy; `/api/health` shows `vector: "pinecone"`.
+4. Every document uploaded before this step shows *Not indexed*; open its record and click **Re-index**.
 
 ### Vapi (bank-call training)
 - Create the account, copy the **public** key. The assistant is transient (built per call by the app), so no dashboard assistant is required; the webhook URL and `x-vapi-secret` header travel with each call config.
@@ -85,4 +94,5 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 2. Admin login → create a test learner → create+confirm a DBD record with an issue date 46+ days ago → assign.
 3. Learner login → dashboard shows the company and the bank date → open a study card → quiz → exam → name card PDF → bank call (real provider) → hang up → recording and transcript appear under Admin → Call training.
 4. Admin → Notifications shows the exam-result rows as `sent`; Telegram/email received.
-5. Delete the test learner (Admin → Users → disable, or SQL).
+5. Upload a multi-page PDF to a record → the document shows *Queued* → within two minutes *Ready (N pages)* → **Ask the documents** returns a page-cited answer.
+6. Delete the test learner (Admin → Users → disable, or SQL).

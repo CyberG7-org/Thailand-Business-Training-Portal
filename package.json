@@ -19,7 +19,9 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
     "check:secrets": "node scripts/check-client-secrets.mjs",
-    "fixtures:pdf": "node scripts/make-fixture-pdf.mjs"
+    "fixtures:pdf": "node scripts/make-fixture-pdf.mjs",
+    "vector:setup": "node scripts/vector-setup.mjs",
+    "vector:smoke": "node scripts/vector-smoke.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
