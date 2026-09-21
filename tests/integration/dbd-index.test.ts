@@ -9,6 +9,7 @@ import {
 import { createDbdRecord, listDbdDocuments, uploadDbdDocument } from '@/lib/db/dbd-records';
 import { MissingPagesError, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
 import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
+import type { Chunk } from '@/lib/domain/rag/chunk';
 import { FakeDbdExtractor } from '@/lib/integrations/extraction/fake';
 import type { DbdExtractor } from '@/lib/integrations/extraction/types';
 import { FakeVectorStore } from '@/lib/integrations/vector/fake';
@@ -28,8 +29,12 @@ const pdfFile = () => new File([fixture], 'pack.pdf', { type: 'application/pdf' 
 /** A vector store that remembers what it was asked to remove. */
 class RecordingStore extends FakeVectorStore {
   removed: string[] = [];
+  indexed: Chunk[][] = [];
   override async remove(ids: string[]) {
     this.removed.push(...ids);
+  }
+  override async index(chunks: Chunk[]) {
+    this.indexed.push(chunks);
   }
 }
 
@@ -214,6 +219,35 @@ describe('index jobs and the worker', () => {
     const ids = [...(a.data ?? []), ...(b.data ?? [])].map((j) => j.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toHaveLength(2);
+  });
+
+  it('re-labels chunks when the document type is classified while the job runs', async () => {
+    // The direct extraction classifies the document in parallel with the index job; whichever
+    // finishes second must not leave the chunks (and their vector metadata) with the old type.
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await svc.from('dbd_documents').update({ document_type: null }).eq('id', doc.id);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    const classifiesMidway: DbdExtractor = {
+      ...transcriberWith(() => []),
+      async transcribe(_slice, range) {
+        await svc.from('dbd_documents').update({ document_type: 'certificate' }).eq('id', doc.id);
+        return [{ page: range.firstPage, text: 'หน้าเดียว' }];
+      },
+    };
+    store.indexed = [];
+    await processIndexJobs({
+      extractor: classifiesMidway,
+      vector: store,
+      slicePages: 1,
+      budgetMs: 60_000,
+    });
+    const { data: rows } = await svc
+      .from('dbd_chunks')
+      .select('document_type')
+      .eq('document_id', doc.id);
+    expect(rows?.every((r) => r.document_type === 'certificate')).toBe(true);
+    const last = store.indexed[store.indexed.length - 1];
+    expect(last.every((c) => c.documentType === 'certificate')).toBe(true);
   });
 
   it('fails a job whose runs keep dying before the worker can report an error', async () => {

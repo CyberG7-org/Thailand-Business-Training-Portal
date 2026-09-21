@@ -242,6 +242,43 @@ async function storeSlice(
   }
 }
 
+/**
+ * The direct extraction classifies a document while its index job may already be running; when
+ * the job finishes with a different type than its slices used, rows and vector metadata are
+ * rewritten (same ids, so the store overwrites in place).
+ */
+async function relabelChunks(
+  admin: Db,
+  vector: VectorStore,
+  documentId: string,
+  documentType: string | null,
+): Promise<void> {
+  const { data, error } = await admin
+    .from('dbd_chunks')
+    .select('id, record_id, document_id, page, chunk_index, chunk_text')
+    .eq('document_id', documentId)
+    .order('page')
+    .order('chunk_index');
+  if (error) throw error;
+  if (!data || data.length === 0) return;
+  const { error: updateError } = await admin
+    .from('dbd_chunks')
+    .update({ document_type: documentType })
+    .eq('document_id', documentId);
+  if (updateError) throw updateError;
+  await vector.index(
+    data.map((r) => ({
+      id: r.id,
+      recordId: r.record_id,
+      documentId: r.document_id,
+      documentType,
+      page: r.page,
+      chunkIndex: r.chunk_index,
+      text: r.chunk_text,
+    })),
+  );
+}
+
 async function setDocument(
   admin: Db,
   documentId: string,
@@ -339,6 +376,14 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
       } while (!done && now() - started < budgetMs);
 
       if (done) {
+        const { data: fresh } = await admin
+          .from('dbd_documents')
+          .select('document_type')
+          .eq('id', doc.id)
+          .single();
+        if (fresh && fresh.document_type !== doc.document_type) {
+          await relabelChunks(admin, deps.vector, doc.id, fresh.document_type);
+        }
         await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
         await setDocument(admin, doc.id, {
           index_status: 'ready',
