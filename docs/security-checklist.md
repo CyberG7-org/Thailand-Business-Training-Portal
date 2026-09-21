@@ -8,7 +8,7 @@ Verdict per item of the foundation spec §13 "Security" row plus what the slices
 | 2 | Service-role key never reaches the client bundle | ✅ | `pnpm check:secrets` (`scripts/check-client-secrets.mjs`) after `pnpm build` |
 | 3 | IDOR on every id-bearing learner route (quiz/exam attempts, results, calls, cards) | ✅ | `tests/e2e/idor.spec.ts` (404 for foreign ids), RLS integration tests |
 | 4 | Admin routes bounce learners; middleware guards `/dashboard` and `/admin` | ✅ | `tests/e2e/auth.spec.ts`, `tests/e2e/idor.spec.ts` |
-| 5 | Private buckets only; files served through short-lived signed URLs (DBD docs, study PDFs, TTS cache, name cards, recordings) | ✅ | bucket definitions in migrations 0002/0005/0008/0009; signed-URL helpers in `lib/db/*` (300–600 s) |
+| 5 | Private buckets only; files served through short-lived signed URLs (DBD docs, study PDFs, TTS cache, name cards, recordings); DBD uploads go browser → bucket under a signed upload URL that only admins can obtain, and the object is verified (PDF magic, 30 MB, record prefix) before it becomes a document (D45) | ✅ | bucket definitions in migrations 0002/0005/0008/0009; signed-URL helpers in `lib/db/*` (300–600 s) |
 | 6 | Cron endpoint requires `CRON_SECRET` bearer | ✅ | `tests/e2e/exam.spec.ts`, `idor.spec.ts` |
 | 7 | Vapi webhook requires `x-vapi-secret`; deliveries ledgered and idempotent | ✅ | `tests/e2e/bank-call.spec.ts`, `tests/integration/calls.test.ts` |
 | 8 | TTS endpoint requires an active session and only synthesizes approved Thai cards | ✅ | `tests/e2e/study.spec.ts`, `idor.spec.ts` |

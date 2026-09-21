@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DbdRecordInput } from '@/lib/domain/dbd-record';
+import { MAX_DOCUMENT_BYTES } from '@/lib/domain/document-upload';
 import type { StructuredData } from '@/lib/domain/dbd-profile';
 import { getVectorStore, resolveVectorProvider, type VectorStore } from '@/lib/integrations/vector';
 import { countPages } from '@/lib/pdf/slice';
@@ -82,10 +83,28 @@ export async function confirmDbdRecord(
   return data;
 }
 
+const PDF_MAGIC = '%PDF-';
+
+/** Why an uploaded object could not become a document; the UI has a message per code. */
+export class DocumentUploadError extends Error {
+  constructor(
+    message: string,
+    public readonly code: 'invalid-file' | 'no-file',
+  ) {
+    super(message);
+    this.name = 'DocumentUploadError';
+  }
+}
+
+/** Where a new document of the record lives in the bucket: `<record>/<time>-<nonce>.pdf`. */
+export function newDocumentPath(recordId: string): string {
+  return `${recordId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+}
+
 /**
  * Adds one source document to the record (decision D38: certificate, objectives sheet,
- * shareholder list, memorandum…). The first document also becomes `document_path`, the file
- * learners and the AI question generator see as "the certificate".
+ * shareholder list, memorandum…) from bytes the server holds — tests and scripts; the admin UI
+ * uploads from the browser and calls `registerDbdDocument`.
  */
 export async function uploadDbdDocument(
   db: Db,
@@ -93,18 +112,49 @@ export async function uploadDbdDocument(
   file: File | Blob,
   originalName = 'certificate.pdf',
 ): Promise<string> {
-  const existing = await listDbdDocuments(db, id);
-  const position = existing.length + 1;
-  const path = `${id}/${Date.now()}-${position}.pdf`;
+  const path = newDocumentPath(id);
   const { error } = await db.storage
     .from('dbd-documents')
     .upload(path, file, { contentType: 'application/pdf' });
   if (error) throw error;
+  return registerDbdDocument(db, id, { path, originalName });
+}
+
+/**
+ * Turns an object the browser uploaded straight to the bucket (signed upload URL; a function's
+ * request body is capped at 4.5 MB on Vercel) into a document of the record: the object must sit
+ * under the record's prefix and be a PDF within the size cap, or it is removed again. The first
+ * document also becomes `document_path`, the file learners and the AI question generator see as
+ * "the certificate".
+ */
+export async function registerDbdDocument(
+  db: Db,
+  id: string,
+  input: { path: string; originalName: string },
+): Promise<string> {
+  const { path } = input;
+  if (!path.startsWith(`${id}/`) || path.includes('..')) {
+    throw new DocumentUploadError('The upload does not belong to this record', 'invalid-file');
+  }
+  const { data: blob, error: downloadError } = await db.storage
+    .from('dbd-documents')
+    .download(path);
+  if (downloadError || !blob) {
+    throw new DocumentUploadError('The uploaded file was not found', 'no-file');
+  }
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const isPdf = new TextDecoder().decode(bytes.subarray(0, PDF_MAGIC.length)) === PDF_MAGIC;
+  if (!isPdf || bytes.byteLength > MAX_DOCUMENT_BYTES) {
+    await db.storage.from('dbd-documents').remove([path]);
+    throw new DocumentUploadError('Only PDF files up to 30 MB are accepted', 'invalid-file');
+  }
   const { data: auth } = await db.auth.getUser();
+  const existing = await listDbdDocuments(db, id);
+  const position = existing.length + 1;
   // P14: the page count decides how the document is read; an unreadable file is stored but not indexed.
   let pageCount: number | null = null;
   try {
-    pageCount = await countPages(new Uint8Array(await file.arrayBuffer()));
+    pageCount = await countPages(bytes);
   } catch {
     pageCount = null;
   }
@@ -114,8 +164,8 @@ export async function uploadDbdDocument(
     .insert({
       record_id: id,
       path,
-      original_name: originalName,
-      size_bytes: file.size,
+      original_name: input.originalName,
+      size_bytes: bytes.byteLength,
       position,
       uploaded_by: auth.user?.id ?? null,
       page_count: pageCount,

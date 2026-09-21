@@ -86,7 +86,8 @@
       "uploaded": "Uploaded",
       "errors": {
         "no-file": "Choose a PDF file",
-        "invalid-file": "Only PDF files up to 10 MB are accepted"
+        "upload-failed": "The file could not be uploaded (connection lost or not a PDF). Please try again.",
+        "invalid-file": "Only PDF files up to 30 MB are accepted (6 files at most)"
       },
       "fields": {
         "companyNameTh": "Company name (Thai)",

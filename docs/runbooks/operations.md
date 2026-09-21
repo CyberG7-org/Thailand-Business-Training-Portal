@@ -29,6 +29,7 @@ Set the uptime monitor to alert on non-200 from `/api/health` for 3 consecutive 
 | Call ends but no transcript | `webhook_events` for that call id | `duplicate`/`applied` with `partial`: recording URL unreachable — download from Vapi dashboard manually if needed |
 | Wrong bank date for a learner | `eligibility_snapshots` latest row for the user; DBD record `issued_on` | correct `issued_on` on the record (trigger recomputes) or the policy days in `/admin/settings` (recomputes for everyone) |
 | Extraction refuses / hallucinates | provider `claude` in health; the review screen highlights unmatched fields | admin corrects fields before confirming — extraction never auto-confirms |
+| Upload fails with "could not be uploaded" | browser console for the PUT to `<supabase>/storage/v1/object/upload/sign/dbd-documents/…`; Supabase Storage logs | 413 from Storage → file over the bucket's 30 MB limit; 400 → not `application/pdf`; the file never passes through Vercel (D45), so a 413 from a Vercel function means a stale deployment |
 
 ### Index stuck or failed
 

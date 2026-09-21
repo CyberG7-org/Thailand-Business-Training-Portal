@@ -86,7 +86,8 @@
       "uploaded": "已上传",
       "errors": {
         "no-file": "请选择 PDF 文件",
-        "invalid-file": "仅接受 10 MB 以内的 PDF 文件"
+        "upload-failed": "文件上传失败（连接中断或不是 PDF），请重试。",
+        "invalid-file": "仅接受 30 MB 以内的 PDF 文件（最多 6 个）"
       },
       "fields": {
         "companyNameTh": "公司名称（泰文）",

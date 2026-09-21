@@ -8,12 +8,11 @@ import {
   extractDocumentAction,
   removeDocumentAction,
   retryIndexAction,
-  uploadDocumentAction,
   type ToolState,
 } from '../actions';
+import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
 
 const initial: ToolState = { ok: false, error: null };
-const UPLOAD_ERROR_KEYS = ['no-file', 'invalid-file'] as const;
 const EXTRACT_ERROR_KEYS = [
   'not_configured',
   'provider',
@@ -94,7 +93,11 @@ export function RecordTools({
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const [confirmState, confirmAction, confirming] = useActionState(confirmDbdRecordAction, initial);
-  const [uploadState, uploadAction, uploading] = useActionState(uploadDocumentAction, initial);
+  const {
+    state: uploadState,
+    pending: uploading,
+    submit: submitUpload,
+  } = useDirectUpload({ locale, id, redirect: false });
   const [extractState, extractAction, extracting] = useActionState(extractDocumentAction, initial);
   const missing = confirmState.error?.startsWith('missing:')
     ? confirmState.error.slice('missing:'.length)
@@ -175,53 +178,60 @@ export function RecordTools({
         )}
         {documents.length > 0 && <p className="text-xs text-gray-600">{t('index.hint')}</p>}
 
-        <form action={uploadAction} className="grid gap-2 border-t pt-3">
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="id" value={id} />
+        <div className="grid gap-2 border-t pt-3">
           <p className="text-xs text-gray-600">
             {extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
           </p>
-          <input
-            name="document"
-            type="file"
-            accept="application/pdf"
-            multiple
-            required
-            className="text-sm"
-          />
-          {uploadState.error && (
-            <p role="alert" className="text-sm text-red-700">
-              {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
-            </p>
-          )}
-          <FillOutcome state={uploadState} />
-          <div className="flex flex-wrap gap-2">
+          {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitUpload(e.currentTarget);
+            }}
+            className="grid gap-2"
+          >
+            <input
+              name="document"
+              type="file"
+              accept="application/pdf"
+              multiple
+              required
+              className="text-sm"
+            />
+            {uploadState.error && (
+              <p role="alert" className="text-sm text-red-700">
+                {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
+              </p>
+            )}
+            <FillOutcome state={uploadState} />
             <button
               type="submit"
               disabled={uploading || locked}
-              className="rounded border px-4 py-2 disabled:opacity-50"
+              className="justify-self-start rounded border px-4 py-2 disabled:opacity-50"
             >
               {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
             </button>
+          </form>
+          <form action={extractAction} className="grid gap-2">
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="id" value={id} />
             <button
               type="submit"
-              formAction={extractAction}
-              formNoValidate
               disabled={!canExtract || extracting || uploading}
               data-testid="extract-button"
-              className="rounded border px-4 py-2 disabled:opacity-50"
+              className="justify-self-start rounded border px-4 py-2 disabled:opacity-50"
               title={t('extractHint')}
             >
               {extracting ? t('extracting') : t('reExtract')}
             </button>
-          </div>
-          {extractState.error && (
-            <p role="alert" data-testid="extract-error" className="text-sm text-red-700">
-              {extractErrorKey ? t(`extractErrors.${extractErrorKey}`) : extractState.error}
-            </p>
-          )}
-          <FillOutcome state={extractState} />
-        </form>
+            {extractState.error && (
+              <p role="alert" data-testid="extract-error" className="text-sm text-red-700">
+                {extractErrorKey ? t(`extractErrors.${extractErrorKey}`) : extractState.error}
+              </p>
+            )}
+            <FillOutcome state={extractState} />
+          </form>
+        </div>
       </div>
 
       <form action={confirmAction} className="grid gap-2 rounded border p-4">

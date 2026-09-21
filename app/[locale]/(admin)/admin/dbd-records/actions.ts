@@ -6,13 +6,15 @@ import { requireAdmin } from '@/lib/auth/session';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { ExtractionError } from '@/lib/integrations/extraction/types';
 import {
+  DocumentUploadError,
   confirmDbdRecord,
   createDbdRecord,
   getDbdRecord,
   listDbdDocuments,
+  newDocumentPath,
+  registerDbdDocument,
   removeDbdDocument,
   updateDbdRecord,
-  uploadDbdDocument,
 } from '@/lib/db/dbd-records';
 import { askRecordDocuments, enqueueIndexJob, type AskResult } from '@/lib/db/dbd-index';
 import { extractAndApply, type ExtractAndApplyResult } from '@/lib/db/extraction';
@@ -20,6 +22,7 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
 import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
+import { checkDocumentFiles, type DocumentFileMeta } from '@/lib/domain/document-upload';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
   businessProfileSchema,
@@ -200,39 +203,74 @@ export async function confirmDbdRecordAction(
   }
 }
 
-const MAX_PDF_BYTES = 30 * 1024 * 1024;
-const MAX_FILES = 6;
+export type PreparedUpload = { path: string; token: string };
+export type PrepareUploadsResult =
+  { ok: true; id: string; uploads: PreparedUpload[] } | { ok: false; error: string };
 
-/** The "document" field may carry several PDFs (certificate, objectives sheet, บอจ.5, บอจ.2…). */
-function pdfFiles(formData: FormData): File[] | 'no-file' | 'invalid-file' {
-  const files = formData
-    .getAll('document')
-    .filter((f): f is File => f instanceof File && f.size > 0);
-  if (files.length === 0) return 'no-file';
-  if (files.length > MAX_FILES) return 'invalid-file';
-  for (const f of files) {
-    if (f.type !== 'application/pdf' || f.size > MAX_PDF_BYTES) return 'invalid-file';
-  }
-  return files;
-}
-
-export async function uploadDocumentAction(
-  _prev: ToolState,
-  formData: FormData,
-): Promise<ToolState> {
-  const locale = String(formData.get('locale') ?? 'th');
-  const id = String(formData.get('id') ?? '');
-  await requireAdmin(locale);
-  const files = pdfFiles(formData);
-  if (files === 'no-file' || files === 'invalid-file') return { ok: false, error: files };
+/**
+ * Step 1 of a browser-direct upload: validates what the admin picked (names, sizes, types only —
+ * the bytes never pass through a function, which Vercel caps at 4.5 MB), creates the record when
+ * there is none yet, and issues one signed upload URL per file under the record's prefix.
+ */
+export async function prepareUploadsAction(input: {
+  locale: string;
+  id: string | null;
+  files: DocumentFileMeta[];
+}): Promise<PrepareUploadsResult> {
+  const admin = await requireAdmin(input.locale);
+  const problem = checkDocumentFiles(input.files);
+  if (problem) return { ok: false, error: problem };
   const db = await createSupabaseServerClient();
   try {
-    for (const file of files) await uploadDbdDocument(db, id, file, file.name);
+    const id = input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id)).id;
+    const uploads: PreparedUpload[] = [];
+    for (const file of input.files.filter((f) => f.size > 0)) {
+      const path = newDocumentPath(id);
+      const { data, error } = await db.storage.from('dbd-documents').createSignedUploadUrl(path);
+      if (error || !data) throw new Error(error?.message ?? `no upload URL for ${file.name}`);
+      uploads.push({ path, token: data.token });
+    }
+    return { ok: true, id, uploads };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
+}
+
+/**
+ * Step 2: the browser has put the files in the bucket; register each as a document of the
+ * record, then read them (auto-fill). With `redirect`, the caller gets the record page URL to
+ * navigate to (upload-first creation); otherwise the record page is revalidated in place.
+ */
+export async function registerUploadsAction(input: {
+  locale: string;
+  id: string;
+  uploads: { path: string; name: string }[];
+  redirect?: boolean;
+}): Promise<ToolState & { redirectTo?: string }> {
+  const { locale, id } = input;
+  await requireAdmin(locale);
+  const db = await createSupabaseServerClient();
+  try {
+    for (const upload of input.uploads) {
+      await registerDbdDocument(db, id, { path: upload.path, originalName: upload.name });
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof DocumentUploadError ? e.code : errorMessage(e) };
+  }
   const outcome = await fillFromDocument(db, id);
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+  if (input.redirect) {
+    const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
+    if (outcome.applied?.length) query.set('applied', String(outcome.applied.length));
+    if (outcome.extractionError) query.set('extractionError', outcome.extractionError);
+    if (outcome.transcripts) query.set('transcripts', outcome.transcripts);
+    return {
+      ok: true,
+      error: null,
+      ...outcome,
+      redirectTo: `/${locale}/admin/dbd-records/${id}?${query.toString()}`,
+    };
+  }
   return { ok: true, error: null, ...outcome };
 }
 
@@ -252,31 +290,6 @@ async function fillFromDocument(
       extractionError: e instanceof ExtractionError ? e.code : errorMessage(e),
     };
   }
-}
-
-/** Upload-first creation: new record + PDF + automatic fill, then straight to the review page. */
-export async function createFromDocumentAction(
-  _prev: ToolState,
-  formData: FormData,
-): Promise<ToolState> {
-  const locale = String(formData.get('locale') ?? 'th');
-  const admin = await requireAdmin(locale);
-  const files = pdfFiles(formData);
-  if (files === 'no-file' || files === 'invalid-file') return { ok: false, error: files };
-  const db = await createSupabaseServerClient();
-  let id: string;
-  try {
-    id = (await createDbdRecord(db, EMPTY_INPUT, admin.id)).id;
-    for (const file of files) await uploadDbdDocument(db, id, file, file.name);
-  } catch (e) {
-    return { ok: false, error: errorMessage(e) };
-  }
-  const outcome = await fillFromDocument(db, id);
-  const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
-  if (outcome.applied?.length) query.set('applied', String(outcome.applied.length));
-  if (outcome.extractionError) query.set('extractionError', outcome.extractionError);
-  if (outcome.transcripts) query.set('transcripts', outcome.transcripts);
-  redirect(`/${locale}/admin/dbd-records/${id}?${query.toString()}`);
 }
 
 export async function extractDocumentAction(
