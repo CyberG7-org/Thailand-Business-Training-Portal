@@ -57,6 +57,13 @@ describe('index jobs and the worker', () => {
     asAdmin = await clientFor(admin);
     recordId = (await createDbdRecord(asAdmin, dbdRecordInputSchema.parse({}), admin.id)).id;
     store = new RecordingStore(loadChunksFromDb);
+    // The worker claims the oldest due job in the shared local database; neutralise anything an
+    // earlier suite (e.g. the e2e re-index click) left queued so this file only sees its own jobs.
+    const { error } = await svc
+      .from('index_jobs')
+      .update({ status: 'done', locked_until: null, last_error: 'cleared by dbd-index.test' })
+      .in('status', ['queued', 'running']);
+    if (error) throw error;
   });
 
   /** The newest job of a document; re-indexing adds a row once the previous one is done. */
