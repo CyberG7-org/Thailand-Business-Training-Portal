@@ -12,8 +12,10 @@ export class FakeVectorStore implements VectorStore {
   readonly name = 'fake';
   constructor(private readonly loadChunks: ChunkLoader) {}
 
-  async index(): Promise<void> {}
-  async remove(): Promise<void> {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async index(chunks: Chunk[]): Promise<void> {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async remove(ids: string[]): Promise<void> {}
 
   async search({ recordId, query, topK = 4, documentTypes }: SearchOptions): Promise<Passage[]> {
     const chunks = await this.loadChunks(recordId, documentTypes);
