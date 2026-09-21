@@ -37,8 +37,47 @@ const ENGLISH_MONTHS = [
   'December',
 ];
 
+/** Abbreviations as printed on DBD paperwork (มี.ค. and มิ.ย. differ only in the vowel). */
+const THAI_MONTH_ABBREVIATIONS = [
+  'ม.ค.',
+  'ก.พ.',
+  'มี.ค.',
+  'เม.ย.',
+  'พ.ค.',
+  'มิ.ย.',
+  'ก.ค.',
+  'ส.ค.',
+  'ก.ย.',
+  'ต.ค.',
+  'พ.ย.',
+  'ธ.ค.',
+];
+const THAI_DIGITS = '๐๑๒๓๔๕๖๗๘๙';
+
 const ISO_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
-const DMY_RE = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+const DMY_RE = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/;
+/** "9 เมษายน 2569", "5 เดือน สิงหาคม พ.ศ. 2569", "13 ก.ค. 2569", "13 July 2026", "13 Jul 2569". */
+const DAY_MONTH_YEAR_RE =
+  /^(?:วันที่\s*)?(\d{1,2})\s+(?:เดือน\s*)?(\S+)\s+(?:พ\.ศ\.|ค\.ศ\.)?\s*(\d{4})$/;
+/** "July 13, 2026". */
+const MONTH_DAY_YEAR_RE = /^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/;
+
+function monthNumber(name: string): number | null {
+  const thai = THAI_MONTHS.indexOf(name);
+  if (thai >= 0) return thai + 1;
+  const abbreviated = THAI_MONTH_ABBREVIATIONS.indexOf(name);
+  if (abbreviated >= 0) return abbreviated + 1;
+  const english = ENGLISH_MONTHS.findIndex(
+    (m) =>
+      m.toLowerCase() === name.toLowerCase() || m.slice(0, 3).toLowerCase() === name.toLowerCase(),
+  );
+  return english >= 0 ? english + 1 : null;
+}
+
+/** Thai numerals to Arabic digits, so "๑๓ กรกฎาคม ๒๕๖๙" reads like "13 กรกฎาคม 2569". */
+function arabicDigits(text: string): string {
+  return text.replace(/[๐-๙]/g, (d) => String(THAI_DIGITS.indexOf(d)));
+}
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -89,21 +128,32 @@ export function normalizeYear(year: number): { ce: number; wasBe: boolean } {
   return year >= BE_THRESHOLD ? { ce: year - BE_OFFSET, wasBe: true } : { ce: year, wasBe: false };
 }
 
-/** Accepts `DD/MM/YYYY` or `YYYY-MM-DD`; the year may be BE or CE. Returns null when invalid. */
+/**
+ * Accepts `DD/MM/YYYY` (also `-`/`.`), `YYYY-MM-DD`, and dates as certificates print them —
+ * "9 เมษายน 2569", "5 เดือน สิงหาคม พ.ศ. 2569", "13 ก.ค. 2569", Thai numerals, "13 July 2026",
+ * "July 13, 2026". The year may be BE or CE. Returns null when invalid.
+ */
 export function parseDateInput(input: string): ISODate | null {
-  const trimmed = input.trim();
+  const trimmed = arabicDigits(input).trim().replace(/\s+/g, ' ');
   let y: number;
-  let m: number;
+  let m: number | null;
   let d: number;
   const iso = ISO_RE.exec(trimmed);
   const dmy = DMY_RE.exec(trimmed);
+  const named = DAY_MONTH_YEAR_RE.exec(trimmed);
+  const english = MONTH_DAY_YEAR_RE.exec(trimmed);
   if (iso) {
     [y, m, d] = [Number(iso[1]), Number(iso[2]), Number(iso[3])];
   } else if (dmy) {
     [d, m, y] = [Number(dmy[1]), Number(dmy[2]), Number(dmy[3])];
+  } else if (named) {
+    [d, m, y] = [Number(named[1]), monthNumber(named[2]), Number(named[3])];
+  } else if (english) {
+    [m, d, y] = [monthNumber(english[1]), Number(english[2]), Number(english[3])];
   } else {
     return null;
   }
+  if (m === null) return null;
   const { ce } = normalizeYear(y);
   return isRealDate(ce, m, d) ? toISO(ce, m, d) : null;
 }

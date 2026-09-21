@@ -57,6 +57,19 @@ describe('applyExtractionToRecord', () => {
     expect(rejected).toEqual([]);
   });
 
+  it('takes dates as the certificate prints them (first real pack on staging: "9 เมษายน 2569")', () => {
+    const printed = structuredClone(SAMPLE_EXTRACTION);
+    printed.registered_on.value = '9 เมษายน 2569';
+    printed.issued_on.value = '5 เดือน สิงหาคม พ.ศ. 2569';
+    const { input, applied, rejected } = applyExtractionToRecord(printed, {});
+    expect(input.registered_on).toBe('2026-04-09');
+    expect(input.issued_on).toBe('2026-08-05');
+    expect(applied).toEqual(expect.arrayContaining(['registered_on', 'issued_on']));
+    expect(rejected).toEqual([]);
+    const notes = extractionToFormValues(printed).dateNotes;
+    expect(notes.registered_on).toEqual({ raw: '9 เมษายน 2569', iso: '2026-04-09', wasBe: true });
+  });
+
   it('drops an invalid extracted value on its own and keeps the rest', () => {
     const broken = structuredClone(SAMPLE_EXTRACTION);
     broken.juristic_id.value = '12345'; // not 13 digits

@@ -58,8 +58,24 @@ describe('parseDateInput', () => {
   it('parses ISO input with a CE year', () => {
     expect(parseDateInput('2026-07-13')).toBe('2026-07-13');
   });
+  it('parses dates the way a certificate prints them: Thai month names, พ.ศ., เดือน, Thai digits', () => {
+    expect(parseDateInput('9 เมษายน 2569')).toBe('2026-04-09');
+    expect(parseDateInput('วันที่ 5 เดือน สิงหาคม พ.ศ. 2569')).toBe('2026-08-05');
+    expect(parseDateInput('๑๓ กรกฎาคม ๒๕๖๙')).toBe('2026-07-13');
+    expect(parseDateInput('13 ก.ค. 2569')).toBe('2026-07-13');
+    expect(parseDateInput('1 มกราคม 2026')).toBe('2026-01-01');
+  });
+  it('parses English month names and other separators', () => {
+    expect(parseDateInput('13 July 2026')).toBe('2026-07-13');
+    expect(parseDateInput('July 13, 2026')).toBe('2026-07-13');
+    expect(parseDateInput('13 Jul 2569')).toBe('2026-07-13');
+    expect(parseDateInput('13-07-2569')).toBe('2026-07-13');
+    expect(parseDateInput('13.07.2026')).toBe('2026-07-13');
+  });
   it('rejects impossible dates and garbage', () => {
     expect(parseDateInput('31/02/2026')).toBeNull();
+    expect(parseDateInput('30 กุมภาพันธ์ 2569')).toBeNull();
+    expect(parseDateInput('13 เดือนไหน 2569')).toBeNull();
     expect(parseDateInput('hello')).toBeNull();
     expect(parseDateInput('')).toBeNull();
   });
