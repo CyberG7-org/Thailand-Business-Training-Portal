@@ -59,6 +59,19 @@ describe('index jobs and the worker', () => {
     store = new RecordingStore(loadChunksFromDb);
   });
 
+  /** The newest job of a document; re-indexing adds a row once the previous one is done. */
+  async function latestJob(documentId: string) {
+    const { data, error } = await svc
+      .from('index_jobs')
+      .select('*')
+      .eq('document_id', documentId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+
   afterAll(async () => {
     const docs = await listDbdDocuments(svc, recordId);
     if (docs.length > 0) await svc.storage.from('dbd-documents').remove(docs.map((d) => d.path));
@@ -82,14 +95,14 @@ describe('index jobs and the worker', () => {
     expect(first).toMatchObject({ claimed: 1, slices: 1, completed: 0, released: 1 });
     let [doc] = await listDbdDocuments(svc, recordId);
     expect(doc).toMatchObject({ index_status: 'indexing', indexed_pages: 2 });
-    let { data: job } = await svc.from('index_jobs').select('*').eq('document_id', doc.id).single();
+    let job = await latestJob(doc.id);
     expect(job).toMatchObject({ status: 'queued', next_page: 3, attempts: 0 });
 
     const second = await processIndexJobs(deps);
     expect(second).toMatchObject({ claimed: 1, slices: 1, completed: 1 });
     [doc] = await listDbdDocuments(svc, recordId);
     expect(doc).toMatchObject({ index_status: 'ready', indexed_pages: 3, index_error: null });
-    ({ data: job } = await svc.from('index_jobs').select('*').eq('document_id', doc.id).single());
+    job = await latestJob(doc.id);
     expect(job?.status).toBe('done');
 
     const { data: pages } = await svc
@@ -163,20 +176,20 @@ describe('index jobs and the worker', () => {
     });
     expect(run).toMatchObject({ claimed: 1, failed: 0, released: 1 });
     expect(calls).toBe(2);
-    let { data: job } = await svc.from('index_jobs').select('*').eq('document_id', doc.id).single();
+    let job = await latestJob(doc.id);
     expect(job).toMatchObject({ status: 'queued', attempts: 1 });
     expect(job?.last_error).toMatch(/missing page/i);
-    expect(new Date(job!.locked_until!).getTime()).toBeGreaterThan(Date.now());
+    expect(new Date(job.locked_until!).getTime()).toBeGreaterThan(Date.now());
 
     // Force the remaining attempts through by expiring the lease each time.
     for (let i = 0; i < 4; i++) {
       await svc
         .from('index_jobs')
         .update({ locked_until: new Date(0).toISOString() })
-        .eq('id', job!.id);
+        .eq('id', job.id);
       await processIndexJobs({ extractor: skipsPageTwo, vector: store, budgetMs: 60_000 });
     }
-    ({ data: job } = await svc.from('index_jobs').select('*').eq('document_id', doc.id).single());
+    job = await latestJob(doc.id);
     expect(job).toMatchObject({ status: 'failed', attempts: 5 });
     const [failedDoc] = await listDbdDocuments(svc, recordId);
     expect(failedDoc.index_status).toBe('failed');
@@ -201,6 +214,7 @@ describe('index jobs and the worker', () => {
     await svc
       .from('index_jobs')
       .update({ status: 'queued', locked_until: null })
+      .in('status', ['queued', 'running'])
       .in(
         'document_id',
         docs.map((d) => d.id),

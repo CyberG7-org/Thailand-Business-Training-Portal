@@ -1,7 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DbdRecordInput } from '@/lib/domain/dbd-record';
 import type { StructuredData } from '@/lib/domain/dbd-profile';
+import { getVectorStore, resolveVectorProvider } from '@/lib/integrations/vector';
+import { countPages } from '@/lib/pdf/slice';
 import type { Database, Json } from './database.types';
+import { enqueueIndexJob, listChunkIds } from './dbd-index';
 
 type Db = SupabaseClient<Database>;
 export type DbdRecordRow = Database['public']['Tables']['dbd_records']['Row'];
@@ -98,15 +101,33 @@ export async function uploadDbdDocument(
     .upload(path, file, { contentType: 'application/pdf' });
   if (error) throw error;
   const { data: auth } = await db.auth.getUser();
-  const { error: docError } = await db.from('dbd_documents').insert({
-    record_id: id,
-    path,
-    original_name: originalName,
-    size_bytes: file.size,
-    position,
-    uploaded_by: auth.user?.id ?? null,
-  });
+  // P14: the page count decides how the document is read; an unreadable file is stored but not indexed.
+  let pageCount: number | null = null;
+  try {
+    pageCount = await countPages(new Uint8Array(await file.arrayBuffer()));
+  } catch {
+    pageCount = null;
+  }
+  const indexing = resolveVectorProvider() !== 'off';
+  const { data: doc, error: docError } = await db
+    .from('dbd_documents')
+    .insert({
+      record_id: id,
+      path,
+      original_name: originalName,
+      size_bytes: file.size,
+      position,
+      uploaded_by: auth.user?.id ?? null,
+      page_count: pageCount,
+      index_status: pageCount === null ? 'failed' : indexing ? 'queued' : 'skipped',
+      index_error: pageCount === null ? 'unreadable_pdf' : null,
+    })
+    .select('id')
+    .single();
   if (docError) throw docError;
+  if (pageCount !== null && indexing) {
+    await enqueueIndexJob(db, { recordId: id, documentId: doc.id });
+  }
   if (position === 1) {
     const { error: updateError } = await db
       .from('dbd_records')
@@ -141,6 +162,9 @@ export async function removeDbdDocument(
     .maybeSingle();
   if (error) throw error;
   if (!doc) return;
+  // Vectors first, then the row (pages and chunks cascade) — decision D40.
+  const ids = await listChunkIds(db, doc.id);
+  if (ids.length > 0) await getVectorStore()?.remove(ids);
   await db.storage.from('dbd-documents').remove([doc.path]);
   const { error: delError } = await db.from('dbd_documents').delete().eq('id', doc.id);
   if (delError) throw delError;

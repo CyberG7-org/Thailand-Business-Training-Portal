@@ -21,6 +21,7 @@ export default defineConfig({
       NOTIFY_PROVIDER: 'fake',
       VAPI_PROVIDER: 'fake',
       QUESTION_GEN_PROVIDER: 'fake',
+      VECTOR_PROVIDER: 'fake',
     },
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
