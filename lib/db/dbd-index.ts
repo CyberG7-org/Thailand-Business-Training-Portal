@@ -223,6 +223,16 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     if (!job) break;
     summary.claimed++;
 
+    // The claim counts an expired `running` lease as a failed attempt (the run was killed before
+    // it could report); the worker's own catch counts the rest. Both meet the same ceiling.
+    if (job.attempts >= MAX_INDEX_ATTEMPTS) {
+      const message = 'worker died repeatedly (lease expired)';
+      await setJob(admin, job.id, { status: 'failed', locked_until: null, last_error: message });
+      await setDocument(admin, job.document_id, { index_status: 'failed', index_error: message });
+      summary.failed++;
+      continue;
+    }
+
     if (!deps.extractor || !deps.vector) {
       await setJob(admin, job.id, {
         status: 'done',

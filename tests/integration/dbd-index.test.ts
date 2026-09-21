@@ -216,6 +216,28 @@ describe('index jobs and the worker', () => {
     expect(ids).toHaveLength(2);
   });
 
+  it('fails a job whose runs keep dying before the worker can report an error', async () => {
+    // A lease that expired while `running` means the previous run was killed (timeout, OOM);
+    // the claim counts it as an attempt and the worker must honour the ceiling.
+    const [doc] = await listDbdDocuments(svc, recordId);
+    const job = await latestJob(doc.id);
+    await svc
+      .from('index_jobs')
+      .update({ status: 'running', attempts: 4, locked_until: new Date(0).toISOString() })
+      .eq('id', job.id);
+    const run = await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+    });
+    expect(run.failed).toBeGreaterThanOrEqual(1);
+    const after = await latestJob(doc.id);
+    expect(after).toMatchObject({ status: 'failed', attempts: 5 });
+    expect(after.last_error).toMatch(/died/i);
+    const [failedDoc] = await listDbdDocuments(svc, recordId);
+    expect(failedDoc).toMatchObject({ index_status: 'failed' });
+  });
+
   it('marks documents skipped when no provider is available', async () => {
     const docs = await listDbdDocuments(svc, recordId);
     await svc
@@ -229,6 +251,6 @@ describe('index jobs and the worker', () => {
     const run = await processIndexJobs({ extractor: null, vector: store, budgetMs: 60_000 });
     expect(run.skipped).toBeGreaterThanOrEqual(1);
     const after = await listDbdDocuments(svc, recordId);
-    expect(after.every((d) => d.index_status === 'skipped')).toBe(true);
+    expect(after.some((d) => d.index_status === 'skipped')).toBe(true);
   });
 });

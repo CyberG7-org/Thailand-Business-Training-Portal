@@ -9,6 +9,8 @@ import { ExtractionError, type DbdExtraction, type DbdExtractor } from './types'
 const MODEL = 'claude-opus-5';
 /** Request ceiling for document content (the API rejects larger payloads). */
 export const MAX_TOTAL_PDF_BYTES = 30 * 1024 * 1024;
+/** A transcription call that has not finished by then is treated as a failed attempt. */
+export const TRANSCRIPTION_TIMEOUT_MS = 150_000;
 
 /** Maps SDK failures to ExtractionError codes (shared by extract and transcribe). */
 function toExtractionError(error: unknown): ExtractionError {
@@ -74,26 +76,29 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     try {
       // Streaming keeps long Thai transcripts clear of request timeouts.
       text = await this.client.messages
-        .stream({
-          model: transcriptionModel(),
-          max_tokens: 16000,
-          messages: [
-            {
-              role: 'user',
-              content: [
-                {
-                  type: 'document',
-                  source: {
-                    type: 'base64',
-                    media_type: 'application/pdf',
-                    data: Buffer.from(slice).toString('base64'),
+        .stream(
+          {
+            model: transcriptionModel(),
+            max_tokens: 16000,
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'document',
+                    source: {
+                      type: 'base64',
+                      media_type: 'application/pdf',
+                      data: Buffer.from(slice).toString('base64'),
+                    },
                   },
-                },
-                { type: 'text', text: transcriptionPrompt(range) },
-              ],
-            },
-          ],
-        })
+                  { type: 'text', text: transcriptionPrompt(range) },
+                ],
+              },
+            ],
+          },
+          { timeout: TRANSCRIPTION_TIMEOUT_MS },
+        )
         .finalText();
     } catch (error) {
       throw toExtractionError(error);
