@@ -8,6 +8,7 @@ import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
 import { FakeQuestionGenerator } from '@/lib/integrations/question-gen/fake';
 import type { GeneratedQuestion, QuestionGenerator } from '@/lib/integrations/question-gen/types';
 import { FakeVectorStore } from '@/lib/integrations/vector/fake';
+import { VectorError, type Passage, type SearchOptions } from '@/lib/integrations/vector/types';
 import { loadChunksFromDb } from '@/lib/integrations/vector/fake-loader';
 import {
   adminClient,
@@ -224,6 +225,46 @@ describe('retrieval consumers', () => {
     await svc.from('dbd_documents').update({ page_count: null }).eq('id', documentId);
     expect((await loadReference(asAdmin, recordId)).pdf).not.toBeNull(); // pre-P14 upload: unknown = small
     await svc.from('dbd_documents').update({ page_count: 3 }).eq('id', documentId);
+  });
+
+  it('runs the per-concept queries concurrently (one round trip of latency, not seven)', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    class SlowStore extends FakeVectorStore {
+      override async search(options: SearchOptions): Promise<Passage[]> {
+        inFlight++;
+        maxInFlight = Math.max(maxInFlight, inFlight);
+        await new Promise((r) => setTimeout(r, 30));
+        inFlight--;
+        return super.search(options);
+      }
+    }
+    const slow = new SlowStore(loadChunksFromDb);
+    await loadCardEvidence(svc, slow, recordId, 'business_plan');
+    expect(maxInFlight).toBeGreaterThan(1);
+    maxInFlight = 0;
+    await loadReferencePassages(svc, slow, recordId);
+    expect(maxInFlight).toBeGreaterThan(1);
+  });
+
+  it('falls back to the old path when the store is up but failing', async () => {
+    const dead = new FakeVectorStore(loadChunksFromDb);
+    dead.search = async () => {
+      throw new VectorError('Pinecone is unreachable', 'unavailable');
+    };
+    expect(await loadReferencePassages(svc, dead, recordId)).toEqual([]);
+    const result = await generateQuestionsIntoBank(
+      asAdmin,
+      admin.id,
+      { ...baseInput, referenceRecordId: recordId, count: 1, templateCount: 1 },
+      new FakeQuestionGenerator(),
+      dead,
+    );
+    batchIds.push(result.batchId);
+    questionIds.push(...result.questionIds);
+    expect(result.produced).toBe(1);
+    expect((await getQuestion(asAdmin, result.questionIds[0]))?.source_refs).toEqual([]);
+    expect(await loadCardEvidence(svc, dead, recordId, 'identity')).toEqual([]);
   });
 
   it("returns at most three passages of the learner's own record for a card group", async () => {

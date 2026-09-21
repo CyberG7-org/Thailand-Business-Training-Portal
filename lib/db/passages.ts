@@ -3,7 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ConceptGroup } from '@/lib/domain/bank-interview';
 import { CONCEPT_GROUPS, conceptGroupQuery, conceptQueries } from '@/lib/domain/rag/concepts';
 import type { ReferencePassage } from '@/lib/integrations/question-gen/passages';
-import type { Passage, VectorStore } from '@/lib/integrations/vector/types';
+import { VectorError, type Passage, type VectorStore } from '@/lib/integrations/vector/types';
 import type { Database } from './database.types';
 import { searchRecordPassages } from './dbd-index';
 
@@ -33,6 +33,32 @@ export async function hasReadyIndex(db: Db, recordId: string): Promise<boolean> 
 }
 
 /**
+ * Runs the queries concurrently (one round trip of latency, not one per query). A store that is
+ * up but failing yields no passages: every consumer then falls back to its pre-index behaviour
+ * instead of failing the page or the batch.
+ */
+async function searchAll(
+  vector: VectorStore,
+  recordId: string,
+  queries: string[],
+  topK: number,
+): Promise<Passage[][]> {
+  try {
+    return await Promise.all(
+      queries.map(
+        async (query) => (await searchRecordPassages(vector, recordId, query, { topK })) ?? [],
+      ),
+    );
+  } catch (e) {
+    if (e instanceof VectorError) {
+      console.error('passages: vector store unavailable, falling back', e.message);
+      return queries.map(() => []);
+    }
+    throw e;
+  }
+}
+
+/**
  * Passages for a generation run (spec §8): one query per concept group built from the bank's
  * questions, top 4 per group, deduplicated by chunk id. Empty when the record has no index.
  */
@@ -43,17 +69,21 @@ export async function loadReferencePassages(
 ): Promise<ReferencePassage[]> {
   if (!vector || !(await hasReadyIndex(db, recordId))) return [];
   const names = await documentNamesFor(db, recordId);
+  const perGroup = await searchAll(
+    vector,
+    recordId,
+    CONCEPT_GROUPS.map((group) => conceptGroupQuery(group)),
+    4,
+  );
   const out: ReferencePassage[] = [];
   const seen = new Set<string>();
-  for (const group of CONCEPT_GROUPS) {
-    const hits =
-      (await searchRecordPassages(vector, recordId, conceptGroupQuery(group), { topK: 4 })) ?? [];
-    for (const hit of hits) {
+  CONCEPT_GROUPS.forEach((group, i) => {
+    for (const hit of perGroup[i]) {
       if (seen.has(hit.id)) continue;
       seen.add(hit.id);
       out.push(toReferencePassage(hit, group, names));
     }
-  }
+  });
   return out;
 }
 
@@ -72,8 +102,7 @@ export async function loadCardEvidence(
   if (!vector || !(await hasReadyIndex(db, recordId))) return [];
   const names = await documentNamesFor(db, recordId);
   const best = new Map<string, Passage>();
-  for (const query of conceptQueries(group)) {
-    const hits = (await searchRecordPassages(vector, recordId, query, { topK: 2 })) ?? [];
+  for (const hits of await searchAll(vector, recordId, conceptQueries(group), 2)) {
     for (const hit of hits) {
       const prev = best.get(hit.id);
       if (!prev || prev.score < hit.score) best.set(hit.id, hit);
