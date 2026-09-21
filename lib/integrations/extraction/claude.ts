@@ -9,6 +9,8 @@ import { ExtractionError, type DbdExtraction, type DbdExtractor } from './types'
 const MODEL = 'claude-opus-5';
 /** Request ceiling for document content (the API rejects larger payloads). */
 export const MAX_TOTAL_PDF_BYTES = 30 * 1024 * 1024;
+/** Output ceiling per slice; a transcript that hits it is refused rather than stored truncated. */
+const TRANSCRIPTION_MAX_TOKENS = 32000;
 /** A transcription call that has not finished by then is treated as a failed attempt. */
 export const TRANSCRIPTION_TIMEOUT_MS = 150_000;
 
@@ -72,14 +74,14 @@ export class ClaudeDbdExtractor implements DbdExtractor {
   }
 
   async transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]> {
-    let text: string;
+    let message;
     try {
       // Streaming keeps long Thai transcripts clear of request timeouts.
-      text = await this.client.messages
+      message = await this.client.messages
         .stream(
           {
             model: transcriptionModel(),
-            max_tokens: 16000,
+            max_tokens: TRANSCRIPTION_MAX_TOKENS,
             messages: [
               {
                 role: 'user',
@@ -99,10 +101,23 @@ export class ClaudeDbdExtractor implements DbdExtractor {
           },
           { timeout: TRANSCRIPTION_TIMEOUT_MS },
         )
-        .finalText();
+        .finalMessage();
     } catch (error) {
       throw toExtractionError(error);
     }
+    if (message.stop_reason === 'max_tokens') {
+      throw new ExtractionError(
+        `Transcript of pages ${range.firstPage}–${range.lastPage} exceeded the output limit; lower TRANSCRIBE_SLICE_PAGES`,
+        'too_large',
+      );
+    }
+    if (message.stop_reason === 'refusal') {
+      throw new ExtractionError('The model refused to transcribe this slice', 'invalid_output');
+    }
+    const text = message.content
+      .filter((block) => block.type === 'text')
+      .map((block) => block.text)
+      .join('');
     return parsePageMarkers(text, range);
   }
 }

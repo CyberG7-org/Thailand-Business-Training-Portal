@@ -1,5 +1,7 @@
+import type Anthropic from '@anthropic-ai/sdk';
 import { describe, expect, it } from 'vitest';
 import { formatPageMarkers, parsePageMarkers } from '@/lib/domain/rag/transcript';
+import { ClaudeDbdExtractor } from '@/lib/integrations/extraction/claude';
 import { FakeDbdExtractor, fakePageText } from '@/lib/integrations/extraction/fake';
 import {
   DEFAULT_TRANSCRIPTION_MODEL,
@@ -35,5 +37,50 @@ describe('fake transcriber', () => {
       pages,
     );
     expect(fakePageText(7)).toContain('หน้า 7');
+  });
+});
+
+describe('Claude transcriber (stubbed SDK client)', () => {
+  const clientReturning = (message: { stop_reason: string; content: unknown[] }) =>
+    ({
+      messages: {
+        stream: () => ({ finalMessage: async () => message }),
+      },
+    }) as unknown as Anthropic;
+
+  it('parses the pages of a complete transcript', async () => {
+    const extractor = new ClaudeDbdExtractor(
+      clientReturning({
+        stop_reason: 'end_turn',
+        content: [{ type: 'text', text: '=== PAGE 3 ===\nสาม\n=== PAGE 4 ===\nสี่' }],
+      }),
+    );
+    await expect(
+      extractor.transcribe(new Uint8Array(), { firstPage: 3, lastPage: 4 }),
+    ).resolves.toEqual([
+      { page: 3, text: 'สาม' },
+      { page: 4, text: 'สี่' },
+    ]);
+  });
+
+  it('refuses a transcript cut off by the output limit instead of storing a truncated page', async () => {
+    const extractor = new ClaudeDbdExtractor(
+      clientReturning({
+        stop_reason: 'max_tokens',
+        content: [{ type: 'text', text: '=== PAGE 3 ===\nสาม\n=== PAGE 4 ===\nสี่ (ถูกตัด' }],
+      }),
+    );
+    await expect(
+      extractor.transcribe(new Uint8Array(), { firstPage: 3, lastPage: 4 }),
+    ).rejects.toMatchObject({ code: 'too_large' });
+  });
+
+  it('reports a refusal as invalid output', async () => {
+    const extractor = new ClaudeDbdExtractor(
+      clientReturning({ stop_reason: 'refusal', content: [] }),
+    );
+    await expect(
+      extractor.transcribe(new Uint8Array(), { firstPage: 1, lastPage: 1 }),
+    ).rejects.toMatchObject({ code: 'invalid_output' });
   });
 });
