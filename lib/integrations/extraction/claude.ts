@@ -2,7 +2,7 @@ import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { parsePageMarkers, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
-import { EXTRACTION_INSTRUCTIONS, dbdExtractionSchema } from './schema';
+import { EXTRACTION_INSTRUCTIONS, dbdExtractionApiSchema, fromApiExtraction } from './schema';
 import { transcriptionModel, transcriptionPrompt } from './transcribe';
 import { ExtractionError, type DbdExtraction, type DbdExtractor } from './types';
 
@@ -58,19 +58,22 @@ export class ClaudeDbdExtractor implements DbdExtractor {
 
     let response;
     try {
-      response = await this.client.messages.parse({
-        model: MODEL,
-        max_tokens: 24000,
-        messages: [{ role: 'user', content }],
-        output_config: { format: zodOutputFormat(dbdExtractionSchema) },
-      });
+      // Streamed: the SDK refuses non-streaming requests this long (max_tokens ≥ ~21k).
+      response = await this.client.messages
+        .stream({
+          model: MODEL,
+          max_tokens: 24000,
+          messages: [{ role: 'user', content }],
+          output_config: { format: zodOutputFormat(dbdExtractionApiSchema) },
+        })
+        .finalMessage();
     } catch (error) {
       throw toExtractionError(error);
     }
     if (response.stop_reason === 'refusal' || !response.parsed_output) {
       throw new ExtractionError('The model did not return a valid extraction', 'invalid_output');
     }
-    return response.parsed_output as DbdExtraction;
+    return fromApiExtraction(response.parsed_output) as DbdExtraction;
   }
 
   async transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]> {

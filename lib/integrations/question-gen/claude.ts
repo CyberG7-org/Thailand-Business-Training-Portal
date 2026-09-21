@@ -90,13 +90,16 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
 
     let response;
     try {
-      response = await this.client.messages.parse({
-        model: MODEL,
-        max_tokens: 32000,
-        system: GENERATION_INSTRUCTIONS,
-        messages: [{ role: 'user', content }],
-        output_config: { format: zodOutputFormat(generationOutputSchema) },
-      });
+      // Streamed: the SDK refuses non-streaming requests this long (max_tokens ≥ ~21k).
+      response = await this.client.messages
+        .stream({
+          model: MODEL,
+          max_tokens: 32000,
+          system: GENERATION_INSTRUCTIONS,
+          messages: [{ role: 'user', content }],
+          output_config: { format: zodOutputFormat(generationOutputSchema) },
+        })
+        .finalMessage();
     } catch (error) {
       throw toGenError(error);
     }
@@ -114,13 +117,15 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
       `SOURCE QUESTION (JSON):\n${JSON.stringify(input.source, null, 2)}`;
     let response;
     try {
-      response = await this.client.messages.parse({
-        model: MODEL,
-        max_tokens: 8000,
-        system: TRANSLATION_INSTRUCTIONS,
-        messages: [{ role: 'user', content: request }],
-        output_config: { format: zodOutputFormat(translationOutputSchema) },
-      });
+      response = await this.client.messages
+        .stream({
+          model: MODEL,
+          max_tokens: 8000,
+          system: TRANSLATION_INSTRUCTIONS,
+          messages: [{ role: 'user', content: request }],
+          output_config: { format: zodOutputFormat(translationOutputSchema) },
+        })
+        .finalMessage();
     } catch (error) {
       throw toGenError(error);
     }
