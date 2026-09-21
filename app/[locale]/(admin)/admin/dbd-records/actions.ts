@@ -20,6 +20,7 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { getVectorStore } from '@/lib/integrations/vector';
 import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
+import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
   businessProfileSchema,
   parseListText,
@@ -331,8 +332,8 @@ export async function retryIndexAction(formData: FormData): Promise<void> {
   const documentId = String(formData.get('documentId') ?? '');
   await requireAdmin(locale);
   const db = await createSupabaseServerClient();
-  const docs = await listDbdDocuments(db, id);
-  if (!docs.some((d) => d.id === documentId)) return;
+  const doc = (await listDbdDocuments(db, id)).find((d) => d.id === documentId);
+  if (!doc || !canRequestIndex(doc.index_status as IndexStatus)) return;
   await enqueueIndexJob(db, { recordId: id, documentId, kind: 'reindex' });
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
 }

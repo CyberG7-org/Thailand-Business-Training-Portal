@@ -188,7 +188,8 @@
         },
         "retry": "Retry",
         "reindex": "Re-index",
-        "hint": "Documents are read five pages at a time in the background (about a minute per run); reload to refresh the status."
+        "hint": "Documents are read five pages at a time in the background (about a minute per run); reload to refresh the status.",
+        "start": "Index"
       },
       "ask": {
         "title": "Ask the documents",

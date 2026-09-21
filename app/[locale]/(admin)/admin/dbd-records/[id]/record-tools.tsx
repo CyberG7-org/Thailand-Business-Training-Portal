@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
+import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
   confirmDbdRecordAction,
   extractDocumentAction,
@@ -22,7 +23,7 @@ const EXTRACT_ERROR_KEYS = [
   'too_large',
 ] as const;
 
-export type IndexStatus = 'none' | 'queued' | 'indexing' | 'ready' | 'failed' | 'skipped';
+export type { IndexStatus };
 
 export type DocumentSummary = {
   id: string;
@@ -125,7 +126,7 @@ export function RecordTools({
                     total: doc.pageCount ?? 0,
                   })}
                 </span>
-                {(doc.indexStatus === 'failed' || doc.indexStatus === 'ready') && (
+                {canRequestIndex(doc.indexStatus) && (
                   <form action={retryIndexAction}>
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="id" value={id} />
@@ -135,7 +136,11 @@ export function RecordTools({
                       className="text-xs underline"
                       data-testid="reindex-button"
                     >
-                      {doc.indexStatus === 'failed' ? t('index.retry') : t('index.reindex')}
+                      {doc.indexStatus === 'failed'
+                        ? t('index.retry')
+                        : doc.indexStatus === 'ready'
+                          ? t('index.reindex')
+                          : t('index.start')}
                     </button>
                   </form>
                 )}
