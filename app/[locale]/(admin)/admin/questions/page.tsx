@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/auth/session';
 import { listGenerationBatches } from '@/lib/db/question-gen';
 import { listQuestions } from '@/lib/db/questions';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import type { SourceRef } from '@/lib/integrations/question-gen/passages';
 import { approveQuestionAction } from './actions';
 
 const STATUSES = ['draft', 'approved', 'retired'] as const;
@@ -102,6 +103,7 @@ export default async function QuestionsPage({
             <th>{t('pools')}</th>
             <th>{t('status')}</th>
             <th>{t('languages')}</th>
+            <th>{t('sources')}</th>
             <th></th>
           </tr>
         </thead>
@@ -131,6 +133,13 @@ export default async function QuestionsPage({
                 <td>{q.pools.join(', ')}</td>
                 <td data-testid="row-status">{q.approval_status}</td>
                 <td>{languages.join(', ') || '—'}</td>
+                <td data-testid="question-sources" className="text-xs text-gray-600">
+                  {(q.source_refs as unknown as SourceRef[]).map((r, i) => (
+                    <span key={i} className="mr-1 rounded bg-gray-100 px-1">
+                      {t('sourceRef', { document: r.document_name, page: r.page })}
+                    </span>
+                  ))}
+                </td>
                 <td>
                   {q.approval_status === 'draft' && languages.length === 3 && (
                     <form action={approveQuestionAction}>

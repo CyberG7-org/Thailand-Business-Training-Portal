@@ -287,7 +287,9 @@
         "provider": "The AI provider returned an error. Try again.",
         "invalid_output": "The AI returned an invalid result. Try again.",
         "no_material": "Write at least one language first"
-      }
+      },
+      "sources": "Sources",
+      "sourceRef": "{document} · page {page}"
     },
     "notifications": {
       "title": "Notifications",

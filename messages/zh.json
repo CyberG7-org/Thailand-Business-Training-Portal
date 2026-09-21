@@ -287,7 +287,9 @@
         "provider": "AI 服务商返回错误，请重试。",
         "invalid_output": "AI 返回的结果无效，请重试。",
         "no_material": "请先至少填写一种语言"
-      }
+      },
+      "sources": "来源",
+      "sourceRef": "{document} · 第 {page} 页"
     },
     "notifications": {
       "title": "通知",
