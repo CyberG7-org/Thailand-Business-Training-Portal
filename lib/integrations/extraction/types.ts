@@ -1,6 +1,7 @@
 import type { Director } from '@/lib/domain/dbd-record';
 import type { Slice, TranscribedPage } from '@/lib/domain/rag/transcript';
 import type { DbdExtractionOutput } from './schema';
+import type { DocumentType, SweepResult } from './transcript-schema';
 
 /** One extracted value with the model's confidence and where it was read (decision D38). */
 export type ExtractedField<T> = {
@@ -48,7 +49,16 @@ export interface DbdExtractor {
    * Throws `MissingPagesError` when the model skipped a page.
    */
   transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]>;
+  /** Document kind from its first transcribed page (P14c); "other" when unsure. */
+  classify(firstPageText: string): Promise<DocumentType>;
+  /** Level 1/3 particulars (+ directors) from retrieved passages; list fields stay empty. */
+  extractFacts(passages: TranscriptPassage[]): Promise<DbdExtraction>;
+  /** Level 2 list rows printed on a batch of consecutive pages of one document. */
+  sweep(pages: TranscribedPage[], documentType: DocumentType): Promise<SweepResult>;
 }
+
+/** A transcript passage handed to the facts call, labelled for provenance. */
+export type TranscriptPassage = { documentPosition: number; page: number; text: string };
 
 export class ExtractionError extends Error {
   constructor(

@@ -47,6 +47,15 @@ function transcriberWith(pages: (range: Slice) => TranscribedPage[]): DbdExtract
     async transcribe(_slice, range) {
       return pages(range);
     },
+    async classify(text) {
+      return new FakeDbdExtractor().classify(text);
+    },
+    async extractFacts(passages) {
+      return new FakeDbdExtractor().extractFacts(passages);
+    },
+    async sweep(batch, type) {
+      return new FakeDbdExtractor().sweep(batch, type);
+    },
   };
 }
 

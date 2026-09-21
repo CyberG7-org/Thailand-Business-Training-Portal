@@ -1,5 +1,6 @@
 import type { Slice, TranscribedPage } from '@/lib/domain/rag/transcript';
-import type { DbdExtraction, DbdExtractor } from './types';
+import { EMPTY_SWEEP, type DocumentType, type SweepResult } from './transcript-schema';
+import type { DbdExtraction, DbdExtractor, TranscriptPassage } from './types';
 
 const at = (page: number | null, doc: number | null = 1) => ({
   source_page: page,
@@ -173,6 +174,16 @@ export function fakePageText(page: number): string {
   ].join('\n');
 }
 
+/** Keyword classification of a transcribed first page (dev/tests). */
+export function fakeClassify(text: string): DocumentType {
+  if (text.includes('หนังสือรับรอง')) return 'certificate';
+  if (text.includes('วัตถุที่ประสงค์')) return 'objectives_sheet';
+  if (text.includes('บอจ.5') || text.includes('ผู้ถือหุ้น')) return 'shareholder_list';
+  if (text.includes('บริคณห์สนธิ') || text.includes('บอจ.2')) return 'memorandum';
+  if (text.includes('ข้อบังคับ')) return 'articles';
+  return 'other';
+}
+
 export class FakeDbdExtractor implements DbdExtractor {
   readonly name = 'fake';
   constructor(private readonly result: DbdExtraction = SAMPLE_EXTRACTION) {}
@@ -189,5 +200,43 @@ export class FakeDbdExtractor implements DbdExtractor {
       pages.push({ page, text: fakePageText(page) });
     }
     return pages;
+  }
+
+  async classify(firstPageText: string): Promise<DocumentType> {
+    return fakeClassify(firstPageText);
+  }
+
+  /** The sample company's particulars, as if read from transcripts; lists left empty. */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async extractFacts(passages: TranscriptPassage[]): Promise<DbdExtraction> {
+    const result = structuredClone(this.result);
+    const empty = {
+      value: null,
+      confidence: 0,
+      source_text: null,
+      source_page: null,
+      source_document: null,
+    };
+    result.objectives = { ...empty };
+    result.business_categories = { ...empty };
+    result.shareholders = { ...empty };
+    result.promoters = { ...empty };
+    result.documents = [];
+    return result;
+  }
+
+  async sweep(pages: TranscribedPage[], documentType: DocumentType): Promise<SweepResult> {
+    const out: SweepResult = structuredClone(EMPTY_SWEEP);
+    const sample = this.result;
+    if (documentType === 'objectives_sheet') out.objectives = sample.objectives.value ?? [];
+    if (documentType === 'shareholder_list') {
+      out.shareholders = sample.shareholders.value ?? [];
+      out.share_structure = sample.share_structure.value ?? out.share_structure;
+    }
+    if (documentType === 'memorandum') out.promoters = sample.promoters.value ?? [];
+    if (documentType === 'certificate' && pages.some((p) => p.text.includes('วัตถุที่ประสงค์'))) {
+      out.objectives = sample.objectives.value ?? [];
+    }
+    return out;
   }
 }

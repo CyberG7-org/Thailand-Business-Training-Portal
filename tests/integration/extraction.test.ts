@@ -28,6 +28,15 @@ const failing: DbdExtractor = {
   async transcribe() {
     throw new ExtractionError('boom', 'provider');
   },
+  async classify() {
+    throw new ExtractionError('boom', 'provider');
+  },
+  async extractFacts() {
+    throw new ExtractionError('boom', 'provider');
+  },
+  async sweep() {
+    throw new ExtractionError('boom', 'provider');
+  },
 };
 
 describe('runExtraction', () => {

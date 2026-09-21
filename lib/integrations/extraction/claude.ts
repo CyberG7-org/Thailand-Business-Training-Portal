@@ -1,10 +1,26 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import type { z } from 'zod';
 import { parsePageMarkers, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
 import { EXTRACTION_INSTRUCTIONS, dbdExtractionApiSchema, fromApiExtraction } from './schema';
 import { transcriptionModel, transcriptionPrompt } from './transcribe';
-import { ExtractionError, type DbdExtraction, type DbdExtractor } from './types';
+import {
+  CLASSIFY_INSTRUCTIONS,
+  FACTS_INSTRUCTIONS,
+  SWEEP_INSTRUCTIONS,
+  classifyApiSchema,
+  fromSweepApi,
+  sweepApiSchema,
+  type DocumentType,
+  type SweepResult,
+} from './transcript-schema';
+import {
+  ExtractionError,
+  type DbdExtraction,
+  type DbdExtractor,
+  type TranscriptPassage,
+} from './types';
 
 const MODEL = 'claude-opus-5';
 /** Request ceiling for document content (the API rejects larger payloads). */
@@ -122,5 +138,65 @@ export class ClaudeDbdExtractor implements DbdExtractor {
       .map((block) => block.text)
       .join('');
     return parsePageMarkers(text, range);
+  }
+
+  async classify(firstPageText: string): Promise<DocumentType> {
+    if (firstPageText.trim() === '') return 'other';
+    const output = await this.structured(
+      classifyApiSchema,
+      CLASSIFY_INSTRUCTIONS,
+      `PAGE 1:\n${firstPageText.slice(0, 6000)}`,
+      400,
+    );
+    return output.document_type;
+  }
+
+  async extractFacts(passages: TranscriptPassage[]): Promise<DbdExtraction> {
+    const text = passages
+      .map((p) => `[document ${p.documentPosition}, page ${p.page}]\n${p.text}`)
+      .join('\n\n');
+    const output = await this.structured(dbdExtractionApiSchema, FACTS_INSTRUCTIONS, text, 8000);
+    return fromApiExtraction(output) as DbdExtraction;
+  }
+
+  async sweep(pages: TranscribedPage[], documentType: DocumentType): Promise<SweepResult> {
+    const text = pages.map((p) => `=== PAGE ${p.page} ===\n${p.text}`).join('\n');
+    const output = await this.structured(
+      sweepApiSchema,
+      `${SWEEP_INSTRUCTIONS}\nDocument type: ${documentType}.`,
+      text,
+      16000,
+    );
+    return fromSweepApi(output);
+  }
+
+  /** One streamed structured call over transcript text (Sonnet: it reads text, not scans). */
+  private async structured<T extends z.ZodTypeAny>(
+    schema: T,
+    system: string,
+    text: string,
+    maxTokens: number,
+  ): Promise<z.infer<T>> {
+    let response;
+    try {
+      response = await this.client.messages
+        .stream(
+          {
+            model: transcriptionModel(),
+            max_tokens: maxTokens,
+            system,
+            messages: [{ role: 'user', content: text }],
+            output_config: { format: zodOutputFormat(schema) },
+          },
+          { timeout: TRANSCRIPTION_TIMEOUT_MS },
+        )
+        .finalMessage();
+    } catch (error) {
+      throw toExtractionError(error);
+    }
+    if (response.stop_reason === 'refusal' || !response.parsed_output) {
+      throw new ExtractionError('The model did not return a valid answer', 'invalid_output');
+    }
+    return response.parsed_output as z.infer<T>;
   }
 }
