@@ -18,7 +18,7 @@ import type { VectorStore } from '@/lib/integrations/vector/types';
 import type { Database, Json } from './database.types';
 import { searchRecordPassages } from './dbd-index';
 import { getDbdRecord, listDbdDocuments, updateDbdRecord, type DbdRecordRow } from './dbd-records';
-import { recordToFormValues } from './extraction';
+import { recordToFormValues } from './record-form-values';
 
 type Db = SupabaseClient<Database>;
 

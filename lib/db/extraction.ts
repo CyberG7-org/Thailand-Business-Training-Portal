@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { directorsToText, type Director } from '@/lib/domain/dbd-record';
 import {
   isBusinessProfileEmpty,
   readStructuredData,
@@ -7,8 +6,9 @@ import {
   type Provenance,
   type StructuredData,
 } from '@/lib/domain/dbd-profile';
-import { applyExtractionToRecord, type RecordFormValues } from '@/lib/domain/extraction-merge';
+import { applyExtractionToRecord } from '@/lib/domain/extraction-merge';
 import { planDirectRead } from '@/lib/domain/extraction-plan';
+import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
 import {
   dbdExtractionSchema,
   normalizeStoredExtraction,
@@ -20,6 +20,8 @@ import {
 } from '@/lib/integrations/extraction/types';
 import type { Database, Json } from './database.types';
 import { getDbdRecord, listDbdDocuments, updateDbdRecord, type DbdRecordRow } from './dbd-records';
+import { recordToFormValues } from './record-form-values';
+import { extractFromTranscripts } from './transcript-extraction';
 
 type Db = SupabaseClient<Database>;
 
@@ -98,27 +100,7 @@ export async function runExtraction(
   }
 }
 
-/** The record's columns as the strings the admin form shows (empty string = no value). */
-export function recordToFormValues(record: DbdRecordRow): RecordFormValues {
-  const text = (v: unknown) => (v === null || v === undefined ? '' : String(v));
-  return {
-    juristic_id: text(record.juristic_id),
-    certificate_no: text(record.certificate_no),
-    document_ref: text(record.document_ref),
-    company_name_th: text(record.company_name_th),
-    company_name_en: text(record.company_name_en),
-    registered_on: text(record.registered_on),
-    issued_on: text(record.issued_on),
-    registered_capital: text(record.registered_capital),
-    head_office_address: text(record.head_office_address),
-    province: text(record.province),
-    signing_authority: text(record.signing_authority),
-    objectives_count: text(record.objectives_count),
-    issuing_office: text(record.issuing_office),
-    registrar_name: text(record.registrar_name),
-    directors_text: directorsToText((record.directors as unknown as Director[] | null) ?? []),
-  };
-}
+export { recordToFormValues } from './record-form-values';
 
 export type ExtractAndApplyResult = {
   record: DbdRecordRow;
@@ -128,6 +110,8 @@ export type ExtractAndApplyResult = {
   rejected: string[];
   /** Whether the Level 2 business profile was filled from the documents. */
   businessFilled: boolean;
+  /** What the transcript path filled for oversized documents (null when it did not run). */
+  fromTranscripts: { applied: string[]; lists: string[] } | null;
 };
 
 /** Level 2 as the extractor returned it, in the stored shape. */
@@ -187,6 +171,43 @@ export async function extractAndApply(
   db: Db,
   recordId: string,
   extractor: DbdExtractor,
+  vector: VectorStore | null = getVectorStore(),
+): Promise<ExtractAndApplyResult> {
+  // Small documents are read whole now; oversized ones are filled from their transcripts once
+  // indexed (D42). A pack with nothing small enough is "deferred" unless the transcripts already
+  // supplied something.
+  let direct: ExtractAndApplyResult | null = null;
+  try {
+    direct = await directPass(db, recordId, extractor);
+  } catch (e) {
+    if (!(e instanceof ExtractionError) || e.code !== 'deferred') throw e;
+  }
+  const transcripts = await extractFromTranscripts(db, recordId, { extractor, vector });
+  const fromTranscripts = transcripts.skipped
+    ? null
+    : { applied: transcripts.applied, lists: transcripts.lists };
+  if (
+    !direct &&
+    (!fromTranscripts ||
+      (fromTranscripts.applied.length === 0 && fromTranscripts.lists.length === 0))
+  ) {
+    throw new ExtractionError('Every document is too large to read whole', 'deferred');
+  }
+  const record = (await getDbdRecord(db, recordId)) ?? direct?.record;
+  if (!record) throw new ExtractionError('Record not found', 'not_allowed');
+  return {
+    record,
+    applied: direct?.applied ?? [],
+    rejected: direct?.rejected ?? [],
+    businessFilled: direct?.businessFilled ?? false,
+    fromTranscripts,
+  };
+}
+
+async function directPass(
+  db: Db,
+  recordId: string,
+  extractor: DbdExtractor,
 ): Promise<ExtractAndApplyResult> {
   const extracted = await runExtraction(db, recordId, extractor);
   const extraction = parseStoredExtraction(extracted.extraction_raw);
@@ -214,7 +235,7 @@ export async function extractAndApply(
     applied.length > 0
       ? await updateDbdRecord(db, recordId, input, structured)
       : await updateStructuredData(db, recordId, structured);
-  return { record, applied, rejected, businessFilled };
+  return { record, applied, rejected, businessFilled, fromTranscripts: null };
 }
 
 async function updateStructuredData(

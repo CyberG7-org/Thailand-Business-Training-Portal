@@ -231,8 +231,8 @@ async function fillFromDocument(
   const extractor = getDbdExtractor();
   if (!extractor) return { extraction: 'skipped', applied: [] };
   try {
-    const { applied } = await extractAndApply(db, id, extractor);
-    return { extraction: 'filled', applied };
+    const { applied, fromTranscripts } = await extractAndApply(db, id, extractor);
+    return { extraction: 'filled', applied: [...applied, ...(fromTranscripts?.applied ?? [])] };
   } catch (e) {
     if (e instanceof ExtractionError && e.code === 'deferred') {
       return { extraction: 'deferred', applied: [] };
@@ -280,9 +280,14 @@ export async function extractDocumentAction(
   if (!extractor) return { ok: false, error: 'not_configured' };
   const db = await createSupabaseServerClient();
   try {
-    const { applied } = await extractAndApply(db, id, extractor);
+    const { applied, fromTranscripts } = await extractAndApply(db, id, extractor);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return { ok: true, error: null, applied, extraction: 'filled' };
+    return {
+      ok: true,
+      error: null,
+      applied: [...applied, ...(fromTranscripts?.applied ?? [])],
+      extraction: 'filled',
+    };
   } catch (e) {
     if (e instanceof ExtractionError) return { ok: false, error: e.code };
     return { ok: false, error: errorMessage(e) };

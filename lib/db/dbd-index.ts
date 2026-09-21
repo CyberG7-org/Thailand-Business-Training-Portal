@@ -153,6 +153,8 @@ export type IndexWorkerDeps = {
   slicePages?: number;
   now?: () => number;
   download?: (path: string) => Promise<Uint8Array>;
+  /** Called after a document reaches `ready` (the transcript path hangs off this); errors are logged. */
+  onDocumentReady?: (recordId: string, documentId: string) => Promise<void>;
 };
 
 export type IndexRunSummary = {
@@ -401,6 +403,13 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
           index_error: null,
         });
         summary.completed++;
+        if (deps.onDocumentReady) {
+          try {
+            await deps.onDocumentReady(job.record_id, doc.id);
+          } catch (e) {
+            console.error('onDocumentReady failed', e);
+          }
+        }
       } else {
         await setJob(admin, job.id, { status: 'queued', locked_until: null });
         summary.released++;

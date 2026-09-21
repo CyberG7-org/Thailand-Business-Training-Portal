@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { processIndexJobs } from '@/lib/db/dbd-index';
+import { extractFromTranscripts } from '@/lib/db/transcript-extraction';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { getVectorStore } from '@/lib/integrations/vector';
 
@@ -26,11 +28,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   try {
+    const extractor = getDbdExtractor();
+    const vector = getVectorStore();
     const summary = await processIndexJobs({
-      extractor: getDbdExtractor(),
-      vector: getVectorStore(),
+      extractor,
+      vector,
       budgetMs: WORK_BUDGET_MS,
       slicePages: slicePages(),
+      // Oversized documents fill the record from their transcripts once ready (spec §6, D42).
+      onDocumentReady: async (recordId) => {
+        await extractFromTranscripts(createSupabaseAdminClient(), recordId, { extractor, vector });
+      },
     });
     return NextResponse.json(summary);
   } catch (e) {

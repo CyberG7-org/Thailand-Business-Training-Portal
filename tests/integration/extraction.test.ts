@@ -9,7 +9,13 @@ import {
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { extractAndApply, runExtraction } from '@/lib/db/extraction';
 import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
-import { FakeDbdExtractor, SAMPLE_EXTRACTION } from '@/lib/integrations/extraction/fake';
+import {
+  FakeDbdExtractor,
+  SAMPLE_EXTRACTION,
+  fakePageText,
+} from '@/lib/integrations/extraction/fake';
+import { FakeVectorStore } from '@/lib/integrations/vector/fake';
+import { loadChunksFromDb } from '@/lib/integrations/vector/fake-loader';
 import { ExtractionError, type DbdExtractor } from '@/lib/integrations/extraction/types';
 import {
   adminClient,
@@ -192,5 +198,44 @@ describe('extractAndApply', () => {
     const again = await extractAndApply(asAdmin, recordId, new FakeDbdExtractor());
     expect(again.applied).toEqual([]);
     expect(again.record.juristic_id).toBe('0105569000123');
+  });
+
+  it('fills a deferred pack from its transcripts (P14c)', async () => {
+    const svc = adminClient();
+    await svc.from('dbd_documents').update({ page_count: 25 }).eq('record_id', recordId);
+    await svc
+      .from('dbd_records')
+      .update({ company_name_th: null, juristic_id: null })
+      .eq('id', recordId);
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await svc
+      .from('dbd_documents')
+      .update({ index_status: 'ready', indexed_pages: 1, document_type: 'certificate' })
+      .eq('id', doc.id);
+    await svc
+      .from('dbd_pages')
+      .upsert([{ document_id: doc.id, page: 1, text: fakePageText(1), model: 'fake' }], {
+        onConflict: 'document_id,page',
+      });
+    await svc.from('dbd_chunks').upsert([
+      {
+        id: `${doc.id}#1#0`,
+        record_id: recordId,
+        document_id: doc.id,
+        document_type: 'certificate',
+        page: 1,
+        chunk_index: 0,
+        chunk_text: fakePageText(1),
+        char_count: fakePageText(1).length,
+      },
+    ]);
+    const result = await extractAndApply(
+      asAdmin,
+      recordId,
+      new FakeDbdExtractor(),
+      new FakeVectorStore(loadChunksFromDb),
+    );
+    expect(result.fromTranscripts?.applied).toContain('company_name_th');
+    expect(result.record.company_name_th).toBe('บริษัท ตัวอย่างการสกัด จำกัด');
   });
 });

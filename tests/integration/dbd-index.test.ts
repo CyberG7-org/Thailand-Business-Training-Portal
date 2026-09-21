@@ -274,6 +274,21 @@ describe('index jobs and the worker', () => {
     expect(after.document_type).toBe('memorandum');
   });
 
+  it('tells the caller when a document becomes ready (the transcript path hangs off this)', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    const ready: string[] = [];
+    await processIndexJobs({
+      extractor: new FakeDbdExtractor(),
+      vector: store,
+      budgetMs: 60_000,
+      onDocumentReady: async (r, d) => {
+        ready.push(`${r}:${d}`);
+      },
+    });
+    expect(ready).toEqual([`${recordId}:${doc.id}`]);
+  });
+
   it('fails a job whose runs keep dying before the worker can report an error', async () => {
     // A lease that expired while `running` means the previous run was killed (timeout, OOM);
     // the claim counts it as an attempt and the worker must honour the ceiling.
