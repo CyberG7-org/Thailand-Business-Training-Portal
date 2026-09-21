@@ -18,10 +18,12 @@
     "db:types": "supabase gen types typescript --local --schema public > lib/db/database.types.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
-    "check:secrets": "node scripts/check-client-secrets.mjs"
+    "check:secrets": "node scripts/check-client-secrets.mjs",
+    "fixtures:pdf": "node scripts/make-fixture-pdf.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
+    "@pinecone-database/pinecone": "^9.0.0",
     "@react-pdf/renderer": "^4.9.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
@@ -29,6 +31,7 @@
     "mammoth": "^1.12.3",
     "next": "16.3.4",
     "next-intl": "^4.14.2",
+    "pdf-lib": "^1.17.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-markdown": "^10.1.0",
