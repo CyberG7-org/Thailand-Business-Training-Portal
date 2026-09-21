@@ -55,6 +55,25 @@ describe('upload → index status', () => {
     expect(jobs).toEqual([]);
   });
 
+  it('marks an encrypted PDF failed without queueing a job', async () => {
+    const bytes = readFileSync('tests/fixtures/encrypted.pdf');
+    await uploadDbdDocument(
+      asAdmin,
+      recordId,
+      new File([bytes], 'locked.pdf', { type: 'application/pdf' }),
+      'locked.pdf',
+    );
+    const docs = await listDbdDocuments(asAdmin, recordId);
+    const doc = docs[docs.length - 1];
+    expect(doc).toMatchObject({
+      page_count: null,
+      index_status: 'failed',
+      index_error: 'unreadable_pdf',
+    });
+    const { data: jobs } = await svc.from('index_jobs').select('id').eq('document_id', doc.id);
+    expect(jobs).toEqual([]);
+  });
+
   it('marks the document skipped when the vector provider is off', async () => {
     process.env.VECTOR_PROVIDER = 'off';
     const bytes = readFileSync('tests/fixtures/three-pages.pdf');
