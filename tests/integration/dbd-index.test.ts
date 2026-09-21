@@ -259,6 +259,21 @@ describe('index jobs and the worker', () => {
     expect(last.every((c) => c.documentType === 'certificate')).toBe(true);
   });
 
+  it('classifies an untyped document from its first transcribed page and keeps a known type', async () => {
+    const [doc] = await listDbdDocuments(svc, recordId);
+    await svc.from('dbd_documents').update({ document_type: null }).eq('id', doc.id);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    await processIndexJobs({ extractor: new FakeDbdExtractor(), vector: store, budgetMs: 60_000 });
+    let [after] = await listDbdDocuments(svc, recordId);
+    expect(after.document_type).toBe('certificate'); // fakePageText(1) is a หนังสือรับรอง
+
+    await svc.from('dbd_documents').update({ document_type: 'memorandum' }).eq('id', doc.id);
+    await enqueueIndexJob(asAdmin, { recordId, documentId: doc.id, kind: 'reindex' });
+    await processIndexJobs({ extractor: new FakeDbdExtractor(), vector: store, budgetMs: 60_000 });
+    [after] = await listDbdDocuments(svc, recordId);
+    expect(after.document_type).toBe('memorandum');
+  });
+
   it('fails a job whose runs keep dying before the worker can report an error', async () => {
     // A lease that expired while `running` means the previous run was killed (timeout, OOM);
     // the claim counts it as an attempt and the worker must honour the ceiling.

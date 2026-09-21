@@ -366,6 +366,16 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
           break;
         }
         const pages = await transcribeWithRetry(deps.extractor, bytes, slice);
+        // Spec §5.6: an untyped document is classified from its first page; a known type stays.
+        if (slice.firstPage === 1 && doc.document_type === null) {
+          try {
+            const type = await deps.extractor.classify(pages[0]?.text ?? '');
+            await setDocument(admin, doc.id, { document_type: type });
+            doc.document_type = type;
+          } catch (e) {
+            console.error('classify failed; leaving the type unknown', e);
+          }
+        }
         const model = deps.extractor.name === 'claude' ? transcriptionModel() : deps.extractor.name;
         await storeSlice(admin, deps.vector, job, doc.document_type, pages, model);
         nextPage = slice.lastPage + 1;
