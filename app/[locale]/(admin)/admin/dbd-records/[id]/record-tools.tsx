@@ -6,6 +6,7 @@ import {
   confirmDbdRecordAction,
   extractDocumentAction,
   removeDocumentAction,
+  retryIndexAction,
   uploadDocumentAction,
   type ToolState,
 } from '../actions';
@@ -21,11 +22,17 @@ const EXTRACT_ERROR_KEYS = [
   'too_large',
 ] as const;
 
+export type IndexStatus = 'none' | 'queued' | 'indexing' | 'ready' | 'failed' | 'skipped';
+
 export type DocumentSummary = {
   id: string;
   name: string;
   type: string | null;
   sizeBytes: number;
+  pageCount: number | null;
+  indexStatus: IndexStatus;
+  indexedPages: number;
+  indexError: string | null;
 };
 
 function FillOutcome({ state }: { state: ToolState }) {
@@ -101,6 +108,37 @@ export function RecordTools({
                 <span className="text-xs text-gray-500">
                   {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
                 </span>
+                <span
+                  data-testid="index-status"
+                  data-status={doc.indexStatus}
+                  title={doc.indexError ?? undefined}
+                  className={`rounded px-1 text-xs ${
+                    doc.indexStatus === 'ready'
+                      ? 'bg-green-100'
+                      : doc.indexStatus === 'failed'
+                        ? 'bg-red-100'
+                        : 'bg-gray-100'
+                  }`}
+                >
+                  {t(`index.status.${doc.indexStatus}` as 'index.status.ready', {
+                    done: doc.indexedPages,
+                    total: doc.pageCount ?? 0,
+                  })}
+                </span>
+                {(doc.indexStatus === 'failed' || doc.indexStatus === 'ready') && (
+                  <form action={retryIndexAction}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="id" value={id} />
+                    <input type="hidden" name="documentId" value={doc.id} />
+                    <button
+                      type="submit"
+                      className="text-xs underline"
+                      data-testid="reindex-button"
+                    >
+                      {doc.indexStatus === 'failed' ? t('index.retry') : t('index.reindex')}
+                    </button>
+                  </form>
+                )}
                 {!locked && (
                   <form action={removeDocumentAction}>
                     <input type="hidden" name="locale" value={locale} />
@@ -115,6 +153,7 @@ export function RecordTools({
             ))}
           </ul>
         )}
+        {documents.length > 0 && <p className="text-xs text-gray-600">{t('index.hint')}</p>}
 
         <form action={uploadAction} className="grid gap-2 border-t pt-3">
           <input type="hidden" name="locale" value={locale} />

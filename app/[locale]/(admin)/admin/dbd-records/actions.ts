@@ -9,12 +9,16 @@ import {
   confirmDbdRecord,
   createDbdRecord,
   getDbdRecord,
+  listDbdDocuments,
   removeDbdDocument,
   updateDbdRecord,
   uploadDbdDocument,
 } from '@/lib/db/dbd-records';
+import { enqueueIndexJob, searchRecordPassages } from '@/lib/db/dbd-index';
 import { extractAndApply } from '@/lib/db/extraction';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { answerFromPassages } from '@/lib/integrations/rag/answer';
+import { getVectorStore } from '@/lib/integrations/vector';
 import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
 import {
   businessProfileSchema,
@@ -318,4 +322,54 @@ export async function saveInterviewAnswersAction(
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
   }
+}
+
+/** Puts a failed or stuck document back in the queue from page 1 (P14). */
+export async function retryIndexAction(formData: FormData): Promise<void> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  const documentId = String(formData.get('documentId') ?? '');
+  await requireAdmin(locale);
+  const db = await createSupabaseServerClient();
+  const docs = await listDbdDocuments(db, id);
+  if (!docs.some((d) => d.id === documentId)) return;
+  await enqueueIndexJob(db, { recordId: id, documentId, kind: 'reindex' });
+  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+}
+
+export type AskState = {
+  question: string;
+  answer: string | null;
+  passages: { document: string; page: number; text: string }[];
+  error: 'empty' | 'not_indexed' | 'unavailable' | null;
+};
+
+/** "Ask the documents": retrieval + a grounded answer, never free-form knowledge (spec §8). */
+export async function askDocumentsAction(_prev: AskState, formData: FormData): Promise<AskState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  const question = String(formData.get('question') ?? '')
+    .trim()
+    .slice(0, 300);
+  await requireAdmin(locale);
+  const empty: AskState = { question, answer: null, passages: [], error: null };
+  if (question.length < 2) return { ...empty, error: 'empty' };
+  const vector = getVectorStore();
+  if (!vector) return { ...empty, error: 'unavailable' };
+  const db = await createSupabaseServerClient();
+  const docs = await listDbdDocuments(db, id);
+  if (!docs.some((d) => d.index_status === 'ready')) return { ...empty, error: 'not_indexed' };
+  const names = new Map(docs.map((d) => [d.id, d.original_name]));
+  const passages = (await searchRecordPassages(vector, id, question, { topK: 5 })) ?? [];
+  const answer = await answerFromPassages(question, passages, names);
+  return {
+    question,
+    answer,
+    passages: passages.map((p) => ({
+      document: names.get(p.documentId) ?? '',
+      page: p.page,
+      text: p.text,
+    })),
+    error: null,
+  };
 }

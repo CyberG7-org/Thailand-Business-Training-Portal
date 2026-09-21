@@ -175,7 +175,36 @@
         "business_address": "Actual place of business",
         "operations_status": "Has the company commenced operations?"
       },
-      "saveInterview": "Save interview answers"
+      "saveInterview": "Save interview answers",
+      "index": {
+        "label": "Search index",
+        "status": {
+          "none": "Not indexed",
+          "queued": "Queued",
+          "indexing": "Reading {done}/{total} pages",
+          "ready": "Ready ({total} pages)",
+          "failed": "Failed",
+          "skipped": "Disabled"
+        },
+        "retry": "Retry",
+        "reindex": "Re-index",
+        "hint": "Documents are read five pages at a time in the background (about a minute per run); reload to refresh the status."
+      },
+      "ask": {
+        "title": "Ask the documents",
+        "hint": "Answers come only from the uploaded documents, with the page — use it to check what was read.",
+        "placeholder": "e.g. What is the registered capital? / Who holds shares?",
+        "submit": "Ask",
+        "asking": "Searching…",
+        "passages": "Passages from the documents",
+        "source": "{document} · page {page}",
+        "errors": {
+          "empty": "Type a question first",
+          "not_indexed": "The documents are not indexed yet — wait until the status is \"Ready\"",
+          "unavailable": "Search is disabled (VECTOR_PROVIDER not configured)"
+        },
+        "noAnswer": "No model answer available; showing the passages found"
+      }
     },
     "assignment": {
       "title": "Assigned company",

@@ -11,7 +11,8 @@ import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
 import { InterviewForm } from './interview-form';
-import { RecordTools } from './record-tools';
+import { AskDocuments } from './ask-documents';
+import { RecordTools, type DocumentSummary } from './record-tools';
 
 // Upload + extraction run inside the page's server actions; allow the full serverless window.
 export const maxDuration = 60;
@@ -54,6 +55,10 @@ export default async function DbdRecordPage({
           name: d.original_name,
           type: d.document_type,
           sizeBytes: d.size_bytes,
+          pageCount: d.page_count,
+          indexStatus: d.index_status as DocumentSummary['indexStatus'],
+          indexedPages: d.indexed_pages,
+          indexError: d.index_error,
         }))}
         extractionAvailable={getDbdExtractor() !== null}
       />
@@ -97,6 +102,7 @@ export default async function DbdRecordPage({
         recordId={record.id}
         answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
       />
+      <AskDocuments recordId={record.id} />
     </section>
   );
 }
