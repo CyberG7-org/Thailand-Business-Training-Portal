@@ -2,17 +2,20 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { LOCALES, type AppLocale } from '@/i18n/routing';
 import type { OptionKey, QuestionOption } from '@/lib/domain/assessment/engine';
+import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { getQuestionGenerator } from '@/lib/integrations/question-gen';
 import {
   bannedLiterals,
   type DbdReferenceRecord,
 } from '@/lib/integrations/question-gen/dbd-reference';
+import { resolveSourceRefs } from '@/lib/integrations/question-gen/passages';
 import {
   QuestionGenError,
   type GeneratedLocalization,
   type MaterialBundle,
   type QuestionGenerator,
 } from '@/lib/integrations/question-gen/types';
+import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
 import {
   translationProblem,
   validateGenerated,
@@ -20,7 +23,8 @@ import {
 } from '@/lib/integrations/question-gen/validate';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
-import type { Database } from './database.types';
+import type { Database, Json } from './database.types';
+import { loadReferencePassages } from './passages';
 import { getQuestion, upsertQuestionLocalization } from './questions';
 
 type Db = SupabaseClient<Database>;
@@ -111,10 +115,22 @@ export async function loadReference(
     business: readStructuredData(data.structured_data).business ?? null,
     interview: readStructuredData(data.structured_data).interview ?? null,
   };
+  // Attach the stored certificate only when it is small enough to read whole (D42); big packs are
+  // reached through passages instead. Unknown page counts are uploads from before P14: attach.
   let pdf: Uint8Array | null = null;
   if (data.document_path) {
-    const { data: blob } = await db.storage.from('dbd-documents').download(data.document_path);
-    if (blob) pdf = new Uint8Array(await blob.arrayBuffer());
+    const { data: first } = await db
+      .from('dbd_documents')
+      .select('page_count')
+      .eq('record_id', recordId)
+      .order('position')
+      .limit(1)
+      .maybeSingle();
+    const pages = first?.page_count ?? null;
+    if (pages === null || pages <= directReadMaxPages()) {
+      const { data: blob } = await db.storage.from('dbd-documents').download(data.document_path);
+      if (blob) pdf = new Uint8Array(await blob.arrayBuffer());
+    }
   }
   return { record, pdf };
 }
@@ -154,6 +170,7 @@ export async function generateQuestionsIntoBank(
   adminId: string,
   input: GenerateBankInput,
   generator: QuestionGenerator | null = getQuestionGenerator(),
+  vector: VectorStore | null = getVectorStore(),
 ): Promise<GenerateBankResult> {
   if (!generator)
     throw new QuestionGenError('Question generation is not configured', 'not_configured');
@@ -163,9 +180,15 @@ export async function generateQuestionsIntoBank(
     buildMaterial(db, input),
     input.referenceRecordId ? loadReference(db, input.referenceRecordId) : null,
   ]);
+  // Retrieved passages replace the whole-PDF block when the reference record is indexed (D43).
+  const passages =
+    reference && input.referenceRecordId
+      ? await loadReferencePassages(db, vector, input.referenceRecordId)
+      : [];
 
   const generated = await generator.generate({
     reference,
+    passages,
     material,
     count,
     templateCount,
@@ -178,6 +201,7 @@ export async function generateQuestionsIntoBank(
 
   const summary = [
     reference ? `DBD ${reference.record.juristic_id ?? input.referenceRecordId}` : null,
+    passages.length ? `${passages.length} passages` : null,
     input.studyMaterialIds.length ? `${input.studyMaterialIds.length} study card(s)` : null,
     input.pastedText.trim() ? `${input.pastedText.trim().length} chars pasted` : null,
     input.upload ? `file ${input.upload.name}` : null,
@@ -215,6 +239,7 @@ export async function generateQuestionsIntoBank(
         active: true,
         created_by: adminId,
         generation_batch_id: batch.id,
+        source_refs: resolveSourceRefs(q.sources, passages) as unknown as Json,
       })
       .select('id')
       .single();
