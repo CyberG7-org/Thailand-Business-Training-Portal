@@ -1,5 +1,6 @@
 // Generates the PDF fixtures under tests/fixtures (text-only, no real data):
 // - three-pages.pdf: three pages for slicing/indexing tests
+// - twenty-five-pages.pdf: over the direct-read limit, so the transcript path is exercised
 // - encrypted.pdf: one page whose trailer declares standard encryption, so readers report it as
 //   encrypted (pdf-lib cannot write real ciphertext; the declaration is what the upload gate checks)
 import { writeFileSync } from 'node:fs';
@@ -13,6 +14,15 @@ for (let i = 1; i <= 3; i++) {
 }
 writeFileSync('tests/fixtures/three-pages.pdf', await three.save());
 console.log('tests/fixtures/three-pages.pdf written');
+
+const big = await PDFDocument.create();
+const bigFont = await big.embedFont(StandardFonts.Helvetica);
+for (let i = 1; i <= 25; i++) {
+  const page = big.addPage([595, 842]);
+  page.drawText(`Fixture page ${i} of 25`, { x: 50, y: 780, size: 18, font: bigFont });
+}
+writeFileSync('tests/fixtures/twenty-five-pages.pdf', await big.save());
+console.log('tests/fixtures/twenty-five-pages.pdf written');
 
 const encrypted = await PDFDocument.create();
 encrypted.addPage([595, 842]);

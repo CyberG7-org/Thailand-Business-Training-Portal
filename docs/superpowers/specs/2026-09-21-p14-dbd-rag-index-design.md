@@ -4,7 +4,7 @@
 |---|---|
 | Builds on | P12 three-level extraction (D37/D38), P11 AI question authoring (D33–D36), P13 bank-interview concepts (D39) |
 | Requested by | owner (2026-09-21): "for uploading the DBD, let's use the RAG method … the input will be PDFs and does contain lots of pages"; vector store: **Pinecone** |
-| Status | Stages 1–2 implemented (P14a index pipeline, P14b retrieval consumers); stage 3 (oversized-document extraction, P14c) pending |
+| Status | Implemented (P14a index pipeline, P14b retrieval consumers, P14c oversized documents) |
 
 ## 1. Why
 
