@@ -1,4 +1,5 @@
 import type { AppLocale } from '@/i18n/routing';
+import type { ConceptGroup } from '@/lib/domain/bank-interview';
 
 /**
  * Starter study cards built on the bank-interview concepts (decision D39). Placeholders render
@@ -8,6 +9,8 @@ import type { AppLocale } from '@/i18n/routing';
 export type StarterCard = {
   contentKey: string;
   sortOrder: number;
+  /** The bank-interview concept group the card teaches (null for advice cards). */
+  conceptGroup: ConceptGroup | null;
   localizations: Record<AppLocale, { title: string; body: string }>;
 };
 
@@ -15,6 +18,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
   {
     contentKey: 'bank-interview-1-identity',
     sortOrder: 10,
+    conceptGroup: 'identity',
     localizations: {
       th: {
         title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (1/5): ตัวตนของบริษัท',
@@ -72,6 +76,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
   {
     contentKey: 'bank-interview-2-ownership',
     sortOrder: 20,
+    conceptGroup: 'ownership',
     localizations: {
       th: {
         title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (2/5): ทุนและผู้ถือหุ้น',
@@ -126,6 +131,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
   {
     contentKey: 'bank-interview-3-business',
     sortOrder: 30,
+    conceptGroup: 'business_plan',
     localizations: {
       th: {
         title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (3/5): ธุรกิจและการดำเนินงาน',
@@ -189,6 +195,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
   {
     contentKey: 'bank-interview-4-role',
     sortOrder: 40,
+    conceptGroup: 'personal',
     localizations: {
       th: {
         title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (4/5): บทบาทของคุณ',
@@ -243,6 +250,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
   {
     contentKey: 'bank-interview-5-tips',
     sortOrder: 50,
+    conceptGroup: null,
     localizations: {
       th: {
         title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (5/5): วิธีตอบให้ผ่าน',
@@ -298,3 +306,8 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
     },
   },
 ];
+
+/** The concept group a starter card teaches — the study page retrieves evidence for it. */
+export function cardConceptGroup(contentKey: string): ConceptGroup | null {
+  return BANK_INTERVIEW_CARDS.find((c) => c.contentKey === contentKey)?.conceptGroup ?? null;
+}
