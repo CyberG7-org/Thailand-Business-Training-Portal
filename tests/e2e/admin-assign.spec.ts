@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { createConfirmedRecord, createLearner, loginAs } from './helpers';
+import { createConfirmedRecord, createLearner, loginAs, openManualRecordForm } from './helpers';
 
 test('a learner created for a confirmed record is assigned to it, with the +45-day date in Thai', async ({
   page,
@@ -19,8 +19,14 @@ test('a learner created for a confirmed record is assigned to it, with the +45-d
   await expect(page.getByTestId('assigned-company')).toHaveText(company);
   await expect(page.getByTestId('available-from')).toContainText('27 สิงหาคม 2569');
 
-  // An unconfirmed record is offered nowhere: the picker on the Users page lists it disabled.
+  // An unconfirmed record is listed in the picker but cannot be chosen.
+  const pending = `บริษัท ยังไม่ยืนยัน ${Date.now()} จำกัด`;
+  await openManualRecordForm(page);
+  await page.locator('input[name="company_name_th"]').fill(pending);
+  await page.getByRole('button', { name: 'บันทึก' }).click();
+  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   await page.goto('/th/admin/users');
-  const options = page.locator('select[name="dbdRecordId"] option[disabled]');
-  await expect(options.first()).toBeAttached();
+  const option = page.locator('select[name="dbdRecordId"] option', { hasText: pending });
+  await expect(option).toBeAttached();
+  await expect(option).toBeDisabled();
 });
