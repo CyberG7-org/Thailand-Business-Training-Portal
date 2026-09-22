@@ -11,7 +11,11 @@ import {
   type QuestionText,
   type SelectableQuestion,
 } from '@/lib/domain/assessment/engine';
-import { MissingFieldError, type TemplateRecord } from '@/lib/domain/assessment/template';
+import {
+  MissingFieldError,
+  renderTemplateLenient,
+  type TemplateRecord,
+} from '@/lib/domain/assessment/template';
 import {
   EMPTY_INTERVIEW_PROFILE,
   myShareholding,
@@ -229,72 +233,108 @@ export async function getOrStartAttempt(args: {
   return attempt;
 }
 
-export type DisplayedQuestion = { prompt: string; options: QuestionOption[] };
+export type DisplayedQuestion = {
+  prompt: string;
+  options: QuestionOption[];
+  /** Null only when the question has no localization left at all. */
+  correctKey: OptionKey | null;
+  /** Placeholders filled in for the learner's company (leniently: an unknown value shows "—"). */
+  explanation: string | null;
+};
 
-/**
- * What to show for each question of an attempt in the language the learner is looking at
- * (D50): the snapshot when it is the attempt's language, otherwise the same question rendered
- * from that language's localization with the same record, seed and presented option order.
- * Grading is by option key, which every approved question mirrors across languages; a question
- * without that language falls back to its snapshot.
- */
-export async function localizeAttemptAnswers(
-  attempt: AttemptWithAnswers,
-  locale: AppLocale,
-): Promise<Map<string, DisplayedQuestion>> {
-  const fromSnapshot = new Map<string, DisplayedQuestion>(
-    attempt.assessment_answers.map((a) => [
-      a.question_id,
-      { prompt: a.rendered_prompt, options: a.rendered_options as unknown as QuestionOption[] },
-    ]),
-  );
-  if (locale === attempt.language) return fromSnapshot;
-
-  const admin = createSupabaseAdminClient();
-  const [{ data: locs }, { data: recordRow }, assignment] = await Promise.all([
-    admin
-      .from('question_localizations')
-      .select('question_id, prompt, options, correct_key, explanation')
-      .in('question_id', attempt.question_ids)
-      .eq('language', locale),
+/** The learner's company as the templates see it, for an attempt (role from the current assignment). */
+async function templateRecordForAttempt(
+  admin: Db,
+  attempt: AttemptRow,
+): Promise<TemplateRecord | null> {
+  const [{ data: recordRow }, assignment] = await Promise.all([
     attempt.dbd_record_id
       ? admin.from('dbd_records').select('*').eq('id', attempt.dbd_record_id).maybeSingle()
       : Promise.resolve({ data: null }),
     getActiveAssignmentForUser(admin, attempt.user_id),
   ]);
-  const record = recordRow
-    ? toTemplateRecord(
-        recordRow,
-        assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null,
-      )
-    : null;
-  const byQuestion = new Map((locs ?? []).map((l) => [l.question_id, l]));
-  const out = new Map(fromSnapshot);
+  if (!recordRow) return null;
+  return toTemplateRecord(
+    recordRow,
+    assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null,
+  );
+}
+
+/**
+ * What to show for each question of an attempt in the language the learner is looking at
+ * (D50): the snapshot when it is the attempt's language, otherwise the same question rendered
+ * from that language's localization with the same record, seed and presented option order.
+ * The correct key and the explanation (placeholders filled in) come along for reviews (D51).
+ * Grading is by option key, which every approved question mirrors across languages; a question
+ * without that language falls back to the attempt's language, then to its snapshot.
+ */
+export async function localizeAttemptAnswers(
+  attempt: AttemptWithAnswers,
+  locale: AppLocale,
+): Promise<Map<string, DisplayedQuestion>> {
+  const admin = createSupabaseAdminClient();
+  const languages = Array.from(new Set([locale, attempt.language as AppLocale]));
+  const [{ data: locs }, record] = await Promise.all([
+    admin
+      .from('question_localizations')
+      .select('question_id, language, prompt, options, correct_key, explanation')
+      .in('question_id', attempt.question_ids)
+      .in('language', languages),
+    templateRecordForAttempt(admin, attempt),
+  ]);
+  const byQuestion = new Map<string, NonNullable<typeof locs>>();
+  for (const loc of locs ?? []) {
+    byQuestion.set(loc.question_id, [...(byQuestion.get(loc.question_id) ?? []), loc]);
+  }
+
+  const out = new Map<string, DisplayedQuestion>();
   for (const answer of attempt.assessment_answers) {
-    const loc = byQuestion.get(answer.question_id);
-    if (!loc) continue;
-    try {
-      const rendered = renderQuestion(
-        answer.question_id,
-        {
-          prompt: loc.prompt,
-          options: loc.options as QuestionOption[],
-          correct_key: loc.correct_key as OptionKey,
-          explanation: loc.explanation,
-        },
-        record,
-        attempt.shuffle_seed,
-        locale,
-      );
-      const byKey = new Map(rendered.options.map((o) => [o.key, o]));
-      const options = (answer.presented_option_order as OptionKey[])
-        .map((key) => byKey.get(key))
-        .filter((o): o is QuestionOption => o !== undefined);
-      if (options.length !== answer.presented_option_order.length) continue;
-      out.set(answer.question_id, { prompt: rendered.prompt, options });
-    } catch (e) {
-      if (!(e instanceof MissingFieldError)) throw e;
+    const snapshot: DisplayedQuestion = {
+      prompt: answer.rendered_prompt,
+      options: answer.rendered_options as unknown as QuestionOption[],
+      correctKey: null,
+      explanation: null,
+    };
+    const candidates = byQuestion.get(answer.question_id) ?? [];
+    const loc =
+      candidates.find((l) => l.language === locale) ??
+      candidates.find((l) => l.language === attempt.language);
+    if (!loc) {
+      out.set(answer.question_id, snapshot);
+      continue;
     }
+    const shown: DisplayedQuestion = {
+      ...snapshot,
+      correctKey: loc.correct_key as OptionKey,
+      explanation: loc.explanation ? renderTemplateLenient(loc.explanation, record, locale) : null,
+    };
+    if (loc.language !== attempt.language) {
+      try {
+        const rendered = renderQuestion(
+          answer.question_id,
+          {
+            prompt: loc.prompt,
+            options: loc.options as QuestionOption[],
+            correct_key: loc.correct_key as OptionKey,
+            explanation: loc.explanation,
+          },
+          record,
+          attempt.shuffle_seed,
+          locale,
+        );
+        const byKey = new Map(rendered.options.map((o) => [o.key, o]));
+        const options = (answer.presented_option_order as OptionKey[])
+          .map((key) => byKey.get(key))
+          .filter((o): o is QuestionOption => o !== undefined);
+        if (options.length === answer.presented_option_order.length) {
+          shown.prompt = rendered.prompt;
+          shown.options = options;
+        }
+      } catch (e) {
+        if (!(e instanceof MissingFieldError)) throw e;
+      }
+    }
+    out.set(answer.question_id, shown);
   }
   return out;
 }
@@ -393,6 +433,13 @@ export async function answerQuestion(args: {
   if (!loc) throw new AssessmentError('Question text missing', 'not_found');
 
   const isCorrect = loc.correct_key === args.selectedKey;
+  const explanation = loc.explanation
+    ? renderTemplateLenient(
+        loc.explanation,
+        await templateRecordForAttempt(admin, attempt),
+        (args.locale ?? attempt.language) as AppLocale,
+      )
+    : null;
   const { error } = await admin
     .from('assessment_answers')
     .update({
@@ -402,7 +449,7 @@ export async function answerQuestion(args: {
     })
     .eq('id', answer.id);
   if (error) throw error;
-  return { isCorrect, correctKey: loc.correct_key as OptionKey, explanation: loc.explanation };
+  return { isCorrect, correctKey: loc.correct_key as OptionKey, explanation };
 }
 
 /** Scores and closes the attempt; every question must be answered. */
@@ -439,23 +486,4 @@ export async function submitAttempt(args: {
     .single();
   if (updateError) throw updateError;
   return data;
-}
-
-/** Correct keys and explanations for a closed attempt's review (never for in-progress exams). */
-export async function getReviewKeys(
-  attempt: AttemptRow,
-): Promise<Map<string, { correctKey: OptionKey; explanation: string | null }>> {
-  const admin = createSupabaseAdminClient();
-  const { data, error } = await admin
-    .from('question_localizations')
-    .select('question_id, correct_key, explanation')
-    .in('question_id', attempt.question_ids)
-    .eq('language', attempt.language);
-  if (error) throw error;
-  return new Map(
-    data.map((r) => [
-      r.question_id,
-      { correctKey: r.correct_key as OptionKey, explanation: r.explanation },
-    ]),
-  );
 }

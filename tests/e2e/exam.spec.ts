@@ -33,6 +33,10 @@ test('learner takes the exam without feedback, sees pass/fail; notifications are
   await expect(page).toHaveURL(/\/result$/);
   await expect(page.getByTestId('exam-result')).toHaveAttribute('data-result', /pass|fail/);
   await expect(page.getByTestId('exam-score')).toContainText(`/ ${total}`);
+  // The result reviews every question like the quiz does: the correct option is marked (D51).
+  await expect(page.getByTestId('review-0')).toBeVisible();
+  await expect(page.locator('[data-testid^="review-"]')).toHaveCount(total);
+  await expect(page.getByTestId('review-0').locator('[data-state="correct"]')).toHaveCount(1);
 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-exam-status')).toHaveText(/เสร็จสิ้น|กำลังดำเนินการ/);

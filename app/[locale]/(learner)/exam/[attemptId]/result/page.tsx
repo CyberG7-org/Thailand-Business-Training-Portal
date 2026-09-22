@@ -5,8 +5,9 @@ import { requireUser } from '@/lib/auth/session';
 import type { AppLocale } from '@/i18n/routing';
 import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { AnswerReview } from '@/components/answer-review';
 
-/** Score, pass/fail and which questions were wrong — correct answers stay hidden (D21). */
+/** Score, pass/fail and the full review — every option with the correct one marked (D51). */
 export default async function ExamResultPage({
   params,
 }: {
@@ -42,18 +43,7 @@ export default async function ExamResultPage({
         })}
       </p>
       <p className="text-sm text-gray-600">{t('resultNote')}</p>
-      <ol className="grid max-w-2xl gap-2">
-        {attempt.assessment_answers.map((a, i) => (
-          <li key={a.id} className="flex items-start gap-2 rounded border p-3 text-sm">
-            <span className={a.is_correct ? 'text-green-700' : 'text-red-700'}>
-              {a.is_correct ? '✓' : '✗'}
-            </span>
-            <span>
-              {i + 1}. {texts.get(a.question_id)?.prompt ?? a.rendered_prompt}
-            </span>
-          </li>
-        ))}
-      </ol>
+      <AnswerReview answers={attempt.assessment_answers} texts={texts} />
     </section>
   );
 }

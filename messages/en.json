@@ -576,7 +576,7 @@
     "pass": "Passed",
     "fail": "Not passed",
     "scoreLine": "Score: {score} / {max} (passing mark {passingMark}%)",
-    "resultNote": "Questions marked ✗ were answered incorrectly.",
+    "resultNote": "Questions marked ✗ were answered incorrectly; the green option is the correct answer and the struck-through one is what you chose.",
     "errors": {
       "max_attempts": "You have used all allowed attempts.",
       "retry_wait": "Please wait before retrying the exam.",

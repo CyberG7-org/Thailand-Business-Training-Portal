@@ -576,7 +576,7 @@
     "pass": "通过",
     "fail": "未通过",
     "scoreLine": "得分：{score} / {max}（及格线 {passingMark}%）",
-    "resultNote": "标记 ✗ 的题目回答错误。",
+    "resultNote": "标有 ✗ 的题目回答错误；绿色选项为正确答案，划线的选项是您的选择。",
     "errors": {
       "max_attempts": "您已用完允许的考试次数。",
       "retry_wait": "请稍后再重考。",

@@ -3,7 +3,6 @@ import {
   answerQuestion,
   getAttemptWithAnswers,
   getOrStartAttempt,
-  getReviewKeys,
   listMyAttempts,
   localizeAttemptAnswers,
   submitAttempt,
@@ -140,8 +139,13 @@ describe('assessment attempts', () => {
     expect(submitted.score).toBe(feedback.filter((f) => f.isCorrect).length);
     expect(submitted.result).toBeNull();
 
-    const keys = await getReviewKeys(submitted);
-    expect(keys.size).toBe(submitted.question_ids.length);
+    // The review carries the key and an explanation with its placeholders filled in.
+    const review = await localizeAttemptAnswers(full!, 'th');
+    expect(review.size).toBe(submitted.question_ids.length);
+    for (const shown of review.values()) {
+      expect(shown.correctKey).toMatch(/^[A-D]$/);
+      expect(shown.explanation ?? '').not.toMatch(/\{[a-z_]+\}/);
+    }
 
     const mine = await listMyAttempts(asLearner, learner.id, 'quiz');
     expect(mine.map((a) => a.id)).toContain(attempt.id);
@@ -171,15 +175,15 @@ describe('assessment attempts', () => {
     }
     // Feedback follows the language asked for; correctness is by key and unchanged.
     const first = full.assessment_answers[0];
-    const keys = await getReviewKeys(full);
     const feedback = await answerQuestion({
       userId: learner.id,
       attemptId: attempt.id,
       questionId: first.question_id,
-      selectedKey: keys.get(first.question_id)!.correctKey,
+      selectedKey: inThai.get(first.question_id)!.correctKey!,
       locale: 'th',
     });
     expect(feedback.isCorrect).toBe(true);
+    expect(feedback.explanation ?? '').not.toMatch(/\{[a-z_]+\}/);
     const svc = adminClient();
     await svc.from('assessment_attempts').delete().eq('id', attempt.id);
   });
