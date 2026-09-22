@@ -6,10 +6,10 @@ Run on the staging deployment with real provider keys. One admin tester and two 
 
 | # | Scenario | Steps | Pass criteria | PRD |
 |---|---|---|---|---|
-| A1 | Provision a learner | Admin → Users → New: login id, display name, language, temporary password | Learner can log in with those credentials; wrong password shows the generic error | AUTH |
-| A2 | Import a DBD certificate | Admin → DBD records → New → upload PDF → Extract | Suggestions appear with confidence; unmatched fields are empty (never invented); admin edits and confirms | DBD-001..004 |
-| A3 | Issue date & eligibility | Enter the certificate "Issued on" date in BE; save | Stored CE date shown; after assignment the learner's bank date = issued + 45 days (Thai calendar text) | BR-002/003 |
-| A4 | Assign company | Admin → Users → learner → Assign record | Learner dashboard shows the company; reassigning deactivates the old assignment | ASSIGN |
+| A1 | Provision a learner | Admin → Users → New: login id, temporary password, display name, **company** (a confirmed DBD record) | Learner can log in with those credentials and sees that company; wrong password shows the generic error; unconfirmed records are listed but cannot be chosen | AUTH, ASSIGN |
+| A2 | Import a DBD pack | Admin → DBD records → New → upload the PDFs (several at once) → wait for "reading in the background" to finish (1–3 min, reload) | Fields fill with confidence/page notes; unmatched fields stay empty (never invented); lists appear in the business profile; admin edits and confirms | DBD-001..004 |
+| A3 | Issue date & eligibility | Check the "Issued on" date reads as printed (e.g. 5 สิงหาคม 2569); edit it in any printed form; save | The date stays in Thai (พ.ศ.); after assignment the learner's bank date = issued + 45 days (Thai calendar text) | BR-002/003 |
+| A4 | Reassign company | Admin → Users → learner → Deactivate, then assign another confirmed record | Learner dashboard shows the new company; the old assignment is deactivated | ASSIGN |
 | A5 | Study content | Create a card in TH/EN/ZH, upload a PDF, enable Thai TTS | Learner sees the card in each language; read-aloud plays Thai audio | STUDY |
 | A6 | Question bank | Create a personalized question with `{company_name_th}`; approve after all three languages exist | Approval blocked until TH/EN/ZH present; learner sees the company name substituted | QUIZ/EXAM |
 | A7 | Policy settings | Change passing mark, counts, exam-pass gates; add Telegram chat ids and emails | Saved with validation errors on bad input; Audit log shows the change with the admin's login id | CONFIG |

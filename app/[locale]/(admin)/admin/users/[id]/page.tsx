@@ -64,8 +64,6 @@ export default async function UserDetailPage({
         <dd>{user.display_name ?? '—'}</dd>
         <dt>{t('role')}</dt>
         <dd>{user.role}</dd>
-        <dt>{t('language')}</dt>
-        <dd>{user.preferred_language}</dd>
         <dt>{t('status')}</dt>
         <dd data-testid="account-status">{user.status}</dd>
       </dl>

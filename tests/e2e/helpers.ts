@@ -22,6 +22,23 @@ export async function openManualRecordForm(page: Page) {
   await expect(page.locator('input[name="company_name_th"]')).toBeVisible();
 }
 
+/** Creates a learner on the Users page; `company` must be a confirmed record's Thai name. */
+export async function createLearner(
+  page: Page,
+  fields: { loginId: string; password: string; displayName?: string; company: string },
+): Promise<void> {
+  await page.goto('/th/admin/users');
+  await page.locator('input[name="loginId"]').fill(fields.loginId);
+  await page.locator('input[name="password"]').fill(fields.password);
+  if (fields.displayName) await page.locator('input[name="displayName"]').fill(fields.displayName);
+  const option = page.locator('select[name="dbdRecordId"] option', { hasText: fields.company });
+  await page
+    .locator('select[name="dbdRecordId"]')
+    .selectOption((await option.getAttribute('value'))!);
+  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  await expect(page.getByTestId('create-user-status')).toContainText(fields.loginId);
+}
+
 export async function createConfirmedRecord(
   page: Page,
   fields: { companyNameTh: string; juristicId: string; issuedOn: string },
