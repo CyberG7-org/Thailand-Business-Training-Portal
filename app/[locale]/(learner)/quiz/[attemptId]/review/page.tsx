@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/auth/session';
 import type { AppLocale } from '@/i18n/routing';
 import { getAttemptWithAnswers, getReviewKeys, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { optionLabel } from '@/lib/domain/assessment/engine';
 
 export default async function QuizReviewPage({
   params,
@@ -40,7 +41,7 @@ export default async function QuizReviewPage({
                 {i + 1}. {shown.prompt}
               </p>
               <ul className="mt-2 grid gap-1 text-sm">
-                {options.map((o) => {
+                {options.map((o, oi) => {
                   const isCorrect = o.key === key?.correctKey;
                   const isSelected = o.key === a.selected_key;
                   return (
@@ -54,7 +55,7 @@ export default async function QuizReviewPage({
                             : 'text-gray-600'
                       }
                     >
-                      {o.key}. {o.text}
+                      {optionLabel(oi)}. {o.text}
                       {isCorrect ? ` ✓` : ''}
                       {isSelected && !isCorrect ? ` ✗` : ''}
                     </li>

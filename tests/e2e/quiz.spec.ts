@@ -58,6 +58,10 @@ test('admin authors a personalized question; learner takes the quiz with instant
   await page.waitForURL(/\/th\/quiz\/[0-9a-f-]{36}$/);
   const attemptUrl = page.url();
 
+  // Options are shuffled, but the letters always read A, B, C… top to bottom.
+  const letters = await page.locator('[data-testid^="option-"] span').allTextContents();
+  expect(letters).toEqual(letters.map((_, i) => `${String.fromCharCode(65 + i)}.`));
+
   // Switching the UI language mid-attempt shows the same question in that language (D50).
   const thaiPrompt = (await page.getByTestId('question-prompt').textContent())!;
   await page.getByRole('button', { name: 'English' }).click();

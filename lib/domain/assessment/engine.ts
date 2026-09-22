@@ -26,6 +26,15 @@ export type QuestionText = {
   explanation: string | null;
 };
 
+/**
+ * Letters shown next to options, by position: the options are shuffled but the learner always
+ * reads A–D top to bottom. The stored option key stays the identity used for grading.
+ */
+export const OPTION_LABELS = ['A', 'B', 'C', 'D'] as const;
+export function optionLabel(index: number): string {
+  return OPTION_LABELS[index] ?? String.fromCharCode(65 + index);
+}
+
 export type RenderedQuestion = {
   questionId: string;
   prompt: string;

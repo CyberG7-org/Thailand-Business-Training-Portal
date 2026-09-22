@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useActionState } from 'react';
-import type { QuestionOption } from '@/lib/domain/assessment/engine';
+import { optionLabel, type QuestionOption } from '@/lib/domain/assessment/engine';
 import { answerQuizAction, type AnswerState } from './actions';
 
 type AnswerAction = (prev: AnswerState, formData: FormData) => Promise<AnswerState>;
@@ -56,7 +56,7 @@ export function QuestionCard({
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="attemptId" value={attemptId} />
         <input type="hidden" name="questionId" value={questionId} />
-        {options.map((o) => (
+        {options.map((o, i) => (
           <button
             key={o.key}
             type="submit"
@@ -75,7 +75,7 @@ export function QuestionCard({
             }
             className={`rounded border px-4 py-3 text-left text-sm disabled:cursor-default ${optionClass(o.key)}`}
           >
-            <span className="mr-2 font-semibold">{o.key}.</span>
+            <span className="mr-2 font-semibold">{optionLabel(i)}.</span>
             {o.text}
           </button>
         ))}
@@ -94,7 +94,9 @@ export function QuestionCard({
           <p className="font-semibold">
             {state.feedback!.isCorrect
               ? t('correct')
-              : t('incorrect', { key: state.feedback!.correctKey })}
+              : t('incorrect', {
+                  key: optionLabel(options.findIndex((o) => o.key === state.feedback!.correctKey)),
+                })}
           </p>
           {!state.feedback!.isCorrect && state.feedback!.explanation && (
             <p className="mt-1">{state.feedback!.explanation}</p>
