@@ -2,9 +2,9 @@ import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireUser } from '@/lib/auth/session';
-import { getAttemptWithAnswers, getReviewKeys } from '@/lib/db/assessment';
+import type { AppLocale } from '@/i18n/routing';
+import { getAttemptWithAnswers, getReviewKeys, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import type { QuestionOption } from '@/lib/domain/assessment/engine';
 
 export default async function QuizReviewPage({
   params,
@@ -17,6 +17,7 @@ export default async function QuizReviewPage({
   if (!attempt || attempt.kind !== 'quiz') notFound();
   if (attempt.status === 'in_progress') redirect(`/${locale}/quiz/${attemptId}`);
   const keys = await getReviewKeys(attempt);
+  const texts = await localizeAttemptAnswers(attempt, locale as AppLocale);
   const t = await getTranslations('quiz');
 
   return (
@@ -31,11 +32,12 @@ export default async function QuizReviewPage({
       <ol className="grid max-w-2xl gap-4">
         {attempt.assessment_answers.map((a, i) => {
           const key = keys.get(a.question_id);
-          const options = a.rendered_options as unknown as QuestionOption[];
+          const shown = texts.get(a.question_id)!;
+          const options = shown.options;
           return (
             <li key={a.id} className="rounded border p-4" data-testid={`review-${i}`}>
               <p className="font-semibold">
-                {i + 1}. {a.rendered_prompt}
+                {i + 1}. {shown.prompt}
               </p>
               <ul className="mt-2 grid gap-1 text-sm">
                 {options.map((o) => {

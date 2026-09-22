@@ -58,6 +58,16 @@ test('admin authors a personalized question; learner takes the quiz with instant
   await page.waitForURL(/\/th\/quiz\/[0-9a-f-]{36}$/);
   const attemptUrl = page.url();
 
+  // Switching the UI language mid-attempt shows the same question in that language (D50).
+  const thaiPrompt = (await page.getByTestId('question-prompt').textContent())!;
+  await page.getByRole('button', { name: 'English' }).click();
+  await expect(page).toHaveURL(attemptUrl.replace('/th/', '/en/'));
+  await expect(page.getByTestId('question-prompt')).not.toHaveText(thaiPrompt);
+  await expect(page.getByTestId('question-prompt')).toHaveText(/[A-Za-z]/);
+  await page.getByRole('button', { name: 'ไทย' }).click();
+  await expect(page).toHaveURL(attemptUrl);
+  await expect(page.getByTestId('question-prompt')).toHaveText(thaiPrompt);
+
   // Answer questions one by one; the personalized prompt must contain the company name.
   const total = Number(
     (await page.getByText(/ข้อ 1 จาก (\d+)/).textContent())?.match(/จาก (\d+)/)?.[1] ?? '0',

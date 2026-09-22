@@ -5,6 +5,7 @@ import {
   getOrStartAttempt,
   getReviewKeys,
   listMyAttempts,
+  localizeAttemptAnswers,
   submitAttempt,
 } from '@/lib/db/assessment';
 import {
@@ -145,6 +146,42 @@ describe('assessment attempts', () => {
     const mine = await listMyAttempts(asLearner, learner.id, 'quiz');
     expect(mine.map((a) => a.id)).toContain(attempt.id);
     expect(await listMyAttempts(asOther, learner.id, 'quiz')).toEqual([]);
+  });
+
+  it('shows an attempt in the language the learner switched to, same questions and option order', async () => {
+    const attempt = await getOrStartAttempt({
+      userId: learner.id,
+      kind: 'quiz',
+      language: 'en',
+      count: 4,
+    });
+    const full = (await getAttemptWithAnswers(asLearner, attempt.id))!;
+    const inEnglish = await localizeAttemptAnswers(full, 'en');
+    const inThai = await localizeAttemptAnswers(full, 'th');
+    for (const answer of full.assessment_answers) {
+      const en = inEnglish.get(answer.question_id)!;
+      const th = inThai.get(answer.question_id)!;
+      // The snapshot is what the attempt language shows.
+      expect(en.prompt).toBe(answer.rendered_prompt);
+      // Thai text, same option keys in the same presented order, the company name substituted.
+      expect(th.prompt).not.toBe(en.prompt);
+      expect(th.prompt).toMatch(/[\u0E00-\u0E7F]/);
+      expect(th.options.map((o) => o.key)).toEqual(answer.presented_option_order);
+      if (en.prompt.includes('บริษัท สอบ จำกัด')) expect(th.prompt).toContain('บริษัท สอบ จำกัด');
+    }
+    // Feedback follows the language asked for; correctness is by key and unchanged.
+    const first = full.assessment_answers[0];
+    const keys = await getReviewKeys(full);
+    const feedback = await answerQuestion({
+      userId: learner.id,
+      attemptId: attempt.id,
+      questionId: first.question_id,
+      selectedKey: keys.get(first.question_id)!.correctKey,
+      locale: 'th',
+    });
+    expect(feedback.isCorrect).toBe(true);
+    const svc = adminClient();
+    await svc.from('assessment_attempts').delete().eq('id', attempt.id);
   });
 
   it('rejects submitting with unanswered questions and answering a closed attempt', async () => {

@@ -229,6 +229,76 @@ export async function getOrStartAttempt(args: {
   return attempt;
 }
 
+export type DisplayedQuestion = { prompt: string; options: QuestionOption[] };
+
+/**
+ * What to show for each question of an attempt in the language the learner is looking at
+ * (D50): the snapshot when it is the attempt's language, otherwise the same question rendered
+ * from that language's localization with the same record, seed and presented option order.
+ * Grading is by option key, which every approved question mirrors across languages; a question
+ * without that language falls back to its snapshot.
+ */
+export async function localizeAttemptAnswers(
+  attempt: AttemptWithAnswers,
+  locale: AppLocale,
+): Promise<Map<string, DisplayedQuestion>> {
+  const fromSnapshot = new Map<string, DisplayedQuestion>(
+    attempt.assessment_answers.map((a) => [
+      a.question_id,
+      { prompt: a.rendered_prompt, options: a.rendered_options as unknown as QuestionOption[] },
+    ]),
+  );
+  if (locale === attempt.language) return fromSnapshot;
+
+  const admin = createSupabaseAdminClient();
+  const [{ data: locs }, { data: recordRow }, assignment] = await Promise.all([
+    admin
+      .from('question_localizations')
+      .select('question_id, prompt, options, correct_key, explanation')
+      .in('question_id', attempt.question_ids)
+      .eq('language', locale),
+    attempt.dbd_record_id
+      ? admin.from('dbd_records').select('*').eq('id', attempt.dbd_record_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    getActiveAssignmentForUser(admin, attempt.user_id),
+  ]);
+  const record = recordRow
+    ? toTemplateRecord(
+        recordRow,
+        assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null,
+      )
+    : null;
+  const byQuestion = new Map((locs ?? []).map((l) => [l.question_id, l]));
+  const out = new Map(fromSnapshot);
+  for (const answer of attempt.assessment_answers) {
+    const loc = byQuestion.get(answer.question_id);
+    if (!loc) continue;
+    try {
+      const rendered = renderQuestion(
+        answer.question_id,
+        {
+          prompt: loc.prompt,
+          options: loc.options as QuestionOption[],
+          correct_key: loc.correct_key as OptionKey,
+          explanation: loc.explanation,
+        },
+        record,
+        attempt.shuffle_seed,
+        locale,
+      );
+      const byKey = new Map(rendered.options.map((o) => [o.key, o]));
+      const options = (answer.presented_option_order as OptionKey[])
+        .map((key) => byKey.get(key))
+        .filter((o): o is QuestionOption => o !== undefined);
+      if (options.length !== answer.presented_option_order.length) continue;
+      out.set(answer.question_id, { prompt: rendered.prompt, options });
+    } catch (e) {
+      if (!(e instanceof MissingFieldError)) throw e;
+    }
+  }
+  return out;
+}
+
 /** Learner-scoped read (RLS): the attempt with its answers in presentation order. */
 export async function getAttemptWithAnswers(
   db: Db,
@@ -293,6 +363,8 @@ export async function answerQuestion(args: {
   attemptId: string;
   questionId: string;
   selectedKey: string;
+  /** Language of the explanation to return; the attempt's own language when omitted or missing. */
+  locale?: AppLocale;
 }): Promise<AnswerFeedback> {
   const admin = createSupabaseAdminClient();
   const attempt = await requireOwnedInProgress(admin, args.userId, args.attemptId);
@@ -310,12 +382,14 @@ export async function answerQuestion(args: {
     throw new AssessmentError('Unknown option', 'invalid_key');
   }
 
-  const { data: loc } = await admin
+  const { data: locs } = await admin
     .from('question_localizations')
-    .select('correct_key, explanation')
+    .select('language, correct_key, explanation')
     .eq('question_id', args.questionId)
-    .eq('language', attempt.language)
-    .single();
+    .in('language', [attempt.language, args.locale ?? attempt.language]);
+  const loc =
+    locs?.find((l) => l.language === (args.locale ?? attempt.language)) ??
+    locs?.find((l) => l.language === attempt.language);
   if (!loc) throw new AssessmentError('Question text missing', 'not_found');
 
   const isCorrect = loc.correct_key === args.selectedKey;

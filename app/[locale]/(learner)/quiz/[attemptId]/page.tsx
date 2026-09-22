@@ -1,9 +1,9 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { requireUser } from '@/lib/auth/session';
-import { getAttemptWithAnswers } from '@/lib/db/assessment';
+import type { AppLocale } from '@/i18n/routing';
+import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import type { QuestionOption } from '@/lib/domain/assessment/engine';
 import { submitQuizAction } from '../actions';
 import { QuestionCard } from '../question-card';
 
@@ -20,7 +20,9 @@ export default async function QuizAttemptPage({
   const t = await getTranslations('quiz');
 
   const next = attempt.assessment_answers.find((a) => a.selected_key === null);
-  if (!next) {
+  const texts = next ? await localizeAttemptAnswers(attempt, locale as AppLocale) : null;
+  const shown = next && texts ? texts.get(next.question_id)! : null;
+  if (!next || !shown) {
     return (
       <section className="grid gap-4">
         <h1 className="text-2xl font-semibold">{t('title')}</h1>
@@ -49,8 +51,8 @@ export default async function QuizAttemptPage({
         questionId={next.question_id}
         position={next.position}
         total={attempt.assessment_answers.length}
-        prompt={next.rendered_prompt}
-        options={next.rendered_options as unknown as QuestionOption[]}
+        prompt={shown.prompt}
+        options={shown.options}
         instantFeedback
       />
     </section>

@@ -2,7 +2,8 @@ import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireUser } from '@/lib/auth/session';
-import { getAttemptWithAnswers } from '@/lib/db/assessment';
+import type { AppLocale } from '@/i18n/routing';
+import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 /** Score, pass/fail and which questions were wrong — correct answers stay hidden (D21). */
@@ -17,6 +18,7 @@ export default async function ExamResultPage({
   if (!attempt || attempt.kind !== 'exam') notFound();
   if (attempt.status === 'in_progress') redirect(`/${locale}/exam/${attemptId}`);
   const t = await getTranslations('exam');
+  const texts = await localizeAttemptAnswers(attempt, locale as AppLocale);
   const passed = attempt.result === 'pass';
 
   return (
@@ -47,7 +49,7 @@ export default async function ExamResultPage({
               {a.is_correct ? '✓' : '✗'}
             </span>
             <span>
-              {i + 1}. {a.rendered_prompt}
+              {i + 1}. {texts.get(a.question_id)?.prompt ?? a.rendered_prompt}
             </span>
           </li>
         ))}

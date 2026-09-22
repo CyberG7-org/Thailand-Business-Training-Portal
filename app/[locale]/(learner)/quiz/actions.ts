@@ -51,7 +51,13 @@ export async function answerQuizAction(
   const selectedKey = String(formData.get('selectedKey') ?? '');
   const user = await requireUser(locale);
   try {
-    const feedback = await answerQuestion({ userId: user.id, attemptId, questionId, selectedKey });
+    const feedback = await answerQuestion({
+      userId: user.id,
+      attemptId,
+      questionId,
+      selectedKey,
+      locale: locale as AppLocale,
+    });
     return { feedback, selectedKey, error: null };
   } catch (e) {
     return { feedback: null, selectedKey: null, error: code(e) };
