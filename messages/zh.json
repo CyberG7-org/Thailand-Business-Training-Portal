@@ -1,7 +1,9 @@
 {
   "app": {
     "name": "商业培训门户",
-    "language": "语言"
+    "language": "语言",
+    "back": "返回",
+    "home": "首页"
   },
   "home": {
     "title": "泰国商业培训与银行验证门户"
