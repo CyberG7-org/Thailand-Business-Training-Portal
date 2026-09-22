@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
+import { MAX_GENERATION_COUNT as MAX_COUNT } from '@/lib/domain/generation-limits';
 import { generateQuestionsAction, type GenerateState } from './actions';
 
 const initial: GenerateState = { error: null, rejected: [] };
@@ -92,10 +93,10 @@ export function GenerateForm({
             name="count"
             type="number"
             min={1}
-            max={40}
+            max={MAX_COUNT}
             value={count}
             onChange={(e) => {
-              const next = Math.max(1, Math.min(40, Number(e.target.value) || 1));
+              const next = Math.max(1, Math.min(MAX_COUNT, Number(e.target.value) || 1));
               setCount(next);
               setTemplateCount((current) => Math.min(current, next));
             }}

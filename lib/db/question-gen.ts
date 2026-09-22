@@ -15,6 +15,7 @@ import {
   type MaterialBundle,
   type QuestionGenerator,
 } from '@/lib/integrations/question-gen/types';
+import { MAX_GENERATION_COUNT } from '@/lib/domain/generation-limits';
 import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
 import {
   translationProblem,
@@ -50,7 +51,7 @@ export type GenerateBankResult = {
   questionIds: string[];
 };
 
-const MAX_COUNT = 40;
+const MAX_COUNT = MAX_GENERATION_COUNT;
 
 /** Turns an uploaded file into model material: PDFs stay binary, DOCX/TXT/MD become text. */
 export async function uploadToMaterial(

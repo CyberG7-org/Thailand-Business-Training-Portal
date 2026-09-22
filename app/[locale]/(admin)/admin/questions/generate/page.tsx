@@ -8,7 +8,9 @@ import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen';
 import { GenerateForm } from './generate-form';
 
 // Generation is one long model call; allow the full serverless window (Vercel Hobby limit).
-export const maxDuration = 60;
+// One batch is a single long Opus call (three languages per question): allow the full window
+// a Vercel function may take, and keep batches small enough to fit it (MAX_COUNT).
+export const maxDuration = 300;
 
 export default async function GenerateQuestionsPage({
   params,

@@ -448,7 +448,7 @@
       "focus": "Focus (optional)",
       "focusHint": "e.g. emphasise what bank officers ask",
       "generate": "Generate questions",
-      "generating": "Generating… (about 30–60 s)",
+      "generating": "Generating… (about 1–3 minutes, keep this page open)",
       "errors": {
         "not_configured": "AI is not configured (ANTHROPIC_API_KEY required). Contact an admin.",
         "provider": "The AI provider returned an error. Try again.",

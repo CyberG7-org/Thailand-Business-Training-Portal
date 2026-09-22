@@ -448,7 +448,7 @@
       "focus": "侧重点（可选）",
       "focusHint": "例如：侧重银行工作人员常问的问题",
       "generate": "生成题目",
-      "generating": "生成中…（约 30–60 秒）",
+      "generating": "正在生成…（约 1–3 分钟，请勿关闭页面）",
       "errors": {
         "not_configured": "尚未配置 AI（需要 ANTHROPIC_API_KEY），请联系管理员。",
         "provider": "AI 服务商返回错误，请重试。",

@@ -1,6 +1,7 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { GENERATION_TIMEOUT_MS, TRANSLATION_TIMEOUT_MS } from '@/lib/domain/generation-limits';
 import { describeReference } from './dbd-reference';
 import { passagesBlock } from './passages';
 import {
@@ -92,13 +93,16 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
     try {
       // Streamed: the SDK refuses non-streaming requests this long (max_tokens ≥ ~21k).
       response = await this.client.messages
-        .stream({
-          model: MODEL,
-          max_tokens: 32000,
-          system: GENERATION_INSTRUCTIONS,
-          messages: [{ role: 'user', content }],
-          output_config: { format: zodOutputFormat(generationOutputSchema) },
-        })
+        .stream(
+          {
+            model: MODEL,
+            max_tokens: 32000,
+            system: GENERATION_INSTRUCTIONS,
+            messages: [{ role: 'user', content }],
+            output_config: { format: zodOutputFormat(generationOutputSchema) },
+          },
+          { timeout: GENERATION_TIMEOUT_MS },
+        )
         .finalMessage();
     } catch (error) {
       throw toGenError(error);
@@ -118,13 +122,16 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
     let response;
     try {
       response = await this.client.messages
-        .stream({
-          model: MODEL,
-          max_tokens: 8000,
-          system: TRANSLATION_INSTRUCTIONS,
-          messages: [{ role: 'user', content: request }],
-          output_config: { format: zodOutputFormat(translationOutputSchema) },
-        })
+        .stream(
+          {
+            model: MODEL,
+            max_tokens: 8000,
+            system: TRANSLATION_INSTRUCTIONS,
+            messages: [{ role: 'user', content: request }],
+            output_config: { format: zodOutputFormat(translationOutputSchema) },
+          },
+          { timeout: TRANSLATION_TIMEOUT_MS },
+        )
         .finalMessage();
     } catch (error) {
       throw toGenError(error);
