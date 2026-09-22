@@ -28,5 +28,5 @@ test('a learner created for a confirmed record is assigned to it, with the +45-d
   await page.goto('/th/admin/users');
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: pending });
   await expect(option).toBeAttached();
-  await expect(option).toBeDisabled();
+  await expect(option).toHaveAttribute('disabled', '');
 });
