@@ -78,7 +78,7 @@
       "status": "状态",
       "confirm": "确认记录",
       "missingForConfirmation": "无法确认 — 缺少：{fields}",
-      "dateHint": "日/月/年（佛历 2569 或公历 2026）或 年-月-日",
+      "dateHint": "按证明上的写法，例如 9 เมษายน 2569 或 09/04/2569",
       "directorsHint": "每行一位董事：泰文名 | 英文名",
       "documentMissing": "尚未上传证书 PDF",
       "documentUploaded": "证书 PDF 已上传",
@@ -122,7 +122,6 @@
       "reviewSuggestions": "证书中的建议值显示在仍为空的字段中。请逐项核对（尤其是高亮字段），然后保存并确认。",
       "suggestedFromDocument": "来自文件的建议（置信度 {confidence}%）",
       "lowConfidenceHint": "置信度较低，请核对",
-      "dateReading": "文件印为 {raw}（佛历）→ {iso}",
       "extractErrors": {
         "not_configured": "未配置 AI 提取。",
         "provider": "提取服务失败，请稍后重试。",

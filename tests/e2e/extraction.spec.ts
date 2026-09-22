@@ -26,8 +26,8 @@ test('uploading a certificate creates the record and fills its fields in the bac
   // The record now carries the values read from the document, with their provenance.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
-  await expect(page.locator('input[name="issued_on"]')).toHaveValue('2026-07-13');
-  await expect(page.getByTestId('suggestion-issued_on')).toContainText('13/07/2569');
+  await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
+  await expect(page.getByTestId('suggestion-issued_on')).toContainText('90%');
   await expect(page.getByTestId('suggestion-head_office_address')).toContainText('ความมั่นใจต่ำ');
   await expect(page.getByTestId('record-status')).toHaveText('extracted');
 

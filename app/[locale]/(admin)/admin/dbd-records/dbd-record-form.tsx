@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { formatDate, isISODate, type Locale } from '@/lib/domain/thai-date';
 import { useActionState } from 'react';
 import type { DbdRecordRow } from '@/lib/db/dbd-records';
 import {
@@ -100,7 +101,6 @@ export function DbdRecordForm({
     if (!suggested || !suggestions) return null;
     const low = suggestions.lowConfidence.includes(name);
     const pct = Math.round((suggestions.confidence[name] ?? 0) * 100);
-    const date = suggestions.dateNotes[name];
     return (
       <span
         data-testid={`suggestion-${name}`}
@@ -109,7 +109,6 @@ export function DbdRecordForm({
         {t('suggestedFromDocument', { confidence: pct })}
         {sourceLabel(name)}
         {low ? ` — ${t('lowConfidenceHint')}` : ''}
-        {date?.wasBe && date.iso ? ` · ${t('dateReading', { raw: date.raw, iso: date.iso })}` : ''}
       </span>
     );
   };
@@ -134,12 +133,16 @@ export function DbdRecordForm({
   const renderField = ([name, label]: readonly [string, string]) => {
     const { value, suggested } = defaultFor(name, record?.[name as keyof DbdRecordRow]);
     const low = suggested && suggestions?.lowConfidence.includes(name);
+    // Dates are shown the way the certificate prints them (Thai users read พ.ศ.); the stored
+    // calendar value only serves the bank-date arithmetic and is never displayed.
+    const shown =
+      DATE_FIELDS.has(name) && isISODate(value) ? formatDate(value, locale as Locale) : value;
     return (
       <label key={name} className="text-sm">
         {t(`fields.${label}` as 'fields.companyNameTh')}
         <input
           name={name}
-          defaultValue={value}
+          defaultValue={shown}
           readOnly={locked}
           className={`${inputClass} ${low ? 'border-amber-500 bg-amber-50' : ''}`}
         />

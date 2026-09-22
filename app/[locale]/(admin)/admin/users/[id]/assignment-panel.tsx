@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { useActionState } from 'react';
 import { assignRecordAction, deactivateAssignmentAction, type AccountActionState } from './actions';
 
@@ -74,7 +75,8 @@ export function AssignmentPanel({
             <option value="">{t('choose')}</option>
             {options.map((o) => (
               <option key={o.id} value={o.id}>
-                {o.company_name_th ?? o.id} · {o.juristic_id ?? '—'} · {o.issued_on ?? '—'}
+                {o.company_name_th ?? o.id} · {o.juristic_id ?? '—'} ·{' '}
+                {o.issued_on ? formatDate(o.issued_on, locale as Locale) : '—'}
               </option>
             ))}
           </select>

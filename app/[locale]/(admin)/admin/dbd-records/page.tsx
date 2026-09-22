@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import { listDbdRecords } from '@/lib/db/dbd-records';
+import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 export default async function DbdRecordsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -38,7 +39,7 @@ export default async function DbdRecordsPage({ params }: { params: Promise<{ loc
                 </Link>
               </td>
               <td>{r.juristic_id ?? '—'}</td>
-              <td>{r.issued_on ?? '—'}</td>
+              <td>{r.issued_on ? formatDate(r.issued_on, locale as Locale) : '—'}</td>
               <td>{r.extraction_status}</td>
             </tr>
           ))}

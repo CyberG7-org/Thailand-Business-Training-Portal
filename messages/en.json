@@ -78,7 +78,7 @@
       "status": "Status",
       "confirm": "Confirm record",
       "missingForConfirmation": "Cannot confirm — missing: {fields}",
-      "dateHint": "DD/MM/YYYY (BE 2569 or CE 2026) or YYYY-MM-DD",
+      "dateHint": "As printed on the certificate, e.g. 9 เมษายน 2569, 09/04/2569 or 9 April 2026",
       "directorsHint": "One director per line: Thai name | English name",
       "documentMissing": "No certificate PDF uploaded",
       "documentUploaded": "Certificate PDF uploaded",
@@ -122,7 +122,6 @@
       "reviewSuggestions": "Suggested values from the certificate are shown where the record is still empty. Check every field — especially highlighted ones — then Save and Confirm.",
       "suggestedFromDocument": "Suggested from the document ({confidence}% confidence)",
       "lowConfidenceHint": "low confidence, please verify",
-      "dateReading": "printed {raw} (Buddhist Era) → {iso}",
       "extractErrors": {
         "not_configured": "AI extraction is not configured.",
         "provider": "The extraction service failed. Try again later.",
