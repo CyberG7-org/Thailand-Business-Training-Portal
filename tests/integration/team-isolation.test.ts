@@ -147,6 +147,39 @@ describe('one team cannot see another', () => {
     await svc.from('profiles').update({ status: 'active' }).eq('id', a.manager.id);
   });
 
+  it('hides another team transcripts, chunks, sweeps and jobs', async () => {
+    const { data: doc } = await svc
+      .from('dbd_documents')
+      .select('id')
+      .eq('record_id', b.recordId)
+      .single();
+    await svc
+      .from('dbd_pages')
+      .insert({ document_id: doc!.id, page: 1, text: 'ความลับ', model: 'fake' });
+    await svc.from('dbd_chunks').insert({
+      id: `${doc!.id}#1#0`,
+      record_id: b.recordId,
+      document_id: doc!.id,
+      page: 1,
+      chunk_index: 0,
+      chunk_text: 'ความลับ',
+      char_count: 7,
+    });
+    await svc
+      .from('dbd_sweeps')
+      .insert({ document_id: doc!.id, first_page: 1, last_page: 1, result: {} });
+    await svc
+      .from('index_jobs')
+      .insert({ record_id: b.recordId, document_id: doc!.id, kind: 'index' });
+
+    for (const table of ['dbd_pages', 'dbd_chunks', 'dbd_sweeps', 'index_jobs'] as const) {
+      const { data } = await a.asManager.from(table).select('*');
+      expect(data ?? []).toEqual([]);
+    }
+    const { data: mine } = await b.asManager.from('dbd_chunks').select('record_id');
+    expect((mine ?? []).map((c) => c.record_id)).toEqual([b.recordId]);
+  });
+
   it('still shows an admin everything', async () => {
     const admin = await createTestUser('admin');
     const asAdmin = await clientFor(admin);
