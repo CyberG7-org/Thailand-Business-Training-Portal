@@ -1279,7 +1279,11 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      in_my_team: { Args: { p_user: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_manager: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
+      my_team: { Args: never; Returns: string }
       policy_int: { Args: { p_key: string }; Returns: number }
       recompute_eligibility_snapshots: {
         Args: { p_reason: string }
