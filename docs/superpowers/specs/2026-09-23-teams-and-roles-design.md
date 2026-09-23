@@ -94,7 +94,7 @@ Rules:
 | Exam and quiz results | all teams | own team only | own only |
 | Call sessions and recordings | all teams | own team only | own only |
 | Name cards | all teams | own team only | own only |
-| Notifications | all | own team's learners | — |
+| Notifications | all | — (deferred) | — |
 | Audit log | everything | own team's actions | — |
 | Policy settings, provider keys | yes | no | — |
 
@@ -111,8 +111,7 @@ Two consequences worth stating plainly, both accepted by the owner:
 
 ### 5.1 Changes
 
-Everything except the two `notify_*` columns lands in the first stage; those arrive with the
-notification work in stage 4.
+All of it lands in the first stage.
 
 ```sql
 -- Role gains one value.
@@ -127,13 +126,6 @@ create index profiles_manager_idx on public.profiles (manager_id);
 -- Companies: which team a record belongs to (null = the admin's own).
 alter table public.dbd_records add column team_id uuid references public.profiles (id);
 create index dbd_records_team_idx on public.dbd_records (team_id);
-
--- Notifications: whose result this is about (null for system-wide events).
-alter table public.notifications add column subject_user_id uuid references public.profiles (id);
-
--- How a manager is reached when one of their learners finishes an exam.
-alter table public.profiles add column notify_email text;
-alter table public.profiles add column notify_telegram_chat_id text;
 
 -- Codes that never repeat.
 create table public.login_id_counters (
@@ -217,17 +209,12 @@ and changes the display name to the new holder. The team code, its learners and 
 put, so every id keeps meaning and no data moves. The audit log records the change of holder.
 This needs no schema beyond what §5 adds.
 
-## 8. Notifications
+## 8. Notifications — deferred
 
-Exam results are queued with `subject_user_id` set to the learner. Recipients are resolved at
-queue time:
-
-- The learner's manager, through the `notify_email` / `notify_telegram_chat_id` on their profile.
-- Plus the global admin list in Policy settings, which continues to work as today. Empty that list
-  if managers should be the only recipients.
-
-A manager sees, in the Notifications screen, only the entries whose `subject_user_id` is in their
-team. Retry and requeue behave as they do now.
+Notifications are untouched by this spec, at the owner's instruction: exam results keep going to
+the global admin list in Policy settings, and the Notifications screen stays admin-only. Routing a
+result to the learner's own manager needs a contact channel per manager and a subject column on
+the queue; both are a later, self-contained piece of work once teams are in use.
 
 ## 9. Audit
 
@@ -270,8 +257,8 @@ Each stage is shippable on its own and ends green.
    helper.
 3. **Scoping the rest.** Records, documents, questions, content, calls, name cards, audit,
    navigation.
-4. **Notifications.** Manager contact channels, recipient resolution, team-scoped Notifications
-   screen.
+
+Each stage gets its own implementation plan: P15a, P15b, P15c.
 
 ## 13. Tests
 
@@ -301,5 +288,6 @@ Deliberately excluded, and why:
 - **Moving a learner between teams** — the exit path covers the real case; cross-team transfer
   would break the code-to-team correspondence.
 - **Quotas or billing per team** — no commercial model depends on it yet.
+- **Routing notifications to managers** — deferred by the owner; see §8.
 - **Restyling the screens** — the design system (palette, typography, selective glassmorphism) is
   applied after this lands, so the new screens are built once rather than styled twice.
