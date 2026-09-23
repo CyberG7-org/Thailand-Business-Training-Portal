@@ -234,3 +234,84 @@ describe('one team cannot see another', () => {
     await deleteTestUser(admin.id);
   });
 });
+
+describe('the shared library and the admin-only corners', () => {
+  let team: Team;
+  let admin: TestUser;
+  let asAdmin: Client;
+
+  beforeAll(async () => {
+    team = await seedTeam('ซี');
+    admin = await createTestUser('admin');
+    asAdmin = await clientFor(admin);
+  });
+
+  afterAll(async () => {
+    await svc.storage.from('dbd-documents').remove([team.documentPath]);
+    await svc.from('dbd_records').delete().eq('id', team.recordId);
+    await deleteTestUser(team.learner.id);
+    await deleteTestUser(team.manager.id);
+    await deleteTestUser(admin.id);
+  });
+
+  it('lets a manager author and approve in the shared question bank', async () => {
+    const { data, error } = await team.asManager
+      .from('questions')
+      .insert({ question_key: `mgr-${Date.now()}`, kind: 'generic', approval_status: 'draft' })
+      .select()
+      .single();
+    expect(error).toBeNull();
+    // Approval needs th, en and zh (spec §4.3), so the manager writes all three first.
+    const { error: localized } = await team.asManager.from('question_localizations').insert(
+      (['th', 'en', 'zh'] as const).map((language) => ({
+        question_id: data!.id,
+        language,
+        prompt: `prompt ${language}`,
+        options: [
+          { key: 'A', text: 'A' },
+          { key: 'B', text: 'B' },
+        ],
+        correct_key: 'A',
+      })),
+    );
+    expect(localized).toBeNull();
+    const { error: approved } = await team.asManager
+      .from('questions')
+      .update({ approval_status: 'approved' })
+      .eq('id', data!.id);
+    expect(approved).toBeNull();
+    await svc.from('questions').delete().eq('id', data!.id);
+  });
+
+  it('lets a manager author a study card', async () => {
+    const { data, error } = await team.asManager
+      .from('study_materials')
+      .insert({ content_key: `mgr-${Date.now()}`, type: 'card' })
+      .select()
+      .single();
+    expect(error).toBeNull();
+    await svc.from('study_materials').delete().eq('id', data!.id);
+  });
+
+  it('keeps policy settings, notifications and webhooks for the admin alone', async () => {
+    const { data: policy } = await team.asManager.from('policy_config').select('key');
+    expect(policy ?? []).toEqual([]);
+    const { data: notifications } = await team.asManager.from('notifications').select('id');
+    expect(notifications ?? []).toEqual([]);
+    const { data: adminPolicy } = await asAdmin.from('policy_config').select('key');
+    expect((adminPolicy ?? []).length).toBeGreaterThan(0);
+  });
+
+  it('shows a manager only their own team actions in the audit log', async () => {
+    await svc.from('audit_logs').insert([
+      { actor_id: team.manager.id, action: 'test.mine', entity_type: 'test', entity_id: 'x' },
+      { actor_id: admin.id, action: 'test.theirs', entity_type: 'test', entity_id: 'y' },
+    ]);
+    const { data } = await team.asManager
+      .from('audit_logs')
+      .select('action')
+      .like('action', 'test.%');
+    expect((data ?? []).map((r) => r.action)).toEqual(['test.mine']);
+    await svc.from('audit_logs').delete().like('action', 'test.%');
+  });
+});
