@@ -17,18 +17,21 @@ test('learner takes the exam without feedback, sees pass/fail; notifications are
   await page.waitForURL(/\/th\/exam\/[0-9a-f-]{36}$/);
   const attemptId = page.url().split('/').pop()!;
 
-  const total = Number(
-    (await page.getByText(/ข้อ 1 จาก (\d+)/).textContent())?.match(/จาก (\d+)/)?.[1] ?? '0',
-  );
-  expect(total).toBeGreaterThan(0);
+  const total = await page.locator('[data-testid^="question-card-"]').count();
+  expect(total).toBeGreaterThan(1);
+  const progress = page.getByTestId('attempt-progress');
+  await expect(progress).toHaveAttribute('data-total', String(total));
+  await expect(page.getByTestId('submit-exam')).toBeDisabled();
   for (let i = 0; i < total; i++) {
-    await expect(page.getByText(`ข้อ ${i + 1} จาก ${total}`)).toBeVisible();
-    await page.getByTestId('option-A').click();
+    const card = page.getByTestId(`question-card-${i}`);
+    await card.getByTestId('option-A').click();
     // No correctness feedback during the exam (EXAM-002): only "saved".
-    await expect(page.getByTestId('saved')).toBeVisible();
-    await expect(page.getByTestId('feedback')).toHaveCount(0);
-    await page.getByTestId('next-question').click();
+    await expect(card.getByTestId('saved')).toBeVisible();
+    await expect(card.getByTestId('feedback')).toHaveCount(0);
+    await expect(progress).toHaveAttribute('data-answered', String(i + 1));
   }
+  // While the exam is open the page never carries the correct answers.
+  await expect(page.locator('[data-state="correct"]')).toHaveCount(0);
   await page.getByTestId('submit-exam').click();
   await expect(page).toHaveURL(/\/result$/);
   await expect(page.getByTestId('exam-result')).toHaveAttribute('data-result', /pass|fail/);

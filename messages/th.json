@@ -546,9 +546,6 @@
     "correct": "ถูกต้อง!",
     "incorrect": "ไม่ถูกต้อง — คำตอบที่ถูกคือ {key}",
     "saved": "บันทึกคำตอบแล้ว",
-    "next": "ข้อถัดไป",
-    "finish": "เสร็จสิ้น",
-    "allAnswered": "คุณตอบครบทุกข้อแล้ว",
     "submit": "ส่งแบบทดสอบ",
     "reviewTitle": "สรุปแบบทดสอบ",
     "scoreLine": "คะแนน: {score} / {max}",
@@ -560,7 +557,10 @@
       "already_answered": "ข้อนี้ตอบแล้ว",
       "unanswered": "กรุณาตอบให้ครบทุกข้อก่อน",
       "invalid_key": "ตัวเลือกไม่ถูกต้อง"
-    }
+    },
+    "answeredOf": "ตอบแล้ว {answered} จาก {total} ข้อ",
+    "percentDone": "ความคืบหน้า {percent}%",
+    "jumpNext": "ไปข้อที่ยังไม่ได้ตอบ"
   },
   "exam": {
     "title": "ข้อสอบ",
@@ -570,7 +570,6 @@
     "history": "ครั้งที่ผ่านมา",
     "attemptLine": "ครั้งที่ {no}: {score} / {max} — {result}",
     "noFeedbackNote": "ระบบบันทึกคำตอบทันที และจะแสดงผลหลังจากส่งข้อสอบเท่านั้น",
-    "allAnswered": "คุณตอบครบทุกข้อแล้ว",
     "submit": "ส่งข้อสอบ",
     "resultTitle": "ผลสอบ",
     "pass": "สอบผ่าน",

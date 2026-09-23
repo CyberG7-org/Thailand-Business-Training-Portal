@@ -58,54 +58,60 @@ test('admin authors a personalized question; learner takes the quiz with instant
   await page.waitForURL(/\/th\/quiz\/[0-9a-f-]{36}$/);
   const attemptUrl = page.url();
 
+  // Every question of the attempt is on this one page.
+  const total = await page.locator('[data-testid^="question-card-"]').count();
+  expect(total).toBeGreaterThan(1);
+  const progress = page.getByTestId('attempt-progress');
+  await expect(progress).toHaveAttribute('data-answered', '0');
+  await expect(progress).toHaveAttribute('data-total', String(total));
+  await expect(page.getByTestId('submit-quiz')).toBeDisabled();
+
+  const first = page.getByTestId('question-card-0');
   // Options are shuffled, but the letters always read A, B, C… top to bottom.
-  const letters = await page.locator('[data-testid^="option-"] span').allTextContents();
+  const letters = await first.locator('[data-testid^="option-"] span').allTextContents();
   expect(letters).toEqual(letters.map((_, i) => `${String.fromCharCode(65 + i)}.`));
 
-  // Switching the UI language mid-attempt shows the same question in that language (D50).
-  const thaiPrompt = (await page.getByTestId('question-prompt').textContent())!;
+  // Switching the UI language mid-attempt shows the same questions in that language (D50).
+  const thaiPrompt = (await first.getByTestId('question-prompt').textContent())!;
   await page.getByRole('button', { name: 'English' }).click();
   await expect(page).toHaveURL(attemptUrl.replace('/th/', '/en/'));
-  await expect(page.getByTestId('question-prompt')).not.toHaveText(thaiPrompt);
-  await expect(page.getByTestId('question-prompt')).toHaveText(/[A-Za-z]/);
+  const firstEn = page.getByTestId('question-card-0').getByTestId('question-prompt');
+  await expect(firstEn).not.toHaveText(thaiPrompt);
+  await expect(firstEn).toHaveText(/[A-Za-z]/);
   await page.getByRole('button', { name: 'ไทย' }).click();
   await expect(page).toHaveURL(attemptUrl);
-  await expect(page.getByTestId('question-prompt')).toHaveText(thaiPrompt);
-
-  // Answer questions one by one; the personalized prompt must contain the company name.
-  const total = Number(
-    (await page.getByText(/ข้อ 1 จาก (\d+)/).textContent())?.match(/จาก (\d+)/)?.[1] ?? '0',
+  await expect(page.getByTestId('question-card-0').getByTestId('question-prompt')).toHaveText(
+    thaiPrompt,
   );
-  expect(total).toBeGreaterThan(0);
+
+  // Answer every question in place; the personalized prompt must contain the company name.
   let sawCompany = false;
   for (let i = 0; i < total; i++) {
-    await expect(page.getByText(`ข้อ ${i + 1} จาก ${total}`)).toBeVisible();
-    const prompt = await page.getByTestId('question-prompt').textContent();
+    const card = page.getByTestId(`question-card-${i}`);
+    const prompt = await card.getByTestId('question-prompt').textContent();
     if (prompt?.includes(company)) sawCompany = true;
 
-    // Pick a deliberately wrong-looking option first time, then check feedback semantics.
-    const buttons = page.locator('[data-testid^="option-"]');
-    await buttons.first().click();
-    const feedback = page.getByTestId('feedback');
+    await card.locator('[data-testid^="option-"]').first().click();
+    const feedback = card.getByTestId('feedback');
     await expect(feedback).toBeVisible();
     const correct = (await feedback.getAttribute('data-correct')) === 'true';
     if (!correct) {
-      await expect(page.locator('[data-state="correct"]')).toHaveCount(1);
-      await expect(page.locator('[data-state="incorrect"]')).toHaveCount(1);
+      await expect(card.locator('[data-state="correct"]')).toHaveCount(1);
+      await expect(card.locator('[data-state="incorrect"]')).toHaveCount(1);
       await expect(feedback).toContainText('ไม่ถูกต้อง');
     } else {
       await expect(feedback).toContainText('ถูกต้อง');
     }
+    await expect(progress).toHaveAttribute('data-answered', String(i + 1));
 
     if (i === 1) {
-      // Leaving mid-attempt and coming back resumes at the next unanswered question.
+      // Leaving mid-attempt and coming back keeps what was already answered.
       await page.goto('/th/quiz');
       await page.getByTestId('start-quiz').click();
       await expect(page).toHaveURL(attemptUrl);
-      await expect(page.getByText(`ข้อ ${i + 2} จาก ${total}`)).toBeVisible();
-      continue;
+      await expect(page.getByTestId('attempt-progress')).toHaveAttribute('data-answered', '2');
+      await expect(page.getByTestId('question-card-0').getByTestId('feedback')).toBeVisible();
     }
-    await page.getByTestId('next-question').click();
   }
   expect(sawCompany).toBe(true);
 

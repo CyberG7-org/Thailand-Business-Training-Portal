@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { requireUser } from '@/lib/auth/session';
 import type { AppLocale } from '@/i18n/routing';
+import { requireUser } from '@/lib/auth/session';
 import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import { QuestionCard } from '../../quiz/question-card';
+import { AttemptBoard, type BoardQuestion } from '../../quiz/attempt-board';
 import { answerExamAction, submitExamAction } from '../actions';
 
 export default async function ExamAttemptPage({
@@ -18,44 +18,34 @@ export default async function ExamAttemptPage({
   if (!attempt || attempt.kind !== 'exam') notFound();
   if (attempt.status !== 'in_progress') redirect(`/${locale}/exam/${attemptId}/result`);
   const t = await getTranslations('exam');
+  const texts = await localizeAttemptAnswers(attempt, locale as AppLocale);
 
-  const next = attempt.assessment_answers.find((a) => a.selected_key === null);
-  const texts = next ? await localizeAttemptAnswers(attempt, locale as AppLocale) : null;
-  const shown = next && texts ? texts.get(next.question_id)! : null;
-  if (!next || !shown) {
-    return (
-      <section className="grid gap-4">
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <p>{t('allAnswered')}</p>
-        <form action={submitExamAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="attemptId" value={attempt.id} />
-          <button
-            type="submit"
-            data-testid="submit-exam"
-            className="rounded bg-gray-900 px-4 py-2 text-white"
-          >
-            {t('submit')}
-          </button>
-        </form>
-      </section>
-    );
-  }
+  // An open exam reveals nothing (EXAM-002): the correct keys never leave the server, so the
+  // page carries only the prompt, the options and which one the learner picked.
+  const questions: BoardQuestion[] = attempt.assessment_answers.map((a) => {
+    const shown = texts.get(a.question_id)!;
+    return {
+      questionId: a.question_id,
+      position: a.position,
+      prompt: shown.prompt,
+      options: shown.options,
+      answeredKey: a.selected_key,
+      revealed: null,
+    };
+  });
 
   return (
     <section className="grid gap-4">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
       <p className="text-sm text-gray-600">{t('noFeedbackNote')}</p>
-      <QuestionCard
-        key={next.question_id}
+      <AttemptBoard
         attemptId={attempt.id}
-        questionId={next.question_id}
-        position={next.position}
-        total={attempt.assessment_answers.length}
-        prompt={shown.prompt}
-        options={shown.options}
+        questions={questions}
         instantFeedback={false}
-        action={answerExamAction}
+        answerAction={answerExamAction}
+        submitAction={submitExamAction}
+        submitTestId="submit-exam"
+        submitLabel={t('submit')}
       />
     </section>
   );

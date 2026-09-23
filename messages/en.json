@@ -546,9 +546,6 @@
     "correct": "Correct!",
     "incorrect": "Incorrect — the correct answer is {key}",
     "saved": "Answer saved",
-    "next": "Next question",
-    "finish": "Finish",
-    "allAnswered": "You have answered every question.",
     "submit": "Submit quiz",
     "reviewTitle": "Quiz review",
     "scoreLine": "Score: {score} / {max}",
@@ -560,7 +557,10 @@
       "already_answered": "This question is already answered.",
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option."
-    }
+    },
+    "answeredOf": "{answered} of {total} answered",
+    "percentDone": "{percent}% complete",
+    "jumpNext": "Go to the next unanswered question"
   },
   "exam": {
     "title": "Exam",
@@ -570,7 +570,6 @@
     "history": "Previous attempts",
     "attemptLine": "Attempt {no}: {score} / {max} — {result}",
     "noFeedbackNote": "Answers are saved as you go; results are shown only after you submit.",
-    "allAnswered": "You have answered every question.",
     "submit": "Submit exam",
     "resultTitle": "Exam result",
     "pass": "Passed",

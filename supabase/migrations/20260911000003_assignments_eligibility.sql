@@ -22,7 +22,7 @@ insert into public.policy_config (key, value) values
   ('bank_eligibility_days', '45'::jsonb),
   ('bank_access_expiry_days', 'null'::jsonb),
   ('exam_passing_mark_percent', '70'::jsonb),
-  ('quiz_question_count', '10'::jsonb),
+  ('quiz_question_count', '20'::jsonb),
   ('exam_question_count', '20'::jsonb),
   ('exam_max_attempts', 'null'::jsonb),
   ('exam_retry_wait_hours', '0'::jsonb),

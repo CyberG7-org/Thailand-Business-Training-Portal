@@ -36,11 +36,8 @@ export async function answerExamAction(
   const user = await requireUser(locale);
   try {
     await answerQuestion({ userId: user.id, attemptId, questionId, selectedKey });
-    return {
-      feedback: { isCorrect: false, correctKey: 'A', explanation: null },
-      selectedKey,
-      error: null,
-    };
+    // No feedback of any kind: the card marks itself answered from the key it sent.
+    return { feedback: null, selectedKey, error: null };
   } catch (e) {
     return { feedback: null, selectedKey: null, error: code(e) };
   }

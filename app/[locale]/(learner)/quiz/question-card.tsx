@@ -1,12 +1,14 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { optionLabel, type QuestionOption } from '@/lib/domain/assessment/engine';
 import { answerQuizAction, type AnswerState } from './actions';
 
 type AnswerAction = (prev: AnswerState, formData: FormData) => Promise<AnswerState>;
+
+/** What an already-answered quiz question reveals on a reload; the exam never sends this. */
+export type Revealed = { correctKey: string; explanation: string | null };
 
 const initial: AnswerState = { feedback: null, selectedKey: null, error: null };
 
@@ -18,6 +20,9 @@ export function QuestionCard({
   prompt,
   options,
   instantFeedback,
+  answeredKey = null,
+  revealed = null,
+  onAnswered,
   action = answerQuizAction,
 }: {
   attemptId: string;
@@ -28,26 +33,51 @@ export function QuestionCard({
   options: QuestionOption[];
   /** Quiz shows correctness immediately; the exam only confirms the answer was saved. */
   instantFeedback: boolean;
+  /** The answer already stored for this question, so a reload shows it. */
+  answeredKey?: string | null;
+  /** Quiz only: the correct key and explanation for a question already answered. */
+  revealed?: Revealed | null;
+  /** Lets the page count progress without a round trip. */
+  onAnswered?: (questionId: string) => void;
   /** Defaults to the quiz action; the exam passes its non-revealing action. */
   action?: AnswerAction;
 }) {
   const locale = useLocale();
-  const router = useRouter();
   const t = useTranslations('quiz');
   const [state, formAction, pending] = useActionState(action, initial);
-  const answered = state.feedback !== null;
+
+  // The answer this card shows: the one just given, or the one the server already had.
+  const selectedKey = state.selectedKey ?? answeredKey;
+  const answered = selectedKey !== null;
+  // Correctness is painted only where it is allowed to be seen, whatever the action returns.
+  const reveal: Revealed | null = !instantFeedback
+    ? null
+    : state.feedback
+      ? { correctKey: state.feedback.correctKey, explanation: state.feedback.explanation }
+      : revealed;
+  const isCorrect = reveal ? reveal.correctKey === selectedKey : null;
+
+  const justAnswered = state.selectedKey !== null;
+  useEffect(() => {
+    if (justAnswered) onAnswered?.(questionId);
+  }, [justAnswered, onAnswered, questionId]);
 
   const optionClass = (key: string) => {
-    if (!answered || !instantFeedback) {
-      return state.selectedKey === key ? 'border-gray-900' : 'border-gray-300 hover:bg-gray-50';
+    if (!reveal) {
+      return selectedKey === key ? 'border-gray-900' : 'border-gray-300 hover:bg-gray-50';
     }
-    if (key === state.feedback!.correctKey) return 'border-green-600 bg-green-50';
-    if (key === state.selectedKey) return 'border-red-600 bg-red-50';
+    if (key === reveal.correctKey) return 'border-green-600 bg-green-50';
+    if (key === selectedKey) return 'border-red-600 bg-red-50';
     return 'border-gray-200 opacity-70';
   };
 
   return (
-    <div className="grid max-w-2xl gap-4" data-testid="question-card">
+    <div
+      id={`q-${position}`}
+      data-testid={`question-card-${position}`}
+      data-answered={answered}
+      className={`grid gap-4 rounded border p-4 ${answered ? 'border-gray-200' : 'border-gray-400'}`}
+    >
       <p className="text-sm text-gray-500">{t('progress', { position: position + 1, total })}</p>
       <h2 className="text-lg font-semibold" data-testid="question-prompt">
         {prompt}
@@ -65,11 +95,11 @@ export function QuestionCard({
             disabled={answered || pending}
             data-testid={`option-${o.key}`}
             data-state={
-              !answered || !instantFeedback
+              !reveal
                 ? 'idle'
-                : o.key === state.feedback!.correctKey
+                : o.key === reveal.correctKey
                   ? 'correct'
-                  : o.key === state.selectedKey
+                  : o.key === selectedKey
                     ? 'incorrect'
                     : 'other'
             }
@@ -85,38 +115,26 @@ export function QuestionCard({
           {t(`errors.${state.error}` as never)}
         </p>
       )}
-      {answered && instantFeedback && (
+      {answered && instantFeedback && reveal && (
         <div
-          className={`rounded border p-3 text-sm ${state.feedback!.isCorrect ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50'}`}
+          className={`rounded border p-3 text-sm ${isCorrect ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50'}`}
           data-testid="feedback"
-          data-correct={state.feedback!.isCorrect}
+          data-correct={isCorrect}
         >
           <p className="font-semibold">
-            {state.feedback!.isCorrect
+            {isCorrect
               ? t('correct')
               : t('incorrect', {
-                  key: optionLabel(options.findIndex((o) => o.key === state.feedback!.correctKey)),
+                  key: optionLabel(options.findIndex((o) => o.key === reveal.correctKey)),
                 })}
           </p>
-          {!state.feedback!.isCorrect && state.feedback!.explanation && (
-            <p className="mt-1">{state.feedback!.explanation}</p>
-          )}
+          {!isCorrect && reveal.explanation && <p className="mt-1">{reveal.explanation}</p>}
         </div>
       )}
       {answered && !instantFeedback && (
         <p className="text-sm text-gray-600" data-testid="saved">
           {t('saved')}
         </p>
-      )}
-      {answered && (
-        <button
-          type="button"
-          onClick={() => router.refresh()}
-          data-testid="next-question"
-          className="justify-self-start rounded bg-gray-900 px-4 py-2 text-sm text-white"
-        >
-          {position + 1 < total ? t('next') : t('finish')}
-        </button>
       )}
     </div>
   );

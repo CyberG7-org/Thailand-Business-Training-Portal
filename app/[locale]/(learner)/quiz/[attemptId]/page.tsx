@@ -1,11 +1,11 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { requireUser } from '@/lib/auth/session';
 import type { AppLocale } from '@/i18n/routing';
+import { requireUser } from '@/lib/auth/session';
 import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import { submitQuizAction } from '../actions';
-import { QuestionCard } from '../question-card';
+import { answerQuizAction, submitQuizAction } from '../actions';
+import { AttemptBoard, type BoardQuestion } from '../attempt-board';
 
 export default async function QuizAttemptPage({
   params,
@@ -18,42 +18,36 @@ export default async function QuizAttemptPage({
   if (!attempt || attempt.kind !== 'quiz') notFound();
   if (attempt.status !== 'in_progress') redirect(`/${locale}/quiz/${attemptId}/review`);
   const t = await getTranslations('quiz');
+  const texts = await localizeAttemptAnswers(attempt, locale as AppLocale);
 
-  const next = attempt.assessment_answers.find((a) => a.selected_key === null);
-  const texts = next ? await localizeAttemptAnswers(attempt, locale as AppLocale) : null;
-  const shown = next && texts ? texts.get(next.question_id)! : null;
-  if (!next || !shown) {
-    return (
-      <section className="grid gap-4">
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <p>{t('allAnswered')}</p>
-        <form action={submitQuizAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="attemptId" value={attempt.id} />
-          <button
-            type="submit"
-            data-testid="submit-quiz"
-            className="rounded bg-gray-900 px-4 py-2 text-white"
-          >
-            {t('submit')}
-          </button>
-        </form>
-      </section>
-    );
-  }
+  // The quiz reveals correctness as you answer, so a question already answered keeps showing it
+  // after a reload. Unanswered questions carry no correct key.
+  const questions: BoardQuestion[] = attempt.assessment_answers.map((a) => {
+    const shown = texts.get(a.question_id)!;
+    return {
+      questionId: a.question_id,
+      position: a.position,
+      prompt: shown.prompt,
+      options: shown.options,
+      answeredKey: a.selected_key,
+      revealed:
+        a.selected_key !== null && shown.correctKey !== null
+          ? { correctKey: shown.correctKey, explanation: shown.explanation }
+          : null,
+    };
+  });
 
   return (
     <section className="grid gap-4">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <QuestionCard
-        key={next.question_id}
+      <AttemptBoard
         attemptId={attempt.id}
-        questionId={next.question_id}
-        position={next.position}
-        total={attempt.assessment_answers.length}
-        prompt={shown.prompt}
-        options={shown.options}
+        questions={questions}
         instantFeedback
+        answerAction={answerQuizAction}
+        submitAction={submitQuizAction}
+        submitTestId="submit-quiz"
+        submitLabel={t('submit')}
       />
     </section>
   );

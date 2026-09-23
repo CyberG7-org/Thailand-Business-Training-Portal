@@ -546,9 +546,6 @@
     "correct": "正确！",
     "incorrect": "不正确 — 正确答案是 {key}",
     "saved": "答案已保存",
-    "next": "下一题",
-    "finish": "完成",
-    "allAnswered": "您已回答所有问题。",
     "submit": "提交测验",
     "reviewTitle": "测验回顾",
     "scoreLine": "得分：{score} / {max}",
@@ -560,7 +557,10 @@
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。"
-    }
+    },
+    "answeredOf": "已回答 {answered} / {total} 题",
+    "percentDone": "完成 {percent}%",
+    "jumpNext": "跳到下一道未作答的题"
   },
   "exam": {
     "title": "考试",
@@ -570,7 +570,6 @@
     "history": "历史记录",
     "attemptLine": "第 {no} 次：{score} / {max} — {result}",
     "noFeedbackNote": "答案会即时保存；结果仅在提交后显示。",
-    "allAnswered": "您已回答所有问题。",
     "submit": "提交考试",
     "resultTitle": "考试结果",
     "pass": "通过",
