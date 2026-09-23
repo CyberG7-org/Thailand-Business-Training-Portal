@@ -180,6 +180,51 @@ describe('one team cannot see another', () => {
     expect((mine ?? []).map((c) => c.record_id)).toEqual([b.recordId]);
   });
 
+  it('hides another team learner activity', async () => {
+    // A learner can only be assigned to a confirmed record, and confirming one needs its
+    // core fields (dbd_confirmed_requires_core_fields).
+    const { error: confirmError } = await svc
+      .from('dbd_records')
+      .update({
+        extraction_status: 'confirmed',
+        juristic_id: String(Date.now()).padStart(13, '0').slice(-13),
+        confirmed_by: b.manager.id,
+        confirmed_at: new Date().toISOString(),
+      })
+      .eq('id', b.recordId);
+    expect(confirmError).toBeNull();
+    const { data: assignment } = await svc
+      .from('user_dbd_assignments')
+      .insert({ user_id: b.learner.id, dbd_record_id: b.recordId })
+      .select()
+      .single();
+    expect(assignment).not.toBeNull();
+    const { data: attempt } = await svc
+      .from('assessment_attempts')
+      .insert({
+        user_id: b.learner.id,
+        dbd_record_id: b.recordId,
+        kind: 'quiz',
+        language: 'th',
+        attempt_no: 1,
+        question_ids: [],
+        shuffle_seed: 'seed',
+      })
+      .select()
+      .single();
+    expect(attempt).not.toBeNull();
+
+    const { data: assignmentsSeen } = await a.asManager
+      .from('user_dbd_assignments')
+      .select('user_id');
+    expect((assignmentsSeen ?? []).map((r) => r.user_id)).not.toContain(b.learner.id);
+    const { data: attemptsSeen } = await a.asManager.from('assessment_attempts').select('user_id');
+    expect((attemptsSeen ?? []).map((r) => r.user_id)).not.toContain(b.learner.id);
+
+    const { data: mine } = await b.asManager.from('assessment_attempts').select('user_id');
+    expect((mine ?? []).map((r) => r.user_id)).toEqual([b.learner.id]);
+  });
+
   it('still shows an admin everything', async () => {
     const admin = await createTestUser('admin');
     const asAdmin = await clientFor(admin);
