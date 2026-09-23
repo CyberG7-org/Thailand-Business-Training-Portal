@@ -55,3 +55,24 @@ export async function clientFor(user: TestUser): Promise<Client> {
 export async function deleteTestUser(id: string): Promise<void> {
   await adminClient().auth.admin.deleteUser(id);
 }
+
+/** A manager account; its profile id is its own team. */
+export async function createTestManager(
+  overrides: { loginId?: string; displayName?: string } = {},
+): Promise<TestUser> {
+  return createTestUser('manager', overrides);
+}
+
+/** A learner inside the given manager's team. */
+export async function createTestLearnerIn(
+  manager: TestUser,
+  overrides: { loginId?: string; displayName?: string } = {},
+): Promise<TestUser> {
+  const learner = await createTestUser('learner', overrides);
+  const { error } = await adminClient()
+    .from('profiles')
+    .update({ manager_id: manager.id })
+    .eq('id', learner.id);
+  if (error) throw error;
+  return learner;
+}

@@ -397,6 +397,7 @@ export type Database = {
           registrar_name: string | null
           signing_authority: string | null
           structured_data: Json
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -424,6 +425,7 @@ export type Database = {
           registrar_name?: string | null
           signing_authority?: string | null
           structured_data?: Json
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -451,6 +453,7 @@ export type Database = {
           registrar_name?: string | null
           signing_authority?: string | null
           structured_data?: Json
+          team_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -464,6 +467,13 @@ export type Database = {
           {
             foreignKeyName: "dbd_records_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dbd_records_team_id_fkey"
+            columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -735,6 +745,7 @@ export type Database = {
           display_name: string | null
           id: string
           login_id: string
+          manager_id: string | null
           preferred_language: string
           role: string
           status: string
@@ -745,6 +756,7 @@ export type Database = {
           display_name?: string | null
           id: string
           login_id: string
+          manager_id?: string | null
           preferred_language?: string
           role: string
           status?: string
@@ -755,12 +767,21 @@ export type Database = {
           display_name?: string | null
           id?: string
           login_id?: string
+          manager_id?: string | null
           preferred_language?: string
           role?: string
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       question_generation_batches: {
         Row: {
