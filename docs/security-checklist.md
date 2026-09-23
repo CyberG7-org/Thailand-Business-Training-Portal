@@ -22,7 +22,8 @@ Verdict per item of the foundation spec §13 "Security" row plus what the slices
 | 15 | Content-Security-Policy | ⏳ deferred | Not set for the pilot: `@vapi-ai/web` (Daily WebRTC) and Supabase signed URLs need an allow-list that must be validated against the production domains first. Track in P10. |
 | 16 | Rate limiting on login / webhook | ⏳ deferred | Supabase Auth applies its own login rate limits; app-level limits are a P10 item once the hosting platform is fixed. |
 | 17 | Dependency audit | ⏳ manual | Run `pnpm audit --prod` before each release (P10 checklist). |
-| 18 | DBD chunk text stored at Pinecone (third-party processor, US region on Starter); `PINECONE_API_KEY` server-only; vectors deleted with the document; learners never query another record; transcripts, chunks and cached sweeps (`dbd_pages`, `dbd_chunks`, `dbd_sweeps`) are admin-read, worker-write only | ✅ | `tests/integration/dbd-index.rls.test.ts`, `tests/integration/dbd-index.upload.test.ts`, `pnpm check:secrets` |
+| 18 | DBD chunk text stored at Pinecone (third-party processor, US region on Starter); `PINECONE_API_KEY` server-only; vectors deleted with the document; learners never query another record; transcripts, chunks and cached sweeps (`dbd_pages`, `dbd_chunks`, `dbd_sweeps`) are read-only to the admin and to the manager whose team owns the record, worker-write only | ✅ | `tests/integration/dbd-index.rls.test.ts`, `tests/integration/dbd-index.upload.test.ts`, `pnpm check:secrets` |
+| 19 | One manager cannot read or write another team’s learners, records, documents, transcripts, attempts, calls, name cards or audit entries; storage keys are scoped by record and learner id, not merely hidden in the UI | ✅ | `tests/integration/team-isolation.test.ts`, `tests/integration/team-helpers.test.ts` |
 
 ## Notes
 
