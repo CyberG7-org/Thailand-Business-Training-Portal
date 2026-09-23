@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db/database.types';
 
-export type Role = 'learner' | 'admin';
+export type Role = 'learner' | 'manager' | 'admin';
 export type TestUser = { id: string; loginId: string; password: string; role: Role };
 export type Client = SupabaseClient<Database>;
 

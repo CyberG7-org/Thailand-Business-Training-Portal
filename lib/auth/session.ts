@@ -5,7 +5,7 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 export type CurrentUser = {
   id: string;
   loginId: string;
-  role: 'learner' | 'admin';
+  role: 'learner' | 'manager' | 'admin';
   displayName: string | null;
   preferredLanguage: AppLocale;
   status: 'active' | 'disabled';
