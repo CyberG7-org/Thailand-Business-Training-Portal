@@ -1,63 +1,18 @@
-import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   adminClient,
   clientFor,
-  createTestLearnerIn,
-  createTestManager,
+  confirmRecord,
   createTestUser,
+  deleteTeam,
   deleteTestUser,
+  seedTeam,
   type Client,
+  type Team,
   type TestUser,
 } from './helpers';
 
 const svc = adminClient();
-const fixture = readFileSync('tests/fixtures/three-pages.pdf');
-
-export type Team = {
-  manager: TestUser;
-  learner: TestUser;
-  asManager: Client;
-  recordId: string;
-  documentPath: string;
-};
-
-/** A manager, one learner of theirs, and one company record with a document. */
-async function seedTeam(label: string): Promise<Team> {
-  const manager = await createTestManager({ displayName: label });
-  const learner = await createTestLearnerIn(manager, { displayName: `${label} learner` });
-  const { data: record, error } = await svc
-    .from('dbd_records')
-    .insert({
-      company_name_th: `บริษัท ${label} จำกัด`,
-      team_id: manager.id,
-      created_by: manager.id,
-    })
-    .select()
-    .single();
-  if (error) throw error;
-  const documentPath = `${record.id}/${Date.now()}-1.pdf`;
-  await svc.storage
-    .from('dbd-documents')
-    .upload(documentPath, fixture, { contentType: 'application/pdf' });
-  const { error: docError } = await svc.from('dbd_documents').insert({
-    record_id: record.id,
-    path: documentPath,
-    original_name: 'pack.pdf',
-    size_bytes: fixture.byteLength,
-    position: 1,
-    page_count: 3,
-    index_status: 'ready',
-  });
-  if (docError) throw docError;
-  return {
-    manager,
-    learner,
-    asManager: await clientFor(manager),
-    recordId: record.id,
-    documentPath,
-  };
-}
 
 describe('one team cannot see another', () => {
   let a: Team;
@@ -69,16 +24,12 @@ describe('one team cannot see another', () => {
   });
 
   afterAll(async () => {
-    for (const team of [a, b]) {
-      await svc.storage.from('dbd-documents').remove([team.documentPath]);
-      await svc.from('dbd_records').delete().eq('id', team.recordId);
-      await deleteTestUser(team.learner.id);
-      await deleteTestUser(team.manager.id);
-    }
+    for (const team of [a, b]) await deleteTeam(team);
   });
 
   it('shows a manager their own learner and nobody else', async () => {
-    const { data } = await a.asManager.from('profiles').select('id, manager_id');
+    const { data, error } = await a.asManager.from('profiles').select('id, manager_id');
+    expect(error).toBeNull();
     const ids = (data ?? []).map((p) => p.id);
     expect(ids).toContain(a.learner.id);
     expect(ids).not.toContain(b.learner.id);
@@ -86,9 +37,15 @@ describe('one team cannot see another', () => {
   });
 
   it('shows a manager their own records and documents only', async () => {
-    const { data: records } = await a.asManager.from('dbd_records').select('id');
+    const { data: records, error: recordsError } = await a.asManager
+      .from('dbd_records')
+      .select('id');
+    expect(recordsError).toBeNull();
     expect((records ?? []).map((r) => r.id)).toEqual([a.recordId]);
-    const { data: docs } = await a.asManager.from('dbd_documents').select('record_id');
+    const { data: docs, error: docsError } = await a.asManager
+      .from('dbd_documents')
+      .select('record_id');
+    expect(docsError).toBeNull();
     expect((docs ?? []).map((d) => d.record_id)).toEqual([a.recordId]);
   });
 
@@ -104,18 +61,20 @@ describe('one team cannot see another', () => {
       .from('dbd_records')
       .insert({ company_name_th: 'บริษัท แอบ จำกัด', team_id: b.manager.id });
     expect(inserted).not.toBeNull();
-    const { data: moved } = await a.asManager
+    const { data: moved, error: movedError } = await a.asManager
       .from('dbd_records')
       .update({ team_id: a.manager.id })
       .eq('id', b.recordId)
       .select();
+    expect(movedError).toBeNull();
     expect(moved ?? []).toEqual([]);
 
-    const { data: poached } = await a.asManager
+    const { data: poached, error: poachedError } = await a.asManager
       .from('profiles')
       .update({ manager_id: a.manager.id })
       .eq('id', b.learner.id)
       .select();
+    expect(poachedError).toBeNull();
     expect(poached ?? []).toEqual([]);
     const { error: pushedAway } = await a.asManager
       .from('profiles')
@@ -131,7 +90,8 @@ describe('one team cannot see another', () => {
       .insert({ company_name_th: 'บริษัท ของแอดมิน จำกัด' })
       .select()
       .single();
-    const { data: seenByA } = await a.asManager.from('dbd_records').select('id');
+    const { data: seenByA, error: seenError } = await a.asManager.from('dbd_records').select('id');
+    expect(seenError).toBeNull();
     expect((seenByA ?? []).map((r) => r.id)).not.toContain(mine!.id);
     await svc.from('dbd_records').delete().eq('id', mine!.id);
   });
@@ -142,7 +102,8 @@ describe('one team cannot see another', () => {
     const { data, error } = await asLearner.from('profiles').select('id').eq('id', a.learner.id);
     expect(error).toBeNull();
     expect((data ?? []).map((p) => p.id)).toEqual([a.learner.id]);
-    const { data: hidden } = await a.asManager.from('dbd_records').select('id');
+    const { data: hidden, error: hiddenError } = await a.asManager.from('dbd_records').select('id');
+    expect(hiddenError).toBeNull();
     expect(hidden ?? []).toEqual([]);
     await svc.from('profiles').update({ status: 'active' }).eq('id', a.manager.id);
   });
@@ -173,26 +134,16 @@ describe('one team cannot see another', () => {
       .insert({ record_id: b.recordId, document_id: doc!.id, kind: 'index' });
 
     for (const table of ['dbd_pages', 'dbd_chunks', 'dbd_sweeps', 'index_jobs'] as const) {
-      const { data } = await a.asManager.from(table).select('*');
-      expect(data ?? []).toEqual([]);
+      const { data, error } = await a.asManager.from(table).select('*');
+      expect(error, table).toBeNull();
+      expect(data ?? [], table).toEqual([]);
     }
     const { data: mine } = await b.asManager.from('dbd_chunks').select('record_id');
     expect((mine ?? []).map((c) => c.record_id)).toEqual([b.recordId]);
   });
 
   it('hides another team learner activity', async () => {
-    // A learner can only be assigned to a confirmed record, and confirming one needs its
-    // core fields (dbd_confirmed_requires_core_fields).
-    const { error: confirmError } = await svc
-      .from('dbd_records')
-      .update({
-        extraction_status: 'confirmed',
-        juristic_id: String(Date.now()).padStart(13, '0').slice(-13),
-        confirmed_by: b.manager.id,
-        confirmed_at: new Date().toISOString(),
-      })
-      .eq('id', b.recordId);
-    expect(confirmError).toBeNull();
+    await confirmRecord(b.recordId, b.manager.id);
     const { data: assignment } = await svc
       .from('user_dbd_assignments')
       .insert({ user_id: b.learner.id, dbd_record_id: b.recordId })
@@ -214,11 +165,15 @@ describe('one team cannot see another', () => {
       .single();
     expect(attempt).not.toBeNull();
 
-    const { data: assignmentsSeen } = await a.asManager
+    const { data: assignmentsSeen, error: assignmentsError } = await a.asManager
       .from('user_dbd_assignments')
       .select('user_id');
+    expect(assignmentsError).toBeNull();
     expect((assignmentsSeen ?? []).map((r) => r.user_id)).not.toContain(b.learner.id);
-    const { data: attemptsSeen } = await a.asManager.from('assessment_attempts').select('user_id');
+    const { data: attemptsSeen, error: attemptsError } = await a.asManager
+      .from('assessment_attempts')
+      .select('user_id');
+    expect(attemptsError).toBeNull();
     expect((attemptsSeen ?? []).map((r) => r.user_id)).not.toContain(b.learner.id);
 
     const { data: mine } = await b.asManager.from('assessment_attempts').select('user_id');
@@ -247,10 +202,7 @@ describe('the shared library and the admin-only corners', () => {
   });
 
   afterAll(async () => {
-    await svc.storage.from('dbd-documents').remove([team.documentPath]);
-    await svc.from('dbd_records').delete().eq('id', team.recordId);
-    await deleteTestUser(team.learner.id);
-    await deleteTestUser(team.manager.id);
+    await deleteTeam(team);
     await deleteTestUser(admin.id);
   });
 
@@ -294,9 +246,15 @@ describe('the shared library and the admin-only corners', () => {
   });
 
   it('keeps policy settings, notifications and webhooks for the admin alone', async () => {
-    const { data: policy } = await team.asManager.from('policy_config').select('key');
+    const { data: policy, error: policyError } = await team.asManager
+      .from('policy_config')
+      .select('key');
+    expect(policyError).toBeNull();
     expect(policy ?? []).toEqual([]);
-    const { data: notifications } = await team.asManager.from('notifications').select('id');
+    const { data: notifications, error: notificationsError } = await team.asManager
+      .from('notifications')
+      .select('id');
+    expect(notificationsError).toBeNull();
     expect(notifications ?? []).toEqual([]);
     const { data: adminPolicy } = await asAdmin.from('policy_config').select('key');
     expect((adminPolicy ?? []).length).toBeGreaterThan(0);
@@ -307,10 +265,11 @@ describe('the shared library and the admin-only corners', () => {
       { actor_id: team.manager.id, action: 'test.mine', entity_type: 'test', entity_id: 'x' },
       { actor_id: admin.id, action: 'test.theirs', entity_type: 'test', entity_id: 'y' },
     ]);
-    const { data } = await team.asManager
+    const { data, error } = await team.asManager
       .from('audit_logs')
       .select('action')
       .like('action', 'test.%');
+    expect(error).toBeNull();
     expect((data ?? []).map((r) => r.action)).toEqual(['test.mine']);
     await svc.from('audit_logs').delete().like('action', 'test.%');
   });

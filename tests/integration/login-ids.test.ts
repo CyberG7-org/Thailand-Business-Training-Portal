@@ -41,6 +41,13 @@ describe('allocate_login_id', () => {
     expect(await allocate(other, 't02-')).toBe('t02-01');
   });
 
+  it('stores the code lower-case whatever case the prefix is given in', async () => {
+    const scope = `test-${randomUUID()}`;
+    scopes.push(scope);
+    expect(await allocate(scope, 'T')).toBe('t01');
+    expect(await allocate(scope, 'T01-')).toBe('t01-02');
+  });
+
   it('never reissues a number after the account that held it is gone', async () => {
     const scope = `test-${randomUUID()}`;
     scopes.push(scope);

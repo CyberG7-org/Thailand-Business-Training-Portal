@@ -21,11 +21,13 @@ drop policy "question batches: admins do everything" on public.question_generati
 create policy "question batches: staff do everything" on public.question_generation_batches
   for all to authenticated using (public.is_staff()) with check (public.is_staff());
 
+-- The buckets are 'study-materials' and 'tts-cache' (migration 0005); there is no
+-- 'study-files' bucket, and naming one would have left both of these with no policy at all.
 drop policy "study files: admins do everything" on storage.objects;
 create policy "study files: staff do everything" on storage.objects
   for all to authenticated
-  using (bucket_id = 'study-files' and public.is_staff())
-  with check (bucket_id = 'study-files' and public.is_staff());
+  using (bucket_id in ('study-materials', 'tts-cache') and public.is_staff())
+  with check (bucket_id in ('study-materials', 'tts-cache') and public.is_staff());
 
 -- A manager reads what their own team did; the admin reads everything.
 drop policy "audit: admins read" on public.audit_logs;

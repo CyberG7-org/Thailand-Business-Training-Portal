@@ -26,7 +26,8 @@ begin
   returning case when xmax = 0 then 1 else c.next_value - 1 end into v_next;
   -- Pad single digits only. lpad() truncates anything longer than its width, so lpad('100', 2)
   -- would silently return '10' and hand out a code that is already taken.
-  return p_prefix || case when v_next < 10 then '0' || v_next::text else v_next::text end;
+  -- Stored lower-case (spec §3.3); the screens upper-case them for display.
+  return lower(p_prefix) || case when v_next < 10 then '0' || v_next::text else v_next::text end;
 end;
 $$;
 

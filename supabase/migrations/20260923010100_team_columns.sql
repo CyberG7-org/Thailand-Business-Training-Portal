@@ -21,6 +21,12 @@ security definer
 set search_path = public
 as $$
 begin
+  -- Parent side: a manager who still holds learners cannot stop being one, or their team
+  -- would point at an account that is no longer a manager.
+  if tg_op = 'UPDATE' and old.role = 'manager' and new.role <> 'manager'
+     and exists (select 1 from public.profiles p where p.manager_id = new.id) then
+    raise exception 'this manager still has learners; move or remove them first';
+  end if;
   if new.manager_id is null then
     return new;
   end if;
@@ -39,3 +45,7 @@ $$;
 create trigger profiles_team_membership
   before insert or update of manager_id, role on public.profiles
   for each row execute function public.enforce_team_membership();
+
+-- Supabase grants EXECUTE to anon and authenticated by default (migration 0012): a trigger
+-- function is nobody's to call directly.
+revoke all on function public.enforce_team_membership() from public, anon, authenticated;

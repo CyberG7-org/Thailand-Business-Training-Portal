@@ -4,46 +4,34 @@ drop policy "dbd pages: admins read" on public.dbd_pages;
 create policy "dbd pages: admins and owning managers read" on public.dbd_pages
   for select to authenticated
   using (
-    public.is_admin() or (public.is_manager() and exists (
-      select 1 from public.dbd_documents d
-      join public.dbd_records r on r.id = d.record_id
-      where d.id = dbd_pages.document_id and r.team_id = public.my_team()
-    ))
+    public.is_admin() or (public.is_manager() and public.document_in_my_team(dbd_pages.document_id))
   );
 
 drop policy "dbd chunks: admins read" on public.dbd_chunks;
 create policy "dbd chunks: admins and owning managers read" on public.dbd_chunks
   for select to authenticated
   using (
-    public.is_admin() or (public.is_manager() and exists (
-      select 1 from public.dbd_records r
-      where r.id = dbd_chunks.record_id and r.team_id = public.my_team()
-    ))
+    public.is_admin() or (public.is_manager() and public.record_in_my_team(dbd_chunks.record_id))
   );
 
 drop policy "dbd sweeps: admins read" on public.dbd_sweeps;
 create policy "dbd sweeps: admins and owning managers read" on public.dbd_sweeps
   for select to authenticated
   using (
-    public.is_admin() or (public.is_manager() and exists (
-      select 1 from public.dbd_documents d
-      join public.dbd_records r on r.id = d.record_id
-      where d.id = dbd_sweeps.document_id and r.team_id = public.my_team()
-    ))
+    public.is_admin() or (public.is_manager() and public.document_in_my_team(dbd_sweeps.document_id))
   );
 
 drop policy "index jobs: admins do everything" on public.index_jobs;
 create policy "index jobs: admins and owning managers" on public.index_jobs
   for all to authenticated
   using (
-    public.is_admin() or (public.is_manager() and exists (
-      select 1 from public.dbd_records r
-      where r.id = index_jobs.record_id and r.team_id = public.my_team()
-    ))
+    public.is_admin() or (public.is_manager() and public.record_in_my_team(index_jobs.record_id))
   )
   with check (
-    public.is_admin() or (public.is_manager() and exists (
-      select 1 from public.dbd_records r
-      where r.id = index_jobs.record_id and r.team_id = public.my_team()
-    ))
+    public.is_admin() or (public.is_manager()
+      and public.record_in_my_team(index_jobs.record_id)
+      -- The worker writes a document's text under the job's record_id, so a job whose two
+      -- sides name different teams is how one team's pack ends up in another's index.
+      and (index_jobs.document_id is null or public.document_in_my_team(index_jobs.document_id))
+    )
   );
