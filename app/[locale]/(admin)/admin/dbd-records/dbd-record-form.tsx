@@ -15,6 +15,11 @@ import {
 } from '@/lib/domain/dbd-profile';
 import { directorsToText, type Director } from '@/lib/domain/dbd-record';
 import type { ExtractionSuggestions } from '@/lib/domain/extraction-merge';
+import {
+  CONTACT_FIELDS,
+  missingBusinessAnswers,
+  type InterviewProfile,
+} from '@/lib/domain/bank-interview';
 import { saveDbdRecordAction, type SaveState } from './actions';
 
 /** Level 1 — company identity (หนังสือรับรอง). */
@@ -39,6 +44,13 @@ const DOCUMENT_FIELDS = [
   ['objectives_count', 'objectivesCount'],
 ] as const;
 
+/**
+ * What the certificate cannot say: how to reach the company and what it sells (D58). They sit
+ * with the identity fields because that is where a manager looks after an upload, and they stay
+ * editable after confirmation — unlike the certificate facts, they are not read off a document.
+ */
+const BUSINESS_ANSWER_FIELDS = ['nature_of_business', 'products_services'] as const;
+
 const DATE_FIELDS = new Set(['registered_on', 'issued_on']);
 const initial: SaveState = { ok: false, error: null, fieldErrors: {} };
 
@@ -46,6 +58,7 @@ export function DbdRecordForm({
   record,
   suggestions = null,
   business = null,
+  interview = null,
   provenance = {},
   documentNames = [],
 }: {
@@ -54,6 +67,8 @@ export function DbdRecordForm({
   suggestions?: ExtractionSuggestions | null;
   /** Level 2 as stored on the record. */
   business?: BusinessProfile | null;
+  /** The four answers the manager owes, stored with the interview profile (D58). */
+  interview?: InterviewProfile | null;
   /** Level 3: where each stored value was read (field → page/document/confidence). */
   provenance?: Provenance;
   /** Uploaded document names, in order, to label `source_document`. */
@@ -63,6 +78,8 @@ export function DbdRecordForm({
   const t = useTranslations('admin.dbd');
   const [state, formAction, pending] = useActionState(saveDbdRecordAction, initial);
   const locked = record?.extraction_status === 'confirmed';
+  const answers = interview;
+  const missingAnswers = missingBusinessAnswers(answers);
   const profile = business ?? EMPTY_BUSINESS_PROFILE;
   const inputClass = 'mt-1 w-full rounded border px-2 py-1 read-only:bg-gray-100';
 
@@ -184,6 +201,44 @@ export function DbdRecordForm({
           <span className="text-xs text-gray-500">{t('directorsHint')}</span>
           {suggestionNote('directors_text', directorsDefault.suggested)}
         </label>
+
+        <div className="grid gap-3 border-t pt-3">
+          {missingAnswers.length > 0 && (
+            <p data-testid="answers-missing" className="text-sm text-amber-800">
+              {t('answersMissing', {
+                fields: missingAnswers
+                  .map((f) => t(`interviewFields.${f}` as 'interviewFields.account_purpose'))
+                  .join(', '),
+              })}
+            </p>
+          )}
+          <p className="text-xs font-semibold text-gray-700">{t('interviewGroups.contact')}</p>
+          {CONTACT_FIELDS.map((field) => (
+            <label key={field} className="text-sm">
+              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
+              <span className="text-red-700"> *</span>
+              <input
+                name={`interview_${field}`}
+                type={field === 'contact_email' ? 'email' : 'text'}
+                defaultValue={answers?.[field] ?? ''}
+                className={inputClass}
+              />
+            </label>
+          ))}
+          <p className="text-xs font-semibold text-gray-700">{t('interviewGroups.business')}</p>
+          {BUSINESS_ANSWER_FIELDS.map((field) => (
+            <label key={field} className="text-sm">
+              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
+              <span className="text-red-700"> *</span>
+              <textarea
+                name={`interview_${field}`}
+                rows={3}
+                defaultValue={answers?.[field] ?? ''}
+                className={inputClass}
+              />
+            </label>
+          ))}
+        </div>
       </fieldset>
 
       {record && (
@@ -301,15 +356,16 @@ export function DbdRecordForm({
           {t('saved')}
         </p>
       )}
-      {!locked && (
-        <button
-          type="submit"
-          disabled={pending}
-          className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-        >
-          {t('save')}
-        </button>
-      )}
+      {/* Always present: the four answers above stay editable after confirmation, and a
+          record confirmed before they were required still owes them. The certificate inputs are
+          read-only once confirmed, so saving then rewrites them unchanged. */}
+      <button
+        type="submit"
+        disabled={pending}
+        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+      >
+        {t('save')}
+      </button>
     </form>
   );
 }

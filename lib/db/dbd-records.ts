@@ -35,10 +35,15 @@ export async function createDbdRecord(
   db: Db,
   input: DbdRecordInput,
   createdBy: string,
+  structured?: Partial<StructuredData>,
 ): Promise<DbdRecordRow> {
   const { data, error } = await db
     .from('dbd_records')
-    .insert({ ...toColumns(input), created_by: createdBy })
+    .insert({
+      ...toColumns(input),
+      created_by: createdBy,
+      ...(structured ? { structured_data: structured as never } : {}),
+    })
     .select()
     .single();
   if (error) throw error;

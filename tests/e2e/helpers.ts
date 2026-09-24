@@ -60,10 +60,11 @@ export async function createConfirmedRecord(
  * every fixture that confirms one writes them first.
  */
 export async function fillBusinessAnswers(page: Page): Promise<void> {
-  await page.locator('input[name="interview_contact_email"]').fill('info@e2e.co.th');
-  await page.locator('input[name="interview_contact_phone"]').fill('02-000-0000');
-  await page.locator('textarea[name="interview_nature_of_business"]').fill('ขายเสื้อผ้าออนไลน์');
-  await page.locator('textarea[name="interview_products_services"]').fill('เสื้อผ้าสตรีนำเข้า');
-  await page.getByTestId('save-interview').click();
-  await expect(page.getByTestId('interview-saved')).toBeVisible();
+  const form = page.locator('form:has(input[name="juristic_id"])');
+  await form.locator('input[name="interview_contact_email"]').fill('info@e2e.co.th');
+  await form.locator('input[name="interview_contact_phone"]').fill('02-000-0000');
+  await form.locator('textarea[name="interview_nature_of_business"]').fill('ขายเสื้อผ้าออนไลน์');
+  await form.locator('textarea[name="interview_products_services"]').fill('เสื้อผ้าสตรีนำเข้า');
+  await form.getByRole('button', { name: 'บันทึก' }).click();
+  await expect(form.getByRole('status')).toContainText('บันทึกแล้ว');
 }

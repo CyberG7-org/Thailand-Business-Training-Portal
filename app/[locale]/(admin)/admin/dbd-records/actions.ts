@@ -166,11 +166,17 @@ export async function saveDbdRecordAction(
         }
         return { ok: false, error: 'validation', fieldErrors };
       }
-      await updateDbdRecord(db, id, parsed.data, { ...stored, business: business.data });
+      await updateDbdRecord(db, id, parsed.data, {
+        ...stored,
+        business: business.data,
+        interview: formDataToInterview(formData, stored),
+      });
       revalidatePath(`/${locale}/admin/dbd-records/${id}`);
       return { ok: true, error: null, fieldErrors: {} };
     }
-    const row = await createDbdRecord(db, parsed.data, admin.id);
+    const row = await createDbdRecord(db, parsed.data, admin.id, {
+      interview: formDataToInterview(formData, readStructuredData(null)),
+    });
     createdId = row.id;
   } catch (e) {
     return { ok: false, error: errorMessage(e), fieldErrors: {} };

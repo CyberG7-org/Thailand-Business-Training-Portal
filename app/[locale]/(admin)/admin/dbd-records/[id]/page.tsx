@@ -131,6 +131,7 @@ export default async function DbdRecordPage({
         record={record}
         suggestions={suggestions}
         business={structured.business ?? null}
+        interview={structured.interview ?? null}
         provenance={structured.provenance ?? {}}
         documentNames={documents.map((d) => d.original_name)}
       />
