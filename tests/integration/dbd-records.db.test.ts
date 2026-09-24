@@ -137,6 +137,51 @@ describe('a confirmed record carries the company contact and what it sells', () 
     if (error) throw error;
   }
 
+  it('takes the four in one complete save, not two halves', async () => {
+    const answers = {
+      contact_email: 'info@example.co.th',
+      contact_phone: '02-123-4567',
+      nature_of_business: 'ขายเสื้อผ้าออนไลน์',
+      products_services: 'เสื้อผ้าสตรีนำเข้า',
+    };
+    const { data: own } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท ครบถ้วน จำกัด',
+        juristic_id: '0105500009992',
+        extraction_status: 'confirmed',
+        confirmed_by: confirmer.id,
+        confirmed_at: new Date().toISOString(),
+        structured_data: { interview: answers } as never,
+      })
+      .select()
+      .single();
+
+    // Writing only the business half of a confirmed record leaves the row failing the check,
+    // so a manager filling a grandfathered record has to save all four together.
+    const { error: half } = await svc
+      .from('dbd_records')
+      .update({
+        structured_data: {
+          interview: { nature_of_business: 'ผลิตสื่อ', products_services: 'บริการคอนเทนต์' },
+        } as never,
+      })
+      .eq('id', own!.id);
+    expect(half?.message ?? '').toContain('dbd_confirmed_requires_business_answers');
+
+    const { error: whole } = await svc
+      .from('dbd_records')
+      .update({
+        structured_data: {
+          interview: { ...answers, nature_of_business: 'ผลิตสื่อ' },
+        } as never,
+      })
+      .eq('id', own!.id);
+    expect(whole).toBeNull();
+
+    await svc.from('dbd_records').delete().eq('id', own!.id);
+  });
+
   it('refuses while an answer is blank, and allows it once all four are in', async () => {
     expect(await confirm()).toContain('dbd_confirmed_requires_business_answers');
 
