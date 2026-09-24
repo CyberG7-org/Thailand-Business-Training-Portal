@@ -128,7 +128,11 @@ function formDataToInterview(formData: FormData, stored: ReturnType<typeof readS
 }
 
 function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : 'Unexpected error';
+  const raw = e instanceof Error ? e.message : 'Unexpected error';
+  // A record confirmed before the business answers were required still owes them, and says so
+  // in the same words as the confirm checklist instead of a raw constraint name (D58).
+  if (raw.includes('dbd_confirmed_requires_business_answers')) return 'answers-required';
+  return raw;
 }
 
 export async function saveDbdRecordAction(

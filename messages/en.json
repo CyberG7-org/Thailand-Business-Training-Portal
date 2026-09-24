@@ -95,7 +95,8 @@
       "errors": {
         "no-file": "Choose a PDF file",
         "upload-failed": "The file could not be uploaded (connection lost or not a PDF). Please try again.",
-        "invalid-file": "Only PDF files up to 30 MB are accepted (6 files at most)"
+        "invalid-file": "Only PDF files up to 30 MB are accepted (6 files at most)",
+        "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below)."
       },
       "fields": {
         "companyNameTh": "Company name (Thai)",

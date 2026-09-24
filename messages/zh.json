@@ -95,7 +95,8 @@
       "errors": {
         "no-file": "请选择 PDF 文件",
         "upload-failed": "文件上传失败（连接中断或不是 PDF），请重试。",
-        "invalid-file": "仅接受 30 MB 以内的 PDF 文件（最多 6 个）"
+        "invalid-file": "仅接受 30 MB 以内的 PDF 文件（最多 6 个）",
+        "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。"
       },
       "fields": {
         "companyNameTh": "公司名称（泰文）",

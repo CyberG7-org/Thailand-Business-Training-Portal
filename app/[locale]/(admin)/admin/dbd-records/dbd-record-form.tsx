@@ -293,7 +293,7 @@ export function DbdRecordForm({
 
       {state.error && state.error !== 'validation' && (
         <p role="alert" className="text-sm text-red-700">
-          {state.error}
+          {state.error === 'answers-required' ? t('errors.answers-required') : state.error}
         </p>
       )}
       {state.ok && (
