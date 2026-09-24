@@ -38,6 +38,19 @@ export async function seedLearnerWithCompany(
       juristic_id: '0105568233704',
       issued_on: issuedOn,
       ...extra,
+      // A confirmed record owes the four business answers, so they are merged into whatever
+      // structured data the caller supplied rather than replacing it.
+      structured_data: {
+        ...((extra.structured_data as Record<string, unknown> | undefined) ?? {}),
+        interview: {
+          contact_email: 'info@test-company.co.th',
+          contact_phone: '02-000-0000',
+          nature_of_business: 'ทดสอบระบบ',
+          products_services: 'สินค้าทดสอบ',
+          ...(((extra.structured_data as Record<string, unknown> | undefined)?.interview as
+            Record<string, unknown> | undefined) ?? {}),
+        },
+      },
       extraction_status: 'confirmed',
       confirmed_by: user.user.id,
       confirmed_at: new Date().toISOString(),

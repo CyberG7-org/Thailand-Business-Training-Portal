@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createMyDocumentSignedUrl, getMyCompany, getMyEligibility } from '@/lib/db/learner';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -36,6 +37,7 @@ describe('lib/db/learner', () => {
         juristic_id: '0105568233704',
         issued_on: '2026-07-13',
         document_path: path,
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

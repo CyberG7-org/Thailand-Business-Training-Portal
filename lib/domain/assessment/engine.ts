@@ -111,6 +111,8 @@ export function renderQuestion(
     par_value: null,
     directors_count: null,
     shareholders_count: null,
+    nature_of_business: null,
+    products_services: null,
     account_purpose: null,
     monthly_volume: null,
     clients_location: null,

@@ -83,6 +83,8 @@ export function toTemplateRecord(
     par_value: business.share_structure.par_value,
     directors_count: directors && directors.length > 0 ? directors.length : null,
     shareholders_count: business.shareholders.length > 0 ? business.shareholders.length : null,
+    nature_of_business: interview.nature_of_business,
+    products_services: interview.products_services,
     account_purpose: interview.account_purpose,
     monthly_volume: interview.monthly_volume,
     clients_location: interview.clients_location,

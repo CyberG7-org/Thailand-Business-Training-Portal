@@ -8,6 +8,7 @@ import {
   submitAttempt,
 } from '@/lib/db/assessment';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -39,6 +40,7 @@ describe('assessment attempts', () => {
         juristic_id: '0105569000123',
         registered_capital: 2000000,
         issued_on: '2026-07-13',
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

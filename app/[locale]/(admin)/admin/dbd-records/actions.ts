@@ -185,7 +185,10 @@ export async function confirmDbdRecordAction(
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) return { ok: false, error: 'not-found' };
-  const missing = missingFieldsForConfirmation(record);
+  const missing = missingFieldsForConfirmation(
+    record,
+    readStructuredData(record.structured_data).interview ?? null,
+  );
   if (missing.length > 0) return { ok: false, error: `missing:${missing.join(',')}` };
   try {
     await confirmDbdRecord(db, id, admin.id);

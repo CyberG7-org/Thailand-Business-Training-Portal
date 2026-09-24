@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth/session';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { missingFieldsForConfirmation } from '@/lib/domain/dbd-record';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -92,6 +93,7 @@ export default async function DbdRecordPage({
           indexedPages: d.indexed_pages,
           indexError: d.index_error,
         }))}
+        missing={missingFieldsForConfirmation(record, structured.interview ?? null)}
         reading={reading}
         extractionAvailable={getDbdExtractor() !== null}
       />

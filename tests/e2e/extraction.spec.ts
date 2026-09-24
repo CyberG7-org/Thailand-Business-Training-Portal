@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs, openManualRecordForm } from './helpers';
+import { fillBusinessAnswers, loginAs, openManualRecordForm } from './helpers';
 
 const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
 
@@ -55,6 +55,8 @@ test('uploading a certificate creates the record and fills its fields in the bac
     'นายแก้ไข ทดสอบ | ไทย',
   );
 
+  // The certificate cannot say how to reach the company or what it sells: the manager does.
+  await fillBusinessAnswers(page);
   // Confirm works straight away — no separate Save needed.
   await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');

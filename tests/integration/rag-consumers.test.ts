@@ -11,6 +11,7 @@ import { FakeVectorStore } from '@/lib/integrations/vector/fake';
 import { VectorError, type Passage, type SearchOptions } from '@/lib/integrations/vector/types';
 import { loadChunksFromDb } from '@/lib/integrations/vector/fake-loader';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -107,6 +108,7 @@ describe('retrieval consumers', () => {
       await svc
         .from('dbd_records')
         .update({
+          structured_data: CONFIRMED_ANSWERS as never,
           extraction_status: 'confirmed',
           confirmed_by: admin.id,
           confirmed_at: new Date().toISOString(),

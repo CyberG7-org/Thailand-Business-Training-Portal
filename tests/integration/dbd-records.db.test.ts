@@ -10,6 +10,7 @@ import {
 } from '@/lib/db/dbd-records';
 import { dbdRecordInputSchema } from '@/lib/domain/dbd-record';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -51,10 +52,8 @@ describe('lib/db/dbd-records', () => {
     });
   });
 
-  it('refuses confirmation until core fields exist, then confirms', async () => {
-    await expect(confirmDbdRecord(asAdmin, recordId, admin.id)).rejects.toMatchObject({
-      code: '23514',
-    });
+  it('refuses confirmation naming what is missing, then confirms', async () => {
+    await expect(confirmDbdRecord(asAdmin, recordId, admin.id)).rejects.toThrow(/juristic_id/);
     await updateDbdRecord(
       asAdmin,
       recordId,
@@ -64,6 +63,15 @@ describe('lib/db/dbd-records', () => {
         issued_on: '13/07/2569',
       }),
     );
+    // The certificate is complete, but nobody has said how to reach the company or what it sells.
+    await expect(confirmDbdRecord(asAdmin, recordId, admin.id)).rejects.toThrow(
+      /nature_of_business/,
+    );
+
+    await asAdmin
+      .from('dbd_records')
+      .update({ structured_data: CONFIRMED_ANSWERS as never })
+      .eq('id', recordId);
     const confirmed = await confirmDbdRecord(asAdmin, recordId, admin.id);
     expect(confirmed.extraction_status).toBe('confirmed');
     expect(confirmed.confirmed_by).toBe(admin.id);
@@ -81,5 +89,78 @@ describe('lib/db/dbd-records', () => {
   it('lists records newest first', async () => {
     const rows = await listDbdRecords(asAdmin);
     expect(rows.some((r) => r.id === recordId)).toBe(true);
+  });
+});
+
+/**
+ * The database is the backstop behind the confirm action: even a direct write cannot mark a
+ * record confirmed while the manager's four answers are missing (owner, 2026-09-24). Every core
+ * field is satisfied throughout, so only the new constraint can be doing the refusing.
+ */
+describe('a confirmed record carries the company contact and what it sells', () => {
+  const svc = adminClient();
+  let confirmer: TestUser;
+  let recordId: string;
+
+  beforeAll(async () => {
+    confirmer = await createTestUser('admin');
+    const { data } = await svc
+      .from('dbd_records')
+      .insert({ company_name_th: 'บริษัท ยืนยัน จำกัด', juristic_id: '0105500009991' })
+      .select()
+      .single();
+    recordId = data!.id;
+  });
+
+  afterAll(async () => {
+    await svc.from('dbd_records').delete().eq('id', recordId);
+    await deleteTestUser(confirmer.id);
+  });
+
+  async function confirm(): Promise<string | null> {
+    const { error } = await svc
+      .from('dbd_records')
+      .update({
+        extraction_status: 'confirmed',
+        confirmed_by: confirmer.id,
+        confirmed_at: new Date().toISOString(),
+      })
+      .eq('id', recordId);
+    return error?.message ?? null;
+  }
+
+  async function answer(interview: Record<string, string>) {
+    const { error } = await svc
+      .from('dbd_records')
+      .update({ structured_data: { interview } as never })
+      .eq('id', recordId);
+    if (error) throw error;
+  }
+
+  it('refuses while an answer is blank, and allows it once all four are in', async () => {
+    expect(await confirm()).toContain('dbd_confirmed_requires_business_answers');
+
+    await answer({
+      contact_email: 'info@example.co.th',
+      contact_phone: '02-123-4567',
+      nature_of_business: 'ขายเสื้อผ้าออนไลน์',
+      products_services: '   ',
+    });
+    expect(await confirm()).toContain('dbd_confirmed_requires_business_answers');
+
+    await answer({
+      contact_email: 'info@example.co.th',
+      contact_phone: '02-123-4567',
+      nature_of_business: 'ขายเสื้อผ้าออนไลน์',
+      products_services: 'เสื้อผ้าสตรีนำเข้า',
+    });
+    expect(await confirm()).toBeNull();
+
+    const { data } = await svc
+      .from('dbd_records')
+      .select('extraction_status')
+      .eq('id', recordId)
+      .single();
+    expect(data!.extraction_status).toBe('confirmed');
   });
 });

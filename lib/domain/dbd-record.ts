@@ -1,3 +1,4 @@
+import { missingBusinessAnswers, type InterviewProfile } from './bank-interview';
 import { z } from 'zod';
 import { parseDateInput } from './thai-date';
 
@@ -108,8 +109,17 @@ export function directorsToText(directors: Director[]): string {
 
 export const CONFIRMATION_REQUIRED_FIELDS = ['juristic_id', 'company_name_th'] as const;
 
+/**
+ * Everything that must be in place before a record may be confirmed: the two certificate facts
+ * the document supplies, and the four answers only the manager can write (owner, 2026-09-24).
+ * The interview profile is a required argument so no caller can forget to weigh it.
+ */
 export function missingFieldsForConfirmation(
   record: Pick<DbdRecordInput, (typeof CONFIRMATION_REQUIRED_FIELDS)[number]>,
+  interview: InterviewProfile | null,
 ): string[] {
-  return CONFIRMATION_REQUIRED_FIELDS.filter((f) => !record[f]);
+  return [
+    ...CONFIRMATION_REQUIRED_FIELDS.filter((f) => !record[f]),
+    ...missingBusinessAnswers(interview),
+  ];
 }

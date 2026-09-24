@@ -19,6 +19,7 @@ import { ExtractionError, type DbdExtractor } from '@/lib/integrations/extractio
 import { FakeVectorStore } from '@/lib/integrations/vector/fake';
 import { loadChunksFromDb } from '@/lib/integrations/vector/fake-loader';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -214,6 +215,7 @@ describe('the transcript path', () => {
     await svc
       .from('dbd_records')
       .update({
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),
@@ -242,6 +244,7 @@ describe('the transcript path', () => {
           .from('dbd_records')
           .update({
             company_name_th: 'ชื่อที่แอดมินพิมพ์ระหว่างรอ',
+            structured_data: CONFIRMED_ANSWERS as never,
             extraction_status: 'confirmed',
             confirmed_by: admin.id,
             confirmed_at: new Date().toISOString(),

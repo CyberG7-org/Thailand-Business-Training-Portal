@@ -13,6 +13,7 @@ import {
 import { FakeQuestionGenerator } from '@/lib/integrations/question-gen/fake';
 import type { GeneratedQuestion, QuestionGenerator } from '@/lib/integrations/question-gen/types';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -52,6 +53,7 @@ describe('AI question authoring', () => {
         directors: [{ name_th: 'นายอ้างอิง ทดสอบ', name_en: null }],
         issued_on: '2026-07-13',
         registered_on: '2026-04-10',
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

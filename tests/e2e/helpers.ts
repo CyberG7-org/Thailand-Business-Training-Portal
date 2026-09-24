@@ -49,7 +49,21 @@ export async function createConfirmedRecord(
   await page.locator('input[name="issued_on"]').fill(fields.issuedOn);
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
+  await fillBusinessAnswers(page);
   await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
   return page.url().split('/').pop()!;
+}
+
+/**
+ * The four answers the DBD pack cannot supply. A record cannot be confirmed without them, so
+ * every fixture that confirms one writes them first.
+ */
+export async function fillBusinessAnswers(page: Page): Promise<void> {
+  await page.locator('input[name="interview_contact_email"]').fill('info@e2e.co.th');
+  await page.locator('input[name="interview_contact_phone"]').fill('02-000-0000');
+  await page.locator('textarea[name="interview_nature_of_business"]').fill('ขายเสื้อผ้าออนไลน์');
+  await page.locator('textarea[name="interview_products_services"]').fill('เสื้อผ้าสตรีนำเข้า');
+  await page.getByTestId('save-interview').click();
+  await expect(page.getByTestId('interview-saved')).toBeVisible();
 }

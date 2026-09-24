@@ -139,7 +139,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | คำถามที่ธนาคารถาม | คำตอบของคุณ |
 |---|---|
-| บริษัททำธุรกิจหลักอะไร | {business_categories} |
+| บริษัททำธุรกิจหลักอะไร | {nature_of_business} |
+| ขายสินค้าหรือบริการอะไร | {products_services} |
+| วัตถุที่ประสงค์ตามที่จดทะเบียน | {business_categories} |
 | บริษัทเปิดบัญชีเพื่ออะไร | {account_purpose} |
 | เงินเข้าออกต่อเดือนประมาณเท่าใด | {monthly_volume} |
 | ลูกค้าหลักอยู่ที่ไหน | {clients_location} |
@@ -158,7 +160,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | The bank asks | Your answer |
 |---|---|
-| What is the primary business activity? | {business_categories} |
+| What is the primary business activity? | {nature_of_business} |
+| What products or services do you sell? | {products_services} |
+| Registered objectives | {business_categories} |
 | Why does the company need a bank account? | {account_purpose} |
 | Projected monthly inflows and outflows? | {monthly_volume} |
 | Where are the main clients? | {clients_location} |
@@ -177,7 +181,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | 银行的问题 | 您的答案 |
 |---|---|
-| 公司主要从事什么业务？ | {business_categories} |
+| 公司主要从事什么业务？ | {nature_of_business} |
+| 销售什么产品或服务？ | {products_services} |
+| 注册经营目的 | {business_categories} |
 | 公司为什么需要开设银行账户？ | {account_purpose} |
 | 预计每月资金进出金额？ | {monthly_volume} |
 | 主要客户来自哪里？ | {clients_location} |

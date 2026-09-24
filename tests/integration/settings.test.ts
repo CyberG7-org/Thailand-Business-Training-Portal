@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { auditDiff, listAuditLogs, listPolicies, updatePolicy } from '@/lib/db/settings';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -26,6 +27,7 @@ describe('policy settings and audit', () => {
         company_name_th: 'บริษัท นโยบาย จำกัด',
         juristic_id: '0105569000999',
         issued_on: '2026-01-01',
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

@@ -65,7 +65,7 @@ export const BANK_INTERVIEW_CONCEPTS: BankInterviewConcept[] = [
       en: "What is the company's primary business activity?",
       zh: '公司主要从事什么业务？',
     },
-    placeholders: ['business_categories', 'objectives'],
+    placeholders: ['nature_of_business', 'products_services', 'business_categories', 'objectives'],
   },
   {
     id: 'shareholders_count',
@@ -192,7 +192,22 @@ const optionalText = z.preprocess(
   z.string().trim().max(1000).nullable().default(null),
 );
 
+/** The company's own contact details. Kept as typed — a Thai landline is not a mobile (D47). */
+const optionalEmail = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.string().trim().email().max(320).nullable().default(null),
+);
+/** Free text the manager writes about the business; longer than a one-line interview answer. */
+const optionalProse = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.string().trim().max(2000).nullable().default(null),
+);
+
 export const interviewProfileSchema = z.object({
+  contact_email: optionalEmail,
+  contact_phone: optionalText,
+  nature_of_business: optionalProse,
+  products_services: optionalProse,
   account_purpose: optionalText,
   monthly_volume: optionalText,
   clients_location: optionalText,
@@ -204,6 +219,27 @@ export const interviewProfileSchema = z.object({
 export type InterviewProfile = z.output<typeof interviewProfileSchema>;
 export const EMPTY_INTERVIEW_PROFILE: InterviewProfile = interviewProfileSchema.parse({});
 export const INTERVIEW_FIELDS = Object.keys(EMPTY_INTERVIEW_PROFILE) as (keyof InterviewProfile)[];
+
+/**
+ * What a manager must write before the record can be confirmed (owner, 2026-09-24): the DBD pack
+ * says who the company is, but not how to reach it or what it actually sells, and the study cards
+ * and the question bank are built on both.
+ */
+export const REQUIRED_INTERVIEW_FIELDS = [
+  'contact_email',
+  'contact_phone',
+  'nature_of_business',
+  'products_services',
+] as const;
+export type RequiredInterviewField = (typeof REQUIRED_INTERVIEW_FIELDS)[number];
+
+/** Which of them are still blank, in the order the form shows them. */
+export function missingBusinessAnswers(profile: InterviewProfile | null): RequiredInterviewField[] {
+  return REQUIRED_INTERVIEW_FIELDS.filter((f) => !profile?.[f]?.trim());
+}
+
+/** The company-level contact details, which are record-keeping and never study facts. */
+export const CONTACT_FIELDS = ['contact_email', 'contact_phone'] as const;
 
 /** The learner's own role in the company (per assignment). */
 export const learnerRoleSchema = z.object({

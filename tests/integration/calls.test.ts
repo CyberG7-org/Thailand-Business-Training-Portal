@@ -8,6 +8,7 @@ import {
 } from '@/lib/db/calls';
 import { parseVapiMessage } from '@/lib/integrations/vapi/webhook';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -44,6 +45,7 @@ describe('bank call sessions', () => {
         registered_capital: 2000000,
         head_office_address: '99/9',
         issued_on: issuedOn,
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

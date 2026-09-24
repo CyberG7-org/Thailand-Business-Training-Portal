@@ -1,3 +1,4 @@
+import { interviewProfileSchema } from '@/lib/domain/bank-interview';
 import { describe, expect, it } from 'vitest';
 import {
   dbdRecordInputSchema,
@@ -73,12 +74,33 @@ describe('directors text', () => {
 });
 
 describe('missingFieldsForConfirmation', () => {
+  const answered = interviewProfileSchema.parse({
+    contact_email: 'info@example.co.th',
+    contact_phone: '02-123-4567',
+    nature_of_business: 'ขายเสื้อผ้าและเครื่องประดับออนไลน์',
+    products_services: 'เสื้อผ้าสตรีนำเข้า ขายผ่าน LINE',
+  });
+
   it('lists the core fields that are still empty', () => {
-    expect(missingFieldsForConfirmation({ juristic_id: null, company_name_th: 'x' })).toEqual([
-      'juristic_id',
-    ]);
     expect(
-      missingFieldsForConfirmation({ juristic_id: '0535569000360', company_name_th: 'x' }),
+      missingFieldsForConfirmation({ juristic_id: null, company_name_th: 'x' }, answered),
+    ).toEqual(['juristic_id']);
+    expect(
+      missingFieldsForConfirmation(
+        { juristic_id: '0535569000360', company_name_th: 'x' },
+        answered,
+      ),
     ).toEqual([]);
+  });
+
+  it('also lists the business answers the manager owes (owner, 2026-09-24)', () => {
+    expect(
+      missingFieldsForConfirmation({ juristic_id: '0535569000360', company_name_th: 'x' }, null),
+    ).toEqual(['contact_email', 'contact_phone', 'nature_of_business', 'products_services']);
+
+    const partial = interviewProfileSchema.parse({ ...answered, contact_phone: null });
+    expect(
+      missingFieldsForConfirmation({ juristic_id: '0535569000360', company_name_th: 'x' }, partial),
+    ).toEqual(['contact_phone']);
   });
 });

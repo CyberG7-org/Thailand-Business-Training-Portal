@@ -5,6 +5,8 @@ import { requireUser } from '@/lib/auth/session';
 import { createMyDocumentSignedUrl, getMyCompany } from '@/lib/db/learner';
 import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import { STAGE_KEYS, stageStatuses, type StageInfo, type StageKey } from '@/lib/domain/progression';
 import { formatDate } from '@/lib/domain/thai-date';
@@ -85,6 +87,8 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const record = mine.dbd_records;
   const documentUrl = await createMyDocumentSignedUrl(user.id, record.id);
   const directors = (record.directors as unknown as Director[] | null) ?? [];
+  // What the company does and sells is the manager's answer, not a certificate fact (Level 4).
+  const interview = readStructuredData(record.structured_data).interview ?? EMPTY_INTERVIEW_PROFILE;
 
   return (
     <section className="grid gap-6">
@@ -109,6 +113,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           </dd>
           <dt>{t('company.address')}</dt>
           <dd>{record.head_office_address ?? '—'}</dd>
+          <dt>{t('company.natureOfBusiness')}</dt>
+          <dd data-testid="company-nature">{interview.nature_of_business ?? '—'}</dd>
+          <dt>{t('company.productsServices')}</dt>
+          <dd data-testid="company-products">{interview.products_services ?? '—'}</dd>
           <dt>{t('company.directors')}</dt>
           <dd>{directors.length ? directors.map((d) => d.name_th).join(', ') : '—'}</dd>
           <dt>{t('company.issuedOn')}</dt>

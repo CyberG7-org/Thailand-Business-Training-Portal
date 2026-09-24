@@ -98,7 +98,15 @@ export function bannedLiterals(record: DbdReferenceRecord): string[] {
     ...(record.directors ?? []).flatMap((d) => [d.name_th, d.name_en]),
     ...(record.business?.shareholders ?? []).map((sh) => sh.name),
     ...(record.business?.promoters ?? []).map((p) => p.name),
+    record.interview?.contact_email,
+    record.interview?.contact_phone,
   ];
+  // What the company sells is the subject of the questions, so a short answer ("ค้าปลีก",
+  // "retail") would reject honest generic ones. Only prose long enough to identify this one
+  // company is banned.
+  for (const prose of [record.interview?.nature_of_business, record.interview?.products_services]) {
+    if (prose && prose.trim().length >= 12) values.push(prose.trim());
+  }
   const capital = record.registered_capital === null ? null : Number(record.registered_capital);
   if (capital !== null && Number.isFinite(capital) && capital > 0) {
     values.push(String(capital), capital.toLocaleString('en-US'), capital.toFixed(2));

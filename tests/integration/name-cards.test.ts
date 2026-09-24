@@ -9,6 +9,7 @@ import { processDueNotifications } from '@/lib/db/notifications';
 import { FakeNotifier } from '@/lib/integrations/notify/fake';
 import type { PdfRenderer } from '@/lib/integrations/pdf/name-card';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -48,6 +49,7 @@ describe('name cards', () => {
         juristic_id: '0105569000123',
         head_office_address: '1 ถนนตัวอย่าง',
         issued_on: '2026-07-13',
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

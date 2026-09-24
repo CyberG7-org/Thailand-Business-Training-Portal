@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { updateAssignmentRole } from '@/lib/db/assignments';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -28,6 +29,7 @@ async function createRecord(
     const { error: e } = await asAdmin
       .from('dbd_records')
       .update({
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: adminId,
         confirmed_at: new Date().toISOString(),

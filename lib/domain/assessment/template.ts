@@ -28,6 +28,8 @@ export const TEMPLATE_FIELDS = [
   // learner's own role
   'directors_count',
   'shareholders_count',
+  'nature_of_business',
+  'products_services',
   'account_purpose',
   'monthly_volume',
   'clients_location',
@@ -65,6 +67,8 @@ export type TemplateRecord = {
   par_value: number | null;
   directors_count: number | null;
   shareholders_count: number | null;
+  nature_of_business: string | null;
+  products_services: string | null;
   account_purpose: string | null;
   monthly_volume: string | null;
   clients_location: string | null;

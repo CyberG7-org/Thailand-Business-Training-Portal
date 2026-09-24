@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { availableFrom } from '@/lib/domain/eligibility';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -53,6 +54,7 @@ describe('eligibility parity: database trigger vs lib/domain', () => {
       await asAdmin
         .from('dbd_records')
         .update({
+          structured_data: CONFIRMED_ANSWERS as never,
           extraction_status: 'confirmed',
           confirmed_by: admin.id,
           confirmed_at: new Date().toISOString(),

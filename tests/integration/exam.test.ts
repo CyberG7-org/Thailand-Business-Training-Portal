@@ -4,6 +4,7 @@ import { examPassedFor, finalizeExam, startExam } from '@/lib/db/exam';
 import { processDueNotifications, requeueNotification } from '@/lib/db/notifications';
 import { FakeNotifier } from '@/lib/integrations/notify/fake';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -31,6 +32,7 @@ describe('exam + notifications', () => {
         juristic_id: '0105569000123',
         registered_capital: 1000000,
         issued_on: '2026-07-13',
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

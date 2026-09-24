@@ -43,6 +43,8 @@ const record: TemplateRecord = {
   par_value: 100,
   directors_count: 1,
   shareholders_count: 3,
+  nature_of_business: null,
+  products_services: null,
   account_purpose: 'รับชำระค่าสินค้าจากลูกค้า',
   monthly_volume: '500,000 บาท',
   clients_location: 'กรุงเทพฯ',

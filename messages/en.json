@@ -30,7 +30,9 @@
       "address": "Head office",
       "directors": "Directors",
       "issuedOn": "Certificate issued on",
-      "openCertificate": "Open certificate (PDF)"
+      "openCertificate": "Open certificate (PDF)",
+      "natureOfBusiness": "What the business does",
+      "productsServices": "Products / services"
     },
     "bank": {
       "title": "Bank verification",
@@ -171,6 +173,10 @@
       "fileHint": "PDF, up to 30 MB per file",
       "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, quiz, exam and call practice.",
       "interviewFields": {
+        "contact_email": "Company email",
+        "contact_phone": "Company phone number",
+        "nature_of_business": "What the business does (in plain words)",
+        "products_services": "Products or services it plans to sell",
         "account_purpose": "Why does the company need a bank account?",
         "monthly_volume": "Projected monthly inflows/outflows",
         "clients_location": "Where are the main clients?",
@@ -213,7 +219,13 @@
       },
       "deferredFill": "The documents are too long to read in one pass; they are being read in the background and the fields will fill in when the index status is \"Ready\" (reload to see them).",
       "readingQueued": "The documents are being read in the background (about 1–3 minutes); reload the page to see the filled fields.",
-      "readingFailed": "The documents could not be read ({reason}). Fill the fields yourself or click \"Read the document again\"."
+      "readingFailed": "The documents could not be read ({reason}). Fill the fields yourself or click \"Read the document again\".",
+      "interviewGroups": {
+        "contact": "Company contact",
+        "business": "What the business does",
+        "bank": "The bank's other questions"
+      },
+      "answersMissing": "Still to fill in before this record can be confirmed: {fields}"
     },
     "assignment": {
       "title": "Assigned company",

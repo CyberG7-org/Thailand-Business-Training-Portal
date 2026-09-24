@@ -83,6 +83,19 @@ export async function createTestLearnerIn(
   return learner;
 }
 
+/**
+ * A confirmed record must carry the manager's four business answers (migration 20260924000000),
+ * so every fixture that confirms one merges this in.
+ */
+export const CONFIRMED_ANSWERS = {
+  interview: {
+    contact_email: 'info@test-company.co.th',
+    contact_phone: '02-000-0000',
+    nature_of_business: 'ทดสอบระบบ',
+    products_services: 'สินค้าทดสอบ',
+  },
+} as const;
+
 export type Team = {
   manager: TestUser;
   learner: TestUser;
@@ -137,6 +150,7 @@ export async function confirmRecord(recordId: string, confirmedBy: string): Prom
     .from('dbd_records')
     .update({
       extraction_status: 'confirmed',
+      structured_data: CONFIRMED_ANSWERS as never,
       juristic_id: String(Date.now()).padStart(13, '0').slice(-13),
       confirmed_by: confirmedBy,
       confirmed_at: new Date().toISOString(),

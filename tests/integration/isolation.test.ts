@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -35,6 +36,7 @@ describe('learner isolation matrix', () => {
           company_name_th: name,
           juristic_id: '0105568233704',
           issued_on: '2026-07-13',
+          structured_data: CONFIRMED_ANSWERS as never,
           extraction_status: 'confirmed',
           confirmed_by: admin.id,
           confirmed_at: new Date().toISOString(),

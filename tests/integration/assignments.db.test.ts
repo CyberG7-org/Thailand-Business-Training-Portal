@@ -7,6 +7,7 @@ import {
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
@@ -37,6 +38,7 @@ describe('lib/db/assignments', () => {
     await asAdmin
       .from('dbd_records')
       .update({
+        structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',
         confirmed_by: admin.id,
         confirmed_at: new Date().toISOString(),

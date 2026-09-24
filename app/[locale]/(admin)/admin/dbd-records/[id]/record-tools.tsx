@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
+import { INTERVIEW_FIELDS } from '@/lib/domain/bank-interview';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
   confirmDbdRecordAction,
@@ -13,6 +14,14 @@ import {
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
 
 const initial: ToolState = { ok: false, error: null };
+
+/** The two certificate facts confirmation needs; the form labels them in camelCase. */
+const CORE_FIELD_LABELS: Record<string, 'fields.juristicId' | 'fields.companyNameTh' | undefined> =
+  {
+    juristic_id: 'fields.juristicId',
+    company_name_th: 'fields.companyNameTh',
+  };
+
 const EXTRACT_ERROR_KEYS = [
   'not_configured',
   'provider',
@@ -76,12 +85,15 @@ export function RecordTools({
   documents,
   reading,
   extractionAvailable,
+  missing,
 }: {
   id: string;
   status: string;
   documents: DocumentSummary[];
   reading: ReadingState | null;
   extractionAvailable: boolean;
+  /** Everything still to fill in; the record cannot be confirmed while any of it remains. */
+  missing: string[];
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
@@ -93,8 +105,16 @@ export function RecordTools({
     submit: submitUpload,
   } = useDirectUpload({ locale, id, redirect: false });
   const [extractState, extractAction, extracting] = useActionState(extractDocumentAction, initial);
-  const missing = confirmState.error?.startsWith('missing:')
-    ? confirmState.error.slice('missing:'.length)
+  const fieldLabel = (f: string) => {
+    if ((INTERVIEW_FIELDS as readonly string[]).includes(f)) {
+      return t(`interviewFields.${f}` as 'interviewFields.account_purpose');
+    }
+    const core = CORE_FIELD_LABELS[f];
+    return core ? t(core) : f;
+  };
+  // The action refuses too, in case the record changed in another tab while this one was open.
+  const refused = confirmState.error?.startsWith('missing:')
+    ? confirmState.error.slice('missing:'.length).split(',')
     : null;
   const uploadErrorKey = UPLOAD_ERROR_KEYS.find((k) => k === uploadState.error);
   const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === extractState.error);
@@ -256,20 +276,25 @@ export function RecordTools({
         <p className="text-sm">
           {t('status')}: <span data-testid="record-status">{status}</span>
         </p>
-        {missing && (
+        {refused && (
           <p role="alert" data-testid="confirm-error" className="text-sm text-red-700">
-            {t('missingForConfirmation', { fields: missing })}
+            {t('missingForConfirmation', { fields: refused.map(fieldLabel).join(', ') })}
           </p>
         )}
-        {confirmState.error && !missing && (
+        {confirmState.error && !refused && (
           <p role="alert" data-testid="confirm-error" className="text-sm text-red-700">
             {confirmState.error}
+          </p>
+        )}
+        {!locked && missing.length > 0 && (
+          <p data-testid="confirm-blocked" className="text-sm text-amber-800">
+            {t('answersMissing', { fields: missing.map(fieldLabel).join(', ') })}
           </p>
         )}
         {!locked && (
           <button
             type="submit"
-            disabled={confirming}
+            disabled={confirming || missing.length > 0}
             className="rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
           >
             {t('confirm')}

@@ -2,10 +2,30 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { INTERVIEW_FIELDS, type InterviewProfile } from '@/lib/domain/bank-interview';
+import {
+  CONTACT_FIELDS,
+  INTERVIEW_FIELDS,
+  REQUIRED_INTERVIEW_FIELDS,
+  missingBusinessAnswers,
+  type InterviewProfile,
+} from '@/lib/domain/bank-interview';
 import { saveInterviewAnswersAction, type ToolState } from '../actions';
 
 const initial: ToolState = { ok: false, error: null };
+
+const BUSINESS_FIELDS = ['nature_of_business', 'products_services'] as const;
+const OTHER_FIELDS = INTERVIEW_FIELDS.filter(
+  (f) =>
+    !(CONTACT_FIELDS as readonly string[]).includes(f) &&
+    !(BUSINESS_FIELDS as readonly string[]).includes(f),
+);
+
+/** Three groups: how to reach the company, what it does, and the bank's remaining questions. */
+const GROUPS = [
+  { heading: 'interviewGroups.contact', fields: [...CONTACT_FIELDS] },
+  { heading: 'interviewGroups.business', fields: [...BUSINESS_FIELDS] },
+  { heading: 'interviewGroups.bank', fields: OTHER_FIELDS },
+] as const;
 
 /**
  * Level 4 — the bank's interview answers the DBD documents cannot supply (decision D39).
@@ -22,6 +42,7 @@ export function InterviewForm({
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const [state, formAction, pending] = useActionState(saveInterviewAnswersAction, initial);
+  const missing = missingBusinessAnswers(answers);
   return (
     <form
       action={formAction}
@@ -32,15 +53,44 @@ export function InterviewForm({
       <input type="hidden" name="id" value={recordId} />
       <h2 className="text-sm font-semibold">{t('levels.interview')}</h2>
       <p className="text-xs text-gray-600">{t('interviewHint')}</p>
-      {INTERVIEW_FIELDS.map((field) => (
-        <label key={field} className="text-sm">
-          {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
-          <input
-            name={`interview_${field}`}
-            defaultValue={answers[field] ?? ''}
-            className="mt-1 w-full rounded border px-2 py-1"
-          />
-        </label>
+      {missing.length > 0 && (
+        <p role="alert" data-testid="answers-missing" className="text-sm text-amber-800">
+          {t('answersMissing', {
+            fields: missing
+              .map((f) => t(`interviewFields.${f}` as 'interviewFields.account_purpose'))
+              .join(', '),
+          })}
+        </p>
+      )}
+      {GROUPS.map(({ heading, fields }) => (
+        <fieldset key={heading} className="grid gap-3 border-t pt-3">
+          <legend className="text-xs font-semibold text-gray-700">{t(heading)}</legend>
+          {fields.map((field) => {
+            const required = (REQUIRED_INTERVIEW_FIELDS as readonly string[]).includes(field);
+            const prose = field === 'nature_of_business' || field === 'products_services';
+            return (
+              <label key={field} className="text-sm">
+                {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
+                {required && <span className="text-red-700"> *</span>}
+                {prose ? (
+                  <textarea
+                    name={`interview_${field}`}
+                    defaultValue={answers[field] ?? ''}
+                    rows={3}
+                    className="mt-1 w-full rounded border px-2 py-1"
+                  />
+                ) : (
+                  <input
+                    name={`interview_${field}`}
+                    type={field === 'contact_email' ? 'email' : 'text'}
+                    defaultValue={answers[field] ?? ''}
+                    className="mt-1 w-full rounded border px-2 py-1"
+                  />
+                )}
+              </label>
+            );
+          })}
+        </fieldset>
       ))}
       {state.error && (
         <p role="alert" className="text-sm text-red-700">

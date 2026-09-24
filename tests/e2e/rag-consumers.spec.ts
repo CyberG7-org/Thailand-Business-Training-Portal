@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs } from './helpers';
+import { fillBusinessAnswers, loginAs } from './helpers';
 import { seedLearnerForRecord } from './seed';
 
 test('AI questions cite the reference pack and learners see passages from their own documents', async ({
@@ -20,6 +20,7 @@ test('AI questions cite the reference pack and learners see passages from their 
   expect(run.status()).toBe(200);
   await page.reload();
   await expect(page.getByTestId('index-status').first()).toHaveAttribute('data-status', 'ready');
+  await fillBusinessAnswers(page);
   await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
 
