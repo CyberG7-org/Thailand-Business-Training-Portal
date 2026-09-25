@@ -14,7 +14,8 @@ test('a manager lands in the admin area and sees only their own doors', async ({
   const nav = page.getByTestId('admin-nav');
   await expect(nav).toContainText('ข้อมูล DBD');
   // Spec §9: a manager reads their own team's audit rows, so the door is theirs to open.
-  await expect(nav).toContainText('บันทึกการใช้งาน');
+  // (P15b asserted the absence of 'บันทึกการใช้งาน', a label that never existed — vacuous.)
+  await expect(nav).toContainText('บันทึกการเปลี่ยนแปลง');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
   await expect(nav).not.toContainText('ผู้จัดการ');
 });
