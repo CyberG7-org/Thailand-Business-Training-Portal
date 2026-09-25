@@ -190,6 +190,9 @@ export async function askRecordDocuments(
   const empty: AskResult = { question, answer: null, passages: [], error: null };
   if (question.length < 2) return { ...empty, error: 'empty' };
   if (!vector) return { ...empty, error: 'unavailable' };
+  // This read is the team boundary for the whole function: it runs under the caller's client, so
+  // another team's record yields no documents, reports `not_indexed`, and never reaches the vector
+  // store below. Keep it before the search, and keep it on `db`, not the service role.
   const { data: docs, error } = await db
     .from('dbd_documents')
     .select('id, original_name, index_status')
