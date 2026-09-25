@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createManager, loginAs, switchTo } from './helpers';
+import { disableProfileOnly } from './seed';
 
 const MANAGER_PASSWORD = 'Manager-Password-1!';
 
@@ -64,6 +65,27 @@ test('a suspended manager loses the admin area on the next request', async ({ pa
   await page.goto('/th/admin/managers');
   await page.getByTestId(`manager-${code.toLowerCase()}`).getByTestId('toggle-status').click();
   await expect(page.getByTestId(`manager-${code.toLowerCase()}`)).toContainText('disabled');
+
+  await managerPage.goto('/th/admin/dbd-records');
+  await expect(managerPage).toHaveURL(/\/th\/login/);
+  await managerContext.close();
+});
+
+/**
+ * Suspending bans the auth user too, which the request-boundary guard catches on its own. This
+ * disables only the profile row, so the JWT stays valid and nothing but the page guard — which
+ * reads that row rather than the token — can turn the manager away.
+ */
+test('the page guard reads the profile row, not the token', async ({ page, browser }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const code = await createManager(page, 'ผู้จัดการโปรไฟล์', MANAGER_PASSWORD);
+
+  const managerContext = await browser.newContext();
+  const managerPage = await managerContext.newPage();
+  await loginAs(managerPage, code.toLowerCase(), MANAGER_PASSWORD);
+  await expect(managerPage).toHaveURL(/\/th\/admin$/);
+
+  await disableProfileOnly(code.toLowerCase());
 
   await managerPage.goto('/th/admin/dbd-records');
   await expect(managerPage).toHaveURL(/\/th\/login/);

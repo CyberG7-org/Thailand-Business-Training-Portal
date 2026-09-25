@@ -1,13 +1,32 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth/session';
+import { redirect } from 'next/navigation';
+import { requireStaff, type CurrentUser } from '@/lib/auth/session';
 import { assignDbdRecord, deactivateAssignment, updateAssignmentRole } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
 import { ProvisioningError, setAccountPassword, setAccountStatus } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 export type AccountActionState = { message: string | null; error: string | null };
+
+/**
+ * Staff may act on an account only when it is theirs: the admin on anyone, a manager on their own
+ * learners. setAccountStatus and setAccountPassword run as service role, so RLS cannot do this.
+ */
+async function requireManageable(locale: string, userId: string): Promise<CurrentUser> {
+  const staff = await requireStaff(locale);
+  if (staff.role === 'admin') return staff;
+  const db = await createSupabaseServerClient();
+  const { data } = await db
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .eq('manager_id', staff.id)
+    .maybeSingle();
+  if (!data) redirect(`/${locale}/admin/users`);
+  return staff;
+}
 
 function errorMessage(e: unknown): string {
   return e instanceof ProvisioningError || e instanceof Error ? e.message : 'Unexpected error';
@@ -19,7 +38,7 @@ export async function resetPasswordAction(
 ): Promise<AccountActionState> {
   const locale = String(formData.get('locale') ?? 'th');
   const userId = String(formData.get('userId') ?? '');
-  await requireAdmin(locale);
+  await requireManageable(locale, userId);
   try {
     await setAccountPassword(userId, String(formData.get('password') ?? ''));
     return { message: 'password-updated', error: null };
@@ -35,7 +54,7 @@ export async function setStatusAction(
   const locale = String(formData.get('locale') ?? 'th');
   const userId = String(formData.get('userId') ?? '');
   const status = formData.get('status') === 'disabled' ? 'disabled' : 'active';
-  const admin = await requireAdmin(locale);
+  const admin = await requireManageable(locale, userId);
   if (admin.id === userId && status === 'disabled') {
     return { message: null, error: 'You cannot disable your own account' };
   }
@@ -55,7 +74,7 @@ export async function assignRecordAction(
   const locale = String(formData.get('locale') ?? 'th');
   const userId = String(formData.get('userId') ?? '');
   const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
-  await requireAdmin(locale);
+  await requireManageable(locale, userId);
   if (!dbdRecordId) return { message: null, error: 'no-record' };
   try {
     await assignDbdRecord(await createSupabaseServerClient(), { userId, dbdRecordId });
@@ -77,7 +96,7 @@ export async function deactivateAssignmentAction(
   const locale = String(formData.get('locale') ?? 'th');
   const userId = String(formData.get('userId') ?? '');
   const assignmentId = String(formData.get('assignmentId') ?? '');
-  await requireAdmin(locale);
+  await requireManageable(locale, userId);
   try {
     await deactivateAssignment(await createSupabaseServerClient(), assignmentId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
@@ -94,7 +113,7 @@ export async function updateAssignmentRoleAction(
   const locale = String(formData.get('locale') ?? 'th');
   const userId = String(formData.get('userId') ?? '');
   const assignmentId = String(formData.get('assignmentId') ?? '');
-  await requireAdmin(locale);
+  await requireManageable(locale, userId);
   const parsed = learnerRoleSchema.safeParse({
     holder_name: formData.get('holder_name'),
     position: formData.get('position'),

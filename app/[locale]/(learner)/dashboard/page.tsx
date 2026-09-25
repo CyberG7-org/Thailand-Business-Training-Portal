@@ -1,3 +1,4 @@
+import { displayLoginId } from '@/lib/domain/login-id';
 import { getTranslations } from 'next-intl/server';
 import { StageCard } from '@/components/stage-card';
 import type { AppLocale } from '@/i18n/routing';
@@ -76,7 +77,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     return (
       <section className="grid gap-6">
         <h1 className="text-2xl font-semibold">
-          {t('welcome', { name: user.displayName ?? user.loginId })}
+          {t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) })}
         </h1>
         <p data-testid="no-company">{t('noCompany')}</p>
         {stageCards}
@@ -93,7 +94,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   return (
     <section className="grid gap-6">
       <h1 className="text-2xl font-semibold">
-        {t('welcome', { name: user.displayName ?? user.loginId })}
+        {t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) })}
       </h1>
 
       {stageCards}

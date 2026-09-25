@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireStaff } from '@/lib/auth/session';
 import { assignDbdRecord } from '@/lib/db/assignments';
+import { recordAccountAction } from '@/lib/db/account-audit';
 import { ProvisioningError, createLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
@@ -59,6 +60,11 @@ export async function createUserAction(
   } catch (e) {
     return fail(e instanceof ProvisioningError ? e.message : 'Unexpected error');
   }
+  await recordAccountAction(staff.id, 'create', created.id, {
+    role: 'learner',
+    login_id: created.loginId,
+    manager_id: managerId,
+  });
   try {
     await assignDbdRecord(db, { userId: created.id, dbdRecordId: record.id });
   } catch (e) {

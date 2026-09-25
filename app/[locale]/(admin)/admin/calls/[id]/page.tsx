@@ -1,3 +1,4 @@
+import { displayLoginId } from '@/lib/domain/login-id';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
@@ -27,7 +28,7 @@ export default async function AdminCallPage({
       <h1 className="text-2xl font-semibold">{t('detailTitle')}</h1>
       <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1 text-sm">
         <dt className="text-gray-600">{t('learner')}</dt>
-        <dd>{session.profiles.display_name ?? session.profiles.login_id}</dd>
+        <dd>{session.profiles.display_name ?? displayLoginId(session.profiles.login_id)}</dd>
         <dt className="text-gray-600">{t('company')}</dt>
         <dd>{session.dbd_records?.company_name_th ?? '—'}</dd>
         <dt className="text-gray-600">{t('modality')}</dt>

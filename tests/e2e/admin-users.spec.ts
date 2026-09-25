@@ -112,3 +112,44 @@ test('admin can disable an account and it can no longer sign in', async ({ page 
   await page.getByRole('button', { name: 'เข้าสู่ระบบ' }).click();
   await expect(page.getByRole('alert')).toBeVisible();
 });
+
+test('the admin cannot pair a team with another team company', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const teamA = await createManager(page, 'ทีมเจ้าของ', MANAGER_PASSWORD);
+  const teamB = await createManager(page, 'ทีมอื่น', MANAGER_PASSWORD);
+
+  // A company that belongs to team A.
+  await switchTo(page, teamA.toLowerCase(), MANAGER_PASSWORD);
+  const company = `บริษัท ของทีมเอ ${Date.now()} จำกัด`;
+  await createConfirmedRecord(page, {
+    companyNameTh: company,
+    juristicId: '0105568233714',
+    issuedOn: '13/07/2569',
+  });
+
+  // The admin picks team B: team A's company must not be on offer for them.
+  await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/users');
+  const teamOption = page.locator('select[name="managerId"] option', { hasText: teamB });
+  await page
+    .locator('select[name="managerId"]')
+    .selectOption((await teamOption.getAttribute('value'))!);
+  await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(company);
+});
+
+test('the admin keeps a way to their own account', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/users');
+  await expect(page.getByRole('link', { name: E2E_ADMIN.loginId.toUpperCase() })).toBeVisible();
+});
+
+test('the admin can rename the holder of a team', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const code = await createManager(page, 'ผู้ดูแลคนเก่า', MANAGER_PASSWORD);
+  const row = page.getByTestId(`manager-${code.toLowerCase()}`);
+  await expect(row).toContainText('ผู้ดูแลคนเก่า');
+
+  await row.locator('input[name="displayName"]').fill('ผู้ดูแลคนใหม่');
+  await row.getByTestId('rename-manager').click();
+  await expect(page.getByTestId(`manager-${code.toLowerCase()}`)).toContainText('ผู้ดูแลคนใหม่');
+});

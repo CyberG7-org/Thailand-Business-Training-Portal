@@ -58,7 +58,7 @@ export default async function ManagersPage({ params }: { params: Promise<{ local
                 <td data-testid="record-count">{count(records, 'team_id', m.id)}</td>
                 <td>{m.status}</td>
                 <td>
-                  <ManagerRowControls id={m.id} status={m.status} />
+                  <ManagerRowControls id={m.id} status={m.status} displayName={m.display_name} />
                 </td>
               </tr>
             ))}

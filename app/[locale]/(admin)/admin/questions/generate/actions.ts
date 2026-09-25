@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { generateQuestionsIntoBank } from '@/lib/db/question-gen';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { QuestionGenError } from '@/lib/integrations/question-gen/types';
@@ -21,7 +21,9 @@ export async function generateQuestionsAction(
   formData: FormData,
 ): Promise<GenerateState> {
   const locale = String(formData.get('locale') ?? 'th');
-  const admin = await requireAdmin(locale);
+  // Spec §4 lets a manager generate from their own records; the reference list and the domain
+  // call both run under the caller's client, so RLS decides which records are reachable.
+  const admin = await requireStaff(locale);
 
   const count = Number(formData.get('count') ?? 10);
   const templateCount = Number(formData.get('templateCount') ?? 0);

@@ -97,19 +97,32 @@ export async function createLearnerAccount(
   const admin = createSupabaseAdminClient();
   const { data: manager } = await admin
     .from('profiles')
-    .select('login_id, role')
+    .select('login_id, role, status')
     .eq('id', input.managerId)
     .maybeSingle();
   if (!manager || manager.role !== 'manager') {
     throw new ProvisioningError('That account is not a manager', 'no-manager');
   }
+  // A suspended manager's team is unreachable to everyone but the admin, so a learner created
+  // under one would have nobody to manage them. The trigger checks the role, not the status.
+  if (manager.status !== 'active') {
+    throw new ProvisioningError('That manager is suspended', 'no-manager');
+  }
   const loginId = await allocate(input.managerId, `${manager.login_id}-`);
   const created = await createAccount({ ...input, loginId, role: 'learner' });
+  // `.select().single()` so a zero-row update is an error rather than a silent success: without
+  // it a learner could be reported as created and belong to no team.
   const { error } = await admin
     .from('profiles')
     .update({ manager_id: input.managerId })
-    .eq('id', created.id);
-  if (error) throw new ProvisioningError(error.message, 'unknown');
+    .eq('id', created.id)
+    .select('id')
+    .single();
+  if (error) {
+    // Undo the auth account, or "creation failed" would leave a working sign-in behind.
+    await admin.auth.admin.deleteUser(created.id);
+    throw new ProvisioningError(error.message, 'unknown');
+  }
   return created;
 }
 

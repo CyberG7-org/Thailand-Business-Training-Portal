@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { createUserAction, type CreateUserState } from './actions';
@@ -10,6 +10,8 @@ const initial: CreateUserState = { ok: false, error: null, createdLoginId: null,
 
 /** A DBD record the picker offers; only confirmed ones can be chosen (the database enforces it). */
 export type CompanyOption = {
+  /** The team that owns the record; null means it is the admin's own (spec §3.2). */
+  teamId?: string | null;
   id: string;
   name: string;
   status: string;
@@ -34,6 +36,12 @@ export function NewUserForm({
   const locale = useLocale();
   const t = useTranslations('admin.users');
   const [state, formAction, pending] = useActionState(createUserAction, initial);
+  const [teamId, setTeamId] = useState('');
+  // An admin choosing a team sees that team's companies and their own untied ones; a manager
+  // (teams === null) sees whatever RLS already gave them.
+  const offered = teams
+    ? companies.filter((c) => !teamId || c.teamId === teamId || c.teamId == null)
+    : companies;
   const confirmed = companies.filter((c) => c.confirmed);
   return (
     <form action={formAction} className="grid max-w-md gap-3 rounded border p-4">
@@ -47,7 +55,13 @@ export function NewUserForm({
               {t('noManager')}
             </p>
           ) : (
-            <select name="managerId" required className="mt-1 w-full rounded border px-2 py-1">
+            <select
+              name="managerId"
+              required
+              value={teamId}
+              onChange={(e) => setTeamId(e.target.value)}
+              className="mt-1 w-full rounded border px-2 py-1"
+            >
               <option value="">{t('chooseTeam')}</option>
               {teams.map((team) => (
                 <option key={team.id} value={team.id}>
@@ -82,7 +96,7 @@ export function NewUserForm({
           className="mt-1 w-full rounded border px-2 py-1"
         >
           <option value="">{t('chooseCompany')}</option>
-          {companies.map((c) => (
+          {offered.map((c) => (
             <option key={c.id} value={c.id} disabled={!c.confirmed}>
               {c.confirmed ? c.name : t('unconfirmedCompany', { name: c.name, status: c.status })}
             </option>

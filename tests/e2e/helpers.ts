@@ -36,8 +36,10 @@ export async function openManualRecordForm(page: Page) {
 /** Creates a manager on the Managers page and returns their allocated code, e.g. "T01". */
 export async function createManager(page: Page, displayName: string, password: string) {
   await page.goto('/th/admin/managers');
-  await page.locator('input[name="displayName"]').fill(displayName);
-  await page.locator('input[name="password"]').fill(password);
+  // Every row carries a rename field of the same name, so scope to the create form.
+  const form = page.locator('form:has([data-testid="create-manager"])');
+  await form.locator('input[name="displayName"]').fill(displayName);
+  await form.locator('input[name="password"]').fill(password);
   await page.getByTestId('create-manager').click();
   const created = page.getByTestId('created-manager');
   await expect(created).toBeVisible();

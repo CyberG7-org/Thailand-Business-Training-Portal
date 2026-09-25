@@ -1,3 +1,4 @@
+import { displayLoginId } from '@/lib/domain/login-id';
 import { getTranslations } from 'next-intl/server';
 import { requireAdmin } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -96,7 +97,7 @@ export default async function AuditPage({
                   <td className="py-2 whitespace-nowrap">
                     {row.created_at ? new Date(row.created_at).toLocaleString(locale) : ''}
                   </td>
-                  <td>{row.actor_login_id ?? t('system')}</td>
+                  <td>{row.actor_login_id ? displayLoginId(row.actor_login_id) : t('system')}</td>
                   <td data-testid="audit-action">{row.action}</td>
                   <td className="font-mono text-xs">{row.entity_id}</td>
                   <td>

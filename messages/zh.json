@@ -507,7 +507,8 @@
       "resetPassword": "重置密码",
       "passwordUpdated": "密码已更新",
       "suspendHint": "停用经理后其无法登录，但团队中的学员仍可继续学习，公司记录对您依然可见。",
-      "empty": "暂无经理。"
+      "empty": "暂无经理。",
+      "rename": "重命名"
     }
   },
   "stages": {

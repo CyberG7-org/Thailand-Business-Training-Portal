@@ -119,3 +119,16 @@ export async function seedLearnerForRecord(recordId: string): Promise<string> {
   if (assignError) throw assignError;
   return loginId;
 }
+
+/**
+ * Disables the profile row only, leaving the auth user unbanned and its token valid. Suspending
+ * through the UI also bans the auth user, which the request-boundary guard catches on its own —
+ * this is how a test can prove the page guard reads the profile rather than the token.
+ */
+export async function disableProfileOnly(loginId: string): Promise<void> {
+  const { error } = await svc()
+    .from('profiles')
+    .update({ status: 'disabled' })
+    .eq('login_id', loginId);
+  if (error) throw error;
+}

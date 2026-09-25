@@ -507,7 +507,8 @@
       "resetPassword": "Reset password",
       "passwordUpdated": "Password updated",
       "suspendHint": "Suspending a manager stops their sign-in. Their learners keep studying and their companies stay visible to you.",
-      "empty": "No managers yet."
+      "empty": "No managers yet.",
+      "rename": "Rename"
     }
   },
   "stages": {

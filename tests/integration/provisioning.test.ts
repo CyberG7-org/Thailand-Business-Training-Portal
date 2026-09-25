@@ -61,6 +61,43 @@ describe('provisioning allocates the code', () => {
     expect(new Set(learners.map((l) => l.loginId)).size).toBe(5);
   });
 
+  it('refuses a learner under a suspended manager, and burns no code doing it', async () => {
+    const manager = await createManagerAccount({ password: PASSWORD });
+    created.push(manager.id);
+    await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
+
+    await expect(
+      createLearnerAccount({ password: PASSWORD, managerId: manager.id }),
+    ).rejects.toBeInstanceOf(ProvisioningError);
+
+    // The team's counter is untouched, so re-enabling the manager still starts at 01.
+    await svc.from('profiles').update({ status: 'active' }).eq('id', manager.id);
+    const first = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
+    created.push(first.id);
+    expect(first.loginId).toBe(`${manager.loginId}-01`);
+  });
+
+  it('leaves no account behind when the team cannot be set', async () => {
+    const manager = await createManagerAccount({ password: PASSWORD });
+    created.push(manager.id);
+    // A parent that vanishes between the check and the write is the real shape of this failure.
+    const gone = crypto.randomUUID();
+    const before = await svc
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'learner');
+
+    await expect(
+      createLearnerAccount({ password: PASSWORD, managerId: gone }),
+    ).rejects.toBeInstanceOf(ProvisioningError);
+
+    const after = await svc
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'learner');
+    expect(after.count).toBe(before.count);
+  });
+
   it('refuses a learner whose parent is not a manager', async () => {
     const manager = await createManagerAccount({ password: PASSWORD });
     const learner = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });

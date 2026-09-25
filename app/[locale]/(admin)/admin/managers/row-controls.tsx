@@ -2,11 +2,24 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { resetManagerPasswordAction, setManagerStatusAction, type ManagerState } from './actions';
+import {
+  renameManagerAction,
+  resetManagerPasswordAction,
+  setManagerStatusAction,
+  type ManagerState,
+} from './actions';
 
 const initial: ManagerState = { ok: false, error: null, createdLoginId: null };
 
-export function ManagerRowControls({ id, status }: { id: string; status: string }) {
+export function ManagerRowControls({
+  id,
+  status,
+  displayName,
+}: {
+  id: string;
+  status: string;
+  displayName: string | null;
+}) {
   const locale = useLocale();
   const t = useTranslations('admin.managers');
   const [statusState, statusAction, statusPending] = useActionState(
@@ -14,6 +27,7 @@ export function ManagerRowControls({ id, status }: { id: string; status: string 
     initial,
   );
   const [pwState, pwAction, pwPending] = useActionState(resetManagerPasswordAction, initial);
+  const [nameState, nameAction, namePending] = useActionState(renameManagerAction, initial);
   const next = status === 'disabled' ? 'active' : 'disabled';
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -28,6 +42,24 @@ export function ManagerRowControls({ id, status }: { id: string; status: string 
           className="text-xs underline disabled:opacity-50"
         >
           {next === 'disabled' ? t('disable') : t('enable')}
+        </button>
+      </form>
+      <form action={nameAction} className="flex items-center gap-1">
+        <input type="hidden" name="locale" value={locale} />
+        <input type="hidden" name="id" value={id} />
+        <input
+          name="displayName"
+          defaultValue={displayName ?? ''}
+          placeholder={t('displayName')}
+          className="w-36 rounded border px-1 py-0.5 text-xs"
+        />
+        <button
+          type="submit"
+          disabled={namePending}
+          data-testid="rename-manager"
+          className="text-xs underline disabled:opacity-50"
+        >
+          {t('rename')}
         </button>
       </form>
       <form action={pwAction} className="flex items-center gap-1">
@@ -49,9 +81,9 @@ export function ManagerRowControls({ id, status }: { id: string; status: string 
           {t('resetPassword')}
         </button>
       </form>
-      {(statusState.error ?? pwState.error) && (
+      {(statusState.error ?? pwState.error ?? nameState.error) && (
         <span role="alert" className="text-xs text-red-700">
-          {statusState.error ?? pwState.error}
+          {statusState.error ?? pwState.error ?? nameState.error}
         </span>
       )}
       {pwState.ok && <span className="text-xs text-green-700">{t('passwordUpdated')}</span>}

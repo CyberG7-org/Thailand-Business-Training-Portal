@@ -24,7 +24,8 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
 
     await page.goto('/th/admin/audit?entity=policy_config&id=require_exam_pass_for_bank_call');
     const row = page.locator('tr', { hasText: 'policy_config.update' }).first();
-    await expect(row).toContainText(E2E_ADMIN.loginId);
+    // Codes are stored lower-case and shown upper-case (spec §3.3).
+    await expect(row).toContainText(E2E_ADMIN.loginId.toUpperCase());
     await row.locator('summary').click();
     await expect(row.getByTestId('audit-diff').filter({ hasText: 'value' })).toContainText('false');
     await page.getByRole('button', { name: 'ออกจากระบบ' }).click();

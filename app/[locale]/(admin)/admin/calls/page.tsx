@@ -1,3 +1,4 @@
+import { displayLoginId } from '@/lib/domain/login-id';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
@@ -29,7 +30,9 @@ export default async function AdminCallsPage({ params }: { params: Promise<{ loc
           <tbody>
             {rows.map((s) => (
               <tr key={s.id} className="border-b" data-testid={`admin-call-${s.id}`}>
-                <td className="py-2">{s.profiles.display_name ?? s.profiles.login_id}</td>
+                <td className="py-2">
+                  {s.profiles.display_name ?? displayLoginId(s.profiles.login_id)}
+                </td>
                 <td>{s.dbd_records?.company_name_th ?? '—'}</td>
                 <td>{s.modality}</td>
                 <td data-testid="admin-call-status">{s.status}</td>

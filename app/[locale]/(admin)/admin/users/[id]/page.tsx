@@ -1,8 +1,9 @@
+import { displayLoginId } from '@/lib/domain/login-id';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import {
   getActiveAssignmentForUser,
   getLatestEligibility,
@@ -22,7 +23,8 @@ export default async function UserDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  await requireAdmin(locale);
+  // RLS shows a manager only their own team, so another team's learner is simply not found.
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const { data: user } = await db.from('profiles').select('*').eq('id', id).maybeSingle();
   if (!user) notFound();
@@ -58,7 +60,7 @@ export default async function UserDetailPage({
       <Link href="/admin/users" className="text-sm underline">
         ← {t('title')}
       </Link>
-      <h1 className="text-2xl font-semibold">{user.login_id}</h1>
+      <h1 className="text-2xl font-semibold">{displayLoginId(user.login_id)}</h1>
       <dl className="grid max-w-md grid-cols-2 gap-1 text-sm">
         <dt>{t('displayName')}</dt>
         <dd>{user.display_name ?? '—'}</dd>

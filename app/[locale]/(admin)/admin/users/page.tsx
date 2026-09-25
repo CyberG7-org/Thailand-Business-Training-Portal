@@ -16,7 +16,7 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
   const { data: users } = await supabase
     .from('profiles')
     .select('id, login_id, role, display_name, status, created_at, manager_id')
-    .eq('role', 'learner')
+    .neq('role', 'manager')
     .order('created_at', { ascending: false });
 
   // Only the admin chooses a team; a manager creates inside their own (spec §7).
@@ -47,13 +47,16 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
   // records, confirmed ones selectable.
   const { data: records } = await supabase
     .from('dbd_records')
-    .select('id, company_name_th, extraction_status')
+    .select('id, company_name_th, extraction_status, team_id')
     .order('company_name_th');
   const companies: CompanyOption[] = (records ?? []).map((r) => ({
     id: r.id,
     name: r.company_name_th ?? t('untitledCompany'),
     status: r.extraction_status,
     confirmed: r.extraction_status === 'confirmed',
+    // The picker narrows to the chosen team: pairing a learner with another team's company
+    // leaves them studying data their own manager cannot see.
+    teamId: r.team_id,
   }));
   const { data: assignments } = learnerIds.length
     ? await supabase
