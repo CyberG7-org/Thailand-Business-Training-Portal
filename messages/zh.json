@@ -230,7 +230,8 @@
         "business": "公司的业务",
         "bank": "银行的其他问题"
       },
-      "answersMissing": "确认该记录前还需填写：{fields}"
+      "answersMissing": "确认该记录前还需填写：{fields}",
+      "team": "团队"
     },
     "assignment": {
       "title": "已分配公司",

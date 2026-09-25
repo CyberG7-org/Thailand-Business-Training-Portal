@@ -54,6 +54,12 @@ test('a manager cannot open a learner of another team', async ({ page }) => {
 test('a manager can open the AI generation screen and use it', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการสร้างข้อสอบ', MANAGER_PASSWORD);
+  const adminCompany = `บริษัท ต้นแบบของแอดมิน ${Date.now()} จำกัด`;
+  await createConfirmedRecord(page, {
+    companyNameTh: adminCompany,
+    juristicId: '0105568233716',
+    issuedOn: '13/07/2569',
+  });
 
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   const company = `บริษัท ออกข้อสอบ ${Date.now()} จำกัด`;
@@ -65,6 +71,8 @@ test('a manager can open the AI generation screen and use it', async ({ page }) 
 
   await page.goto('/th/admin/questions/generate');
   await expect(page).toHaveURL(/\/th\/admin\/questions\/generate$/);
+  // The reference picker is RLS-narrowed: another team's company is not on offer.
+  await expect(page.locator('select[name="reference_record_id"]')).not.toContainText(adminCompany);
   const record = page.locator('select[name="reference_record_id"] option', { hasText: company });
   await page
     .locator('select[name="reference_record_id"]')

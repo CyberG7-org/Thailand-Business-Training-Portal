@@ -230,7 +230,8 @@
         "business": "What the business does",
         "bank": "The bank's other questions"
       },
-      "answersMissing": "Still to fill in before this record can be confirmed: {fields}"
+      "answersMissing": "Still to fill in before this record can be confirmed: {fields}",
+      "team": "Team"
     },
     "assignment": {
       "title": "Assigned company",

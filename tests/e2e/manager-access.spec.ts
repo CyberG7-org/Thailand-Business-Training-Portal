@@ -53,6 +53,15 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
   await page.goto('/th/admin/dbd-records');
   await expect(page.locator('tbody')).toContainText(ownCompany);
   await expect(page.locator('tbody')).not.toContainText(adminCompany);
+  // A manager sees no Team column: every record on their list is theirs.
+  await expect(page.getByRole('columnheader', { name: 'ทีม' })).toHaveCount(0);
+
+  // The admin sees both, and can tell which team uploaded which.
+  await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/dbd-records');
+  await expect(page.getByRole('columnheader', { name: 'ทีม' })).toBeVisible();
+  await expect(page.locator('tr').filter({ hasText: ownCompany })).toContainText(code);
+  await expect(page.locator('tr').filter({ hasText: adminCompany })).not.toContainText(code);
 });
 
 test('a suspended manager loses the admin area on the next request', async ({ page, browser }) => {
