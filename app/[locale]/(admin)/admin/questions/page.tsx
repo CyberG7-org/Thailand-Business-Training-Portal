@@ -26,6 +26,13 @@ export default async function QuestionsPage({
   );
   const currentBatch = batch ? batches.find((b) => b.id === batch) : undefined;
   const t = await getTranslations('admin.questions');
+  // Sources name the kind of document and the page, never the file: a question is shared with
+  // every staff member and a file name is the company's (spec §4).
+  const td = await getTranslations('admin.dbd');
+  const typeLabel = (type: string | null) => {
+    const key = `documentTypes.${type ?? 'unknown'}`;
+    return td.has(key) ? td(key as 'documentTypes.unknown') : td('documentTypes.unknown');
+  };
   return (
     <section className="grid gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -136,7 +143,7 @@ export default async function QuestionsPage({
                 <td data-testid="question-sources" className="text-xs text-gray-600">
                   {(q.source_refs as unknown as SourceRef[]).map((r, i) => (
                     <span key={i} className="mr-1 rounded bg-gray-100 px-1">
-                      {t('sourceRef', { document: r.document_name, page: r.page })}
+                      {t('sourceRef', { document: typeLabel(r.document_type), page: r.page })}
                     </span>
                   ))}
                 </td>

@@ -232,7 +232,7 @@ outcome. The first manager created after this ships starts at `T01`.
 
 **Session guards.** `requireAdmin` appears in 27 files today and means "level 1 or nothing". It
 splits into `requireAdmin` (level 1) and `requireStaff` (admin or manager). Pages that stay level
-1: Policy settings, Managers, the full audit log, and anything touching provider keys.
+1: Policy settings, Managers, Notifications, and anything touching provider keys. The audit log opens to staff, narrowed to the caller’s team by RLS (§9); the admin’s is the full log.
 
 **Queries.** Team-scoped pages pass the caller's team to their query. Because RLS enforces the
 same rule, a missed filter shows an empty list rather than another team's data.
@@ -243,7 +243,7 @@ same rule, a missed filter shows an empty list rather than another team's data.
   counts, suspend, reset password, edit the holder and contact channel.
 - **Users** screen becomes team-scoped for managers; the admin additionally sees which team each
   learner belongs to.
-- **Navigation** is filtered by role: managers do not see Policy settings or the system audit log.
+- **Navigation** is filtered by role: managers do not see Policy settings, Managers or Notifications; their audit link shows their own team’s rows (§9).
 - Account codes are shown upper-case through one display helper, so `t01-03` never reaches a
   screen.
 

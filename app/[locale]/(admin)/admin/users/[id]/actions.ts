@@ -76,8 +76,19 @@ export async function assignRecordAction(
   const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
   await requireManageable(locale, userId);
   if (!dbdRecordId) return { message: null, error: 'no-record' };
+  // The picker offers only the learner's own team's companies and the admin's untied ones; this
+  // is the check behind it, since the admin's client can read every team's records.
+  const db = await createSupabaseServerClient();
+  const [{ data: record }, { data: learner }] = await Promise.all([
+    db.from('dbd_records').select('team_id').eq('id', dbdRecordId).maybeSingle(),
+    db.from('profiles').select('manager_id').eq('id', userId).maybeSingle(),
+  ]);
+  if (!record) return { message: null, error: 'no-record' };
+  if (record.team_id && record.team_id !== learner?.manager_id) {
+    return { message: null, error: 'other-team' };
+  }
   try {
-    await assignDbdRecord(await createSupabaseServerClient(), { userId, dbdRecordId });
+    await assignDbdRecord(db, { userId, dbdRecordId });
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'assigned', error: null };
   } catch (e) {

@@ -62,7 +62,10 @@ export async function listAuditLogs(
     .limit(filter.limit ?? 100);
   if (filter.entityType) query = query.eq('entity_type', filter.entityType);
   if (filter.entityId) query = query.eq('entity_id', filter.entityId);
-  if (filter.actorLoginId) query = query.eq('actor_login_id', filter.actorLoginId);
+  // Codes are stored lower-case and shown upper-case (spec §3.3); accept them as typed.
+  if (filter.actorLoginId) {
+    query = query.eq('actor_login_id', filter.actorLoginId.trim().toLowerCase());
+  }
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];

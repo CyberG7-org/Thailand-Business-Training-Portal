@@ -16,8 +16,10 @@ describe('lib/db/learner', () => {
   let other: TestUser;
   let asOwner: Client;
   let asOther: Client;
-  let recordId: string;
-  const path = `learner-test/${Date.now()}.pdf`;
+  // An object key must sit under its record's own id (migration 20260925000000), so the id is
+  // chosen here and the record inserted with it.
+  const recordId = crypto.randomUUID();
+  const path = `${recordId}/${Date.now()}.pdf`;
 
   beforeAll(async () => {
     [admin, owner, other] = await Promise.all([
@@ -30,9 +32,10 @@ describe('lib/db/learner', () => {
     await svc.storage
       .from('dbd-documents')
       .upload(path, Buffer.from('%PDF-1.4 test'), { contentType: 'application/pdf' });
-    const { data } = await svc
+    const { error } = await svc
       .from('dbd_records')
       .insert({
+        id: recordId,
         company_name_th: 'บริษัท ของฉัน จำกัด',
         juristic_id: '0105568233704',
         issued_on: '2026-07-13',
@@ -44,7 +47,7 @@ describe('lib/db/learner', () => {
       })
       .select()
       .single();
-    recordId = data!.id;
+    if (error) throw error;
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: owner.id, dbd_record_id: recordId, assigned_by: admin.id });

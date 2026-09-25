@@ -200,13 +200,16 @@ export async function generateQuestionsIntoBank(
     bannedLiterals: reference ? bannedLiterals(reference.record) : [],
   });
 
+  // The batch list is shared with every staff member (spec §6), so the summary says what kind of
+  // material went in and how much — never which company, which file, or what the manager wrote.
+  // Content is communal; data is private (spec §4). `created_by` tells the admin whose it is.
   const summary = [
-    reference ? `DBD ${reference.record.juristic_id ?? input.referenceRecordId}` : null,
+    reference ? 'reference pack' : null,
     passages.length ? `${passages.length} passages` : null,
     input.studyMaterialIds.length ? `${input.studyMaterialIds.length} study card(s)` : null,
     input.pastedText.trim() ? `${input.pastedText.trim().length} chars pasted` : null,
-    input.upload ? `file ${input.upload.name}` : null,
-    input.focus ? `focus: ${input.focus}` : null,
+    input.upload ? 'uploaded file' : null,
+    input.focus ? 'with focus' : null,
   ]
     .filter(Boolean)
     .join('; ');

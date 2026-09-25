@@ -41,8 +41,8 @@ describe('passagesBlock', () => {
 describe('resolveSourceRefs', () => {
   it('maps cited numbers to document/page refs, dropping unknown and duplicate ones', () => {
     expect(resolveSourceRefs([1, 1, 2, 9, 0, 1.5], passages)).toEqual([
-      { document_id: 'd', document_name: 'cert.pdf', document_type: 'certificate', page: 1 },
-      { document_id: 'd', document_name: 'cert.pdf', document_type: 'shareholder_list', page: 3 },
+      { document_id: 'd', document_type: 'certificate', page: 1 },
+      { document_id: 'd', document_type: 'shareholder_list', page: 3 },
     ]);
     expect(resolveSourceRefs(undefined, passages)).toEqual([]);
     expect(resolveSourceRefs([1], [])).toEqual([]);

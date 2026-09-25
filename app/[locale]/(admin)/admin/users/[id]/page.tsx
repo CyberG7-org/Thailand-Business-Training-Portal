@@ -31,7 +31,13 @@ export default async function UserDetailPage({
 
   const active = await getActiveAssignmentForUser(db, user.id);
   const eligibility = active ? await getLatestEligibility(db, user.id, active.dbd_record_id) : null;
-  const options = active ? [] : await listConfirmedDbdRecords(db);
+  // A learner may only study a company their own team may see: their team's, or the admin's
+  // untied ones. The admin's client reads every team, so the list is narrowed here as well.
+  const options = active
+    ? []
+    : (await listConfirmedDbdRecords(db)).filter(
+        (o) => o.team_id == null || o.team_id === user.manager_id,
+      );
   const current = active
     ? {
         assignmentId: active.id,

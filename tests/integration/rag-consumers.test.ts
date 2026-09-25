@@ -159,7 +159,6 @@ describe('retrieval consumers', () => {
     expect(first?.source_refs).toEqual([
       {
         document_id: documentId,
-        document_name: 'reference.pdf',
         document_type: expect.any(String),
         page: expect.any(Number),
       },

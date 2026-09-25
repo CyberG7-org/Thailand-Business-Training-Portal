@@ -135,7 +135,7 @@ describe('AI question authoring', () => {
       requested: 3,
       produced: 3,
       rejected: 0,
-      material_summary: 'DBD 0105569000777; 1 study card(s)',
+      material_summary: 'reference pack; 1 study card(s)',
     });
     const { data: learnerView } = await asLearner.from('question_generation_batches').select('id');
     expect(learnerView).toEqual([]);
@@ -193,7 +193,7 @@ describe('AI question authoring', () => {
     expect(batch).toMatchObject({
       produced: 1,
       rejected: 2,
-      material_summary: 'DBD 0105569000777; 10 chars pasted; focus: banking',
+      material_summary: 'reference pack; 10 chars pasted; with focus',
     });
   });
 

@@ -82,7 +82,7 @@ export async function getLatestEligibility(
 export async function listConfirmedDbdRecords(db: Db) {
   const { data, error } = await db
     .from('dbd_records')
-    .select('id, company_name_th, juristic_id, issued_on')
+    .select('id, company_name_th, juristic_id, issued_on, team_id')
     .eq('extraction_status', 'confirmed')
     .order('company_name_th');
   if (error) throw error;

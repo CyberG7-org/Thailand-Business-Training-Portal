@@ -11,10 +11,13 @@ export type ReferencePassage = {
   text: string;
 };
 
-/** Stored on `questions.source_refs` (decision D43). */
+/**
+ * Stored on `questions.source_refs` (decision D43). The name stays out: a question is shared with
+ * every staff member, and a file name is the company's (spec §4 — content is communal, data is
+ * private). The type and page say where a fact came from without saying whose.
+ */
 export type SourceRef = {
   document_id: string;
-  document_name: string;
   document_type: string | null;
   page: number;
 };
@@ -45,12 +48,7 @@ export function resolveSourceRefs(
     const key = `${p.documentId}#${p.page}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({
-      document_id: p.documentId,
-      document_name: p.documentName,
-      document_type: p.documentType,
-      page: p.page,
-    });
+    out.push({ document_id: p.documentId, document_type: p.documentType, page: p.page });
   }
   return out;
 }
