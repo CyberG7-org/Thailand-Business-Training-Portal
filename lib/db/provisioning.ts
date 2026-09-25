@@ -10,7 +10,7 @@ export const newAccountSchema = z.object({
     .trim()
     .refine(isValidLoginId, 'Login ID must be 3–64 letters, digits, ".", "_" or "-"'),
   password: z.string().min(10, 'Password must be at least 10 characters'),
-  role: z.enum(['learner', 'admin']).default('learner'),
+  role: z.enum(['learner', 'manager', 'admin']).default('learner'),
   displayName: z.string().trim().max(120).optional(),
   preferredLanguage: z.enum(['th', 'en', 'zh']).default('th'),
 });
@@ -19,7 +19,7 @@ export type NewAccountInput = z.input<typeof newAccountSchema>;
 export class ProvisioningError extends Error {
   constructor(
     message: string,
-    public readonly code: 'duplicate' | 'invalid' | 'unknown',
+    public readonly code: 'duplicate' | 'invalid' | 'unknown' | 'no-manager',
   ) {
     super(message);
     this.name = 'ProvisioningError';
@@ -57,6 +57,60 @@ export async function createAccount(
     throw new ProvisioningError(message, 'unknown');
   }
   return { id: data.user.id, loginId: normalizedLoginId };
+}
+
+type NewPerson = {
+  password: string;
+  displayName?: string;
+  preferredLanguage?: 'th' | 'en' | 'zh';
+};
+
+/** One round trip to the counter; it serialises on its own row, so concurrent callers queue. */
+async function allocate(scope: string, prefix: string): Promise<string> {
+  const { data, error } = await createSupabaseAdminClient().rpc('allocate_login_id', {
+    p_scope: scope,
+    p_prefix: prefix,
+  });
+  if (error || !data) throw new ProvisioningError(error?.message ?? 'No code allocated', 'unknown');
+  return data as string;
+}
+
+/**
+ * A manager is a team. Their code comes from the one global counter and becomes the prefix every
+ * learner of theirs is numbered under (spec §3.3).
+ */
+export async function createManagerAccount(
+  input: NewPerson,
+): Promise<{ id: string; loginId: string }> {
+  const loginId = await allocate('manager', 't');
+  return createAccount({ ...input, loginId, role: 'manager' });
+}
+
+/**
+ * A learner is numbered inside their manager's team, and carries `manager_id` so every
+ * team-scoped policy can find them. The profile is created by a trigger from the auth user, so
+ * the team is set immediately afterwards; `enforce_team_membership` rejects a non-manager parent.
+ */
+export async function createLearnerAccount(
+  input: NewPerson & { managerId: string },
+): Promise<{ id: string; loginId: string }> {
+  const admin = createSupabaseAdminClient();
+  const { data: manager } = await admin
+    .from('profiles')
+    .select('login_id, role')
+    .eq('id', input.managerId)
+    .maybeSingle();
+  if (!manager || manager.role !== 'manager') {
+    throw new ProvisioningError('That account is not a manager', 'no-manager');
+  }
+  const loginId = await allocate(input.managerId, `${manager.login_id}-`);
+  const created = await createAccount({ ...input, loginId, role: 'learner' });
+  const { error } = await admin
+    .from('profiles')
+    .update({ manager_id: input.managerId })
+    .eq('id', created.id);
+  if (error) throw new ProvisioningError(error.message, 'unknown');
+  return created;
 }
 
 export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {
