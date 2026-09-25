@@ -52,6 +52,11 @@ export function isStaffRole(role: CurrentUser['role']): boolean {
   return (STAFF_ROLES as readonly string[]).includes(role);
 }
 
+/** Where a signed-in person belongs: staff work in the admin area, learners study (spec §11). */
+export function homePathFor(role: CurrentUser['role'], locale: string): string {
+  return `/${locale}/${isStaffRole(role) ? 'admin' : 'dashboard'}`;
+}
+
 export async function requireAdmin(locale: string): Promise<CurrentUser> {
   const user = await requireUser(locale);
   if (user.role !== 'admin') {

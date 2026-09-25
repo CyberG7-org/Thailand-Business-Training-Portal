@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import { LanguageToggle } from '@/components/language-toggle';
-import { getCurrentUser } from '@/lib/auth/session';
+import { getCurrentUser, homePathFor } from '@/lib/auth/session';
 import { LoginForm } from './login-form';
 
 export default async function LoginPage({
@@ -15,7 +15,7 @@ export default async function LoginPage({
   const { reason } = await searchParams;
   const user = await getCurrentUser();
   if (user && user.status === 'active') {
-    redirect(`/${locale}/${user.role === 'admin' ? 'admin' : 'dashboard'}`);
+    redirect(homePathFor(user.role, locale));
   }
   const [t, ta] = await Promise.all([getTranslations('auth'), getTranslations('app')]);
   return (

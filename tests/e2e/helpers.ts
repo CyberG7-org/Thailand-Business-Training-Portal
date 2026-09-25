@@ -14,6 +14,17 @@ export async function loginAs(page: Page, loginId: string, password: string) {
   await page.waitForURL((url) => !/\/login$/.test(url.pathname));
 }
 
+/**
+ * Signs the current user out, then in as someone else. `loginAs` alone cannot switch: the login
+ * page redirects an already-authenticated visitor away, so its form is never there to fill.
+ */
+export async function switchTo(page: Page, loginId: string, password: string) {
+  // Clearing cookies rather than clicking sign-out: the redirect to /login resolves before the
+  // cleared session cookie has landed, so the next sign-in can still be seen as the old user.
+  await page.context().clearCookies();
+  await loginAs(page, loginId, password);
+}
+
 /** Creates and confirms a DBD record through the admin UI; returns its id. Caller must be logged in as admin. */
 /** The upload-first page keeps the manual form collapsed; open it before filling fields. */
 export async function openManualRecordForm(page: Page) {

@@ -1,5 +1,6 @@
 'use server';
 
+import { homePathFor } from '@/lib/auth/session';
 import { cookies } from 'next/headers';
 import { hasLocale } from 'next-intl';
 import { redirect } from 'next/navigation';
@@ -56,7 +57,7 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
       language = chosen;
     }
   }
-  redirect(`/${language}/${profile.role === 'admin' ? 'admin' : 'dashboard'}`);
+  redirect(homePathFor(profile.role as 'learner' | 'manager' | 'admin', language));
 }
 
 export async function signOutAction(formData: FormData) {

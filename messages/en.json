@@ -485,6 +485,25 @@
       "relationship": "Relationship to the other shareholders",
       "save": "Save role",
       "saved": "Saved"
+    },
+    "managers": {
+      "title": "Managers",
+      "new": "New manager",
+      "displayName": "Holder's name",
+      "password": "Initial password",
+      "create": "Create manager",
+      "created": "Created {code} for {name}",
+      "code": "Code",
+      "learners": "Learners",
+      "records": "Companies",
+      "status": "Status",
+      "actions": "Actions",
+      "disable": "Suspend",
+      "enable": "Re-enable",
+      "resetPassword": "Reset password",
+      "passwordUpdated": "Password updated",
+      "suspendHint": "Suspending a manager stops their sign-in. Their learners keep studying and their companies stay visible to you.",
+      "empty": "No managers yet."
     }
   },
   "stages": {

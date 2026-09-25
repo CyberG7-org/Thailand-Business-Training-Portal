@@ -485,6 +485,25 @@
       "relationship": "与其他股东的关系",
       "save": "保存角色",
       "saved": "已保存"
+    },
+    "managers": {
+      "title": "经理",
+      "new": "新增经理",
+      "displayName": "负责人姓名",
+      "password": "初始密码",
+      "create": "创建经理",
+      "created": "已为 {name} 创建 {code}",
+      "code": "代码",
+      "learners": "学员",
+      "records": "公司",
+      "status": "状态",
+      "actions": "操作",
+      "disable": "停用",
+      "enable": "重新启用",
+      "resetPassword": "重置密码",
+      "passwordUpdated": "密码已更新",
+      "suspendHint": "停用经理后其无法登录，但团队中的学员仍可继续学习，公司记录对您依然可见。",
+      "empty": "暂无经理。"
     }
   },
   "stages": {
