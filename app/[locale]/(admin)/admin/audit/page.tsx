@@ -1,6 +1,6 @@
 import { displayLoginId } from '@/lib/domain/login-id';
 import { getTranslations } from 'next-intl/server';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { auditDiff, listAuditLogs } from '@/lib/db/settings';
 
@@ -30,7 +30,9 @@ export default async function AuditPage({
 }) {
   const { locale } = await params;
   const { entity, id, actor } = await searchParams;
-  await requireAdmin(locale);
+  // Spec §9: the admin reads everything, a manager reads their own team. The view is
+  // security_invoker, so the P15a policy on audit_logs does the narrowing.
+  await requireStaff(locale);
   const rows = await listAuditLogs(await createSupabaseServerClient(), {
     entityType: entity || undefined,
     entityId: id || undefined,

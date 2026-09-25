@@ -13,8 +13,9 @@ test('a manager lands in the admin area and sees only their own doors', async ({
   await expect(page).toHaveURL(/\/th\/admin$/);
   const nav = page.getByTestId('admin-nav');
   await expect(nav).toContainText('ข้อมูล DBD');
+  // Spec §9: a manager reads their own team's audit rows, so the door is theirs to open.
+  await expect(nav).toContainText('บันทึกการใช้งาน');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
-  await expect(nav).not.toContainText('บันทึกการใช้งาน');
   await expect(nav).not.toContainText('ผู้จัดการ');
 });
 
@@ -23,7 +24,7 @@ test('typing an admin-only URL does not get a manager in', async ({ page }) => {
   const code = await createManager(page, 'ผู้จัดการลองพิมพ์', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
 
-  for (const path of ['settings', 'audit', 'notifications', 'managers']) {
+  for (const path of ['settings', 'notifications', 'managers']) {
     await page.goto(`/th/admin/${path}`);
     await expect(page, path).toHaveURL(/\/th\/admin$/);
   }
@@ -90,4 +91,30 @@ test('the page guard reads the profile row, not the token', async ({ page, brows
   await managerPage.goto('/th/admin/dbd-records');
   await expect(managerPage).toHaveURL(/\/th\/login/);
   await managerContext.close();
+});
+
+test('a manager reads their own team in the audit log and nothing else', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const code = await createManager(page, 'ผู้จัดการตรวจสอบ', MANAGER_PASSWORD);
+  // An admin action that must not appear for the manager: creating this very manager.
+  await page.goto('/th/admin/audit');
+  await expect(page.locator('tr').filter({ hasText: 'profiles.create' }).first()).toContainText(
+    code.toLowerCase(),
+  );
+
+  await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
+  const company = `บริษัท ตรวจสอบได้ ${Date.now()} จำกัด`;
+  await createConfirmedRecord(page, {
+    companyNameTh: company,
+    juristicId: '0105568233715',
+    issuedOn: '13/07/2569',
+  });
+
+  await page.goto('/th/admin/audit');
+  await expect(page).toHaveURL(/\/th\/admin\/audit$/);
+  // Their own upload is there; the admin's creation of their account is not.
+  await expect(page.locator('tr').filter({ hasText: 'dbd_records.insert' }).first()).toContainText(
+    code,
+  );
+  await expect(page.locator('tr').filter({ hasText: 'profiles.create' })).toHaveCount(0);
 });

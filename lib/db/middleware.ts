@@ -12,7 +12,6 @@ const GUARDS = [
   { prefix: '/dashboard', role: 'any' },
   { prefix: '/admin/managers', role: 'admin' },
   { prefix: '/admin/settings', role: 'admin' },
-  { prefix: '/admin/audit', role: 'admin' },
   { prefix: '/admin/notifications', role: 'admin' },
   { prefix: '/admin', role: 'staff' },
 ] as const;

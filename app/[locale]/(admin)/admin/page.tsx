@@ -9,13 +9,14 @@ const STAFF_LINKS = [
   ['/admin/content', 'content'],
   ['/admin/questions', 'questions'],
   ['/admin/calls', 'calls'],
+  // Spec §9: a manager's audit view is their own team; RLS narrows it through the view.
+  ['/admin/audit', 'audit'],
 ] as const;
 
 const ADMIN_LINKS = [
   ['/admin/managers', 'managers'],
   ['/admin/notifications', 'notifications'],
   ['/admin/settings', 'settings'],
-  ['/admin/audit', 'audit'],
 ] as const;
 
 export default async function AdminHome({ params }: { params: Promise<{ locale: string }> }) {
