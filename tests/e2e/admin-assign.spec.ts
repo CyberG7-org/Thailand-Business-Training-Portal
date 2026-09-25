@@ -1,11 +1,18 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { createConfirmedRecord, createLearner, loginAs, openManualRecordForm } from './helpers';
+import {
+  createConfirmedRecord,
+  createLearner,
+  createManager,
+  loginAs,
+  openManualRecordForm,
+} from './helpers';
 
 test('a learner created for a confirmed record is assigned to it, with the +45-day date in Thai', async ({
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const team = await createManager(page, 'หัวหน้ามอบหมาย', 'Manager-Password-1!');
   const company = `บริษัท มอบหมาย ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: company,
@@ -13,9 +20,8 @@ test('a learner created for a confirmed record is assigned to it, with the +45-d
     issuedOn: '13/07/2569',
   });
 
-  const loginId = `e2e-assign-${Date.now()}`;
-  await createLearner(page, { loginId, password: 'Learner-Pass-123', company });
-  await page.getByRole('link', { name: loginId }).click();
+  const loginId = await createLearner(page, { password: 'Learner-Pass-123', company, team });
+  await page.getByRole('link', { name: loginId.toUpperCase() }).click();
   await expect(page.getByTestId('assigned-company')).toHaveText(company);
   await expect(page.getByTestId('available-from')).toContainText('27 สิงหาคม 2569');
 

@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { assignDbdRecord } from '@/lib/db/assignments';
-import { ProvisioningError, createAccount } from '@/lib/db/provisioning';
+import { ProvisioningError, createLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 export type CreateUserState = {
@@ -24,7 +24,7 @@ export async function createUserAction(
   formData: FormData,
 ): Promise<CreateUserState> {
   const locale = String(formData.get('locale') ?? 'th');
-  await requireAdmin(locale);
+  const staff = await requireStaff(locale);
   const fail = (error: string): CreateUserState => ({
     ok: false,
     error,
@@ -32,6 +32,11 @@ export async function createUserAction(
     company: null,
   });
   const db = await createSupabaseServerClient();
+
+  // A manager creates inside their own team; the admin says which team it is (spec §7).
+  const managerId = staff.role === 'manager' ? staff.id : String(formData.get('managerId') ?? '');
+  if (!managerId) return fail('Choose the team this learner belongs to');
+
   const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
   if (!dbdRecordId) return fail('Choose the company the learner belongs to');
   const { data: record, error: recordError } = await db
@@ -46,11 +51,10 @@ export async function createUserAction(
 
   let created: { id: string; loginId: string };
   try {
-    created = await createAccount({
-      loginId: String(formData.get('loginId') ?? ''),
+    created = await createLearnerAccount({
       password: String(formData.get('password') ?? ''),
-      role: 'learner',
       displayName: String(formData.get('displayName') ?? '') || undefined,
+      managerId,
     });
   } catch (e) {
     return fail(e instanceof ProvisioningError ? e.message : 'Unexpected error');

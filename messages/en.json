@@ -75,7 +75,10 @@
       "noConfirmedCompany": "No confirmed DBD record yet — confirm the company’s record before creating a learner.",
       "goToRecords": "Go to DBD records",
       "untitledCompany": "(company name missing)",
-      "createdFor": "Created {loginId} and assigned to {company}"
+      "createdFor": "Created {loginId} and assigned to {company}",
+      "team": "Team",
+      "chooseTeam": "Which team?",
+      "noManager": "Create a manager first — every learner belongs to a team."
     },
     "dbd": {
       "title": "DBD records",

@@ -75,7 +75,10 @@
       "noConfirmedCompany": "尚无已确认的 DBD 记录，请先确认公司记录再创建学员。",
       "goToRecords": "前往 DBD 记录",
       "untitledCompany": "（公司名称缺失）",
-      "createdFor": "已创建 {loginId} 并分配给 {company}"
+      "createdFor": "已创建 {loginId} 并分配给 {company}",
+      "team": "团队",
+      "chooseTeam": "属于哪个团队？",
+      "noManager": "请先创建经理——每位学员都属于某个团队。"
     },
     "dbd": {
       "title": "DBD 记录",

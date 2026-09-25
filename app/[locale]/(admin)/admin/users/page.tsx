@@ -1,19 +1,42 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { loadProgressionFactsForUsers } from '@/lib/db/progression';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { deriveProgression } from '@/lib/domain/progression';
-import { NewUserForm, type CompanyOption } from './new-user-form';
+import { displayLoginId } from '@/lib/domain/login-id';
+import { NewUserForm, type CompanyOption, type TeamOption } from './new-user-form';
 
 export default async function UsersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  await requireAdmin(locale);
+  const staff = await requireStaff(locale);
   const supabase = await createSupabaseServerClient();
+  // Learners only: managers have their own screen, and a manager would otherwise find their own
+  // row sitting in the list of people they manage. RLS narrows it to the caller's team.
   const { data: users } = await supabase
     .from('profiles')
-    .select('id, login_id, role, display_name, status, created_at')
+    .select('id, login_id, role, display_name, status, created_at, manager_id')
+    .eq('role', 'learner')
     .order('created_at', { ascending: false });
+
+  // Only the admin chooses a team; a manager creates inside their own (spec §7).
+  const { data: managers } =
+    staff.role === 'admin'
+      ? await supabase
+          .from('profiles')
+          .select('id, login_id, display_name')
+          .eq('role', 'manager')
+          .eq('status', 'active')
+          .order('login_id')
+      : { data: null };
+  const teams: TeamOption[] | null = managers
+    ? managers.map((m) => ({
+        id: m.id,
+        code: displayLoginId(m.login_id),
+        name: m.display_name,
+      }))
+    : null;
+  const teamCodeOf = new Map((managers ?? []).map((m) => [m.id, displayLoginId(m.login_id)]));
   const t = await getTranslations('admin.users');
   const tp = await getTranslations('progression');
 
@@ -57,13 +80,14 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
   return (
     <section className="grid gap-6">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <NewUserForm companies={companies} />
+      <NewUserForm companies={companies} teams={teams} />
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b">
             <th className="py-2">{t('loginId')}</th>
             <th>{t('displayName')}</th>
             <th>{t('company')}</th>
+            <th>{t('team')}</th>
             <th>{t('role')}</th>
             <th>{t('status')}</th>
             <th>{t('progression')}</th>
@@ -74,11 +98,14 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
             <tr key={u.id} className="border-b">
               <td className="py-2">
                 <Link href={`/admin/users/${u.id}`} className="underline">
-                  {u.login_id}
+                  {displayLoginId(u.login_id)}
                 </Link>
               </td>
               <td>{u.display_name ?? '—'}</td>
               <td data-testid={`company-${u.login_id}`}>{u.company ?? '—'}</td>
+              <td data-testid={`team-${u.login_id}`}>
+                {u.manager_id ? (teamCodeOf.get(u.manager_id) ?? '—') : '—'}
+              </td>
               <td>{u.role}</td>
               <td>{u.status}</td>
               <td data-testid={`progression-${u.login_id}`}>

@@ -75,7 +75,10 @@
       "noConfirmedCompany": "ยังไม่มีข้อมูล DBD ที่ยืนยันแล้ว กรุณายืนยันข้อมูลบริษัทก่อนสร้างผู้เรียน",
       "goToRecords": "ไปที่ข้อมูล DBD",
       "untitledCompany": "(ยังไม่มีชื่อบริษัท)",
-      "createdFor": "สร้าง {loginId} แล้ว และมอบหมายให้ {company}"
+      "createdFor": "สร้าง {loginId} แล้ว และมอบหมายให้ {company}",
+      "team": "ทีม",
+      "chooseTeam": "อยู่ทีมใด",
+      "noManager": "สร้างผู้จัดการก่อน — ผู้เรียนทุกคนต้องอยู่ในทีม"
     },
     "dbd": {
       "title": "ข้อมูล DBD",

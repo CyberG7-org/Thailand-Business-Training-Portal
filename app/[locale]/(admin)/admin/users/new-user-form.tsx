@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import { Link } from '@/i18n/navigation';
+import { displayLoginId } from '@/lib/domain/login-id';
 import { createUserAction, type CreateUserState } from './actions';
 
 const initial: CreateUserState = { ok: false, error: null, createdLoginId: null, company: null };
@@ -20,7 +21,16 @@ export type CompanyOption = {
  * learner's active assignment. Language is not asked — every learner has all three languages
  * and the switcher remembers the last choice.
  */
-export function NewUserForm({ companies }: { companies: CompanyOption[] }) {
+export type TeamOption = { id: string; code: string; name: string | null };
+
+export function NewUserForm({
+  companies,
+  teams = null,
+}: {
+  companies: CompanyOption[];
+  /** Null for a manager: they create inside their own team (spec §7). */
+  teams?: TeamOption[] | null;
+}) {
   const locale = useLocale();
   const t = useTranslations('admin.users');
   const [state, formAction, pending] = useActionState(createUserAction, initial);
@@ -29,10 +39,25 @@ export function NewUserForm({ companies }: { companies: CompanyOption[] }) {
     <form action={formAction} className="grid max-w-md gap-3 rounded border p-4">
       <input type="hidden" name="locale" value={locale} />
       <h2 className="font-semibold">{t('new')}</h2>
-      <label className="text-sm">
-        {t('loginId')}
-        <input name="loginId" required className="mt-1 w-full rounded border px-2 py-1" />
-      </label>
+      {teams && (
+        <label className="text-sm">
+          {t('team')}
+          {teams.length === 0 ? (
+            <p data-testid="no-manager" className="text-sm text-amber-800">
+              {t('noManager')}
+            </p>
+          ) : (
+            <select name="managerId" required className="mt-1 w-full rounded border px-2 py-1">
+              <option value="">{t('chooseTeam')}</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name ? `${team.code} — ${team.name}` : team.code}
+                </option>
+              ))}
+            </select>
+          )}
+        </label>
+      )}
       <label className="text-sm">
         {t('password')}
         <input
@@ -83,7 +108,10 @@ export function NewUserForm({ companies }: { companies: CompanyOption[] }) {
       )}
       {state.ok && (
         <p role="status" data-testid="create-user-status" className="text-sm text-green-700">
-          {t('createdFor', { loginId: state.createdLoginId ?? '', company: state.company ?? '' })}
+          {t('createdFor', {
+            loginId: displayLoginId(state.createdLoginId),
+            company: state.company ?? '',
+          })}
         </p>
       )}
       <button

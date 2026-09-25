@@ -33,13 +33,32 @@ export async function openManualRecordForm(page: Page) {
   await expect(page.locator('input[name="company_name_th"]')).toBeVisible();
 }
 
-/** Creates a learner on the Users page; `company` must be a confirmed record's Thai name. */
+/** Creates a manager on the Managers page and returns their allocated code, e.g. "T01". */
+export async function createManager(page: Page, displayName: string, password: string) {
+  await page.goto('/th/admin/managers');
+  await page.locator('input[name="displayName"]').fill(displayName);
+  await page.locator('input[name="password"]').fill(password);
+  await page.getByTestId('create-manager').click();
+  const created = page.getByTestId('created-manager');
+  await expect(created).toBeVisible();
+  return (await created.textContent())!.match(/T\d+/)![0];
+}
+
+/**
+ * Creates a learner on the Users page and returns their allocated code, e.g. "t01-01". The code
+ * is allocated, never typed (spec §3.3); `team` is required when the caller is the admin.
+ */
 export async function createLearner(
   page: Page,
-  fields: { loginId: string; password: string; displayName?: string; company: string },
-): Promise<void> {
+  fields: { password: string; displayName?: string; company: string; team?: string },
+): Promise<string> {
   await page.goto('/th/admin/users');
-  await page.locator('input[name="loginId"]').fill(fields.loginId);
+  if (fields.team) {
+    const teamOption = page.locator('select[name="managerId"] option', { hasText: fields.team });
+    await page
+      .locator('select[name="managerId"]')
+      .selectOption((await teamOption.getAttribute('value'))!);
+  }
   await page.locator('input[name="password"]').fill(fields.password);
   if (fields.displayName) await page.locator('input[name="displayName"]').fill(fields.displayName);
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: fields.company });
@@ -47,7 +66,9 @@ export async function createLearner(
     .locator('select[name="dbdRecordId"]')
     .selectOption((await option.getAttribute('value'))!);
   await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
-  await expect(page.getByTestId('create-user-status')).toContainText(fields.loginId);
+  const status = page.getByTestId('create-user-status');
+  await expect(status).toBeVisible();
+  return (await status.textContent())!.match(/T\d+-\d+/)![0].toLowerCase();
 }
 
 export async function createConfirmedRecord(

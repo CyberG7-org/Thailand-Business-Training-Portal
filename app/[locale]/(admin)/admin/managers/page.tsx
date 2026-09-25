@@ -23,7 +23,10 @@ export default async function ManagersPage({ params }: { params: Promise<{ local
     .from('profiles')
     .select('manager_id')
     .not('manager_id', 'is', null);
-  const { data: records } = await db.from('dbd_records').select('team_id').not('team_id', 'is', null);
+  const { data: records } = await db
+    .from('dbd_records')
+    .select('team_id')
+    .not('team_id', 'is', null);
   const count = (rows: { [k: string]: string | null }[] | null, key: string, id: string) =>
     (rows ?? []).filter((r) => r[key] === id).length;
 
