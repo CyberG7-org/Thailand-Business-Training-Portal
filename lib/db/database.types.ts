@@ -1198,6 +1198,10 @@ export type Database = {
         Args: { p_prefix: string; p_scope: string }
         Returns: string
       }
+      release_login_id: {
+        Args: { p_scope: string; p_value: number }
+        Returns: boolean
+      }
       claim_index_jobs: {
         Args: { p_limit?: number }
         Returns: {

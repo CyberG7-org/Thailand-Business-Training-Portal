@@ -57,3 +57,41 @@ describe('allocate_login_id', () => {
     expect(await allocate(scope, 't')).toBe('t03');
   });
 });
+
+async function release(scope: string, value: number): Promise<boolean> {
+  const { data, error } = await svc.rpc('release_login_id', { p_scope: scope, p_value: value });
+  if (error) throw error;
+  return data as boolean;
+}
+
+/**
+ * A number that never reached an account may come back — but only while it is still the latest
+ * one issued, so a number handed out in between is never crossed.
+ */
+describe('release_login_id', () => {
+  const scopes: string[] = [];
+  afterAll(async () => {
+    await svc.from('login_id_counters').delete().in('scope', scopes);
+  });
+
+  it('reissues the latest number once it is handed back', async () => {
+    const scope = `test-${randomUUID()}`;
+    scopes.push(scope);
+    expect(await allocate(scope, 't')).toBe('t01');
+    expect(await release(scope, 1)).toBe(true);
+    expect(await allocate(scope, 't')).toBe('t01');
+    expect(await allocate(scope, 't')).toBe('t02');
+    expect(await release(scope, 2)).toBe(true);
+    expect(await allocate(scope, 't')).toBe('t02');
+  });
+
+  it('refuses a number that is not the latest, or a scope it has never seen', async () => {
+    const scope = `test-${randomUUID()}`;
+    scopes.push(scope);
+    expect(await allocate(scope, 't')).toBe('t01');
+    expect(await allocate(scope, 't')).toBe('t02');
+    expect(await release(scope, 1)).toBe(false);
+    expect(await allocate(scope, 't')).toBe('t03');
+    expect(await release(`test-${randomUUID()}`, 1)).toBe(false);
+  });
+});

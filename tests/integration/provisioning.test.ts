@@ -107,3 +107,77 @@ describe('provisioning allocates the code', () => {
     ).rejects.toBeInstanceOf(ProvisioningError);
   });
 });
+
+/**
+ * A code is spent only by an account that exists. The first manager on staging came out as T02
+ * because a too-short password was rejected after the counter had already moved.
+ */
+describe('provisioning spends a code only on an account that exists', () => {
+  const created: string[] = [];
+  afterAll(async () => {
+    for (const id of created.reverse()) await deleteTestUser(id);
+  });
+
+  async function nextManagerNumber(): Promise<number> {
+    const { data } = await svc
+      .from('login_id_counters')
+      .select('next_value')
+      .eq('scope', 'manager')
+      .maybeSingle();
+    return data?.next_value ?? 1;
+  }
+  const code = (n: number) => `t${n < 10 ? `0${n}` : n}`;
+
+  it('rejects a short password before taking a team code', async () => {
+    const before = await nextManagerNumber();
+    await expect(createManagerAccount({ password: 'short' })).rejects.toMatchObject({
+      code: 'invalid',
+    });
+    expect(await nextManagerNumber()).toBe(before);
+  });
+
+  it('rejects a short learner password without numbering the learner', async () => {
+    const manager = await createManagerAccount({ password: PASSWORD });
+    created.push(manager.id);
+    await expect(
+      createLearnerAccount({ password: 'short', managerId: manager.id }),
+    ).rejects.toMatchObject({ code: 'invalid' });
+    const first = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
+    created.push(first.id);
+    expect(first.loginId).toBe(`${manager.loginId}-01`);
+  });
+
+  it('hands the code back when the auth service refuses the account', async () => {
+    const before = await nextManagerNumber();
+    await expect(
+      createManagerAccount(
+        { password: PASSWORD },
+        {
+          createAccount: async () => {
+            throw new ProvisioningError('auth unavailable', 'unknown');
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: 'unknown' });
+    expect(await nextManagerNumber()).toBe(before);
+    const next = await createManagerAccount({ password: PASSWORD });
+    created.push(next.id);
+    expect(next.loginId).toBe(code(before));
+  });
+
+  it('keeps the number when the refusal is that the code is already taken', async () => {
+    const before = await nextManagerNumber();
+    await expect(
+      createManagerAccount(
+        { password: PASSWORD },
+        {
+          createAccount: async () => {
+            throw new ProvisioningError('Login ID already exists', 'duplicate');
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: 'duplicate' });
+    // Handing it back would issue the same taken code on every retry.
+    expect(await nextManagerNumber()).toBe(before + 1);
+  });
+});

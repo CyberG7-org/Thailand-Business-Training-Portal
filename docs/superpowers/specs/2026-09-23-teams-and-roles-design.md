@@ -75,6 +75,8 @@ Rules:
 - Codes are allocated automatically: the next free number, taken from a counter that only ever
   increases. **A number is never reused**, even if the account it belonged to is deleted, so an
   exam result or audit entry always points at one person.
+- A number that never reached an account — the form or the auth service refused it — goes back
+  and is issued to the next attempt, provided nothing was allocated in between (D61).
 - Numbers pass 99 by growing a digit, not by failing.
 - Login ids are stored lower-case (`t01-03`) as all login ids already are, and displayed
   upper-case (`T01-03`).
