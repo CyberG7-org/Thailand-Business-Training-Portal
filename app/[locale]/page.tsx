@@ -5,5 +5,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const user = await getCurrentUser();
   if (!user || user.status !== 'active') redirect(`/${locale}/login`);
-  redirect(`/${user.preferredLanguage}/${user.role === 'admin' ? 'admin' : 'dashboard'}`);
+  // Staff work in the admin area; learners study (spec §11).
+  const home = user.role === 'learner' ? 'dashboard' : 'admin';
+  redirect(`/${user.preferredLanguage}/${home}`);
 }

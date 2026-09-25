@@ -4,6 +4,7 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { PageNav } from '@/components/page-nav';
 import { SignOutButton } from '@/components/sign-out-button';
 import type { CurrentUser } from '@/lib/auth/session';
+import { displayLoginId } from '@/lib/domain/login-id';
 
 export async function AppHeader({ user, admin = false }: { user: CurrentUser; admin?: boolean }) {
   const t = await getTranslations('app');
@@ -17,7 +18,7 @@ export async function AppHeader({ user, admin = false }: { user: CurrentUser; ad
         </Link>
         <div className="flex items-center gap-4 text-sm">
           <LanguageToggle label={t('language')} />
-          <span>{user.displayName ?? user.loginId}</span>
+          <span>{user.displayName ?? displayLoginId(user.loginId)}</span>
           <SignOutButton />
         </div>
       </header>

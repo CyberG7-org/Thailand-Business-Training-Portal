@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { AppHeader } from '@/components/app-header';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 
 export default async function AdminLayout({
   children,
@@ -10,7 +10,7 @@ export default async function AdminLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const user = await requireAdmin(locale);
+  const user = await requireStaff(locale);
   return (
     <div className="min-h-screen">
       <AppHeader user={user} admin />
