@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Status | Stage 1 implemented (P15a); stages 2–3 (P15b, P15c) pending |
+| Status | Stages 1–2 implemented (P15a, P15b); stage 3 (P15c) pending |
 | Date | 2026-09-23 |
 | Supersedes | The two-role model of the foundation spec (`admin` / `learner`) |
 | Decisions | D52–D56 (recorded when the first stage merges) |
