@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
@@ -32,7 +32,7 @@ export default async function DbdRecordPage({
 }) {
   const { locale, id } = await params;
   const { extraction, extractionError, error } = await searchParams;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) notFound();

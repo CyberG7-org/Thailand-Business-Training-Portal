@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { LOCALES } from '@/i18n/routing';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { getQuestion } from '@/lib/db/questions';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
@@ -18,7 +18,7 @@ export default async function QuestionDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const question = await getQuestion(await createSupabaseServerClient(), id);
   if (!question) notFound();
   const t = await getTranslations('admin.questions');

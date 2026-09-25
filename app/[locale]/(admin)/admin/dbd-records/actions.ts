@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import {
   DocumentUploadError,
@@ -127,6 +127,11 @@ function formDataToInterview(formData: FormData, stored: ReturnType<typeof readS
   return interviewProfileSchema.parse(raw);
 }
 
+/** A manager's own team owns what they create; an admin's records belong to no team (spec §5.2). */
+function teamOf(user: { id: string; role: 'learner' | 'manager' | 'admin' }): string | null {
+  return user.role === 'manager' ? user.id : null;
+}
+
 function errorMessage(e: unknown): string {
   const raw = e instanceof Error ? e.message : 'Unexpected error';
   // A record confirmed before the business answers were required still owes them, and says so
@@ -141,7 +146,7 @@ export async function saveDbdRecordAction(
 ): Promise<SaveState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  const admin = await requireAdmin(locale);
+  const admin = await requireStaff(locale);
   const parsed = dbdRecordInputSchema.safeParse(formDataToInput(formData));
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
@@ -174,9 +179,13 @@ export async function saveDbdRecordAction(
       revalidatePath(`/${locale}/admin/dbd-records/${id}`);
       return { ok: true, error: null, fieldErrors: {} };
     }
-    const row = await createDbdRecord(db, parsed.data, admin.id, {
-      interview: formDataToInterview(formData, readStructuredData(null)),
-    });
+    const row = await createDbdRecord(
+      db,
+      parsed.data,
+      admin.id,
+      { interview: formDataToInterview(formData, readStructuredData(null)) },
+      teamOf(admin),
+    );
     createdId = row.id;
   } catch (e) {
     return { ok: false, error: errorMessage(e), fieldErrors: {} };
@@ -191,7 +200,7 @@ export async function confirmDbdRecordAction(
 ): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  const admin = await requireAdmin(locale);
+  const admin = await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) return { ok: false, error: 'not-found' };
@@ -223,12 +232,13 @@ export async function prepareUploadsAction(input: {
   id: string | null;
   files: DocumentFileMeta[];
 }): Promise<PrepareUploadsResult> {
-  const admin = await requireAdmin(input.locale);
+  const admin = await requireStaff(input.locale);
   const problem = checkDocumentFiles(input.files);
   if (problem) return { ok: false, error: problem };
   const db = await createSupabaseServerClient();
   try {
-    const id = input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id)).id;
+    const id =
+      input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, undefined, teamOf(admin))).id;
     const uploads: PreparedUpload[] = [];
     for (const file of input.files.filter((f) => f.size > 0)) {
       const path = newDocumentPath(id);
@@ -254,7 +264,7 @@ export async function registerUploadsAction(input: {
   redirect?: boolean;
 }): Promise<ToolState & { redirectTo?: string }> {
   const { locale, id } = input;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   try {
     for (const upload of input.uploads) {
@@ -305,7 +315,7 @@ export async function extractDocumentAction(
 ): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   if (!getDbdExtractor()) return { ok: false, error: 'not_configured' };
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
@@ -323,7 +333,7 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
   const documentId = String(formData.get('documentId') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record || record.extraction_status === 'confirmed') return;
@@ -346,7 +356,7 @@ export async function saveInterviewAnswersAction(
 ): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) return { ok: false, error: 'not-found' };
@@ -371,7 +381,7 @@ export async function retryIndexAction(formData: FormData): Promise<void> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
   const documentId = String(formData.get('documentId') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const doc = (await listDbdDocuments(db, id)).find((d) => d.id === documentId);
   if (!doc || !canRequestIndex(doc.index_status as IndexStatus)) return;
@@ -385,7 +395,7 @@ export type AskState = AskResult;
 export async function askDocumentsAction(_prev: AskState, formData: FormData): Promise<AskState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   return askRecordDocuments(db, getVectorStore(), {
     recordId: id,

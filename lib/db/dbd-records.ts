@@ -31,17 +31,24 @@ export async function getDbdRecord(db: Db, id: string): Promise<DbdRecordRow | n
   return data;
 }
 
+/**
+ * `teamId` is the creator's team, or null when an admin creates the record — spec §5.2 invariant 5.
+ * Without it a manager's own upload would belong to no team and vanish from their list the moment
+ * it was saved, since every team-scoped policy reaches a record through `team_id`.
+ */
 export async function createDbdRecord(
   db: Db,
   input: DbdRecordInput,
   createdBy: string,
   structured?: Partial<StructuredData>,
+  teamId?: string | null,
 ): Promise<DbdRecordRow> {
   const { data, error } = await db
     .from('dbd_records')
     .insert({
       ...toColumns(input),
       created_by: createdBy,
+      team_id: teamId ?? null,
       ...(structured ? { structured_data: structured as never } : {}),
     })
     .select()

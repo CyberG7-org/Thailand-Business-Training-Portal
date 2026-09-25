@@ -51,7 +51,8 @@
       "notifications": "通知",
       "calls": "通话训练",
       "settings": "策略设置",
-      "audit": "审计日志"
+      "audit": "审计日志",
+      "managers": "经理"
     },
     "users": {
       "title": "用户",

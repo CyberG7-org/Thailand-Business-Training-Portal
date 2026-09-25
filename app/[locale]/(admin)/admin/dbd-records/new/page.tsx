@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
 import { UploadFirstForm } from './upload-first-form';
@@ -13,7 +13,7 @@ export default async function NewDbdRecordPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const t = await getTranslations('admin.dbd');
   return (
     <section className="grid gap-6">

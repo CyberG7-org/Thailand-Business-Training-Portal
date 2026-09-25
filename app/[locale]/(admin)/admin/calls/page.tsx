@@ -1,12 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { listAllCallSessions } from '@/lib/db/calls';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 export default async function AdminCallsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const rows = await listAllCallSessions(await createSupabaseServerClient());
   const t = await getTranslations('admin.calls');
   return (

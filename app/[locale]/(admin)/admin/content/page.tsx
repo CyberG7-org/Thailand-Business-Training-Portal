@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { LOCALES } from '@/i18n/routing';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listStudyMaterials } from '@/lib/db/study';
 import { loadStarterCardsAction } from './actions';
@@ -15,7 +15,7 @@ export default async function ContentPage({
 }) {
   const { locale } = await params;
   const { loaded } = await searchParams;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const materials = await listStudyMaterials(await createSupabaseServerClient());
   const t = await getTranslations('admin.content');
   return (

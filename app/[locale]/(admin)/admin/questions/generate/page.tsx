@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { listDbdRecords } from '@/lib/db/dbd-records';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listStudyMaterials } from '@/lib/db/study';
@@ -18,7 +18,7 @@ export default async function GenerateQuestionsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const [materials, records] = await Promise.all([listStudyMaterials(db), listDbdRecords(db)]);
   const references = records

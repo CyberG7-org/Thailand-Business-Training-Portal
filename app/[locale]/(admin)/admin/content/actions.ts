@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import {
@@ -43,7 +43,7 @@ export async function saveMaterialAction(
 ): Promise<ContentState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  const admin = await requireAdmin(locale);
+  const admin = await requireStaff(locale);
   const parsed = materialSchema.safeParse({
     contentKey: formData.get('contentKey'),
     type: formData.get('type'),
@@ -73,7 +73,7 @@ export async function saveLocalizationAction(
 ): Promise<ContentState> {
   const locale = String(formData.get('locale') ?? 'th');
   const materialId = String(formData.get('materialId') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const parsed = localizationSchema.safeParse({
     language: formData.get('language'),
     title: formData.get('title'),
@@ -99,7 +99,7 @@ export async function uploadStudyPdfAction(
   const locale = String(formData.get('locale') ?? 'th');
   const materialId = String(formData.get('materialId') ?? '');
   const language = formData.get('language');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   if (language !== 'th' && language !== 'en' && language !== 'zh') {
     return { ok: false, error: 'invalid-language' };
   }
@@ -120,7 +120,7 @@ export async function uploadStudyPdfAction(
 /** One click loads the bank-interview starter cards (decision D39); existing keys are kept. */
 export async function loadStarterCardsAction(formData: FormData): Promise<void> {
   const locale = String(formData.get('locale') ?? 'th');
-  const admin = await requireAdmin(locale);
+  const admin = await requireStaff(locale);
   const { created } = await loadStarterCards(
     await createSupabaseServerClient(),
     BANK_INTERVIEW_CARDS,

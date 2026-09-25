@@ -1,10 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { MaterialForm } from '../material-form';
 
 export default async function NewContentPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const t = await getTranslations('admin.content');
   return (
     <section className="grid gap-4">

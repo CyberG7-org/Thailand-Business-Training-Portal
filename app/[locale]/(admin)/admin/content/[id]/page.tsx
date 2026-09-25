@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { LOCALES } from '@/i18n/routing';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listStudyMaterials, pickLocalization } from '@/lib/db/study';
 import { LocalizationForm } from '../localization-form';
@@ -14,7 +14,7 @@ export default async function ContentDetailPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const material = (await listStudyMaterials(await createSupabaseServerClient())).find(
     (m) => m.id === id,
   );

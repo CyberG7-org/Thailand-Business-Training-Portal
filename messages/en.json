@@ -51,7 +51,8 @@
       "notifications": "Notifications",
       "calls": "Call training",
       "settings": "Policy settings",
-      "audit": "Audit log"
+      "audit": "Audit log",
+      "managers": "Managers"
     },
     "users": {
       "title": "Users",

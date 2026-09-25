@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { createRecordingUrl, getCallSession } from '@/lib/db/calls';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
@@ -11,7 +11,7 @@ export default async function AdminCallPage({
   params: Promise<{ locale: string; id: string }>;
 }) {
   const { locale, id } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const session = await getCallSession(await createSupabaseServerClient(), id);
   if (!session) notFound();
   const recordingUrl = session.recording_path

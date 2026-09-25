@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { fillMissingLanguages } from '@/lib/db/question-gen';
 import {
   createQuestion,
@@ -54,7 +54,7 @@ export async function saveQuestionAction(
 ): Promise<QuestionState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  const admin = await requireAdmin(locale);
+  const admin = await requireStaff(locale);
   const parsed = questionSchema.safeParse({
     questionKey: formData.get('questionKey'),
     pools: formData.getAll('pools'),
@@ -82,7 +82,7 @@ export async function saveQuestionLocalizationAction(
 ): Promise<QuestionState> {
   const locale = String(formData.get('locale') ?? 'th');
   const questionId = String(formData.get('questionId') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const options: QuestionOption[] = OPTION_KEYS.map((key) => ({
     key,
     text: String(formData.get(`option_${key}`) ?? '').trim(),
@@ -115,7 +115,7 @@ export async function setApprovalAction(
   const locale = String(formData.get('locale') ?? 'th');
   const questionId = String(formData.get('questionId') ?? '');
   const status = formData.get('status');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   if (status !== 'draft' && status !== 'approved' && status !== 'retired') {
     return { ok: false, error: 'Invalid status' };
   }
@@ -132,7 +132,7 @@ export async function setApprovalAction(
 export async function approveQuestionAction(formData: FormData): Promise<void> {
   const locale = String(formData.get('locale') ?? 'th');
   const questionId = String(formData.get('questionId') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   await setApprovalStatus(await createSupabaseServerClient(), questionId, 'approved');
   revalidatePath(`/${locale}/admin/questions`);
   const query = new URLSearchParams();
@@ -153,7 +153,7 @@ export async function fillMissingLanguagesAction(
 ): Promise<FillState> {
   const locale = String(formData.get('locale') ?? 'th');
   const questionId = String(formData.get('questionId') ?? '');
-  await requireAdmin(locale);
+  await requireStaff(locale);
   try {
     const written = await fillMissingLanguages(await createSupabaseServerClient(), questionId);
     revalidatePath(`/${locale}/admin/questions/${questionId}`);

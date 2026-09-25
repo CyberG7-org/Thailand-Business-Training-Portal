@@ -1,13 +1,13 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireAdmin } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { listDbdRecords } from '@/lib/db/dbd-records';
 import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 export default async function DbdRecordsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  await requireAdmin(locale);
+  await requireStaff(locale);
   const records = await listDbdRecords(await createSupabaseServerClient());
   const t = await getTranslations('admin.dbd');
   return (
