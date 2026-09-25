@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     'out/**',
     'build/**',
     'next-env.d.ts',
+    // The design handoff's reference scripts are mocks, not code.
+    'docs/**',
   ]),
 ]);
 

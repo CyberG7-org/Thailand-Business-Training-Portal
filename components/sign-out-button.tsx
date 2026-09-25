@@ -7,7 +7,10 @@ export async function SignOutButton() {
   return (
     <form action={signOutAction}>
       <input type="hidden" name="locale" value={locale} />
-      <button type="submit" className="text-sm underline">
+      <button
+        type="submit"
+        className="grid min-h-11 place-items-center px-2 text-sm text-ink-700 hover:text-brand-700"
+      >
         {t('signOut')}
       </button>
     </form>

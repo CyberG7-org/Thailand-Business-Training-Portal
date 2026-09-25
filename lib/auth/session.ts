@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -11,7 +12,7 @@ export type CurrentUser = {
   status: 'active' | 'disabled';
 };
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -31,7 +32,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     preferredLanguage: profile.preferred_language as AppLocale,
     status: profile.status as CurrentUser['status'],
   };
-}
+});
 
 /** Redirects to login when signed out or disabled. Source of truth is the profiles row, not the JWT. */
 export async function requireUser(locale: string): Promise<CurrentUser> {

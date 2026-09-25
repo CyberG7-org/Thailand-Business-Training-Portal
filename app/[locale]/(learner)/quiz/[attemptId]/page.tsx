@@ -1,3 +1,4 @@
+import { LearnerShell } from '@/components/shell/learner-shell';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import type { AppLocale } from '@/i18n/routing';
@@ -38,17 +39,18 @@ export default async function QuizAttemptPage({
   });
 
   return (
-    <section className="grid gap-4">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <AttemptBoard
-        attemptId={attempt.id}
-        questions={questions}
-        instantFeedback
-        answerAction={answerQuizAction}
-        submitAction={submitQuizAction}
-        submitTestId="submit-quiz"
-        submitLabel={t('submit')}
-      />
-    </section>
+    <LearnerShell title={t('title')} step="quiz">
+      <section className="grid gap-4">
+        <AttemptBoard
+          attemptId={attempt.id}
+          questions={questions}
+          instantFeedback
+          answerAction={answerQuizAction}
+          submitAction={submitQuizAction}
+          submitTestId="submit-quiz"
+          submitLabel={t('submit')}
+        />
+      </section>
+    </LearnerShell>
   );
 }

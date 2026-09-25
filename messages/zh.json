@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "商业培训门户",
+    "nameThai": "พอร์ทัลฝึกอบรมธุรกิจ",
     "language": "语言",
     "back": "返回",
     "home": "首页"
@@ -534,7 +535,8 @@
       "expired": "访问期限已结束",
       "missing_issue_date": "缺少证书签发日期"
     },
-    "open": "打开"
+    "open": "打开",
+    "stepOf": "第 {n} 步（共 5 步）"
   },
   "progression": {
     "UNASSIGNED": "未分配",

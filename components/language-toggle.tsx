@@ -38,7 +38,7 @@ export function LanguageToggle({ label, className = '' }: { label: string; class
       role="group"
       aria-label={label}
       data-testid="language-toggle"
-      className={`inline-flex overflow-hidden rounded border bg-white text-sm ${className}`}
+      className={`inline-flex rounded-[10px] bg-brand-100/90 p-[3px] text-sm ${className}`}
     >
       {LOCALES.map((code) => {
         const active = code === locale;
@@ -51,8 +51,8 @@ export function LanguageToggle({ label, className = '' }: { label: string; class
             disabled={pending}
             onClick={() => choose(code)}
             data-testid={`lang-${code}`}
-            className={`px-3 py-1 transition-colors disabled:opacity-60 ${
-              active ? 'bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'
+            className={`grid min-h-11 place-items-center rounded-control px-3.5 transition-colors disabled:opacity-60 ${
+              active ? 'bg-brand-700 font-semibold text-white' : 'text-brand-700 hover:bg-white/60'
             }`}
           >
             {LABELS[code]}

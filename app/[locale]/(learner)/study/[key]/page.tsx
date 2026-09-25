@@ -1,3 +1,4 @@
+import { LearnerShell } from '@/components/shell/learner-shell';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import ReactMarkdown from 'react-markdown';
@@ -35,12 +36,14 @@ export default async function StudyMaterialPage({
 
   if (!loc) {
     return (
-      <section className="grid gap-4">
-        <Link href="/study" className="text-sm underline">
-          ← {t('title')}
-        </Link>
-        <p data-testid="study-not-available">{t('notAvailable')}</p>
-      </section>
+      <LearnerShell title={t('title')} step="study">
+        <section className="grid gap-4">
+          <Link href="/study" className="text-sm underline">
+            ← {t('title')}
+          </Link>
+          <p data-testid="study-not-available">{t('notAvailable')}</p>
+        </section>
+      </LearnerShell>
     );
   }
 
@@ -82,73 +85,72 @@ export default async function StudyMaterialPage({
   }
 
   return (
-    <section className="grid gap-4">
-      <ViewTracker materialId={material.id} />
-      <Link href="/study" className="text-sm underline">
-        ← {t('title')}
-      </Link>
-      <h1 className="text-2xl font-semibold" data-testid="study-title">
-        {loc.title}
-      </h1>
-      {ttsAvailable && (
-        <ReadAloudPlayer
-          materialId={material.id}
-          labels={{
-            play: t('readAloud.play'),
-            pause: t('readAloud.pause'),
-            loading: t('readAloud.loading'),
-            error: t('readAloud.error'),
-          }}
-        />
-      )}
-      {material.type === 'card' && (
-        <article className="prose max-w-2xl" data-testid="study-body">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
-        </article>
-      )}
-      {evidence.length > 0 && (
-        <aside className="max-w-2xl rounded border bg-gray-50 p-4" data-testid="study-evidence">
-          <h2 className="text-sm font-semibold">{t('evidence.title')}</h2>
-          <p className="text-xs text-gray-600">{t('evidence.hint')}</p>
-          <ol className="mt-2 grid gap-2">
-            {evidence.map((e, i) => (
-              <li key={i} className="rounded border bg-white p-2 text-sm">
-                <p className="text-xs text-gray-500">
-                  {t('evidence.source', { document: e.document, page: e.page })}
-                </p>
-                <p className="whitespace-pre-wrap">{e.text}</p>
-              </li>
-            ))}
-          </ol>
-        </aside>
-      )}
-      {material.type === 'pdf' &&
-        (pdfUrl ? (
-          <div className="grid gap-2">
-            <iframe src={pdfUrl} title={loc.title} className="h-[70vh] w-full rounded border" />
-            <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-sm underline">
-              {t('openPdf')}
-            </a>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">{t('pdfMissing')}</p>
-        ))}
-      {completionTracking === 'completed' && (
-        <form action={markCompletedAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="materialId" value={material.id} />
-          <input type="hidden" name="contentKey" value={material.content_key} />
-          {mine?.completed_at ? (
-            <p className="text-sm text-green-700" data-testid="study-completed">
-              {t('completed')}
-            </p>
+    <LearnerShell title={loc.title} titleTestId="study-title" step="study">
+      <section className="grid gap-4">
+        <ViewTracker materialId={material.id} />
+        <Link href="/study" className="text-sm underline">
+          ← {t('title')}
+        </Link>
+        {ttsAvailable && (
+          <ReadAloudPlayer
+            materialId={material.id}
+            labels={{
+              play: t('readAloud.play'),
+              pause: t('readAloud.pause'),
+              loading: t('readAloud.loading'),
+              error: t('readAloud.error'),
+            }}
+          />
+        )}
+        {material.type === 'card' && (
+          <article className="prose max-w-2xl" data-testid="study-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
+          </article>
+        )}
+        {evidence.length > 0 && (
+          <aside className="max-w-2xl rounded border bg-gray-50 p-4" data-testid="study-evidence">
+            <h2 className="text-sm font-semibold">{t('evidence.title')}</h2>
+            <p className="text-xs text-gray-600">{t('evidence.hint')}</p>
+            <ol className="mt-2 grid gap-2">
+              {evidence.map((e, i) => (
+                <li key={i} className="rounded border bg-white p-2 text-sm">
+                  <p className="text-xs text-gray-500">
+                    {t('evidence.source', { document: e.document, page: e.page })}
+                  </p>
+                  <p className="whitespace-pre-wrap">{e.text}</p>
+                </li>
+              ))}
+            </ol>
+          </aside>
+        )}
+        {material.type === 'pdf' &&
+          (pdfUrl ? (
+            <div className="grid gap-2">
+              <iframe src={pdfUrl} title={loc.title} className="h-[70vh] w-full rounded border" />
+              <a href={pdfUrl} target="_blank" rel="noreferrer" className="text-sm underline">
+                {t('openPdf')}
+              </a>
+            </div>
           ) : (
-            <button type="submit" className="rounded bg-gray-900 px-4 py-2 text-sm text-white">
-              {t('markCompleted')}
-            </button>
-          )}
-        </form>
-      )}
-    </section>
+            <p className="text-sm text-gray-500">{t('pdfMissing')}</p>
+          ))}
+        {completionTracking === 'completed' && (
+          <form action={markCompletedAction}>
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="materialId" value={material.id} />
+            <input type="hidden" name="contentKey" value={material.content_key} />
+            {mine?.completed_at ? (
+              <p className="text-sm text-green-700" data-testid="study-completed">
+                {t('completed')}
+              </p>
+            ) : (
+              <button type="submit" className="rounded bg-gray-900 px-4 py-2 text-sm text-white">
+                {t('markCompleted')}
+              </button>
+            )}
+          </form>
+        )}
+      </section>
+    </LearnerShell>
   );
 }

@@ -1,3 +1,4 @@
+import { LearnerShell } from '@/components/shell/learner-shell';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { getTranslations } from 'next-intl/server';
 import { StageCard } from '@/components/stage-card';
@@ -73,15 +74,16 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     </div>
   );
 
+  const welcome = t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) });
+
   if (!mine) {
     return (
-      <section className="grid gap-6">
-        <h1 className="text-2xl font-semibold">
-          {t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) })}
-        </h1>
-        <p data-testid="no-company">{t('noCompany')}</p>
-        {stageCards}
-      </section>
+      <LearnerShell title={welcome} home>
+        <section className="grid gap-6">
+          <p data-testid="no-company">{t('noCompany')}</p>
+          {stageCards}
+        </section>
+      </LearnerShell>
     );
   }
 
@@ -92,48 +94,46 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const interview = readStructuredData(record.structured_data).interview ?? EMPTY_INTERVIEW_PROFILE;
 
   return (
-    <section className="grid gap-6">
-      <h1 className="text-2xl font-semibold">
-        {t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) })}
-      </h1>
+    <LearnerShell title={welcome} home>
+      <section className="grid gap-6">
+        {stageCards}
 
-      {stageCards}
-
-      <div className="rounded border p-4">
-        <h2 className="font-semibold">{t('company.title')}</h2>
-        <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
-          <dt>{t('company.name')}</dt>
-          <dd data-testid="company-name">{record.company_name_th ?? '—'}</dd>
-          <dt>{t('company.juristicId')}</dt>
-          <dd>{record.juristic_id ?? '—'}</dd>
-          <dt>{t('company.registeredCapital')}</dt>
-          <dd>
-            {record.registered_capital == null
-              ? '—'
-              : `${Number(record.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`}
-          </dd>
-          <dt>{t('company.address')}</dt>
-          <dd>{record.head_office_address ?? '—'}</dd>
-          <dt>{t('company.natureOfBusiness')}</dt>
-          <dd data-testid="company-nature">{interview.nature_of_business ?? '—'}</dd>
-          <dt>{t('company.productsServices')}</dt>
-          <dd data-testid="company-products">{interview.products_services ?? '—'}</dd>
-          <dt>{t('company.directors')}</dt>
-          <dd>{directors.length ? directors.map((d) => d.name_th).join(', ') : '—'}</dd>
-          <dt>{t('company.issuedOn')}</dt>
-          <dd>{record.issued_on ? formatDate(record.issued_on, loc) : '—'}</dd>
-        </dl>
-        {documentUrl && (
-          <a
-            href={documentUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 inline-block text-sm underline"
-          >
-            {t('company.openCertificate')}
-          </a>
-        )}
-      </div>
-    </section>
+        <div className="rounded border p-4">
+          <h2 className="font-semibold">{t('company.title')}</h2>
+          <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
+            <dt>{t('company.name')}</dt>
+            <dd data-testid="company-name">{record.company_name_th ?? '—'}</dd>
+            <dt>{t('company.juristicId')}</dt>
+            <dd>{record.juristic_id ?? '—'}</dd>
+            <dt>{t('company.registeredCapital')}</dt>
+            <dd>
+              {record.registered_capital == null
+                ? '—'
+                : `${Number(record.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`}
+            </dd>
+            <dt>{t('company.address')}</dt>
+            <dd>{record.head_office_address ?? '—'}</dd>
+            <dt>{t('company.natureOfBusiness')}</dt>
+            <dd data-testid="company-nature">{interview.nature_of_business ?? '—'}</dd>
+            <dt>{t('company.productsServices')}</dt>
+            <dd data-testid="company-products">{interview.products_services ?? '—'}</dd>
+            <dt>{t('company.directors')}</dt>
+            <dd>{directors.length ? directors.map((d) => d.name_th).join(', ') : '—'}</dd>
+            <dt>{t('company.issuedOn')}</dt>
+            <dd>{record.issued_on ? formatDate(record.issued_on, loc) : '—'}</dd>
+          </dl>
+          {documentUrl && (
+            <a
+              href={documentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-block text-sm underline"
+            >
+              {t('company.openCertificate')}
+            </a>
+          )}
+        </div>
+      </section>
+    </LearnerShell>
   );
 }

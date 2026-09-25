@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Trirong:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap"><style>body{margin:0;background:#cfd8e8;font-family:"IBM Plex Sans Thai",system-ui,sans-serif;color:#111827}a{color:#2458c6;text-underline-offset:3px}a:hover{color:#1c3470}input::placeholder{color:#5b6472}</style><script src="./image-slot.js"></script></helmet>
+<div style="display:flex;gap:48px;align-items:flex-start;padding:48px;flex-wrap:wrap">
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 12px system-ui,sans-serif;color:#374151">Login · Desktop · English</div>
+<div data-screen-label="Login desktop EN" style="width:1280px;height:800px;display:grid;grid-template-columns:560px minmax(0,1fr);background:radial-gradient(rgba(28,52,112,.13) 1px,transparent 1.5px) 0 0/24px 24px,#e6edf8">
+<div style="position:relative;display:flex;flex-direction:column;padding:40px 48px;color:#fff;border-radius:0 36px 36px 0;overflow:hidden;background:#0c1a3a">
+<div style="position:absolute;inset:0"><image-slot id="login-hero" shape="rect" src="{{ heroSrc }}" placeholder="Drop a Thailand business photo (e.g. Bangkok business district, Sathorn skyline)"></image-slot></div>
+<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(12,26,58,.72) 0%,rgba(12,26,58,.35) 30%,rgba(12,26,58,.82) 58%,rgba(12,26,58,.94) 88%,rgba(12,26,58,.5) 100%),linear-gradient(90deg,rgba(28,52,112,.35),transparent 70%)"></div>
+<div style="position:relative;display:flex;flex-direction:column;flex:1;pointer-events:none">
+<div style="display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:10px;background:#0c1a3a;color:#f6ecd6;display:grid;place-items:center;font-family:'Trirong',serif;font-size:17px;font-weight:600;box-shadow:inset 0 0 0 1px rgba(200,150,62,.7)">BT</div><div style="display:flex;flex-direction:column;line-height:1.4"><span style="font-family:'Trirong',serif;font-size:17px;font-weight:600">Business Training Portal</span><span style="font-size:14px;color:#dbe5f8">พอร์ทัลฝึกอบรมธุรกิจ</span></div></div>
+<div style="margin:auto 0">
+<h1 data-anim="rise" data-delay="0" style="margin:0 0 14px;font-family:'Trirong',serif;font-size:36px;line-height:1.35;font-weight:500;text-wrap:balance">Thailand Business Training &amp; Bank Verification Portal</h1>
+<p data-anim="rise" data-delay="60" style="margin:0 0 32px;font-size:16px;line-height:1.75;color:#dbe5f8;max-width:440px;text-wrap:pretty">Prepare for your company's bank account verification. Study your own DBD certificate, practise with quizzes, pass the exam, and rehearse the call with a simulated bank officer.</p>
+<ol data-anim="rise" data-delay="120" style="position:relative;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px">
+<div style="position:absolute;left:15px;top:16px;bottom:16px;width:2px;background:rgba(255,255,255,.2)"></div>
+<li style="position:relative;display:flex;align-items:center;gap:14px;font-size:16px;line-height:1.6"><span style="width:32px;height:32px;border-radius:50%;background:#1c3470;border:1px solid rgba(255,255,255,.35);display:grid;place-items:center;font-size:14px;font-weight:600">1</span>Study material</li>
+<li style="position:relative;display:flex;align-items:center;gap:14px;font-size:16px;line-height:1.6"><span style="width:32px;height:32px;border-radius:50%;background:#1c3470;border:1px solid rgba(255,255,255,.35);display:grid;place-items:center;font-size:14px;font-weight:600">2</span>Evaluation quiz</li>
+<li style="position:relative;display:flex;align-items:center;gap:14px;font-size:16px;line-height:1.6"><span style="width:32px;height:32px;border-radius:50%;background:#1c3470;border:1px solid rgba(255,255,255,.35);display:grid;place-items:center;font-size:14px;font-weight:600">3</span>Exam</li>
+<li style="position:relative;display:flex;align-items:center;gap:14px;font-size:16px;line-height:1.6"><span style="width:32px;height:32px;border-radius:50%;background:#1c3470;border:1px solid rgba(255,255,255,.35);display:grid;place-items:center;font-size:14px;font-weight:600">4</span>Name card</li>
+<li style="position:relative;display:flex;align-items:center;gap:14px;font-size:16px;line-height:1.6"><span style="width:32px;height:32px;border-radius:50%;background:#c8963e;color:#0c1a3a;display:grid;place-items:center;font-size:14px;font-weight:600">5</span>Bank verification</li>
+</ol>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;padding:32px 40px">
+<div role="group" aria-label="Language" style="align-self:flex-end;display:flex;padding:3px;background:#fff;border-radius:10px;font-size:14px;box-shadow:0 2px 6px rgba(12,26,58,.06)"><a href="#" style="display:grid;place-items:center;min-height:38px;padding:0 14px;border-radius:8px;color:#1c3470;text-decoration:none">ไทย</a><a href="#" aria-current="true" style="display:grid;place-items:center;min-height:38px;padding:0 14px;border-radius:8px;background:#1c3470;color:#fff;font-weight:600;text-decoration:none">English</a><a href="#" style="display:grid;place-items:center;min-height:38px;padding:0 14px;border-radius:8px;color:#1c3470;text-decoration:none">中文</a></div>
+<div style="flex:1;display:grid;place-items:center">
+<form data-anim="rise" data-delay="160" style="width:100%;max-width:420px;box-sizing:border-box;padding:36px 36px 32px;background:#fff;border-radius:24px;box-shadow:0 2px 6px rgba(12,26,58,.06),0 16px 40px rgba(12,26,58,.1);display:flex;flex-direction:column;gap:20px">
+<h2 style="margin:0;font-family:'Trirong',serif;font-size:28px;line-height:1.4;font-weight:600;color:#0c1a3a">Sign in</h2>
+<p style="margin:-14px 0 0;font-size:14px;line-height:1.7;color:#5b6472">Use the login ID and password from your administrator.</p>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;line-height:1.7;font-weight:600">Login ID</span><input name="loginId" autocomplete="username" value="user1" style="min-height:48px;padding:0 14px;border-radius:8px;border:1px solid #cbd2dc;background:#fff;font:400 16px 'IBM Plex Sans Thai',sans-serif;color:#111827;box-sizing:border-box" style-focus="outline:2px solid #2458c6;outline-offset:1px;border-color:#2458c6"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;line-height:1.7;font-weight:600">Password</span><span style="position:relative;display:flex"><input type="{{ pwType }}" name="password" autocomplete="current-password" value="training24" style="flex:1;min-height:48px;padding:0 52px 0 14px;border-radius:8px;border:1px solid #cbd2dc;background:#fff;font:400 16px 'IBM Plex Sans Thai',sans-serif;color:#111827;box-sizing:border-box" style-focus="outline:2px solid #2458c6;outline-offset:1px;border-color:#2458c6"><button type="button" onClick="{{ togglePw }}" aria-label="{{ pwLabel }}" style="position:absolute;right:2px;top:2px;width:44px;height:44px;border:0;background:none;color:#5b6472;display:grid;place-items:center;cursor:pointer;border-radius:6px" style-focus="outline:2px solid #2458c6"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"></path><circle cx="12" cy="12" r="3"></circle></svg></button></span></label>
+<button type="submit" style="display:flex;justify-content:center;align-items:center;gap:8px;min-height:52px;margin-top:4px;border:0;border-radius:8px;background:#2458c6;color:#fff;font:600 16px 'IBM Plex Sans Thai',sans-serif;cursor:pointer;transition:background .2s" style-hover="background:#1c3470" style-focus="outline:2px solid #2458c6;outline-offset:2px">Sign in</button>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 12px system-ui,sans-serif;color:#374151">Login · Mobile · ไทย · error state</div>
+<div data-screen-label="Login mobile TH error" style="width:390px;height:800px;display:flex;flex-direction:column;background:radial-gradient(rgba(28,52,112,.13) 1px,transparent 1.5px) 0 0/20px 20px,#e6edf8">
+<div style="position:relative;overflow:hidden;padding:16px 20px 56px;color:#fff;border-radius:0 0 28px 28px;background:#0c1a3a">
+<div style="position:absolute;inset:0"><image-slot id="login-hero-mobile" shape="rect" src="{{ heroSrc }}" placeholder="Drop a Thailand business photo"></image-slot></div>
+<div style="position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(12,26,58,.78),rgba(12,26,58,.6) 45%,rgba(12,26,58,.9))"></div>
+<div style="position:relative;pointer-events:none">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;border-radius:9px;background:#0c1a3a;color:#f6ecd6;display:grid;place-items:center;font-family:'Trirong',serif;font-size:15px;font-weight:600;box-shadow:inset 0 0 0 1px rgba(200,150,62,.7)">BT</div><span style="font-family:'Trirong',serif;font-size:16px;line-height:1.7;font-weight:600;margin-right:auto">พอร์ทัลฝึกอบรมธุรกิจ</span><a href="#" aria-label="เปลี่ยนภาษา" style="pointer-events:auto;display:grid;place-items:center;min-width:44px;min-height:44px;padding:0 10px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);font-size:14px;font-weight:500;color:#fff;text-decoration:none;box-sizing:border-box">ไทย</a></div>
+<h1 data-anim="rise" data-delay="0" style="margin:28px 0 0;font-family:'Trirong',serif;font-size:24px;line-height:1.7;font-weight:500">พอร์ทัลฝึกอบรมธุรกิจและยืนยันตัวตนกับธนาคาร</h1>
+<p data-anim="rise" data-delay="60" style="margin:6px 0 0;font-size:14px;line-height:1.7;color:#dbe5f8">เตรียมตัวยืนยันบัญชีบริษัทกับธนาคาร ศึกษาหนังสือรับรองของบริษัทคุณ ทำแบบทดสอบ สอบ และฝึกโทรกับเจ้าหน้าที่ธนาคารจำลอง</p>
+</div>
+</div>
+<form data-anim="rise" data-delay="120" style="position:relative;margin:auto 16px;padding:24px 20px;background:#fff;border-radius:24px;box-shadow:0 2px 6px rgba(12,26,58,.06),0 16px 40px rgba(12,26,58,.12);display:flex;flex-direction:column;gap:16px">
+<h2 style="margin:0;font-family:'Trirong',serif;font-size:22px;line-height:1.7;font-weight:600;color:#0c1a3a">เข้าสู่ระบบ</h2>
+<p style="margin:-12px 0 0;font-size:14px;line-height:1.7;color:#5b6472">ใช้รหัสผู้ใช้และรหัสผ่านที่ได้รับจากผู้ดูแลระบบ</p>
+<div role="alert" style="display:flex;gap:10px;padding:12px 14px;border-radius:8px;background:#fdecea;color:#b42318;font-size:14px;line-height:1.7;font-weight:500"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:3px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6M12 16.5v.5"></path></svg>รหัสผู้ใช้หรือรหัสผ่านไม่ถูกต้อง</div>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;line-height:1.7;font-weight:600">รหัสผู้ใช้</span><input autocomplete="username" value="user1" style="min-height:48px;padding:0 14px;border-radius:8px;border:1px solid #cbd2dc;background:#fff;font:400 16px 'IBM Plex Sans Thai',sans-serif;color:#111827;box-sizing:border-box" style-focus="outline:2px solid #2458c6;outline-offset:1px"></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;line-height:1.7;font-weight:600">รหัสผ่าน</span><input type="password" autocomplete="current-password" aria-invalid="true" value="wrongpass" style="min-height:48px;padding:0 14px;border-radius:8px;border:2px solid #b42318;background:#fff;font:400 16px 'IBM Plex Sans Thai',sans-serif;color:#111827;box-sizing:border-box" style-focus="outline:2px solid #2458c6;outline-offset:1px"></label>
+<button type="submit" style="display:flex;justify-content:center;align-items:center;min-height:52px;margin-top:4px;border:0;border-radius:8px;background:#2458c6;color:#fff;font:600 16px 'IBM Plex Sans Thai',sans-serif" style-focus="outline:2px solid #2458c6;outline-offset:2px">เข้าสู่ระบบ</button>
+</form>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;animate&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;heroPhoto&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;skyline&quot;,&quot;team&quot;,&quot;finance&quot;,&quot;market&quot;,&quot;leadership&quot;],&quot;default&quot;:&quot;skyline&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { show: false };
+  componentDidMount() { this.run(); }
+  componentDidUpdate(p) { if (p.animate !== this.props.animate) this.run(); }
+  run() {
+    const all = document.querySelectorAll('[data-anim]');
+    all.forEach(el => el.getAnimations().forEach(a => a.cancel()));
+    if (this.props.animate === false || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    all.forEach(el => el.animate([{ opacity: 0, transform: 'translateY(18px)' }, { opacity: 1, transform: 'none' }], { duration: 700, delay: +el.dataset.delay || 0, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' }));
+  }
+  renderVals() {
+    const s = this.state.show;
+    const photo = this.props.heroPhoto ?? 'skyline';
+    return { heroSrc: './assets/photo-' + photo + '.jpg', pwType: s ? 'text' : 'password', pwLabel: s ? 'Hide password' : 'Show password', togglePw: () => this.setState({ show: !s }) };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+/* Proposed additions to app/globals.css (Tailwind v4, CSS-first). */
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --color-brand-900: #0c1a3a;
+  --color-brand-700: #1c3470;
+  --color-brand-600: #2458c6; /* the 10% accent: CTAs, focus, links */
+  --color-brand-100: #dbe5f8;
+  --color-brand-50:  #eef3fc;
+  --color-gold-500: #c8963e; /* completed steps, earned */
+  --color-gold-100: #f6ecd6;
+  --color-ok-600: #1f7a4d;   --color-ok-50: #e8f5ee;
+  --color-warn-600: #a15c07; --color-warn-50: #fdf3e3;
+  --color-bad-600: #b42318;  --color-bad-50: #fdecea;
+  --color-ink-900: #111827;
+  --color-ink-700: #374151;
+  --color-ink-500: #5b6472; /* 5.9:1 on white */
+  --color-ink-300: #cbd2dc;
+  --color-ink-100: #e7eaef;
+  --color-ink-50:  #f6f7f9;
+  --radius-control: 8px;
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+  --shadow-glass: 0 1px 0 rgb(255 255 255 / .6) inset, 0 8px 24px rgb(15 31 61 / .08);
+  --shadow-raised: 0 2px 6px rgb(15 31 61 / .08), 0 12px 32px rgb(15 31 61 / .10);
+}
+
+body {
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif; /* IBM Plex Sans Thai */
+  color: var(--color-ink-900);
+  background: radial-gradient(rgb(28 52 112 / .13) 1px, transparent 1.5px) 0 0 / 24px 24px, #e6edf8;
+}
+.font-display { font-family: var(--font-display), serif; } /* Trirong */
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+:focus-visible { outline: 2px solid var(--color-brand-600); outline-offset: 2px; }
+
+.glass {
+  background: rgb(255 255 255 / .62);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgb(255 255 255 / .7);
+  box-shadow: var(--shadow-glass);
+}
+.glass-strong {
+  background: rgb(255 255 255 / .82);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgb(255 255 255 / .8);
+  box-shadow: var(--shadow-glass);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .glass-strong { background: #fff; border-color: var(--color-ink-100); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-strong { background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--color-ink-100); }
+}

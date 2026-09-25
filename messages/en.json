@@ -1,6 +1,7 @@
 {
   "app": {
     "name": "Business Training Portal",
+    "nameThai": "พอร์ทัลฝึกอบรมธุรกิจ",
     "language": "Language",
     "back": "Back",
     "home": "Home"
@@ -534,7 +535,8 @@
       "expired": "Access period has ended",
       "missing_issue_date": "Certificate issue date missing"
     },
-    "open": "Open"
+    "open": "Open",
+    "stepOf": "Step {n} of 5"
   },
   "progression": {
     "UNASSIGNED": "Unassigned",
