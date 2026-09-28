@@ -165,66 +165,6 @@ export type Database = {
         }
         Relationships: []
       }
-      call_sessions: {
-        Row: {
-          created_at: string
-          dbd_record_id: string
-          ended_at: string | null
-          id: string
-          metadata: Json
-          modality: string
-          recording_path: string | null
-          started_at: string
-          status: string
-          transcript: string | null
-          user_id: string
-          vapi_call_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          dbd_record_id: string
-          ended_at?: string | null
-          id?: string
-          metadata?: Json
-          modality: string
-          recording_path?: string | null
-          started_at?: string
-          status?: string
-          transcript?: string | null
-          user_id: string
-          vapi_call_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          dbd_record_id?: string
-          ended_at?: string | null
-          id?: string
-          metadata?: Json
-          modality?: string
-          recording_path?: string | null
-          started_at?: string
-          status?: string
-          transcript?: string | null
-          user_id?: string
-          vapi_call_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "call_sessions_dbd_record_id_fkey"
-            columns: ["dbd_record_id"]
-            isOneToOne: false
-            referencedRelation: "dbd_records"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "call_sessions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       dbd_chunks: {
         Row: {
           char_count: number
@@ -613,6 +553,104 @@ export type Database = {
             columns: ["record_id"]
             isOneToOne: false
             referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_sessions: {
+        Row: {
+          dbd_record_id: string
+          ended_at: string | null
+          id: string
+          language: string
+          last_turn_at: string
+          plan: Json
+          provider: string
+          started_at: string
+          status: string
+          summary: Json | null
+          user_id: string
+          verdict: string | null
+        }
+        Insert: {
+          dbd_record_id: string
+          ended_at?: string | null
+          id?: string
+          language?: string
+          last_turn_at?: string
+          plan: Json
+          provider: string
+          started_at?: string
+          status: string
+          summary?: Json | null
+          user_id: string
+          verdict?: string | null
+        }
+        Update: {
+          dbd_record_id?: string
+          ended_at?: string | null
+          id?: string
+          language?: string
+          last_turn_at?: string
+          plan?: Json
+          provider?: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          user_id?: string
+          verdict?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_sessions_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_turns: {
+        Row: {
+          assessment: Json | null
+          content: string
+          created_at: string
+          id: string
+          role: string
+          seq: number
+          session_id: string
+        }
+        Insert: {
+          assessment?: Json | null
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          seq: number
+          session_id: string
+        }
+        Update: {
+          assessment?: Json | null
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          seq?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_turns_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -1149,39 +1187,6 @@ export type Database = {
           },
         ]
       }
-      webhook_events: {
-        Row: {
-          error: string | null
-          event_type: string
-          external_id: string
-          id: string
-          payload: Json
-          processed_at: string | null
-          provider: string
-          received_at: string
-        }
-        Insert: {
-          error?: string | null
-          event_type: string
-          external_id: string
-          id?: string
-          payload: Json
-          processed_at?: string | null
-          provider: string
-          received_at?: string
-        }
-        Update: {
-          error?: string | null
-          event_type?: string
-          external_id?: string
-          id?: string
-          payload?: Json
-          processed_at?: string | null
-          provider?: string
-          received_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       audit_logs_with_actor: {
@@ -1203,10 +1208,6 @@ export type Database = {
       allocate_login_id: {
         Args: { p_prefix: string; p_scope: string }
         Returns: string
-      }
-      release_login_id: {
-        Args: { p_scope: string; p_value: number }
-        Returns: boolean
       }
       claim_index_jobs: {
         Args: { p_limit?: number }
@@ -1257,6 +1258,7 @@ export type Database = {
         Args: { p_reason: string; p_record_id: string; p_user_id: string }
         Returns: undefined
       }
+      document_in_my_team: { Args: { p_document: string }; Returns: boolean }
       finalize_attempt: {
         Args: {
           p_attempt_id: string
@@ -1290,14 +1292,27 @@ export type Database = {
         }
       }
       in_my_team: { Args: { p_user: string }; Returns: boolean }
+      interview_answer: {
+        Args: { p_field: string; p_structured: Json }
+        Returns: string
+      }
       is_admin: { Args: never; Returns: boolean }
       is_manager: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      key_learner_is_my_team: { Args: { p_key: string }; Returns: boolean }
+      key_record_is_my_team: { Args: { p_key: string }; Returns: boolean }
+      learner_of_my_team: { Args: { p_user: string }; Returns: boolean }
       my_team: { Args: never; Returns: string }
+      my_team_member_ids: { Args: never; Returns: string[] }
       policy_int: { Args: { p_key: string }; Returns: number }
       recompute_eligibility_snapshots: {
         Args: { p_reason: string }
         Returns: number
+      }
+      record_in_my_team: { Args: { p_record: string }; Returns: boolean }
+      release_login_id: {
+        Args: { p_scope: string; p_value: number }
+        Returns: boolean
       }
       set_my_preferred_language: {
         Args: { p_lang: string }
