@@ -56,9 +56,7 @@ describe('stageStatuses', () => {
 
   it('opens the interview after the exam and tracks its sessions', () => {
     expect(stageStatuses(passed).interview.status).toBe('available');
-    expect(stageStatuses({ ...passed, interviewSessions: 2 }).interview.status).toBe(
-      'in_progress',
-    );
+    expect(stageStatuses({ ...passed, interviewSessions: 2 }).interview.status).toBe('in_progress');
     expect(
       stageStatuses({ ...passed, interviewSessions: 2, interviewReady: true }).interview,
     ).toEqual({ status: 'done' });
