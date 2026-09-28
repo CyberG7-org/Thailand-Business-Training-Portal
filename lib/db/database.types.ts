@@ -636,6 +636,8 @@ export type Database = {
         Row: {
           created_at: string
           dbd_record_id: string
+          holder_name: string | null
+          holder_name_en: string | null
           id: string
           pdf_path: string
           phone_number: string
@@ -646,6 +648,8 @@ export type Database = {
         Insert: {
           created_at?: string
           dbd_record_id: string
+          holder_name?: string | null
+          holder_name_en?: string | null
           id?: string
           pdf_path: string
           phone_number: string
@@ -656,6 +660,8 @@ export type Database = {
         Update: {
           created_at?: string
           dbd_record_id?: string
+          holder_name?: string | null
+          holder_name_en?: string | null
           id?: string
           pdf_path?: string
           phone_number?: string

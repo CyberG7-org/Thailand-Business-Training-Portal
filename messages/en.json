@@ -690,7 +690,7 @@
   },
   "nameCard": {
     "title": "Name card",
-    "intro": "One fixed Thai design, filled from your company record plus the phone number you enter. Preview, download the PDF, or send it to Telegram.",
+    "intro": "One design for every company, filled from your company record plus the name and phone number you enter. Preview, download the PDF, or send it to Telegram.",
     "phone": "Mobile phone number",
     "phoneHint": "Thai mobile, e.g. 081-234-5678 or +66 81 234 5678",
     "generate": "Create name card",
@@ -709,8 +709,12 @@
       "exam_required": "Pass the exam first to create your name card.",
       "invalid_phone": "Enter a valid Thai mobile number.",
       "missing_fields": "Your company record is missing: {fields}. Ask your administrator to complete it.",
-      "not_found": "Name card not found."
-    }
+      "not_found": "Name card not found.",
+      "invalid_name": "Please enter the name in Thai for the card"
+    },
+    "holderName": "Full name (Thai)",
+    "holderNameEn": "Full name (English, optional)",
+    "holderNameHint": "As it should be printed on the card"
   },
   "bankCall": {
     "title": "Bank verification call training",

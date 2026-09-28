@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  NAME_CARD_COPY,
+  NAME_CARD_TEMPLATE_VERSION,
   buildNameCardData,
+  companyInitials,
   missingNameCardFields,
   withThaiBreaks,
-  NAME_CARD_TEMPLATE_VERSION,
+  type NameCardSource,
 } from '@/lib/domain/name-card';
 import { formatThaiMobile, normalizeThaiMobile } from '@/lib/domain/phone';
 
@@ -25,43 +28,84 @@ describe('normalizeThaiMobile', () => {
   });
 });
 
+const source: NameCardSource = {
+  company_name_th: 'บริษัท ธาราวาณิช จำกัด',
+  company_name_en: 'THARA VANICH CO., LTD.',
+  head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง',
+  juristic_id: '0105569000123',
+  contact_email: 'contact@example.co.th',
+  nature_of_business: 'ค้าปลีกอุปกรณ์ไฟฟ้า',
+  products_services: 'สายไฟและอุปกรณ์ติดตั้ง',
+};
+const holder = { nameTh: 'นายตัวอย่าง นามสมมติ', nameEn: 'Sample Holder' };
+
+/** One two-sided design for every company (D63): the learner names the holder, the record does the rest. */
 describe('name card data', () => {
-  const source = {
-    company_name_th: 'บริษัท ทดสอบ จำกัด',
-    company_name_en: 'TEST CO., LTD.',
-    head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง',
-    juristic_id: '0105569000123',
-    directors: [{ name_th: 'นางสาวตัวอย่าง ทดสอบ', name_en: null }],
-    holder_name: null,
-  };
-  it('builds the render model, falling back to the first director as holder', () => {
-    const d = buildNameCardData(source, '0812345678');
-    expect(d.holderName).toBe('นางสาวตัวอย่าง ทดสอบ');
+  it('builds the render model from the record and the name the learner typed', () => {
+    const d = buildNameCardData(source, '0812345678', holder);
+    expect(d.holderName).toBe('นายตัวอย่าง นามสมมติ');
+    expect(d.holderNameEn).toBe('Sample Holder');
+    expect(d.companyInitials).toBe('TV');
     expect(d.phoneDisplay).toBe('081-234-5678');
+    expect(d.email).toBe('contact@example.co.th');
+    expect(d.natureOfBusiness).toBe('ค้าปลีกอุปกรณ์ไฟฟ้า');
+    expect(d.productsServices).toBe('สายไฟและอุปกรณ์ติดตั้ง');
     expect(d.templateVersion).toBe(NAME_CARD_TEMPLATE_VERSION);
+    expect(d.templateVersion).toBe('two-sided-v2');
   });
-  it('prefers the learner display name when present', () => {
-    expect(buildNameCardData({ ...source, holder_name: 'สมชาย' }, '0812345678').holderName).toBe(
-      'สมชาย',
+
+  it('keeps the English name and the business answers optional', () => {
+    const d = buildNameCardData(
+      { ...source, company_name_en: null, nature_of_business: null, products_services: '  ' },
+      '0812345678',
+      { nameTh: 'สมชาย', nameEn: '' },
     );
+    expect(d.companyNameEn).toBeNull();
+    expect(d.holderNameEn).toBeNull();
+    expect(d.natureOfBusiness).toBeNull();
+    expect(d.productsServices).toBeNull();
   });
-  it('refuses to fabricate missing DBD fields', () => {
+
+  it('refuses to fabricate missing DBD fields or a nameless holder', () => {
     expect(missingNameCardFields({ ...source, head_office_address: null })).toEqual([
       'head_office_address',
     ]);
-    expect(() => buildNameCardData({ ...source, company_name_th: null }, '0812345678')).toThrow(
-      /company_name_th/,
-    );
     expect(() =>
-      buildNameCardData({ ...source, directors: [], holder_name: '' }, '0812345678'),
-    ).toThrow(/holder/);
+      buildNameCardData({ ...source, company_name_th: null }, '0812345678', holder),
+    ).toThrow(/company_name_th/);
+    expect(() => buildNameCardData(source, '0812345678', { nameTh: '  ', nameEn: null })).toThrow(
+      /holder/,
+    );
+  });
+});
+
+/** The monogram fits every company: initials of the English name, else the Thai name's first letter. */
+describe('companyInitials', () => {
+  it('drops the legal words and takes two initials', () => {
+    expect(companyInitials('THARA VANICH CO., LTD.', null)).toBe('TV');
+    expect(companyInitials('Siam Cement Public Company Limited', null)).toBe('SC');
+    expect(companyInitials('The Example Company Limited', null)).toBe('E');
+  });
+  it('falls back to the first Thai letter with its mark, past the legal prefix', () => {
+    expect(companyInitials(null, 'บริษัท เกื้อกูล จำกัด')).toBe('เ');
+    expect(companyInitials(null, 'ห้างหุ้นส่วนจำกัด ที่ดี')).toBe('ที่');
+    expect(companyInitials('', '')).toBe('');
+  });
+});
+
+/** The tagline and slogan are the same on every card and live in one place the owner can edit. */
+describe('NAME_CARD_COPY', () => {
+  it('carries a tagline and a two-language slogan', () => {
+    expect(NAME_CARD_COPY.tagline.length).toBeGreaterThan(0);
+    expect(NAME_CARD_COPY.sloganTh.length).toBeGreaterThan(0);
+    expect(NAME_CARD_COPY.sloganEn.length).toBeGreaterThan(0);
   });
 });
 
 describe('withThaiBreaks', () => {
   it('inserts zero-width spaces between Thai words and leaves Latin readable', () => {
     const out = withThaiBreaks('บริษัททดสอบจำกัด TEST');
-    expect(out.replace(/​/g, '')).toBe('บริษัททดสอบจำกัด TEST');
-    expect(out.split('​').length).toBeGreaterThan(2);
+    expect(out.replace(/\u200b/g, '')).toBe('บริษัททดสอบจำกัด TEST');
+    expect(out.split('\u200b').length).toBeGreaterThan(2);
   });
 });

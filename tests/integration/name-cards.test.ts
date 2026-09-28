@@ -18,6 +18,8 @@ import {
   type TestUser,
 } from './helpers';
 
+const HOLDER = { holderNameTh: 'สมชาย ทดสอบ', holderNameEn: 'SOMCHAI TESTER' };
+
 const fakeRenderer: PdfRenderer = {
   name: 'fake',
   async renderNameCard() {
@@ -79,19 +81,39 @@ describe('name cards', () => {
   });
 
   it('rejects invalid phones and learners without an assignment', async () => {
-    await expect(generateNameCard(learner.id, '12345', fakeRenderer)).rejects.toMatchObject({
+    await expect(
+      generateNameCard(learner.id, { phone: '12345', ...HOLDER }, fakeRenderer),
+    ).rejects.toMatchObject({
       code: 'invalid_phone',
     });
-    await expect(generateNameCard(other.id, '0812345678', fakeRenderer)).rejects.toMatchObject({
+    await expect(
+      generateNameCard(other.id, { phone: '0812345678', ...HOLDER }, fakeRenderer),
+    ).rejects.toMatchObject({
       code: 'no_assignment',
     });
   });
 
+  it('refuses a blank holder name', async () => {
+    await expect(
+      generateNameCard(
+        learner.id,
+        { phone: '0812345678', holderNameTh: '   ', holderNameEn: null },
+        fakeRenderer,
+      ),
+    ).rejects.toMatchObject({ code: 'invalid_name' });
+  });
+
   it('generates, stores and signs a card only for its owner', async () => {
-    const card = await generateNameCard(learner.id, '+66 81 234 5678', fakeRenderer);
+    const card = await generateNameCard(
+      learner.id,
+      { phone: '+66 81 234 5678', ...HOLDER },
+      fakeRenderer,
+    );
     cardId = card.id;
     expect(card.phone_number).toBe('0812345678');
-    expect(card.template_version).toBe('placeholder-v1');
+    expect(card.holder_name).toBe('สมชาย ทดสอบ');
+    expect(card.holder_name_en).toBe('SOMCHAI TESTER');
+    expect(card.template_version).toBe('two-sided-v2');
     expect(card.pdf_path.startsWith(`${learner.id}/`)).toBe(true);
 
     expect((await getMyLatestNameCard(asLearner, learner.id))?.id).toBe(card.id);
@@ -102,7 +124,9 @@ describe('name cards', () => {
 
   it('refuses when the record lacks a required field', async () => {
     await svc.from('dbd_records').update({ head_office_address: null }).eq('id', recordId);
-    await expect(generateNameCard(learner.id, '0812345678', fakeRenderer)).rejects.toMatchObject({
+    await expect(
+      generateNameCard(learner.id, { phone: '0812345678', ...HOLDER }, fakeRenderer),
+    ).rejects.toMatchObject({
       code: 'missing_fields',
       fields: ['head_office_address'],
     });

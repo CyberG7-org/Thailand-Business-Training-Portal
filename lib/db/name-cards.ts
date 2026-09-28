@@ -7,6 +7,7 @@ import {
   missingNameCardFields,
   type NameCardSource,
 } from '@/lib/domain/name-card';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { normalizeThaiMobile } from '@/lib/domain/phone';
 import type { PdfRenderer } from '@/lib/integrations/pdf/name-card';
 import { createSupabaseAdminClient } from './admin';
@@ -21,7 +22,12 @@ export class NameCardError extends Error {
   constructor(
     message: string,
     public readonly code:
-      'no_assignment' | 'exam_required' | 'invalid_phone' | 'missing_fields' | 'not_found',
+      | 'no_assignment'
+      | 'exam_required'
+      | 'invalid_phone'
+      | 'invalid_name'
+      | 'missing_fields'
+      | 'not_found',
     public readonly fields: string[] = [],
   ) {
     super(message);
@@ -32,7 +38,10 @@ export class NameCardError extends Error {
 const BUCKET = 'name-cards';
 const SIGNED_URL_SECONDS = 300;
 
-async function sourceFor(userId: string): Promise<{ source: NameCardSource; dbdRecordId: string }> {
+/** The name the form offers before the learner types their own: the role, the profile, a director. */
+async function sourceFor(
+  userId: string,
+): Promise<{ source: NameCardSource; dbdRecordId: string; defaultHolderName: string }> {
   const admin = createSupabaseAdminClient();
   const assignment = await getActiveAssignmentForUser(admin, userId);
   if (!assignment) throw new NameCardError('No active assignment', 'no_assignment');
@@ -42,15 +51,23 @@ async function sourceFor(userId: string): Promise<{ source: NameCardSource; dbdR
     .eq('id', userId)
     .single();
   const r = assignment.dbd_records;
+  const interview = readStructuredData(r.structured_data).interview;
+  const directors = (r.directors as unknown as Director[] | null) ?? [];
   return {
     dbdRecordId: assignment.dbd_record_id,
+    defaultHolderName:
+      assignment.holder_name?.trim() ||
+      profile?.display_name?.trim() ||
+      directors[0]?.name_th?.trim() ||
+      '',
     source: {
       company_name_th: r.company_name_th,
       company_name_en: r.company_name_en,
       head_office_address: r.head_office_address,
       juristic_id: r.juristic_id,
-      directors: (r.directors as unknown as Director[] | null) ?? null,
-      holder_name: profile?.display_name ?? null,
+      contact_email: interview?.contact_email ?? null,
+      nature_of_business: interview?.nature_of_business ?? null,
+      products_services: interview?.products_services ?? null,
     },
   };
 }
@@ -60,29 +77,37 @@ export async function nameCardReadiness(userId: string): Promise<{
   examRequired: boolean;
   examPassed: boolean;
   missingFields: string[];
+  defaultHolderName: string;
 }> {
   const [requireExam, exam] = await Promise.all([
     getPolicy('require_exam_pass_for_name_card'),
     examPassedFor(userId),
   ]);
   let missingFields: string[] = [];
+  let defaultHolderName = '';
   try {
-    missingFields = missingNameCardFields((await sourceFor(userId)).source);
+    const found = await sourceFor(userId);
+    missingFields = missingNameCardFields(found.source);
+    defaultHolderName = found.defaultHolderName;
   } catch {
     missingFields = ['company_name_th', 'head_office_address'];
   }
-  return { examRequired: requireExam, examPassed: exam.passed, missingFields };
+  return { examRequired: requireExam, examPassed: exam.passed, missingFields, defaultHolderName };
 }
 
 /** Renders and stores a new card; never fabricates missing DBD data (BR-008). */
+export type NameCardInput = { phone: string; holderNameTh: string; holderNameEn: string | null };
+
 export async function generateNameCard(
   userId: string,
-  phoneInput: string,
+  input: NameCardInput,
   renderer: PdfRenderer,
 ): Promise<NameCardRow> {
   const admin = createSupabaseAdminClient();
-  const phone = normalizeThaiMobile(phoneInput);
+  const phone = normalizeThaiMobile(input.phone);
   if (!phone) throw new NameCardError('Invalid Thai mobile number', 'invalid_phone');
+  const nameTh = input.holderNameTh.trim();
+  if (!nameTh) throw new NameCardError('Holder name required', 'invalid_name');
 
   const [requireExam, exam] = await Promise.all([
     getPolicy('require_exam_pass_for_name_card'),
@@ -94,7 +119,7 @@ export async function generateNameCard(
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new NameCardError('Missing DBD fields', 'missing_fields', missing);
 
-  const data = buildNameCardData(source, phone);
+  const data = buildNameCardData(source, phone, { nameTh, nameEn: input.holderNameEn });
   const bytes = await renderer.renderNameCard(data);
   const path = `${userId}/${Date.now()}-${data.templateVersion}.pdf`;
   const { error: uploadError } = await admin.storage
@@ -108,6 +133,8 @@ export async function generateNameCard(
       user_id: userId,
       dbd_record_id: dbdRecordId,
       phone_number: phone,
+      holder_name: data.holderName,
+      holder_name_en: data.holderNameEn,
       template_version: data.templateVersion,
       pdf_path: path,
     })

@@ -56,6 +56,8 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
           <GenerateForm
             hasCard={card !== null}
             defaultPhone={card ? formatThaiMobile(card.phone_number) : ''}
+            defaultHolderTh={card?.holder_name ?? readiness.defaultHolderName}
+            defaultHolderEn={card?.holder_name_en ?? ''}
           />
         )}
 

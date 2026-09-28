@@ -1,19 +1,56 @@
 import 'server-only';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { Document, Font, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer';
-import { withThaiBreaks, type NameCardData } from '@/lib/domain/name-card';
+import {
+  Defs,
+  Document,
+  Font,
+  LinearGradient,
+  Page,
+  Path,
+  Polygon,
+  Rect,
+  Stop,
+  StyleSheet,
+  Svg,
+  Text,
+  View,
+  renderToBuffer,
+} from '@react-pdf/renderer';
+import { NAME_CARD_COPY, withThaiBreaks, type NameCardData } from '@/lib/domain/name-card';
 
 const FONT_DIR = path.join(process.cwd(), 'assets', 'fonts');
 let registered = false;
 
+/**
+ * The portal's display and body faces when their files are present, Sarabun otherwise (the
+ * only Thai face shipped so far); either way the PDF embeds what it uses.
+ */
 function registerFonts() {
   if (registered) return;
+  const font = (file: string) => path.join(FONT_DIR, file);
+  const sarabun = [
+    { src: font('Sarabun-Regular.ttf'), fontWeight: 400 },
+    { src: font('Sarabun-Bold.ttf'), fontWeight: 700 },
+  ];
   Font.register({
-    family: 'Sarabun',
-    fonts: [
-      { src: path.join(FONT_DIR, 'Sarabun-Regular.ttf'), fontWeight: 400 },
-      { src: path.join(FONT_DIR, 'Sarabun-Bold.ttf'), fontWeight: 700 },
-    ],
+    family: 'Display',
+    fonts: existsSync(font('Trirong-SemiBold.ttf'))
+      ? [
+          { src: font('Trirong-Regular.ttf'), fontWeight: 400 },
+          { src: font('Trirong-SemiBold.ttf'), fontWeight: 600 },
+        ]
+      : sarabun,
+  });
+  Font.register({
+    family: 'Body',
+    fonts: existsSync(font('IBMPlexSansThai-Regular.ttf'))
+      ? [
+          { src: font('IBMPlexSansThai-Regular.ttf'), fontWeight: 400 },
+          { src: font('IBMPlexSansThai-Medium.ttf'), fontWeight: 500 },
+          { src: font('IBMPlexSansThai-SemiBold.ttf'), fontWeight: 600 },
+        ]
+      : sarabun,
   });
   // Thai has no spaces between words; disable hyphenation and rely on the ZWSP breaks we insert.
   Font.registerHyphenationCallback((word) => [word]);
@@ -22,37 +59,263 @@ function registerFonts() {
 
 // Standard Thai business card: 90 mm × 54 mm (1 mm = 2.8346 pt).
 const MM = 2.8346;
-const styles = StyleSheet.create({
-  page: { fontFamily: 'Sarabun', padding: 6 * MM, backgroundColor: '#ffffff' },
-  company: { fontSize: 13, fontWeight: 700, color: '#111827' },
-  companyEn: { fontSize: 8, color: '#4b5563', marginTop: 1 },
-  holder: { fontSize: 11, fontWeight: 700, marginTop: 5 * MM },
-  title: { fontSize: 8, color: '#374151' },
-  footer: { marginTop: 'auto', fontSize: 7, color: '#374151', lineHeight: 1.4 },
-  rule: { borderTopWidth: 0.5, borderTopColor: '#9ca3af', marginVertical: 2 * MM },
-  meta: { fontSize: 6, color: '#9ca3af', marginTop: 1 },
+const W = 90 * MM;
+const H = 54 * MM;
+
+/** The design tokens of app/globals.css, as a PDF cannot read CSS variables. */
+const C = {
+  brand900: '#0c1a3a',
+  brand700: '#1c3470',
+  brand50: '#eef3fc',
+  gold500: '#c8963e',
+  gold100: '#f6ecd6',
+  gold700: '#6e4c10',
+  brand100: '#dbe5f8',
+  ink900: '#111827',
+  ink700: '#374151',
+  ink500: '#5b6472',
+  ink300: '#cbd2dc',
+  ink100: '#e7eaef',
+  white: '#ffffff',
+};
+
+const s = StyleSheet.create({
+  page: { fontFamily: 'Body', backgroundColor: C.white, color: C.ink900 },
+  abs: { position: 'absolute' },
+  display: { fontFamily: 'Display', fontWeight: 600 },
+  // Front
+  mono: { fontFamily: 'Display', fontWeight: 600, fontSize: 40, color: C.white, lineHeight: 1 },
+  monoSub: { fontSize: 4.6, color: C.gold100, letterSpacing: 1.1, marginTop: 4 },
+  companyTh: {
+    fontFamily: 'Display',
+    fontWeight: 600,
+    fontSize: 12,
+    color: C.brand900,
+    lineHeight: 1.3,
+  },
+  companyEn: { fontSize: 5.2, color: C.ink700, letterSpacing: 0.9, marginTop: 3 },
+  nature: { fontSize: 5.6, color: C.ink700, lineHeight: 1.5, marginTop: 7 },
+  tagline: {
+    alignSelf: 'flex-start',
+    marginTop: 7,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: C.gold100,
+    color: C.gold700,
+    fontSize: 4.4,
+    fontWeight: 600,
+    letterSpacing: 1,
+  },
+  sloganTh: {
+    fontFamily: 'Display',
+    fontWeight: 600,
+    fontSize: 6.4,
+    color: C.white,
+    lineHeight: 1.4,
+  },
+  sloganEn: {
+    fontSize: 4.4,
+    color: C.brand100,
+    letterSpacing: 0.6,
+    marginTop: 1.5,
+    lineHeight: 1.5,
+  },
+  backTagline: {
+    fontSize: 4.2,
+    color: C.gold700,
+    fontWeight: 600,
+    letterSpacing: 1,
+    textAlign: 'right',
+    lineHeight: 1.7,
+  },
+  rule: { height: 0.5, backgroundColor: C.ink100 },
+  reg: { fontSize: 4.6, color: C.ink500, marginTop: 3, textAlign: 'right' },
+  // Back
+  holderTh: {
+    fontFamily: 'Display',
+    fontWeight: 600,
+    fontSize: 11,
+    color: C.brand900,
+    lineHeight: 1.3,
+  },
+  holderEn: { fontSize: 5.4, color: C.ink700, letterSpacing: 0.8, marginTop: 1.5 },
+  fact: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4.2 },
+  dot: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: C.brand900,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4.5,
+    marginTop: 0.5,
+  },
+  factText: { fontSize: 5.8, lineHeight: 1.4, flex: 1 },
+  factSub: { fontSize: 4.4, color: C.ink500, marginTop: 0.5 },
+  label: { fontSize: 4.4, color: C.ink500, letterSpacing: 0.5, marginBottom: 1.5 },
+  products: { fontSize: 5.6, lineHeight: 1.5 },
+  watermark: {
+    fontFamily: 'Display',
+    fontWeight: 600,
+    fontSize: 58,
+    color: C.brand50,
+    lineHeight: 1,
+  },
+  meta: { fontSize: 3.6, color: C.ink300 },
 });
+
+const ICONS: Record<'phone' | 'mail' | 'pin' | 'hash', string[]> = {
+  phone: [
+    'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z',
+  ],
+  mail: [
+    'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z',
+    'M22 6l-10 7L2 6',
+  ],
+  pin: ['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z', 'M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'],
+  hash: ['M4 9h16', 'M4 15h16', 'M10 3L8 21', 'M16 3l-2 18'],
+};
+
+function Dot({ icon }: { icon: keyof typeof ICONS }) {
+  return (
+    <View style={s.dot}>
+      <Svg viewBox="0 0 24 24" width={5} height={5}>
+        {ICONS[icon].map((d) => (
+          <Path key={d} d={d} stroke={C.white} strokeWidth={2.4} fill="none" />
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
+function Fact({
+  icon,
+  children,
+  sub,
+}: {
+  icon: keyof typeof ICONS;
+  children: string;
+  sub?: string;
+}) {
+  return (
+    <View style={s.fact}>
+      <Dot icon={icon} />
+      <View style={{ flex: 1 }}>
+        <Text style={s.factText}>{children}</Text>
+        {sub && <Text style={s.factSub}>{sub}</Text>}
+      </View>
+    </View>
+  );
+}
+
+/** Front: the company. The navy sweep with its gold edge carries the monogram. */
+function Front({ data }: { data: NameCardData }) {
+  return (
+    <Page size={[W, H]} style={s.page} wrap={false}>
+      <Svg width={W} height={H} style={[s.abs, { top: 0, left: 0 }]}>
+        <Defs>
+          <LinearGradient id="navy" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={C.brand900} />
+            <Stop offset="1" stopColor={C.brand700} />
+          </LinearGradient>
+        </Defs>
+        <Polygon points={'0,0 118,0 92,' + H + ' 0,' + H} fill="url(#navy)" />
+        <Polygon points={'118,0 121,0 95,' + H + ' 92,' + H} fill={C.gold500} />
+      </Svg>
+      <View style={[s.abs, { left: 12 * MM - 20, top: 11 * MM }]}>
+        <Text style={s.mono}>{data.companyInitials}</Text>
+        {data.companyNameEn && (
+          <Text style={s.monoSub}>{shortEnglishName(data.companyNameEn)}</Text>
+        )}
+      </View>
+      <View style={[s.abs, { left: 130, top: 12 * MM, width: W - 130 - 12 }]}>
+        <Text style={s.companyTh}>{withThaiBreaks(data.companyNameTh)}</Text>
+        {data.companyNameEn && <Text style={s.companyEn}>{data.companyNameEn.toUpperCase()}</Text>}
+        <Text style={s.tagline}>{NAME_CARD_COPY.tagline}</Text>
+        {data.natureOfBusiness && (
+          <View style={{ maxHeight: 30, overflow: 'hidden' }}>
+            <Text style={s.nature}>{withThaiBreaks(data.natureOfBusiness)}</Text>
+          </View>
+        )}
+      </View>
+      <View style={[s.abs, { left: 12 * MM - 20, bottom: 9 * MM, width: 92 }]}>
+        <Text style={s.sloganTh}>{withThaiBreaks(NAME_CARD_COPY.sloganTh)}</Text>
+        <Text style={s.sloganEn}>{NAME_CARD_COPY.sloganEn}</Text>
+      </View>
+      <View style={[s.abs, { left: 130, right: 12, bottom: 9 }]}>
+        <View style={s.rule} />
+        {data.juristicId && <Text style={s.reg}>{'เลขทะเบียนนิติบุคคล ' + data.juristicId}</Text>}
+      </View>
+    </Page>
+  );
+}
+
+/** Back: the holder and how to reach the company. */
+function Back({ data }: { data: NameCardData }) {
+  return (
+    <Page size={[W, H]} style={s.page} wrap={false}>
+      <Svg width={W} height={3} style={[s.abs, { top: 0, left: 0 }]}>
+        <Defs>
+          <LinearGradient id="strip" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor={C.brand900} />
+            <Stop offset="0.6" stopColor={C.brand700} />
+            <Stop offset="1" stopColor={C.gold500} />
+          </LinearGradient>
+        </Defs>
+        <Rect x={0} y={0} width={W} height={3} fill="url(#strip)" />
+      </Svg>
+      <Text style={[s.abs, s.watermark, { right: -2, bottom: -12 }]}>{data.companyInitials}</Text>
+      <Text style={[s.abs, s.backTagline, { right: 12, top: 12, width: 70 }]}>
+        {NAME_CARD_COPY.tagline.split(' · ').join('\n')}
+      </Text>
+      <View style={[s.abs, { left: 12, top: 12, width: 170 }]}>
+        <Text style={s.holderTh}>{withThaiBreaks(data.holderName)}</Text>
+        {data.holderNameEn && <Text style={s.holderEn}>{data.holderNameEn.toUpperCase()}</Text>}
+      </View>
+      <View style={[s.abs, { left: 12, top: 62, width: 150 }]}>
+        <Fact icon="phone">{data.phoneDisplay}</Fact>
+        {data.email && <Fact icon="mail">{data.email}</Fact>}
+        <Fact icon="pin">{withThaiBreaks(data.address)}</Fact>
+        {data.juristicId && (
+          <Fact icon="hash" sub="เลขทะเบียนนิติบุคคล · Corporate Registration No.">
+            {data.juristicId}
+          </Fact>
+        )}
+      </View>
+      {data.productsServices && (
+        <View
+          style={[
+            s.abs,
+            { left: 172, top: 62, width: W - 172 - 12, maxHeight: 62, overflow: 'hidden' },
+          ]}
+        >
+          <Text style={s.label}>สินค้า / บริการ · PRODUCTS / SERVICES</Text>
+          <Text style={s.products}>{withThaiBreaks(data.productsServices)}</Text>
+        </View>
+      )}
+      <Text style={[s.abs, s.meta, { left: 12, bottom: 5 }]}>{data.templateVersion}</Text>
+    </Page>
+  );
+}
+
+/** "THARA VANICH CO., LTD." → "THARA VANICH", for the small line under the monogram. */
+function shortEnglishName(name: string): string {
+  return name
+    .toUpperCase()
+    .replace(/[,.]/g, ' ')
+    .split(/\s+/)
+    .filter(
+      (w) => w && !['CO', 'LTD', 'LIMITED', 'COMPANY', 'PUBLIC', 'PCL', 'PLC', 'INC'].includes(w),
+    )
+    .join(' ');
+}
 
 export function NameCardDocument({ data }: { data: NameCardData }) {
   return (
-    <Document title={`นามบัตร ${data.companyNameTh}`} language="th">
-      <Page size={[90 * MM, 54 * MM]} style={styles.page}>
-        <View>
-          <Text style={styles.company}>{withThaiBreaks(data.companyNameTh)}</Text>
-          {data.companyNameEn && <Text style={styles.companyEn}>{data.companyNameEn}</Text>}
-        </View>
-        <View>
-          <Text style={styles.holder}>{withThaiBreaks(data.holderName)}</Text>
-          <Text style={styles.title}>{withThaiBreaks(data.holderTitle)}</Text>
-        </View>
-        <View style={styles.footer}>
-          <View style={styles.rule} />
-          <Text>{withThaiBreaks(data.address)}</Text>
-          <Text>โทร. {data.phoneDisplay}</Text>
-          {data.juristicId && <Text>เลขทะเบียนนิติบุคคล {data.juristicId}</Text>}
-          <Text style={styles.meta}>{data.templateVersion}</Text>
-        </View>
-      </Page>
+    <Document title={'นามบัตร ' + data.companyNameTh} language="th">
+      <Front data={data} />
+      <Back data={data} />
     </Document>
   );
 }

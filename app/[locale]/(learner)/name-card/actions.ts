@@ -10,6 +10,8 @@ export type NameCardState = {
   error: string | null;
   fields: string[];
   queued?: number;
+  /** What the learner typed, handed back after a failure so the form keeps it. */
+  values?: { phone: string; holderNameTh: string; holderNameEn: string };
 };
 
 function fail(e: unknown): NameCardState {
@@ -23,13 +25,22 @@ export async function generateNameCardAction(
 ): Promise<NameCardState> {
   const locale = String(formData.get('locale') ?? 'th');
   const user = await requireUser(locale);
+  const values = {
+    phone: String(formData.get('phone') ?? ''),
+    holderNameTh: String(formData.get('holderNameTh') ?? ''),
+    holderNameEn: String(formData.get('holderNameEn') ?? ''),
+  };
   try {
-    await generateNameCard(user.id, String(formData.get('phone') ?? ''), new ReactPdfRenderer());
+    await generateNameCard(
+      user.id,
+      { ...values, holderNameEn: values.holderNameEn.trim() || null },
+      new ReactPdfRenderer(),
+    );
     revalidatePath(`/${locale}/name-card`);
     revalidatePath(`/${locale}/dashboard`);
     return { ok: true, error: null, fields: [] };
   } catch (e) {
-    return fail(e);
+    return { ...fail(e), values };
   }
 }
 

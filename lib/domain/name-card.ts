@@ -1,8 +1,17 @@
-import type { Director } from './dbd-record';
 import { formatThaiMobile } from './phone';
 
-/** Fixed Thai template (decision D24). Bumped whenever the layout changes. */
-export const NAME_CARD_TEMPLATE_VERSION = 'placeholder-v1';
+/** One two-sided design for every company (D24, D63). Bumped whenever the layout changes. */
+export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v2';
+
+/**
+ * The words every card carries, whatever the company (owner, 2026-09-28): a tagline on both
+ * sides and a slogan on the front. Edit here; the template version need not change for copy.
+ */
+export const NAME_CARD_COPY = {
+  tagline: 'TRUST · TRADE · TOGETHER',
+  sloganTh: 'เชื่อมโอกาส สร้างอนาคตไปด้วยกัน',
+  sloganEn: 'YOUR PARTNER FOR A BRIGHTER TOMORROW',
+} as const;
 
 /** DBD fields the template cannot render without (never fabricated — BR-008). */
 export const NAME_CARD_REQUIRED_FIELDS = ['company_name_th', 'head_office_address'] as const;
@@ -12,19 +21,28 @@ export type NameCardSource = {
   company_name_en: string | null;
   head_office_address: string | null;
   juristic_id: string | null;
-  directors: Director[] | null;
-  /** Learner's display name; falls back to the first director's Thai name. */
-  holder_name: string | null;
+  /** The company's contact and business answers, as the manager filled them (D58). */
+  contact_email: string | null;
+  nature_of_business: string | null;
+  products_services: string | null;
 };
+
+/** What the learner types beside the phone number. */
+export type NameCardHolder = { nameTh: string; nameEn: string | null };
 
 export type NameCardData = {
   companyNameTh: string;
   companyNameEn: string | null;
+  /** The monogram on the front. */
+  companyInitials: string;
   holderName: string;
-  holderTitle: string;
+  holderNameEn: string | null;
   address: string;
   phoneDisplay: string;
+  email: string | null;
   juristicId: string | null;
+  natureOfBusiness: string | null;
+  productsServices: string | null;
   templateVersion: string;
 };
 
@@ -32,20 +50,81 @@ export function missingNameCardFields(source: NameCardSource): string[] {
   return NAME_CARD_REQUIRED_FIELDS.filter((f) => !source[f]);
 }
 
-/** Builds the render model; throws when required DBD data is missing. */
-export function buildNameCardData(source: NameCardSource, phoneNormalized: string): NameCardData {
+const LEGAL_WORDS = new Set([
+  'CO',
+  'CO.',
+  'LTD',
+  'LTD.',
+  'LIMITED',
+  'COMPANY',
+  'PUBLIC',
+  'PCL',
+  'PCL.',
+  'PLC',
+  'PLC.',
+  'INC',
+  'INC.',
+  'CORP',
+  'CORP.',
+  'CORPORATION',
+  'PARTNERSHIP',
+  'THE',
+  '&',
+  'AND',
+]);
+const THAI_LEGAL_PREFIX =
+  /^\s*(บริษัท|ห้างหุ้นส่วนจำกัด|ห้างหุ้นส่วนสามัญ|ห้างหุ้นส่วน|หจก\.?|บจก\.?|บมจ\.?)\s*/u;
+
+/** The first letter with any mark that sits on it, so a Thai vowel is never shown alone. */
+function firstGrapheme(text: string): string {
+  let out = '';
+  for (const ch of text) {
+    if (out && !/\p{M}/u.test(ch)) break;
+    out += ch;
+  }
+  return out;
+}
+
+/**
+ * The monogram: the initials of the English name without its legal words ("THARA VANICH CO.,
+ * LTD." → "TV"), else the first letter of the Thai name after its legal prefix.
+ */
+export function companyInitials(nameEn: string | null, nameTh: string | null): string {
+  const words = (nameEn ?? '')
+    .toUpperCase()
+    .split(/[\s,]+/)
+    .map((w) => w.replace(/[^A-Z0-9.&]/g, ''))
+    .filter((w) => w && !LEGAL_WORDS.has(w));
+  const latin = words
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('');
+  if (latin) return latin;
+  return firstGrapheme((nameTh ?? '').replace(THAI_LEGAL_PREFIX, '').trim());
+}
+
+/** Builds the render model; throws when required DBD data or the holder's name is missing. */
+export function buildNameCardData(
+  source: NameCardSource,
+  phoneNormalized: string,
+  holder: NameCardHolder,
+): NameCardData {
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new Error(`Missing DBD fields: ${missing.join(', ')}`);
-  const holder = source.holder_name?.trim() || source.directors?.[0]?.name_th?.trim() || '';
-  if (!holder) throw new Error('Missing DBD fields: holder name');
+  const nameTh = holder.nameTh.trim();
+  if (!nameTh) throw new Error('Missing holder name');
   return {
     companyNameTh: source.company_name_th!,
-    companyNameEn: source.company_name_en,
-    holderName: holder,
-    holderTitle: 'กรรมการผู้มีอำนาจลงนาม',
+    companyNameEn: source.company_name_en?.trim() || null,
+    companyInitials: companyInitials(source.company_name_en, source.company_name_th),
+    holderName: nameTh,
+    holderNameEn: holder.nameEn?.trim() || null,
     address: source.head_office_address!,
     phoneDisplay: formatThaiMobile(phoneNormalized),
+    email: source.contact_email?.trim() || null,
     juristicId: source.juristic_id,
+    natureOfBusiness: source.nature_of_business?.trim() || null,
+    productsServices: source.products_services?.trim() || null,
     templateVersion: NAME_CARD_TEMPLATE_VERSION,
   };
 }
@@ -58,6 +137,6 @@ export function withThaiBreaks(text: string): string {
   if (typeof Intl === 'undefined' || !('Segmenter' in Intl)) return text;
   const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
   let out = '';
-  for (const { segment } of segmenter.segment(text)) out += segment + '​';
+  for (const { segment } of segmenter.segment(text)) out += segment + '\u200b';
   return out;
 }
