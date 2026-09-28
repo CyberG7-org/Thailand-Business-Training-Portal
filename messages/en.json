@@ -82,6 +82,7 @@
       "content": "Study content",
       "questions": "Question bank",
       "interviews": "Readiness interviews",
+      "appointments": "Bank appointments",
       "notifications": "Notifications",
       "settings": "Policy settings",
       "audit": "Audit log",
@@ -116,7 +117,8 @@
       "learnerName": "Learner's name",
       "nextLoginId": "Login ID (assigned by the system)",
       "nextLoginIdHint": "This will be the next learner's login ID. It is given when you create them, never typed.",
-      "nextLoginIdChooseTeam": "Choose a team to see it"
+      "nextLoginIdChooseTeam": "Choose a team to see it",
+      "appointment": "Appointment"
     },
     "dbd": {
       "title": "DBD records",
@@ -579,6 +581,28 @@
         "pasted": "Pasted",
         "off_topic": "Off topic"
       }
+    },
+    "appointments": {
+      "title": "Bank appointments",
+      "intro": "Your team's upcoming appointments by day; block the hours you cannot take.",
+      "empty": "No appointments yet",
+      "day": "Day",
+      "time": "Time",
+      "learner": "Learner",
+      "company": "Company",
+      "team": "Team",
+      "cancel": "Cancel",
+      "blocks": "Blocked hours",
+      "block": "Block hours",
+      "unblock": "Unblock",
+      "date": "Date",
+      "fromHour": "From (hour)",
+      "toHour": "To (hour)",
+      "reason": "Reason",
+      "teamFilter": "Team",
+      "adminCalendar": "Admin calendar",
+      "allTeams": "All teams",
+      "show": "Show"
     }
   },
   "stages": {

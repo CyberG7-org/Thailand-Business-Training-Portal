@@ -9,6 +9,7 @@ const STAFF_LINKS = [
   ['/admin/content', 'content'],
   ['/admin/questions', 'questions'],
   ['/admin/interviews', 'interviews'],
+  ['/admin/appointments', 'appointments'],
   // Spec §9: a manager's audit view is their own team; RLS narrows it through the view.
   ['/admin/audit', 'audit'],
 ] as const;

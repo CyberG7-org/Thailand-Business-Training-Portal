@@ -8,6 +8,9 @@ import { seedManager, seedTeamLearner } from './seed';
  * manager sees it → a second learner cannot take the slot → the learner cancels → the slot is
  * free again. Bookings target a day two weeks out so notice hours and holidays stay clear.
  */
+const slotIso = (date: string, hour: number) =>
+  new Date(date + 'T' + String(hour).padStart(2, '0') + ':00:00+07:00').toISOString();
+
 function twoWeeksOut(): string {
   // The Bangkok date fourteen days from now.
   const d = new Date(Date.now() + 14 * 86_400_000 + 7 * 3_600_000);
@@ -46,6 +49,16 @@ test('the appointment waits for the date, then a slot is booked, seen by the man
   await expect(page.locator('[data-testid^="admin-appointment-"]').first()).toContainText(
     'บริษัท จองนัด จำกัด',
   );
+  // The manager blocks the afternoon; the block shows on the list.
+  const blockForm = page.getByTestId('block-form');
+  await blockForm.locator('input[name="date"]').fill(from);
+  await blockForm.locator('input[name="fromHour"]').fill('13');
+  await blockForm.locator('input[name="toHour"]').fill('16');
+  await blockForm.locator('input[name="reason"]').fill('ประชุมทีม');
+  await blockForm.getByRole('button', { name: 'ปิดช่วงเวลา' }).click();
+  await expect(
+    page.locator('[data-testid^="block-"]').filter({ hasText: 'ประชุมทีม' }),
+  ).toHaveCount(1);
 
   // A teammate sees the same slot taken and cannot click it.
   await switchTo(page, mate, E2E_PASSWORD);
@@ -53,6 +66,10 @@ test('the appointment waits for the date, then a slot is booked, seen by the man
   const taken = page.getByTestId(slotId!);
   await expect(taken).toHaveAttribute('data-state', 'booked');
   await expect(taken).toBeDisabled();
+  await expect(page.getByTestId('slot-' + slotIso(from, 13))).toHaveAttribute(
+    'data-state',
+    'blocked',
+  );
 
   // The booker cancels; the slot is free for the teammate.
   await switchTo(page, booker, E2E_PASSWORD);

@@ -1,10 +1,13 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
+import type { AppLocale } from '@/i18n/routing';
 import { requireStaff } from '@/lib/auth/session';
 import { loadProgressionFactsForUsers } from '@/lib/db/progression';
 import { nextLearnerCodes } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
 import { deriveProgression } from '@/lib/domain/progression';
+import { formatDate } from '@/lib/domain/thai-date';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { NewUserForm, type CompanyOption, type TeamOption } from './new-user-form';
 
@@ -74,6 +77,19 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
         .eq('active', true)
         .in('user_id', learnerIds)
     : { data: [] };
+  // Each learner's next booking (spec §5.3), read under the caller's RLS.
+  const { data: upcoming } = learnerIds.length
+    ? await supabase
+        .from('appointments')
+        .select('user_id, starts_at')
+        .in('user_id', learnerIds)
+        .eq('status', 'booked')
+        .gte('starts_at', new Date().toISOString())
+        .order('starts_at')
+    : { data: [] };
+  const bookingOf = new Map<string, string>();
+  for (const b of upcoming ?? [])
+    if (!bookingOf.has(b.user_id)) bookingOf.set(b.user_id, b.starts_at);
   const companyOf = new Map(
     (assignments ?? []).map((a) => [
       a.user_id,
@@ -86,6 +102,7 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
       ...u,
       company: companyOf.get(u.id) ?? null,
       progression: f ? deriveProgression(f) : null,
+      booking: bookingOf.get(u.id) ?? null,
     };
   });
 
@@ -107,6 +124,7 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
             <th>{t('role')}</th>
             <th>{t('status')}</th>
             <th>{t('progression')}</th>
+            <th>{t('appointment')}</th>
           </tr>
         </thead>
         <tbody>
@@ -126,6 +144,11 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
               <td>{u.status}</td>
               <td data-testid={`progression-${u.login_id}`}>
                 {u.progression ? tp(u.progression) : '—'}
+              </td>
+              <td data-testid={`appointment-${u.login_id}`} className="whitespace-nowrap">
+                {u.booking
+                  ? `${formatDate(bangkokDateOf(u.booking), locale as AppLocale)} ${bangkokTimeLabel(u.booking)}`
+                  : '—'}
               </td>
             </tr>
           ))}
