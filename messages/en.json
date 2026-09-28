@@ -7,16 +7,20 @@
     "home": "Home"
   },
   "home": {
-    "title": "Thailand Business Training & Bank Verification Portal"
+    "title": "Thailand Business Training & Bank Verification Portal",
+    "description": "Prepare for your company's bank account verification. Study your own DBD certificate, practise with quizzes, pass the exam, and rehearse the call with a simulated bank officer."
   },
   "auth": {
     "title": "Sign in",
+    "hint": "Use the login ID and password from your administrator.",
     "loginId": "Login ID",
     "password": "Password",
     "submit": "Sign in",
     "invalidCredentials": "Invalid login ID or password.",
     "accountDisabled": "This account is disabled. Please contact your administrator.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "dashboard": {
     "title": "Dashboard",

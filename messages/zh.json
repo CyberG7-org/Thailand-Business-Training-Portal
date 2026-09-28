@@ -7,16 +7,20 @@
     "home": "首页"
   },
   "home": {
-    "title": "泰国商业培训与银行验证门户"
+    "title": "泰国商业培训与银行验证门户",
+    "description": "为贵公司的银行账户验证做好准备：研读公司的 DBD 登记证明，通过测验和考试，并与模拟银行专员演练通话。"
   },
   "auth": {
     "title": "登录",
+    "hint": "请使用管理员提供的登录 ID 和密码。",
     "loginId": "登录ID",
     "password": "密码",
     "submit": "登录",
     "invalidCredentials": "登录ID或密码不正确。",
     "accountDisabled": "此账户已被停用，请联系管理员。",
-    "signOut": "退出登录"
+    "signOut": "退出登录",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码"
   },
   "dashboard": {
     "title": "首页",

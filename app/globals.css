@@ -109,6 +109,48 @@
     }
   }
 
+  /* The scrim over the login photo: keeps white text at 4.5:1 on the band (phone) and the
+     panel (desktop); the desktop version also fades the photo toward the form column. */
+  .scrim-hero {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-brand-900) 78%, transparent),
+      color-mix(in srgb, var(--color-brand-900) 60%, transparent) 45%,
+      color-mix(in srgb, var(--color-brand-900) 90%, transparent)
+    );
+  }
+  @media (min-width: 1024px) {
+    .scrim-hero {
+      background:
+        linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--color-brand-900) 72%, transparent) 0%,
+          color-mix(in srgb, var(--color-brand-900) 35%, transparent) 30%,
+          color-mix(in srgb, var(--color-brand-900) 82%, transparent) 58%,
+          color-mix(in srgb, var(--color-brand-900) 94%, transparent) 88%,
+          color-mix(in srgb, var(--color-brand-900) 50%, transparent) 100%
+        ),
+        linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--color-brand-700) 35%, transparent),
+          transparent 70%
+        );
+    }
+  }
+
+  /* The entrance from the handoff's motion table: opacity and 18px of lift, 700ms, staggered
+     by --rise-delay. Reduced motion switches every animation off (base layer). */
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+  .rise {
+    animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
   /* The navy band across the top of every learner page: rings, a blue glow top-right, and the
      brand gradient underneath. */
   .band {
