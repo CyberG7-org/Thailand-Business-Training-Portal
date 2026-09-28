@@ -172,3 +172,64 @@ export async function seedStudyCard(): Promise<string> {
   if (locError) throw locError;
   return key;
 }
+
+/** A manager account with the e2e password; their profile id is their team. */
+export async function seedManager(displayName: string): Promise<{ id: string; loginId: string }> {
+  const admin = svc();
+  const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
+  const loginId = `e2e-mgr-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const { data, error } = await admin.auth.admin.createUser({
+    email: `${loginId}@${domain}`,
+    password: E2E_PASSWORD,
+    email_confirm: true,
+    user_metadata: { login_id: loginId, display_name: displayName, preferred_language: 'th' },
+    app_metadata: { role: 'manager' },
+  });
+  if (error) throw error;
+  return { id: data.user.id, loginId };
+}
+
+/** A completed interview that ended ready, written the way the service role writes it. */
+export async function seedReadyInterview(loginId: string): Promise<void> {
+  const admin = svc();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  const { data: assignment } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile!.id)
+    .eq('active', true)
+    .single();
+  const { error } = await admin.from('interview_sessions').insert({
+    user_id: profile!.id,
+    dbd_record_id: assignment!.dbd_record_id,
+    status: 'completed',
+    verdict: 'ready',
+    plan: { items: [], cursor: 0 },
+    provider: 'fake',
+  });
+  if (error) throw error;
+}
+
+/**
+ * A learner in a manager's team with a confirmed company of that team, the exam passed and the
+ * interview ready: everything before the appointment. Returns the login id.
+ */
+export async function seedTeamLearner(
+  managerId: string,
+  companyNameTh: string,
+  issuedOn: string,
+): Promise<string> {
+  const loginId = await seedLearnerWithCompany(companyNameTh, issuedOn, { team_id: managerId });
+  const { error } = await svc()
+    .from('profiles')
+    .update({ manager_id: managerId })
+    .eq('login_id', loginId);
+  if (error) throw error;
+  await seedPassedExam(loginId);
+  await seedReadyInterview(loginId);
+  return loginId;
+}

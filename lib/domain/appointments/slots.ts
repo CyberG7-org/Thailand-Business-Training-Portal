@@ -32,6 +32,16 @@ export function bangkokDateOf(timestamp: string | Date): ISODate {
   return shifted.toISOString().slice(0, 10);
 }
 
+/** "HH:mm" in Bangkok, the way a slot is labelled everywhere. */
+export function bangkokTimeLabel(timestamp: string | Date): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Bangkok',
+  }).format(new Date(timestamp));
+}
+
 export function overlaps(a: Interval, b: Interval): boolean {
   return a.startsAt < b.endsAt && b.startsAt < a.endsAt;
 }

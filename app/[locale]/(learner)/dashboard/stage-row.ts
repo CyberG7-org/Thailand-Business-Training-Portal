@@ -14,11 +14,12 @@ export type StageRow = {
   current: boolean;
 };
 
-/** Where each step's screens live; a step without a route shows status only (appointment: P16b). */
+/** Where each step's screens live; a step without a route shows status only. */
 export const STAGE_ROUTES: Partial<Record<StageKey, string>> = {
   study: '/study',
   quiz: '/quiz',
   exam: '/exam',
   nameCard: '/name-card',
   interview: '/interview',
+  appointment: '/appointment',
 };

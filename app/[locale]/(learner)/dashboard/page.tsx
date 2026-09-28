@@ -3,9 +3,11 @@ import { LearnerShell } from '@/components/shell/learner-shell';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
+import { myUpcomingAppointment } from '@/lib/db/appointments';
 import { createMyDocumentSignedUrl, getMyCompany, latestSubmittedExam } from '@/lib/db/learner';
 import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
@@ -25,18 +27,20 @@ const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const [t, ts, db] = await Promise.all([
+  const [t, ts, ta, db] = await Promise.all([
     getTranslations('dashboard'),
     getTranslations('stages'),
+    getTranslations('appointment'),
     createSupabaseServerClient(),
   ]);
   const loc = locale as AppLocale;
 
-  const [mine, facts, lastExam, passMark] = await Promise.all([
+  const [mine, facts, lastExam, passMark, booking] = await Promise.all([
     getMyCompany(db, user.id),
     loadProgressionFacts(db, user.id),
     latestSubmittedExam(db, user.id),
     getPolicy('exam_passing_mark_percent'),
+    myUpcomingAppointment(user.id),
   ]);
   const stages = stageStatuses(facts);
   const current = currentStage(stages);
@@ -44,6 +48,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
   const detailFor = (key: StageKey, info: StageInfo): string | null => {
     if (key === 'appointment') {
+      // The booked card (spec §5.3): date, time and the manager's name.
+      if (info.status === 'done' && booking) {
+        return t('appointment.booked', {
+          date: formatDate(bangkokDateOf(booking.starts_at), loc),
+          time: bangkokTimeLabel(booking.starts_at),
+          manager: booking.managerName ?? ta('booked.adminCalendar'),
+        });
+      }
       if (info.reason === 'before_available_from' && facts.eligibility) {
         return t('appointment.lockedUntil', {
           date: formatDate(facts.eligibility.availableFrom, loc),

@@ -43,7 +43,8 @@
     "appointment": {
       "pending": "无法计算可预约日期：缺少证书签发日期。",
       "available": "现在可以预约。",
-      "lockedUntil": "可自 {date} 起预约"
+      "lockedUntil": "可自 {date} 起预约",
+      "booked": "已预约：{date} {time} 与 {manager}"
     },
     "hero": {
       "kicker": "银行身份验证准备"
@@ -787,6 +788,40 @@
       "learner_ended": "你提前结束了面谈。",
       "turn_limit": "面谈已达到消息上限。",
       "abandoned": "面谈闲置超过 30 分钟，已被放弃。"
+    }
+  },
+  "appointment": {
+    "title": "银行预约",
+    "intro": "选择你与经理前往银行的日期和时间。除银行假日外每天开放，每个时段一人。",
+    "week": "{date} 当周",
+    "prevWeek": "上一周",
+    "nextWeek": "下一周",
+    "holiday": "银行假日",
+    "noSlots": "无空闲时段",
+    "state": {
+      "free": "空闲",
+      "booked": "已被预约",
+      "blocked": "不可预约",
+      "past": "已过预约时限",
+      "outside_window": "不在可预约期内",
+      "holiday": "银行假日"
+    },
+    "booked": {
+      "title": "你的预约",
+      "line": "{date} {time} 与 {manager}",
+      "adminCalendar": "管理员",
+      "cancel": "取消预约",
+      "cancelHint": "最迟可在时段前 {hours} 小时取消"
+    },
+    "errors": {
+      "not_open": "尚不能预约。",
+      "already_booked": "你已有预约，取消后才能重新预约。",
+      "slot_unavailable": "该时段无法预约。",
+      "slot_taken": "该时段刚被他人预约，请选择其他时段。",
+      "not_found": "找不到预约。",
+      "too_late": "距预约时间太近，无法取消，请联系经理。",
+      "forbidden": "无法执行此操作。",
+      "unknown": "出错了，请重试。"
     }
   },
   "nameCard": {
