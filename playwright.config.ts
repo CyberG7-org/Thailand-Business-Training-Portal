@@ -19,6 +19,7 @@ export default defineConfig({
       EXTRACTION_PROVIDER: 'fake',
       TTS_PROVIDER: 'fake',
       NOTIFY_PROVIDER: 'fake',
+      INTERVIEW_PROVIDER: 'fake',
       QUESTION_GEN_PROVIDER: 'fake',
       VECTOR_PROVIDER: 'fake',
     },

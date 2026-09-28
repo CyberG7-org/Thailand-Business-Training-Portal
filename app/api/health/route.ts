@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { resolveExtractionProvider } from '@/lib/integrations/extraction';
+import { resolveInterviewProvider } from '@/lib/integrations/interview';
 import { resolveNotifyProvider } from '@/lib/integrations/notify';
 import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen';
 import { resolveTtsProvider } from '@/lib/integrations/tts';
@@ -32,6 +33,7 @@ export async function GET() {
       extraction: resolveExtractionProvider(),
       tts: resolveTtsProvider(),
       notify: resolveNotifyProvider(),
+      interview: resolveInterviewProvider(),
       questionGen: resolveQuestionGenProvider(),
       vector: resolveVectorProvider(),
     },
