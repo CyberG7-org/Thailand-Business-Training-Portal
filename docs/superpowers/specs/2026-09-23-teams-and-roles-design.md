@@ -190,10 +190,11 @@ Learner policies are untouched: a learner already sees only their own rows.
 channel. The system allocates the next team code, creates the account with role `manager`, and
 records the creation in the audit log.
 
-**Creating a learner.** A manager supplies a display name, an initial password and the company
-(one of their own confirmed records, as D48 already requires). The system allocates the next code
-inside that team, creates the account with role `learner` and `manager_id` set to the creator, and
-assigns the company.
+**Creating a learner.** A manager supplies the learner's name, an initial password and the
+company (one of their own confirmed records, as D48 already requires). The form shows, read-only,
+the code the next learner of the team will get — read from the counter without taking it — so a
+login id is never typed (D66). The system allocates the next code inside that team, creates the
+account with role `learner` and `manager_id` set to the creator, and assigns the company.
 
 **Suspending a learner.** Unchanged from today: the account is disabled and cannot sign in. Their
 history stays.

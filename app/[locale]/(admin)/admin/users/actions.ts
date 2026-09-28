@@ -38,6 +38,10 @@ export async function createUserAction(
   const managerId = staff.role === 'manager' ? staff.id : String(formData.get('managerId') ?? '');
   if (!managerId) return fail('Choose the team this learner belongs to');
 
+  // The learner is created with their name (D66); the code is never typed, it is allocated.
+  const displayName = String(formData.get('displayName') ?? '').trim();
+  if (!displayName) return fail("Enter the learner's name");
+
   const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
   if (!dbdRecordId) return fail('Choose the company the learner belongs to');
   const { data: record, error: recordError } = await db
@@ -54,7 +58,7 @@ export async function createUserAction(
   try {
     created = await createLearnerAccount({
       password: String(formData.get('password') ?? ''),
-      displayName: String(formData.get('displayName') ?? '') || undefined,
+      displayName,
       managerId,
     });
   } catch (e) {

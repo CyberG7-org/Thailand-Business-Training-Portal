@@ -111,7 +111,11 @@
       "createdFor": "Created {loginId} and assigned to {company}",
       "team": "Team",
       "chooseTeam": "Which team?",
-      "noManager": "Create a manager first — every learner belongs to a team."
+      "noManager": "Create a manager first — every learner belongs to a team.",
+      "learnerName": "Learner's name",
+      "nextLoginId": "Login ID (assigned by the system)",
+      "nextLoginIdHint": "This will be the next learner's login ID. It is given when you create them, never typed.",
+      "nextLoginIdChooseTeam": "Choose a team to see it"
     },
     "dbd": {
       "title": "DBD records",

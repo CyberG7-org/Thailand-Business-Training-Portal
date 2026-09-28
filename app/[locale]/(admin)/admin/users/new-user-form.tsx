@@ -23,15 +23,24 @@ export type CompanyOption = {
  * learner's active assignment. Language is not asked — every learner has all three languages
  * and the switcher remembers the last choice.
  */
-export type TeamOption = { id: string; code: string; name: string | null };
+export type TeamOption = {
+  id: string;
+  code: string;
+  name: string | null;
+  /** The code the next learner of this team gets (D66). */
+  nextLoginId: string;
+};
 
 export function NewUserForm({
   companies,
   teams = null,
+  nextLoginId = null,
 }: {
   companies: CompanyOption[];
   /** Null for a manager: they create inside their own team (spec §7). */
   teams?: TeamOption[] | null;
+  /** A manager's own team's next code; the admin's comes with the team chosen. */
+  nextLoginId?: string | null;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.users');
@@ -43,6 +52,10 @@ export function NewUserForm({
     ? companies.filter((c) => !teamId || c.teamId === teamId || c.teamId == null)
     : companies;
   const confirmed = companies.filter((c) => c.confirmed);
+  // Nobody types a login id: the form says which code the next learner gets (D66).
+  const nextCode = teams
+    ? (teams.find((team) => team.id === teamId)?.nextLoginId ?? null)
+    : nextLoginId;
   return (
     <form action={formAction} className="grid max-w-md gap-3 rounded border p-4">
       <input type="hidden" name="locale" value={locale} />
@@ -73,6 +86,28 @@ export function NewUserForm({
         </label>
       )}
       <label className="text-sm">
+        {t('nextLoginId')}
+        <input
+          readOnly
+          aria-readonly="true"
+          tabIndex={-1}
+          data-testid="next-login-id"
+          value={nextCode ? displayLoginId(nextCode) : ''}
+          placeholder={teams && !teamId ? t('nextLoginIdChooseTeam') : undefined}
+          className="mt-1 w-full rounded border bg-gray-50 px-2 py-1 font-mono text-gray-700"
+        />
+        <span className="mt-1 block text-xs text-gray-600">{t('nextLoginIdHint')}</span>
+      </label>
+      <label className="text-sm">
+        {t('learnerName')}
+        <input
+          name="displayName"
+          required
+          maxLength={120}
+          className="mt-1 w-full rounded border px-2 py-1"
+        />
+      </label>
+      <label className="text-sm">
         {t('password')}
         <input
           name="password"
@@ -82,10 +117,6 @@ export function NewUserForm({
           autoComplete="off"
           className="mt-1 w-full rounded border px-2 py-1"
         />
-      </label>
-      <label className="text-sm">
-        {t('displayName')}
-        <input name="displayName" className="mt-1 w-full rounded border px-2 py-1" />
       </label>
       <label className="text-sm">
         {t('company')}

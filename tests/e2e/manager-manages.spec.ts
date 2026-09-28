@@ -17,6 +17,10 @@ test('a manager can open one of their learners and suspend them', async ({ page 
     juristicId: '0105568233711',
     issuedOn: '13/07/2569',
   });
+  // A manager's own team is implied, so the next code shows straight away (D66).
+  await page.goto('/th/admin/users');
+  await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
+  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-01`);
   const learner = await createLearner(page, { password: LEARNER_PASSWORD, company });
 
   await page.goto('/th/admin/users');

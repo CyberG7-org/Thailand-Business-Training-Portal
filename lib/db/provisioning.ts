@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
+import { formatLoginCode } from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
 import { serverEnv } from './env';
 
@@ -182,6 +183,33 @@ export async function createLearnerAccount(
     throw new ProvisioningError(error.message, 'unknown');
   }
   return created;
+}
+
+/**
+ * The code the next learner of each team will get, for the form to show while the name is
+ * typed (D66); nothing is taken. Read with the service role, as the counters carry no policies,
+ * so a caller passes only the teams it was already shown. A team that has allocated nothing
+ * yet starts at 01, as the allocator does.
+ */
+export async function nextLearnerCodes(
+  teams: { id: string; loginId: string }[],
+): Promise<Map<string, string>> {
+  if (teams.length === 0) return new Map();
+  const { data, error } = await createSupabaseAdminClient()
+    .from('login_id_counters')
+    .select('scope, next_value')
+    .in(
+      'scope',
+      teams.map((team) => team.id),
+    );
+  if (error) throw new ProvisioningError(error.message, 'unknown');
+  const nextValue = new Map((data ?? []).map((row) => [row.scope, row.next_value]));
+  return new Map(
+    teams.map((team) => [
+      team.id,
+      formatLoginCode(`${team.loginId}-`, nextValue.get(team.id) ?? 1),
+    ]),
+  );
 }
 
 export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {

@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { loadProgressionFactsForUsers } from '@/lib/db/progression';
+import { nextLearnerCodes } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { deriveProgression } from '@/lib/domain/progression';
 import { displayLoginId } from '@/lib/domain/login-id';
@@ -29,11 +30,19 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
           .eq('status', 'active')
           .order('login_id')
       : { data: null };
+  // The form shows the code the next learner gets while the name is typed (D66): one per team
+  // on offer for the admin, the manager's own team otherwise. Only teams already listed here.
+  const nextCodes = await nextLearnerCodes(
+    managers
+      ? managers.map((m) => ({ id: m.id, loginId: m.login_id }))
+      : [{ id: staff.id, loginId: staff.loginId }],
+  );
   const teams: TeamOption[] | null = managers
     ? managers.map((m) => ({
         id: m.id,
         code: displayLoginId(m.login_id),
         name: m.display_name,
+        nextLoginId: nextCodes.get(m.id) ?? '',
       }))
     : null;
   const teamCodeOf = new Map((managers ?? []).map((m) => [m.id, displayLoginId(m.login_id)]));
@@ -83,7 +92,11 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
   return (
     <section className="grid gap-6">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <NewUserForm companies={companies} teams={teams} />
+      <NewUserForm
+        companies={companies}
+        teams={teams}
+        nextLoginId={teams ? null : (nextCodes.get(staff.id) ?? null)}
+      />
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b">

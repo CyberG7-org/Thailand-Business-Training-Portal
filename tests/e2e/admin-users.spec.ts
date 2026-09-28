@@ -14,6 +14,19 @@ test('a learner is created inside a team, with an allocated code', async ({ page
     juristicId: '0105568233704',
     issuedOn: '13/07/2569',
   });
+
+  // Before anything is typed the form says which code the next learner of the team gets, and
+  // asks for the learner's name (D66).
+  await page.goto('/th/admin/users');
+  await expect(page.getByTestId('next-login-id')).toHaveValue('');
+  const teamOption = page.locator('select[name="managerId"] option', { hasText: code });
+  await page
+    .locator('select[name="managerId"]')
+    .selectOption((await teamOption.getAttribute('value'))!);
+  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-01`);
+  await expect(page.getByTestId('next-login-id')).toHaveAttribute('readonly', '');
+  await expect(page.locator('input[name="displayName"]')).toHaveAttribute('required', '');
+
   const learner = await createLearner(page, {
     password: LEARNER_PASSWORD,
     displayName: 'E2E Learner',
@@ -26,6 +39,7 @@ test('a learner is created inside a team, with an allocated code', async ({ page
   await expect(page.locator('select[name="preferredLanguage"]')).toHaveCount(0);
   await expect(page.locator('select[name="role"]')).toHaveCount(0);
   await expect(page.locator('input[name="loginId"]')).toHaveCount(0);
+  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-02`);
   await expect(page.getByTestId(`company-${learner}`)).toHaveText(company);
   await expect(page.getByTestId(`team-${learner}`)).toHaveText(code);
 
@@ -55,6 +69,32 @@ test('the admin must say which team', async ({ page }) => {
   await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
   await expect(page.getByTestId('create-user-status')).toHaveCount(0);
   await expect(page.locator('select[name="managerId"]')).toHaveAttribute('required', '');
+});
+
+test('a learner is not created without a name', async ({ page }) => {
+  const company = `บริษัท ไร้ชื่อ ${Date.now()} จำกัด`;
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const code = await createManager(page, 'ทีมไร้ชื่อ', MANAGER_PASSWORD);
+  await createConfirmedRecord(page, {
+    companyNameTh: company,
+    juristicId: '0105568233704',
+    issuedOn: '13/07/2569',
+  });
+
+  await page.goto('/th/admin/users');
+  const teamOption = page.locator('select[name="managerId"] option', { hasText: code });
+  await page
+    .locator('select[name="managerId"]')
+    .selectOption((await teamOption.getAttribute('value'))!);
+  await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
+  const option = page.locator('select[name="dbdRecordId"] option', { hasText: company });
+  await page
+    .locator('select[name="dbdRecordId"]')
+    .selectOption((await option.getAttribute('value'))!);
+  // The name is required, so the browser keeps the form here and no code is spent.
+  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  await expect(page.getByTestId('create-user-status')).toHaveCount(0);
+  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-01`);
 });
 
 test('a learner cannot be created without a confirmed company', async ({ page }) => {

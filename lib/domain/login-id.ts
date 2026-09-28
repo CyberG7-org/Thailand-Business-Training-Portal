@@ -7,3 +7,11 @@ export function displayLoginId(loginId: string | null | undefined): string {
   const trimmed = loginId?.trim();
   return trimmed ? trimmed.toUpperCase() : '—';
 }
+
+/**
+ * The code `allocate_login_id` writes for a counter value — lower-case, a single digit padded to
+ * two — so a screen can say which code comes next before it is taken (D66).
+ */
+export function formatLoginCode(prefix: string, value: number): string {
+  return prefix.toLowerCase() + (value < 10 ? `0${value}` : String(value));
+}

@@ -3,6 +3,7 @@ import {
   ProvisioningError,
   createLearnerAccount,
   createManagerAccount,
+  nextLearnerCodes,
 } from '@/lib/db/provisioning';
 import { adminClient, deleteTestUser } from './helpers';
 
@@ -179,5 +180,33 @@ describe('provisioning spends a code only on an account that exists', () => {
     ).rejects.toMatchObject({ code: 'duplicate' });
     // Handing it back would issue the same taken code on every retry.
     expect(await nextManagerNumber()).toBe(before + 1);
+  });
+});
+
+describe('the next code is shown before it is taken', () => {
+  const created: string[] = [];
+  afterAll(async () => {
+    for (const id of created.reverse()) await deleteTestUser(id);
+  });
+
+  it('names the code the next learner of a team will get, without moving the counter', async () => {
+    const manager = await createManagerAccount({ password: PASSWORD, displayName: 'ทีมถัดไป' });
+    created.push(manager.id);
+    const team = { id: manager.id, loginId: manager.loginId };
+
+    // A fresh team has allocated nothing, so the first learner is -01; asking changes nothing.
+    expect(await nextLearnerCodes([team])).toEqual(
+      new Map([[manager.id, `${manager.loginId}-01`]]),
+    );
+    expect((await nextLearnerCodes([team])).get(manager.id)).toBe(`${manager.loginId}-01`);
+
+    const one = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
+    created.push(one.id);
+    expect(one.loginId).toBe(`${manager.loginId}-01`);
+    expect((await nextLearnerCodes([team])).get(manager.id)).toBe(`${manager.loginId}-02`);
+  });
+
+  it('answers only for the teams it is asked about', async () => {
+    expect(await nextLearnerCodes([])).toEqual(new Map());
   });
 });

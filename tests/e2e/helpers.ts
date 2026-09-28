@@ -62,7 +62,8 @@ export async function createLearner(
       .selectOption((await teamOption.getAttribute('value'))!);
   }
   await page.locator('input[name="password"]').fill(fields.password);
-  if (fields.displayName) await page.locator('input[name="displayName"]').fill(fields.displayName);
+  // The name is required (D66); a spec that does not care gets a placeholder.
+  await page.locator('input[name="displayName"]').fill(fields.displayName ?? 'ผู้เรียนทดสอบ');
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: fields.company });
   await page
     .locator('select[name="dbdRecordId"]')

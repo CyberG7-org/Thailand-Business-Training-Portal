@@ -111,7 +111,11 @@
       "createdFor": "已创建 {loginId} 并分配给 {company}",
       "team": "团队",
       "chooseTeam": "属于哪个团队？",
-      "noManager": "请先创建经理——每位学员都属于某个团队。"
+      "noManager": "请先创建经理——每位学员都属于某个团队。",
+      "learnerName": "学员姓名",
+      "nextLoginId": "登录ID（系统自动分配）",
+      "nextLoginIdHint": "这将是下一位学员的登录ID，创建账户时自动分配，无需输入。",
+      "nextLoginIdChooseTeam": "请先选择团队"
     },
     "dbd": {
       "title": "DBD 记录",
