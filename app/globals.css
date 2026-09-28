@@ -10,6 +10,8 @@
   --color-brand-50: #eef3fc;
   --color-gold-500: #c8963e; /* completed steps, earned moments only */
   --color-gold-100: #f6ecd6;
+  --color-gold-300: #e3bd72; /* the medallion's highlight */
+  --color-gold-600: #a87a2a; /* the medallion's shade */
   --color-gold-700: #6e4c10; /* text on gold-100 (status tags) */
   --color-ok-600: #1f7a4d;
   --color-ok-50: #e8f5ee;
@@ -306,6 +308,40 @@
       font-weight: 500;
       color: var(--color-ink-500);
     }
+  }
+
+  /* The band on a passed exam result (handoff, 05): the blue glow and rings turn gold. */
+  .band-gold {
+    background:
+      repeating-radial-gradient(
+        circle at 92% 12%,
+        rgb(200 150 62 / 0.12) 0 1px,
+        transparent 1px 34px
+      ),
+      radial-gradient(900px 520px at 85% 0%, rgb(200 150 62 / 0.28), transparent 60%),
+      linear-gradient(165deg, var(--color-brand-900) 0%, var(--color-brand-700) 100%);
+  }
+
+  /* The medallion in the result badge: a radial gold, a gold-100 halo, and a pop on arrival. */
+  .medallion {
+    background: radial-gradient(
+      circle at 35% 30%,
+      var(--color-gold-300),
+      var(--color-gold-500) 60%,
+      var(--color-gold-600)
+    );
+    box-shadow:
+      0 0 0 6px var(--color-gold-100),
+      0 8px 20px rgb(138 95 20 / 0.35);
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+  }
+  .pop {
+    animation: pop 800ms cubic-bezier(0.3, 1.4, 0.5, 1) 400ms both;
   }
 
   /* The navy band across the top of every learner page: rings, a blue glow top-right, and the

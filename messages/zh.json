@@ -647,7 +647,9 @@
     },
     "answeredOf": "已回答 {answered} / {total} 题",
     "percentDone": "完成 {percent}%",
-    "jumpNext": "跳到下一道未作答的题"
+    "jumpNext": "跳到下一道未作答的题",
+    "reviewHeading": "你的答案",
+    "reviewIncorrect": "错误"
   },
   "exam": {
     "title": "考试",
@@ -678,7 +680,13 @@
       "questions": "题数",
       "passingMark": "及格线",
       "attempt": "第几次"
-    }
+    },
+    "reviewHeading": "你的答案",
+    "passedNext": "你已通过考试。银行验证通话训练现已开放。",
+    "passedNextCard": "你已通过考试。下一步是名片。",
+    "notPassedNext": "这次未通过。请查看下方答案，准备好后再试一次。",
+    "toBankCall": "前往银行通话训练",
+    "retake": "重新考试"
   },
   "nameCard": {
     "title": "名片",

@@ -647,7 +647,9 @@
     },
     "answeredOf": "{answered} of {total} answered",
     "percentDone": "{percent}% complete",
-    "jumpNext": "Go to the next unanswered question"
+    "jumpNext": "Go to the next unanswered question",
+    "reviewHeading": "Your answers",
+    "reviewIncorrect": "Incorrect"
   },
   "exam": {
     "title": "Exam",
@@ -678,7 +680,13 @@
       "questions": "Questions",
       "passingMark": "Passing mark",
       "attempt": "Attempt"
-    }
+    },
+    "reviewHeading": "Your answers",
+    "passedNext": "You passed. The bank verification call training is now open.",
+    "passedNextCard": "You passed. Your next step is the name card.",
+    "notPassedNext": "Not passed this time. Review the answers below and try again when you are ready.",
+    "toBankCall": "Go to bank call training",
+    "retake": "Retake exam"
   },
   "nameCard": {
     "title": "Name card",

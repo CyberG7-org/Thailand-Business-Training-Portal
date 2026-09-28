@@ -24,6 +24,7 @@ export async function LearnerShell({
   subBarRight,
   hero,
   bandFooter,
+  tone = 'blue',
   children,
 }: {
   /** The page title in the band; the dashboard passes `hero` instead. */
@@ -43,13 +44,20 @@ export async function LearnerShell({
   hero?: ReactNode;
   /** Rendered at the foot of the band, still on navy (the dashboard's stepper). */
   bandFooter?: ReactNode;
+  /** The band's colour: gold for an earned moment (a passed exam). */
+  tone?: 'blue' | 'gold';
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
   const statuses = step && !subBarRight && user ? await cachedStageStatuses(user.id) : null;
   return (
     <>
-      <div className="band rounded-b-[28px] px-4 pt-4 pb-8 md:rounded-b-[36px] md:px-6 md:pb-10">
+      <div
+        className={
+          'band rounded-b-[28px] px-4 pt-4 pb-8 md:rounded-b-[36px] md:px-6 md:pb-10' +
+          (tone === 'gold' ? ' band-gold' : '')
+        }
+      >
         <ShellHeader user={user} />
         {!home && (
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4">

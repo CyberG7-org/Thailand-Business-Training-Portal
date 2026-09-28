@@ -74,7 +74,10 @@ export async function setPolicy(key: string, value: unknown): Promise<void> {
 }
 
 /** Records a submitted, passing exam attempt for a seeded learner (bypasses the UI). */
-export async function seedPassedExam(loginId: string): Promise<void> {
+export async function seedPassedExam(
+  loginId: string,
+  result: 'pass' | 'fail' = 'pass',
+): Promise<void> {
   const admin = svc();
   const { data: profile } = await admin
     .from('profiles')
@@ -92,9 +95,9 @@ export async function seedPassedExam(loginId: string): Promise<void> {
     question_ids: question ? [question.id] : [],
     shuffle_seed: 'seed',
     passing_mark_snapshot: 80,
-    score: 1,
+    score: result === 'pass' ? 1 : 0,
     max_score: 1,
-    result: 'pass',
+    result,
     submitted_at: new Date().toISOString(),
   });
   if (error) throw error;
