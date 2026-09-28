@@ -165,7 +165,7 @@ export function RecordTools({
                     <input type="hidden" name="documentId" value={doc.id} />
                     <button
                       type="submit"
-                      className="staff-link text-xs"
+                      className="staff-btn-ghost staff-btn-sm"
                       data-testid="reindex-button"
                     >
                       {doc.indexStatus === 'failed'
@@ -181,7 +181,7 @@ export function RecordTools({
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="id" value={id} />
                     <input type="hidden" name="documentId" value={doc.id} />
-                    <button type="submit" className="text-xs text-bad-600 underline">
+                    <button type="submit" className="staff-btn-ghost staff-btn-sm text-bad-600">
                       {t('removeDocument')}
                     </button>
                   </form>

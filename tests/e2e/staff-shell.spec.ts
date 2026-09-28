@@ -69,3 +69,48 @@ test('every list page fits a phone', async ({ page }) => {
     expect(overflow, path).toBeLessThanOrEqual(0);
   }
 });
+
+test('a select is drawn as editable; only the allocated code is drawn read-only', async ({
+  page,
+}) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/users');
+  const background = (selector: string) =>
+    page.locator(selector).evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await background('select[name="dbdRecordId"]')).toBe('rgb(255, 255, 255)');
+  expect(await background('[data-testid="next-login-id"]')).not.toBe('rgb(255, 255, 255)');
+});
+
+test('small buttons are tappable and readable on a phone', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/th/admin/settings');
+  const buttons = page.locator('button.staff-btn-sm');
+  expect(await buttons.count()).toBeGreaterThan(0);
+  for (const button of await buttons.all()) {
+    expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    const size = await button.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+    expect(size).toBeGreaterThanOrEqual(14);
+  }
+});
+
+test('manager row actions are buttons a thumb can hit', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await createManager(page, 'ผู้จัดการปุ่มแถว', MANAGER_PASSWORD);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/th/admin/managers');
+  const buttons = page.locator('tbody button');
+  expect(await buttons.count()).toBeGreaterThan(0);
+  for (const button of await buttons.all()) {
+    expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+  }
+});
+
+test('the team filter stays on one row on a laptop', async ({ page }) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/th/admin/appointments');
+  const select = await page.getByTestId('team-filter').boundingBox();
+  const button = await page.locator('form:has(#team-filter) button').boundingBox();
+  expect(select && button && Math.abs(select.y - button.y)).toBeLessThan(2);
+});

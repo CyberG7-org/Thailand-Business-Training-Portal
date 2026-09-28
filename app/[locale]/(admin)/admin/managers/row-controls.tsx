@@ -39,7 +39,7 @@ export function ManagerRowControls({
           type="submit"
           disabled={statusPending}
           data-testid="toggle-status"
-          className="staff-link text-xs disabled:opacity-50"
+          className="staff-btn-ghost staff-btn-sm"
         >
           {next === 'disabled' ? t('disable') : t('enable')}
         </button>
@@ -51,13 +51,13 @@ export function ManagerRowControls({
           name="displayName"
           defaultValue={displayName ?? ''}
           placeholder={t('displayName')}
-          className="staff-input staff-btn-sm w-36 text-sm"
+          className="staff-input staff-input-sm w-36"
         />
         <button
           type="submit"
           disabled={namePending}
           data-testid="rename-manager"
-          className="staff-link text-xs disabled:opacity-50"
+          className="staff-btn-ghost staff-btn-sm"
         >
           {t('rename')}
         </button>
@@ -70,13 +70,13 @@ export function ManagerRowControls({
           type="password"
           minLength={10}
           placeholder={t('resetPassword')}
-          className="staff-input staff-btn-sm w-36 text-sm"
+          className="staff-input staff-input-sm w-36"
         />
         <button
           type="submit"
           disabled={pwPending}
           data-testid="reset-password"
-          className="staff-link text-xs disabled:opacity-50"
+          className="staff-btn-ghost staff-btn-sm"
         >
           {t('resetPassword')}
         </button>

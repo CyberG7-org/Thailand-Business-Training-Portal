@@ -71,7 +71,7 @@ export default async function AppointmentsPage({
             name="team"
             data-testid="team-filter"
             defaultValue={team ?? ''}
-            className={inputClass}
+            className={inputClass + ' sm:w-auto sm:min-w-48'}
           >
             <option value="">{t('allTeams')}</option>
             <option value="admin">{t('adminCalendar')}</option>
@@ -82,7 +82,7 @@ export default async function AppointmentsPage({
               </option>
             ))}
           </select>
-          <button type="submit" className="staff-btn-ghost staff-btn-sm">
+          <button type="submit" className="staff-btn-ghost">
             {t('show')}
           </button>
         </form>

@@ -448,7 +448,7 @@
   textarea.staff-input {
     min-height: 96px;
   }
-  .staff-input:read-only,
+  .staff-input[readonly],
   .staff-input:disabled {
     background: var(--color-ink-50);
     color: var(--color-ink-700);
@@ -495,9 +495,17 @@
     cursor: not-allowed;
   }
   .staff-btn-sm {
-    min-height: 36px;
     padding: 0 12px;
-    font-size: 13px;
+    font-size: 14px;
+  }
+  @media (min-width: 768px) {
+    .staff-btn-sm {
+      min-height: 36px;
+    }
+    .staff-input-sm {
+      min-height: 36px;
+      padding: 4px 10px;
+    }
   }
   .staff-link {
     color: var(--color-brand-600);
