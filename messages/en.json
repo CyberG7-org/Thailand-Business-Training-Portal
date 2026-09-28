@@ -611,7 +611,14 @@
       "title": "From your documents",
       "hint": "The actual text of your company's DBD documents for this topic — compare it with your prepared answers.",
       "source": "{document} · page {page}"
-    }
+    },
+    "intro": "{count} cards on what the bank will ask, each filled with your own company's facts.",
+    "continue": "Continue with card {n}",
+    "continueHere": "continue here",
+    "summary": {
+      "ofTotal": "{done} of {total}"
+    },
+    "allDone": "All cards done"
   },
   "quiz": {
     "title": "Evaluation quiz",

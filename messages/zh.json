@@ -611,7 +611,14 @@
       "title": "来自您的文件",
       "hint": "您公司 DBD 文件中与本主题相关的原文，可与准备好的答案对照。",
       "source": "{document} · 第 {page} 页"
-    }
+    },
+    "intro": "{count} 张关于银行会问什么的学习卡片，每张都基于贵公司的真实信息。",
+    "continue": "继续第 {n} 张卡片",
+    "continueHere": "从这里继续",
+    "summary": {
+      "ofTotal": "{total} 张中的 {done} 张"
+    },
+    "allDone": "所有卡片已完成"
   },
   "quiz": {
     "title": "评估测验",

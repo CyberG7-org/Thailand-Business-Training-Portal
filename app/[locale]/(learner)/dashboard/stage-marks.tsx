@@ -1,4 +1,7 @@
+import { CheckIcon, LockIcon } from '@/components/icons';
 import type { StageStatus } from '@/lib/domain/progression';
+
+export { CheckIcon, ChevronIcon, LockIcon } from '@/components/icons';
 
 /** Handoff, status tags: gold for done, brand for in progress, ink for everything else. */
 const TAG_TONE: Record<StageStatus, string> = {
@@ -25,55 +28,6 @@ export function StatusTag({
     >
       {children}
     </span>
-  );
-}
-
-export function CheckIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-    >
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  );
-}
-
-export function LockIcon({ size = 17 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <rect x="5" y="11" width="14" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-    </svg>
-  );
-}
-
-export function ChevronIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="m9 6 6 6-6 6" />
-    </svg>
   );
 }
 
