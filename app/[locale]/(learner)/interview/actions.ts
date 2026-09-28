@@ -20,8 +20,9 @@ export type ChatTurn = {
   /** The concept the officer asks about next; null on a learner bubble or a closing turn. */
   concept: string | null;
 };
+export type Budget = { used: number; max: number };
 export type SendResult =
-  { ok: true; turns: ChatTurn[]; closed: boolean } | { ok: false; error: string };
+  { ok: true; turns: ChatTurn[]; closed: boolean; budget: Budget } | { ok: false; error: string };
 
 function code(e: unknown): string {
   return e instanceof InterviewError ? e.code : 'unknown';
@@ -51,7 +52,7 @@ export async function sendMessageAction(
 ): Promise<SendResult> {
   const user = await requireUser(locale);
   try {
-    const { turns, closed } = await submitLearnerMessage(user.id, sessionId, content);
+    const { turns, closed, budget } = await submitLearnerMessage(user.id, sessionId, content);
     if (closed) {
       revalidatePath(`/${locale}/interview/${sessionId}`);
       revalidatePath(`/${locale}/dashboard`);
@@ -59,6 +60,7 @@ export async function sendMessageAction(
     return {
       ok: true,
       closed,
+      budget,
       turns: turns.map((t) => ({
         id: t.id,
         role: t.role as ChatTurn['role'],

@@ -42,6 +42,7 @@ export async function Debrief({
   expected,
   locale,
   turns,
+  closeReason,
 }: {
   verdict: 'ready' | 'not_ready' | null;
   narrative: string;
@@ -50,6 +51,8 @@ export async function Debrief({
   expected: Record<string, string>;
   locale: AppLocale;
   turns: ChatTurn[];
+  /** Why the session ended, in the learner's language; null when unknown. */
+  closeReason: string | null;
 }) {
   const t = await getTranslations('interview');
   const ready = verdict === 'ready';
@@ -106,6 +109,11 @@ export async function Debrief({
           >
             {t(`verdict.${tag}`)}
           </span>
+          {closeReason && (
+            <p data-testid="close-reason" className="mt-2 text-sm leading-[1.7] text-ink-700">
+              {t(`closeReason.${closeReason}` as never)}
+            </p>
+          )}
           {narrative && (
             <p lang="th" className="mt-2 text-base leading-[1.75] text-ink-900">
               {narrative}

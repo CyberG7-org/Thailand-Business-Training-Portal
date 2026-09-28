@@ -16,7 +16,7 @@ Verdict per item of the foundation spec §13 "Security" row plus what the slices
 | 10 | Generic login error (no account enumeration); disabled accounts cannot sign in | ✅ | `tests/e2e/auth.spec.ts`, `admin-users.spec.ts` |
 | 11 | Sample certificates with real PII never enter the repo | ✅ | `.gitignore` (`*.pdf`, `*.xlsx`, `.env*`); *manual*: `git ls-files | grep -i pdf` returns only vendored fonts' licence text |
 | 12 | Hardening headers (`X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`) | ✅ | `next.config.ts`; `tests/e2e/idor.spec.ts` |
-| 13 | Server actions re-check ownership/gates instead of trusting the client (attempt ownership, the interview gate and session ownership, the 1,000-character and 30-message limits) | ✅ | `tests/integration/{assessment,exam,interviews}.test.ts` |
+| 13 | Server actions re-check ownership/gates instead of trusting the client (attempt ownership, the interview gate, session ownership and idleness, the 1,000-character limit and the message budget, the third evasion) | ✅ | `tests/integration/{assessment,exam,interviews}.test.ts` |
 | 14 | Extraction output is never auto-confirmed; admin review is mandatory | ✅ | `tests/e2e/extraction.spec.ts`, `tests/integration/extraction.test.ts` |
 | 14b | AI-generated questions land as drafts only; approval still needs an admin and three languages; generation runs under the admin's own RLS session | ✅ | `tests/integration/question-gen.test.ts`, `tests/e2e/ai-questions.spec.ts` |
 | 15 | Content-Security-Policy | ⏳ deferred | Not set for the pilot: Supabase signed URLs and the font hosts need an allow-list validated against the production domains first (the WebRTC allowance the voice call needed went with it). Track in P10. |

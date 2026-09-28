@@ -3,7 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from '@/i18n/navigation';
-import { endInterviewAction, sendMessageAction, type ChatTurn } from '../actions';
+import { endInterviewAction, sendMessageAction, type Budget, type ChatTurn } from '../actions';
 
 const BUBBLE = {
   officer:
@@ -21,15 +21,19 @@ export function Chat({
   sessionId,
   initialTurns,
   maxChars,
+  initialBudget,
 }: {
   sessionId: string;
   initialTurns: ChatTurn[];
   maxChars: number;
+  /** Learner messages sent so far and the session's limit (spec §4.3: shown, not silently cut). */
+  initialBudget: Budget;
 }) {
   const locale = useLocale();
   const t = useTranslations('interview');
   const router = useRouter();
   const [turns, setTurns] = useState(initialTurns);
+  const [budget, setBudget] = useState(initialBudget);
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -48,6 +52,11 @@ export function Chat({
     startTransition(async () => {
       const result = await sendMessageAction(locale, sessionId, text);
       if (!result.ok) {
+        // An idle session was abandoned server-side: the page now renders it as such.
+        if (result.error === 'expired') {
+          router.refresh();
+          return;
+        }
         setTurns((prev) => prev.filter((turn) => turn.id !== 'pending'));
         setDraft(text);
         setError(result.error);
@@ -59,6 +68,7 @@ export function Chat({
         return;
       }
       setTurns(result.turns);
+      setBudget(result.budget);
     });
   };
 
@@ -67,7 +77,7 @@ export function Chat({
     setError(null);
     startTransition(async () => {
       const result = await endInterviewAction(locale, sessionId);
-      if (result.error) setError(result.error);
+      if (result.error && result.error !== 'expired') setError(result.error);
       else router.refresh();
     });
   };
@@ -141,6 +151,10 @@ export function Chat({
         />
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs text-ink-500 tabular-nums">
+            <span data-testid="chat-budget">
+              {t('chat.budget', { n: budget.used + 1, max: budget.max })}
+            </span>
+            {' · '}
             {t('chat.limit', { max: maxChars })}
           </span>
           <div className="flex gap-2">

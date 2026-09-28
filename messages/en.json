@@ -8,7 +8,7 @@
   },
   "home": {
     "title": "Thailand Business Training & Bank Verification Portal",
-    "description": "Prepare for your company's bank account verification. Study your own DBD certificate, practise with quizzes, pass the exam, and rehearse the call with a simulated bank officer."
+    "description": "Prepare for your company's bank account verification. Study your own DBD certificate, practise with quizzes, pass the exam, and rehearse the interview with a simulated bank officer."
   },
   "auth": {
     "title": "Sign in",
@@ -51,8 +51,8 @@
     "next": {
       "study": "Your next step is the study material. Read the cards about your company before the quiz.",
       "quiz": "Your next step is the evaluation quiz. It shows what to review before the exam.",
-      "exam": "Your next step is the exam. Passing it unlocks the bank verification call.",
-      "nameCard": "Your next step is the name card. Create it before the bank verification call.",
+      "exam": "Your next step is the exam. Passing it unlocks the readiness interview.",
+      "nameCard": "Your next step is the name card. Create it before the readiness interview.",
       "interview": "Your next step is the readiness interview. The officer asks about your company, in Thai.",
       "appointment": "You are ready. Your next step is the bank appointment.",
       "done": "You have completed every step. Well done."
@@ -208,7 +208,7 @@
       "sourceDocument": "from {name}",
       "sourcePage": "page {page}",
       "fileHint": "PDF, up to 30 MB per file",
-      "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, quiz, exam and call practice.",
+      "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, quiz, exam and the readiness interview.",
       "interviewFields": {
         "contact_email": "Company email",
         "contact_phone": "Company phone number",
@@ -722,7 +722,8 @@
       "typing": "The officer is typing…",
       "officer": "Bank officer",
       "you": "You",
-      "limit": "Up to {max} characters"
+      "limit": "Up to {max} characters",
+      "budget": "Message {n} of {max}"
     },
     "debrief": {
       "title": "Interview result",
@@ -751,7 +752,17 @@
       "closed": "This interview has ended.",
       "too_long": "The message is too long.",
       "not_found": "Interview not found.",
-      "unknown": "Something went wrong. Please try again."
+      "unknown": "Something went wrong. Please try again.",
+      "expired": "The interview sat idle too long. Please start again.",
+      "no_facts": "The company record has nothing to verify yet. Ask your manager."
+    },
+    "closeReason": {
+      "plan_complete": "Every question was asked.",
+      "too_many_evasions": "Closed after the third evaded answer.",
+      "off_topic_limit": "Closed after repeated off-topic answers.",
+      "learner_ended": "You ended the interview early.",
+      "turn_limit": "The interview reached its message limit.",
+      "abandoned": "The interview sat idle for over 30 minutes and was abandoned."
     }
   },
   "nameCard": {

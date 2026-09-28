@@ -57,6 +57,8 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('chat-message').first()).toHaveAttribute('data-role', 'officer');
   await expect(page.getByTestId('chat-message').first()).toContainText('สวัสดี');
+  // Spec §4.3: the message budget is shown, not silently cut.
+  await expect(page.getByTestId('chat-budget')).toContainText('จาก');
 
   await answerUntilClosed(page, () => 'ไม่ทราบ');
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'not_ready');
@@ -111,6 +113,7 @@ test('the learner can end the interview early and is told to try again', async (
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
   await page.getByTestId('chat-end').click();
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'not_ready');
+  await expect(page.getByTestId('close-reason')).toHaveText('คุณจบการสัมภาษณ์ก่อนครบทุกข้อ');
   await expect(page.getByRole('link', { name: 'ลองอีกครั้ง' })).toHaveAttribute(
     'href',
     '/th/interview',

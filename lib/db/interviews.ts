@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
+import { revealedFact } from '@/lib/domain/interview/leak';
 import { advance, buildPlan, currentItem, probingItems } from '@/lib/domain/interview/plan';
 import { detectPasted } from '@/lib/domain/interview/pasted';
 import type {
@@ -8,6 +9,8 @@ import type {
   CloseReason,
   FactSheet,
   InterviewPlan,
+  OfficerTurn,
+  PlanItem,
   Turn,
 } from '@/lib/domain/interview/types';
 import { decideVerdict } from '@/lib/domain/interview/verdict';
@@ -30,8 +33,30 @@ export const MAX_LEARNER_TURNS = 30;
 export const MAX_INPUT_CHARS = 1000;
 const MAX_EVASIONS = 3;
 
+/** Two attempts per item plus room for the probing pass; never below the spec's 30 (D64). */
+export function turnBudget(plan: InterviewPlan): number {
+  return Math.max(MAX_LEARNER_TURNS, plan.items.length * 2 + 8);
+}
+
+export type Budget = { used: number; max: number };
+
+const GREETING = 'สวัสดีค่ะ ดิฉันเป็นเจ้าหน้าที่ธนาคาร ขอสอบถามข้อมูลบริษัทนะคะ ';
+const REASK = 'ขอถามอีกครั้งนะคะ ';
+/** What the officer says when the code, not the model, closes the interview. */
+const CLOSING = {
+  turn_limit: 'ขอบคุณค่ะ การสัมภาษณ์ครบจำนวนข้อความที่กำหนดแล้ว ธนาคารจะสรุปผลให้นะคะ',
+  too_many_evasions: 'ขออภัยค่ะ วันนี้ธนาคารยังไม่สามารถดำเนินการต่อได้ ขอบคุณที่มาค่ะ',
+} as const;
+
 export type InterviewErrorCode =
-  'not_open' | 'not_configured' | 'not_found' | 'no_assignment' | 'closed' | 'too_long';
+  | 'not_open'
+  | 'not_configured'
+  | 'not_found'
+  | 'no_assignment'
+  | 'no_facts'
+  | 'closed'
+  | 'expired'
+  | 'too_long';
 
 export class InterviewError extends Error {
   constructor(
@@ -153,6 +178,44 @@ async function factsFor(userId: string) {
   return { assignment, facts: interviewFacts(assignment.dbd_records, assignment) };
 }
 
+function isIdle(session: InterviewSessionRow): boolean {
+  return Date.now() - new Date(session.last_turn_at).getTime() >= IDLE_MINUTES * 60_000;
+}
+
+async function abandon(sessionId: string): Promise<void> {
+  const { error } = await createSupabaseAdminClient()
+    .from('interview_sessions')
+    .update({ status: 'abandoned', ended_at: new Date().toISOString() })
+    .eq('id', sessionId);
+  if (error) throw error;
+}
+
+/** Spec §4.5: an open session idle for IDLE_MINUTES is abandoned wherever it is next touched. */
+async function assertFresh(session: InterviewSessionRow): Promise<void> {
+  if (!isIdle(session)) return;
+  await abandon(session.id);
+  throw new InterviewError('The session sat idle too long', 'expired');
+}
+
+/**
+ * The code's last word on a turn: the assessment is of the answer to the question actually
+ * asked, whatever concept the model named; and an officer who states a fact (spec §4.3) is
+ * replaced by a plain re-ask, so nothing from the record reaches the transcript.
+ */
+function guard(
+  reply: OfficerTurn,
+  item: PlanItem | null,
+  facts: FactSheet,
+  opening: boolean,
+): OfficerTurn {
+  const assessment =
+    reply.assessment && item ? { ...reply.assessment, concept: item.concept } : reply.assessment;
+  if (revealedFact(reply.say, facts) === null) return { ...reply, assessment };
+  console.warn('interview: the officer stated a fact; the turn was replaced');
+  const say = item ? (opening ? GREETING : REASK) + item.question : CLOSING.turn_limit;
+  return { say, assessment, next: reply.next };
+}
+
 /**
  * The learner's open session, or a new one. An open session idle for IDLE_MINUTES is abandoned
  * first: the bank would not have waited either, and an abandoned session never gets a verdict.
@@ -175,15 +238,28 @@ export async function startOrResumeInterview(
     .limit(1)
     .maybeSingle();
   if (open) {
-    const idleMs = Date.now() - new Date(open.last_turn_at).getTime();
-    if (idleMs < IDLE_MINUTES * 60_000) return { session: open, turns: await turnsOf(open.id) };
-    await admin
-      .from('interview_sessions')
-      .update({ status: 'abandoned', ended_at: new Date().toISOString() })
-      .eq('id', open.id);
+    if (!isIdle(open)) return { session: open, turns: await turnsOf(open.id) };
+    await abandon(open.id);
   }
   const { assignment, facts } = await factsFor(userId);
   const plan = buildPlan(facts);
+  // Only a record confirmed before D58 can lack every fact; it would otherwise end ready
+  // without a single question.
+  if (plan.items.length === 0) throw new InterviewError('Nothing to verify', 'no_facts');
+  // The officer speaks before the session exists: a provider failure leaves nothing behind.
+  const opening = guard(
+    await officer.turn({
+      facts,
+      plan,
+      transcript: [],
+      learnerMessage: null,
+      pastedDetected: false,
+      evasions: 0,
+    }),
+    plan.items[0] ?? null,
+    facts,
+    true,
+  );
   const { data: session, error } = await admin
     .from('interview_sessions')
     .insert({
@@ -196,14 +272,6 @@ export async function startOrResumeInterview(
     .select()
     .single();
   if (error) throw error;
-  const opening = await officer.turn({
-    facts,
-    plan,
-    transcript: [],
-    learnerMessage: null,
-    pastedDetected: false,
-    evasions: 0,
-  });
   const turn = await record(session.id, 1, 'officer', opening.say, {
     next: opening.next,
   } as unknown as Json);
@@ -221,6 +289,7 @@ async function ownSession(userId: string, sessionId: string): Promise<InterviewS
   return data;
 }
 
+/** The verdict is stored first; the narrative is the model's and never blocks it. */
 async function close(
   session: InterviewSessionRow,
   plan: InterviewPlan,
@@ -229,32 +298,49 @@ async function close(
   reason: CloseReason,
 ): Promise<void> {
   const core = decideVerdict(plan, assessed(transcript), reason);
-  const narrative = await provider().narrate({ facts, verdict: core, transcript });
-  const { error } = await createSupabaseAdminClient()
+  const admin = createSupabaseAdminClient();
+  const summary = { ...core, narrative: '', closeReason: reason };
+  const { error } = await admin
     .from('interview_sessions')
     .update({
       status: 'completed',
       verdict: core.verdict,
-      summary: { ...core, narrative, closeReason: reason } as unknown as Json,
+      summary: summary as unknown as Json,
       plan: advance(plan, { close: reason }) as unknown as Json,
       ended_at: new Date().toISOString(),
     })
     .eq('id', session.id);
   if (error) throw error;
+  try {
+    const narrative = await provider().narrate({ facts, verdict: core, transcript });
+    if (narrative) {
+      await admin
+        .from('interview_sessions')
+        .update({ summary: { ...summary, narrative } as unknown as Json })
+        .eq('id', session.id);
+    }
+  } catch (e) {
+    console.error('interview: the narrative failed; the verdict stands without it', e);
+  }
 }
 
-/** One learner message in, one officer turn out; the session closes when the officer says so. */
+/**
+ * One learner message in, one officer turn out; the session closes when the officer says so, or
+ * when the code's limits say so. Nothing is written until the officer has answered: a provider
+ * failure leaves the learner's message in their hands, not in the transcript.
+ */
 export async function submitLearnerMessage(
   userId: string,
   sessionId: string,
   content: string,
-): Promise<{ turns: InterviewTurnRow[]; closed: boolean }> {
+): Promise<{ turns: InterviewTurnRow[]; closed: boolean; budget: Budget }> {
   const text = content.trim();
   if (text.length === 0 || text.length > MAX_INPUT_CHARS) {
     throw new InterviewError('Message too long', 'too_long');
   }
   const session = await ownSession(userId, sessionId);
   if (session.status !== 'in_progress') throw new InterviewError('The session is closed', 'closed');
+  await assertFresh(session);
   const admin = createSupabaseAdminClient();
   const { facts } = await factsFor(userId);
   const rows = await turnsOf(sessionId);
@@ -270,51 +356,66 @@ export async function submitLearnerMessage(
     );
     if (probing.length) plan = { ...plan, items: [...plan.items, ...probing] };
   }
-  const seq = rows.length + 1;
-  await record(sessionId, seq, 'learner', text, null);
   const learnerTurns = rows.filter((r) => r.role === 'learner').length + 1;
   const evasions = assessed(transcript).filter((a) => a.verdict === 'evasive').length;
   // The transcript ends with the officer's question; the answer travels as learnerMessage, so
   // the Claude adapter's messages alternate.
-  const reply = await provider().turn({
+  const reply = guard(
+    await provider().turn({
+      facts,
+      plan,
+      transcript,
+      learnerMessage: text,
+      pastedDetected: detectPasted(text, facts),
+      evasions,
+    }),
+    item,
     facts,
-    plan,
-    transcript,
-    learnerMessage: text,
-    pastedDetected: detectPasted(text, facts),
-    evasions,
-  });
+    false,
+  );
   const assessment = reply.assessment;
-  await record(sessionId, seq + 1, 'officer', reply.say, {
+  const evasionsNow = evasions + (assessment?.verdict === 'evasive' ? 1 : 0);
+  // Hard limits belong to the code, whatever the officer decided; they close with a closing
+  // line, not with a question the learner can no longer answer.
+  let next = reply.next;
+  let say = reply.say;
+  if ('concept' in next && learnerTurns >= turnBudget(plan)) {
+    next = { close: 'turn_limit' };
+    say = CLOSING.turn_limit;
+  }
+  if ('concept' in next && evasionsNow >= MAX_EVASIONS) {
+    next = { close: 'too_many_evasions' };
+    say = CLOSING.too_many_evasions;
+  }
+  const seq = rows.length + 1;
+  await record(sessionId, seq, 'learner', text, null);
+  await record(sessionId, seq + 1, 'officer', say, {
     ...(assessment ?? {}),
-    next: reply.next,
+    next,
   } as unknown as Json);
   const withReply: Turn[] = [
     ...transcript,
     { role: 'learner', content: text },
-    { role: 'officer', content: reply.say, assessment },
+    { role: 'officer', content: say, assessment },
   ];
-  // Hard limits belong to the code, whatever the officer decided.
-  const evasionsNow = evasions + (assessment?.verdict === 'evasive' ? 1 : 0);
-  let next = reply.next;
-  if (learnerTurns >= MAX_LEARNER_TURNS && 'concept' in next) next = { close: 'turn_limit' };
-  if (evasionsNow >= MAX_EVASIONS && 'concept' in next) next = { close: 'too_many_evasions' };
   if ('concept' in next) plan = advance(plan, next);
+  const budget: Budget = { used: learnerTurns, max: turnBudget(plan) };
   if ('close' in next || !currentItem(plan)) {
     await close(session, plan, withReply, facts, 'close' in next ? next.close : 'plan_complete');
-    return { turns: await turnsOf(sessionId), closed: true };
+    return { turns: await turnsOf(sessionId), closed: true, budget };
   }
   await admin
     .from('interview_sessions')
     .update({ plan: plan as unknown as Json })
     .eq('id', sessionId);
-  return { turns: await turnsOf(sessionId), closed: false };
+  return { turns: await turnsOf(sessionId), closed: false, budget };
 }
 
 /** The learner ends early: a verdict on what was answered, which cannot be ready (spec §4.5). */
 export async function endInterview(userId: string, sessionId: string): Promise<void> {
   const session = await ownSession(userId, sessionId);
   if (session.status !== 'in_progress') return;
+  await assertFresh(session);
   const admin = createSupabaseAdminClient();
   const assignment = await getActiveAssignmentForUser(admin, userId);
   const facts = assignment ? interviewFacts(assignment.dbd_records, assignment) : {};
