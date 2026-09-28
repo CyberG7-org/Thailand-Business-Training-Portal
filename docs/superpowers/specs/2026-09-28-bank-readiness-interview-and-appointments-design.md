@@ -181,18 +181,21 @@ already does for extraction and question generation.
 ### 5.1 Calendar
 
 One calendar **per team** (the manager attends the bank with their learners); learners of admin-
-owned records share the admin's calendar. Slots come from policy, in Asia/Bangkok time:
+owned records share the admin's calendar. The calendar is open **every day of the week except
+Thai public holidays**. Slots come from policy, in Asia/Bangkok time:
 
 | Key                          | Default          |
 | ---------------------------- | ---------------- |
-| `appointment_weekdays`       | `[1,2,3,4,5]`    |
+| `appointment_holidays`      | The Thai public holidays as ISO dates, including substitution days; seeded with the published list for the current year, kept up to date by the admin in Settings each year (the Bank of Thailand publishes the next year's list in December) |
 | `appointment_hours`          | `09:00`–`16:00`  |
 | `appointment_slot_minutes`   | `60`             |
 | `appointment_notice_hours`   | `24` (book ahead of, and cancel until, this many hours before the slot) |
 
-The manager **blocks** slots they cannot take (`appointment_blocks`). A free slot is one inside the
-hours, not blocked, not booked, at least `notice_hours` away, on or after the learner's
-`available_from` and, when set, on or before `expires_at`.
+The manager **blocks** slots they cannot take (`appointment_blocks`). A free slot is one on a day
+that is not a public holiday, inside the hours, not blocked, not booked, at least `notice_hours`
+away, on or after the learner's `available_from` and, when set, on or before `expires_at`.
+Weekends are open days like any other. A holiday added to the list after a booking was made does
+not cancel the booking; the manager decides.
 
 ### 5.2 Booking rules
 
@@ -338,8 +341,9 @@ Thai comes from the model and the fake officer's from the concepts' existing Tha
   detection (verbatim, near-verbatim, legitimately similar short answers such as a 13-digit number
   are _not_ pasted); the verdict rules (each condition alone flips the verdict); six-stage
   progression derivation; slot generation across hours, weekdays, blocks, notice hours and the
-  eligibility window; the Thai persona prompt contains no fact-sheet value in the `say` of the
-  fake officer.
+  eligibility window; public holidays (including substitution days) yield no slots while the days
+  around them do; the Thai persona prompt contains no fact-sheet value in the `say` of the fake
+  officer.
 - **Integration**: RLS — a manager reads their team's sessions and appointments and none of another
   team's; a learner reads only their own; the service-role gates; the one-per-slot index under two
   concurrent bookings; cancellation reopens the slot.
