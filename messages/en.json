@@ -439,6 +439,26 @@
         "study_completion_tracking": {
           "label": "Study completion rule",
           "help": "Count a card when viewed, or only when the learner marks it completed"
+        },
+        "appointment_hours_start": {
+          "label": "Appointment hours start",
+          "help": "First bookable hour of the day, Bangkok time, e.g. 9"
+        },
+        "appointment_hours_end": {
+          "label": "Appointment hours end",
+          "help": "The hour bookings stop, Bangkok time, e.g. 16 (the last slot ends by then)"
+        },
+        "appointment_slot_minutes": {
+          "label": "Slot length (minutes)",
+          "help": "How long each slot lasts, e.g. 60"
+        },
+        "appointment_notice_hours": {
+          "label": "Notice (hours)",
+          "help": "How many hours before a slot a learner may still book or cancel"
+        },
+        "appointment_holidays": {
+          "label": "Bank holidays",
+          "help": "The Bank of Thailand's public holidays, one ISO date (YYYY-MM-DD) per line, substitution days included; add next year's list each December"
         }
       }
     },

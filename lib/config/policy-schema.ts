@@ -20,6 +20,7 @@ export type PolicyFieldDef = {
 const intRange = (min: number, max: number) => z.number().int().min(min).max(max);
 const nullableInt = (min: number, max: number) => intRange(min, max).nullable();
 const stringList = z.array(z.string().trim().min(1)).max(50);
+const isoDateList = z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(100);
 
 export const POLICY_FIELDS = {
   bank_eligibility_days: {
@@ -67,6 +68,23 @@ export const POLICY_FIELDS = {
     control: { kind: 'enum', options: ['viewed', 'completed'] },
     schema: z.enum(['viewed', 'completed']),
   },
+  appointment_hours_start: {
+    control: { kind: 'number', min: 0, max: 23, nullable: false },
+    schema: intRange(0, 23),
+  },
+  appointment_hours_end: {
+    control: { kind: 'number', min: 1, max: 24, nullable: false },
+    schema: intRange(1, 24),
+  },
+  appointment_slot_minutes: {
+    control: { kind: 'number', min: 15, max: 240, nullable: false },
+    schema: intRange(15, 240),
+  },
+  appointment_notice_hours: {
+    control: { kind: 'number', min: 0, max: 168, nullable: false },
+    schema: intRange(0, 168),
+  },
+  appointment_holidays: { control: { kind: 'list' }, schema: isoDateList },
 } satisfies Record<string, PolicyFieldDef>;
 
 export type PolicyFieldKey = keyof typeof POLICY_FIELDS;

@@ -48,4 +48,16 @@ describe('policy schema', () => {
     expect(isPolicyFieldKey('__proto__')).toBe(false);
     expect(isPolicyFieldKey('nope')).toBe(false);
   });
+
+  it('parses the appointment keys: a date list, hours and minutes in range', () => {
+    expect(parsePolicyInput('appointment_holidays', '2026-10-13\n2026-12-07\n')).toEqual({
+      ok: true,
+      value: ['2026-10-13', '2026-12-07'],
+    });
+    expect(parsePolicyInput('appointment_holidays', '13/10/2026')).toMatchObject({ ok: false });
+    expect(parsePolicyInput('appointment_hours_start', '9')).toEqual({ ok: true, value: 9 });
+    expect(parsePolicyInput('appointment_hours_end', '25')).toMatchObject({ ok: false });
+    expect(parsePolicyInput('appointment_slot_minutes', '60')).toEqual({ ok: true, value: 60 });
+    expect(parsePolicyInput('appointment_notice_hours', '24')).toEqual({ ok: true, value: 24 });
+  });
 });

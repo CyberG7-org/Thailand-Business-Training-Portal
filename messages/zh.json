@@ -439,6 +439,26 @@
         "study_completion_tracking": {
           "label": "学习完成判定",
           "help": "打开即算完成，或学员标记完成后才算"
+        },
+        "appointment_hours_start": {
+          "label": "预约开始时间（小时）",
+          "help": "每天可预约的第一个小时，曼谷时间，例如 9"
+        },
+        "appointment_hours_end": {
+          "label": "预约结束时间（小时）",
+          "help": "停止预约的小时，曼谷时间，例如 16（最后一个时段在此之前结束）"
+        },
+        "appointment_slot_minutes": {
+          "label": "时段长度（分钟）",
+          "help": "每个时段的时长，例如 60"
+        },
+        "appointment_notice_hours": {
+          "label": "提前通知（小时）",
+          "help": "学员最迟可在时段前多少小时预约或取消"
+        },
+        "appointment_holidays": {
+          "label": "银行假日",
+          "help": "泰国央行公布的公共假日，每行一个 ISO 日期（YYYY-MM-DD），含补假；每年 12 月补充下一年的列表"
         }
       }
     },
