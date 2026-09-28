@@ -21,7 +21,7 @@ export async function loadProgressionFacts(
     getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
   ]);
-  const [snapshot, studyRows, quizRows, exam, cardRows, interviews] = await Promise.all([
+  const [snapshot, studyRows, quizRows, exam, cardRows, interviews, upcoming] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     db
@@ -33,8 +33,15 @@ export async function loadProgressionFacts(
     examPassedFor(userId),
     db.from('name_cards').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     db.from('interview_sessions').select('verdict').eq('user_id', userId),
+    db
+      .from('appointments')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'booked')
+      .gte('starts_at', new Date().toISOString()),
   ]);
   if (interviews.error) throw interviews.error;
+  if (upcoming.error) throw upcoming.error;
   const sessions = interviews.data ?? [];
 
   return {
@@ -51,7 +58,8 @@ export async function loadProgressionFacts(
     interviewSessions: sessions.length,
     // Ready is one-way (spec §3): the first session that ended ready settles it.
     interviewReady: sessions.some((s) => s.verdict === 'ready'),
-    appointmentBooked: false,
+    // An upcoming booking; a cancelled or past one returns the step to available (spec §3).
+    appointmentBooked: (upcoming.count ?? 0) > 0,
     policy: { requireExamPassForInterview, requireExamPassForNameCard },
   };
 }
@@ -78,6 +86,7 @@ export async function loadProgressionFactsForUsers(
     attempts,
     cards,
     interviews,
+    bookings,
   ] = await Promise.all([
     getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
@@ -101,8 +110,14 @@ export async function loadProgressionFactsForUsers(
       .order('submitted_at', { ascending: false }),
     db.from('name_cards').select('user_id').in('user_id', userIds),
     db.from('interview_sessions').select('user_id, verdict').in('user_id', userIds),
+    db
+      .from('appointments')
+      .select('user_id')
+      .in('user_id', userIds)
+      .eq('status', 'booked')
+      .gte('starts_at', new Date().toISOString()),
   ]);
-  for (const r of [assignments, snapshots, study, attempts, cards, interviews]) {
+  for (const r of [assignments, snapshots, study, attempts, cards, interviews, bookings]) {
     if (r.error) throw r.error;
   }
 
@@ -122,6 +137,7 @@ export async function loadProgressionFactsForUsers(
     else examRows.set(a.user_id, [...(examRows.get(a.user_id) ?? []), { result: a.result }]);
   }
 
+  const bookedUsers = new Set((bookings.data ?? []).map((b) => b.user_id));
   const interviewByUser = new Map<string, { sessions: number; ready: boolean }>();
   for (const s of interviews.data ?? []) {
     const cur = interviewByUser.get(s.user_id) ?? { sessions: 0, ready: false };
@@ -151,7 +167,7 @@ export async function loadProgressionFactsForUsers(
       today,
       interviewSessions: interview.sessions,
       interviewReady: interview.ready,
-      appointmentBooked: false,
+      appointmentBooked: bookedUsers.has(userId),
       policy: { requireExamPassForInterview, requireExamPassForNameCard },
     });
   }
