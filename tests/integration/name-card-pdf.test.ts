@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { NAME_CARD_COPY, buildNameCardData } from '@/lib/domain/name-card';
 import { countPages } from '@/lib/pdf/slice';
@@ -35,6 +36,10 @@ describe('name card PDF (spike S3)', () => {
     expect(Buffer.from(bytes.slice(0, 5)).toString()).toBe('%PDF-');
     expect(bytes.length).toBeGreaterThan(10_000); // font subset embedded
     expect(await countPages(bytes)).toBe(2); // front and back (D63)
+    // 90 × 54 mm, landscape (D24); a zero height would print nothing.
+    const { width, height } = (await PDFDocument.load(bytes)).getPage(0).getSize();
+    expect(width).toBeCloseTo(90 * 2.8346, 0);
+    expect(height).toBeCloseTo(54 * 2.8346, 0);
 
     if (!hasPdftotext()) return;
     const dir = mkdtempSync(path.join(tmpdir(), 'namecard-'));

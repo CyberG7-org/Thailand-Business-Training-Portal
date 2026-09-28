@@ -80,7 +80,8 @@ const C = {
 };
 
 const s = StyleSheet.create({
-  page: { fontFamily: 'Body', backgroundColor: C.white, color: C.ink900 },
+  // wrap=false keeps a card on one page; minHeight (not height) keeps the page at card size.
+  page: { fontFamily: 'Body', backgroundColor: C.white, color: C.ink900, minHeight: H },
   abs: { position: 'absolute' },
   display: { fontFamily: 'Display', fontWeight: 600 },
   // Front
@@ -265,7 +266,7 @@ function Back({ data }: { data: NameCardData }) {
         </Defs>
         <Rect x={0} y={0} width={W} height={3} fill="url(#strip)" />
       </Svg>
-      <Text style={[s.abs, s.watermark, { right: -2, bottom: -12 }]}>{data.companyInitials}</Text>
+      <Text style={[s.abs, s.watermark, { right: 4, bottom: 0 }]}>{data.companyInitials}</Text>
       <Text style={[s.abs, s.backTagline, { right: 12, top: 12, width: 70 }]}>
         {NAME_CARD_COPY.tagline.split(' · ').join('\n')}
       </Text>
