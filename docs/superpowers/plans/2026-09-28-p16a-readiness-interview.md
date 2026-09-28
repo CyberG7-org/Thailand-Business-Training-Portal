@@ -2498,14 +2498,14 @@ Append to `tests/e2e/interview.spec.ts`'s second test, after the ready verdict:
 ### Task 9: Docs, decisions, the full gate
 
 **Files:**
-- Modify: `docs/decisions-log.md` (D63, D64), `docs/security-checklist.md` (a row for interview transcripts: RLS reads, service-role writes, content to Anthropic only), `docs/superpowers/specs/2026-09-28-bank-readiness-interview-and-appointments-design.md` (status: "Implemented — P16a; P16b pending"), `docs/uat-script.md` (the bank step: interview instead of the call), `README.md` if it lists providers/env
+- Modify: `docs/decisions-log.md` (D64, D65), `docs/security-checklist.md` (a row for interview transcripts: RLS reads, service-role writes, content to Anthropic only), `docs/superpowers/specs/2026-09-28-bank-readiness-interview-and-appointments-design.md` (status: "Implemented — P16a; P16b pending"), `docs/uat-script.md` (the bank step: interview instead of the call), `README.md` if it lists providers/env
 
 - [ ] **Step 1: Decision rows** (insert after the last D-row, same table format):
 
 | Date | # | Decision |
 | --- | --- | --- |
-| 2026-09-28 | D63 | The bank step is a **readiness interview**: a Thai chat with an AI bank assessor that verifies the learner against their own record, never states a fact, marks each answer correct / partial / wrong / evasive / pasted, and ends with a verdict decided by rules in `lib/domain/interview/verdict.ts` (core identity facts correct, business coherent, at most one evasion, nothing pasted left, plan completed) and a narrative the model writes from those assessments. Sessions and turns are the learner's, their manager's and the admin's (RLS), written only by the service role. The Vapi voice call, its webhook, tables and bucket are deleted. |
-| 2026-09-28 | D64 | The dashboard has **six steps**: study, quiz, exam, name card, interview, appointment. The interview opens on exam pass (policy `require_exam_pass_for_interview`, renamed) and is not date-gated; the appointment (P16b) needs a ready learner and the 45-day window. Readiness is one-way. |
+| 2026-09-28 | D64 | The bank step is a **readiness interview**: a Thai chat with an AI bank assessor that verifies the learner against their own record, never states a fact, marks each answer correct / partial / wrong / evasive / pasted, and ends with a verdict decided by rules in `lib/domain/interview/verdict.ts` (core identity facts correct, business coherent, at most one evasion, nothing pasted left, plan completed) and a narrative the model writes from those assessments. Sessions and turns are the learner's, their manager's and the admin's (RLS), written only by the service role. The Vapi voice call, its webhook, tables and bucket are deleted. |
+| 2026-09-28 | D65 | The dashboard has **six steps**: study, quiz, exam, name card, interview, appointment. The interview opens on exam pass (policy `require_exam_pass_for_interview`, renamed) and is not date-gated; the appointment (P16b) needs a ready learner and the 45-day window. Readiness is one-way. |
 
 - [ ] **Step 2: The full gate**
 
@@ -2516,7 +2516,7 @@ Expected: all green; note the counts.
 
 ```bash
 git add docs README.md
-git commit -m "docs: D63–D64, the interview in the checklist and the UAT script"
+git commit -m "docs: D64–D65, the interview in the checklist and the UAT script"
 ```
 
 Then `finishing-a-development-branch`: fast-forward `main`, push, apply `20260929000000_interview.sql` to staging through the Supabase MCP (`apply_migration`), check `get_advisors`, watch CI, confirm `/api/health` shows the new SHA and `interview: claude` (staging has the Anthropic key), and tell the owner to remove `VAPI_WEBHOOK_SECRET` and any `VAPI_*` values from Vercel.
