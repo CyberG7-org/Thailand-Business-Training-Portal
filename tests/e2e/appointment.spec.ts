@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_PASSWORD } from './fixtures';
 import { loginAs, switchTo } from './helpers';
+import { THAI_BANK_HOLIDAYS_2026 } from '../../lib/config/policy-defaults';
 import { seedManager, seedTeamLearner } from './seed';
 
 /**
@@ -12,9 +13,11 @@ const slotIso = (date: string, hour: number) =>
   new Date(date + 'T' + String(hour).padStart(2, '0') + ':00:00+07:00').toISOString();
 
 function twoWeeksOut(): string {
-  // The Bangkok date fourteen days from now.
-  const d = new Date(Date.now() + 14 * 86_400_000 + 7 * 3_600_000);
-  return d.toISOString().slice(0, 10);
+  // The first open day from fourteen days out, as a Bangkok date: a bank holiday offers no slot.
+  for (let days = 14; ; days++) {
+    const d = new Date(Date.now() + days * 86_400_000 + 7 * 3_600_000).toISOString().slice(0, 10);
+    if (!THAI_BANK_HOLIDAYS_2026.includes(d)) return d;
+  }
 }
 
 test('the appointment waits for the date, then a slot is booked, seen by the manager, held against a teammate and freed on cancel', async ({

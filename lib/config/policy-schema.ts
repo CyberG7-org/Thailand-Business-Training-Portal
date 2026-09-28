@@ -20,7 +20,8 @@ export type PolicyFieldDef = {
 const intRange = (min: number, max: number) => z.number().int().min(min).max(max);
 const nullableInt = (min: number, max: number) => intRange(min, max).nullable();
 const stringList = z.array(z.string().trim().min(1)).max(50);
-const isoDateList = z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(100);
+// A Gregorian year only: a Buddhist-era date (2569-…) would be stored and block nothing (D47).
+const isoDateList = z.array(z.string().regex(/^(20\d\d|2100)-\d{2}-\d{2}$/)).max(100);
 
 export const POLICY_FIELDS = {
   bank_eligibility_days: {

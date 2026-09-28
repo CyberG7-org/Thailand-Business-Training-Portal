@@ -55,6 +55,8 @@ describe('policy schema', () => {
       value: ['2026-10-13', '2026-12-07'],
     });
     expect(parsePolicyInput('appointment_holidays', '13/10/2026')).toMatchObject({ ok: false });
+    // A Buddhist-era year (the natural Thai reflex, D47) would silently block nothing.
+    expect(parsePolicyInput('appointment_holidays', '2569-10-13')).toMatchObject({ ok: false });
     expect(parsePolicyInput('appointment_hours_start', '9')).toEqual({ ok: true, value: 9 });
     expect(parsePolicyInput('appointment_hours_end', '25')).toMatchObject({ ok: false });
     expect(parsePolicyInput('appointment_slot_minutes', '60')).toEqual({ ok: true, value: 60 });

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { THAI_BANK_HOLIDAYS_2026 } from '@/lib/config/policy-defaults';
 import {
   AppointmentError,
   addBlock,
@@ -15,6 +16,7 @@ import {
   adminClient,
   confirmRecord,
   createTestLearnerIn,
+  createTestUser,
   deleteTeam,
   deleteTestUser,
   seedTeam,
@@ -23,6 +25,13 @@ import {
 } from './helpers';
 
 const svc = adminClient();
+
+/** The first day on or after `date` that is not a seeded bank holiday. */
+function nextOpenDay(date: string): string {
+  let d = date;
+  while (THAI_BANK_HOLIDAYS_2026.includes(d)) d = addCalendarDays(d, 1);
+  return d;
+}
 
 /** A ready learner whose window opened long ago: the issue date a year back. */
 async function makeReady(userId: string, recordId: string) {
@@ -38,11 +47,21 @@ async function makeReady(userId: string, recordId: string) {
   if (error) throw error;
 }
 
+async function upcomingCount(userId: string): Promise<number> {
+  const { count } = await svc
+    .from('appointments')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('status', 'booked')
+    .gte('starts_at', new Date().toISOString());
+  return count ?? 0;
+}
+
 describe('booking the bank appointment', () => {
   let team: Team;
   let second: TestUser;
-  // A day two weeks out that is not a bank holiday; 09:00 Bangkok.
-  const day = addCalendarDays(todayInBangkok(), 14);
+  // An open day two weeks out; 09:00 Bangkok.
+  const day = nextOpenDay(addCalendarDays(todayInBangkok(), 14));
   const slot = bangkokDateTime(day, 9);
 
   beforeAll(async () => {
@@ -111,8 +130,24 @@ describe('booking the bank appointment', () => {
     expect(days[0].slots.find((s) => s.startsAt === slot)?.state).toBe('free');
   });
 
+  it('holds a learner to one upcoming booking even when two requests race', async () => {
+    // Spec §5.2: one upcoming appointment at a time — also when two tabs click together.
+    const other = nextOpenDay(addCalendarDays(day, 7));
+    const results = await Promise.allSettled([
+      bookAppointment(team.learner.id, bangkokDateTime(other, 9)),
+      bookAppointment(team.learner.id, bangkokDateTime(other, 10)),
+    ]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const lost = results.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+    expect(lost).toHaveLength(1);
+    expect((lost[0].reason as AppointmentError).code).toBe('already_booked');
+    expect(await upcomingCount(team.learner.id)).toBe(1);
+    const mine = await myUpcomingAppointment(team.learner.id);
+    await cancelAppointment({ id: team.manager.id, role: 'manager' }, mine!.id);
+  });
+
   it('refuses a learner cancelling inside the notice window, but not the manager', async () => {
-    const soon = bangkokDateTime(addCalendarDays(todayInBangkok(), 2), 9);
+    const soon = bangkokDateTime(nextOpenDay(addCalendarDays(todayInBangkok(), 2)), 9);
     const booking = await bookAppointment(team.learner.id, soon);
     // A clock 23 hours before the slot.
     const late = new Date(new Date(soon).getTime() - 23 * 3_600_000);
@@ -153,6 +188,24 @@ describe('booking the bank appointment', () => {
       });
     } finally {
       await deleteTeam(other);
+    }
+  });
+
+  it('books a learner without a manager on the admin calendar', async () => {
+    // Review Focus 5: no manager → team_id null, and the team's calendar is untouched.
+    const solo = await createTestUser('learner', { displayName: 'ไม่มีผู้จัดการ' });
+    const later = nextOpenDay(addCalendarDays(day, 14));
+    try {
+      await makeReady(solo.id, team.recordId);
+      const booking = await bookAppointment(solo.id, bangkokDateTime(later, 9));
+      expect(booking.team_id).toBeNull();
+      expect((await myUpcomingAppointment(solo.id))?.managerName).toBeNull();
+      const { days } = await learnerCalendar(team.learner.id, later);
+      expect(days[0].slots[0].state).toBe('free');
+    } finally {
+      await svc.from('appointments').delete().eq('user_id', solo.id);
+      await svc.from('interview_sessions').delete().eq('user_id', solo.id);
+      await deleteTestUser(solo.id);
     }
   });
 });

@@ -527,7 +527,7 @@ Expected: FAIL — `Could not find the table 'public.appointments'`.
 `supabase/migrations/20260928020000_appointments.sql`:
 
 ```sql
--- P16b: one calendar per team for the real bank visit (spec 2026-09-28 §5, §7; decision D66).
+-- P16b: one calendar per team for the real bank visit (spec 2026-09-28 §5, §7; decision D67).
 
 create table public.appointments (
   id uuid primary key default gen_random_uuid(),
@@ -1425,11 +1425,11 @@ Strings `admin.nav.appointments` (th นัดหมายธนาคาร / e
 ### Task 7: Docs, the full gate, merge and deploy
 
 **Files:**
-- Modify: `docs/decisions-log.md` (D66), `docs/security-checklist.md` (row 22), `docs/uat-script.md` (rows B8/B9 follow-ups: booking, the manager's list, the teammate, cancel), `docs/runbooks/operations.md` (a row: bookings by day; December holiday upkeep), `docs/superpowers/specs/2026-09-28-bank-readiness-interview-and-appointments-design.md` (status: P16b implemented), `README.md` (D1–D66)
+- Modify: `docs/decisions-log.md` (D67), `docs/security-checklist.md` (row 22), `docs/uat-script.md` (rows B8/B9 follow-ups: booking, the manager's list, the teammate, cancel), `docs/runbooks/operations.md` (a row: bookings by day; December holiday upkeep), `docs/superpowers/specs/2026-09-28-bank-readiness-interview-and-appointments-design.md` (status: P16b implemented), `README.md` (D1–D67)
 
 - [ ] **Step 1: Decision row** (after D65):
 
-| 2026-09-28 | D66 | **Appointments** are one calendar per team (the manager's profile id; learners without a manager book with the admin), open every day except the Bank of Thailand holidays kept in `appointment_holidays` (seeded with the 2026 list, verified by the owner, extended each December by the admin), in Bangkok hours `appointment_hours_start`–`appointment_hours_end` cut into `appointment_slot_minutes`, bookable and cancellable by the learner until `appointment_notice_hours` before; one learner per slot is the partial unique index's decision and the loser is told so; one upcoming booking per learner; the manager blocks hours and cancels any time; a holiday added later leaves existing bookings to the manager. Writes go through the service role after the server's checks; reads through RLS. The picker shows slot states only, never who holds a slot | Owner | `lib/domain/appointments/slots.ts`, `lib/db/appointments.ts`, migration `20260928020000_appointments.sql` |
+| 2026-09-28 | D67 | **Appointments** are one calendar per team (the manager's profile id; learners without a manager book with the admin), open every day except the Bank of Thailand holidays kept in `appointment_holidays` (seeded with the 2026 list, verified by the owner, extended each December by the admin), in Bangkok hours `appointment_hours_start`–`appointment_hours_end` cut into `appointment_slot_minutes`, bookable and cancellable by the learner until `appointment_notice_hours` before; one learner per slot is the partial unique index's decision and the loser is told so; one upcoming booking per learner; the manager blocks hours and cancels any time; a holiday added later leaves existing bookings to the manager. Writes go through the service role after the server's checks; reads through RLS. The picker shows slot states only, never who holds a slot | Owner | `lib/domain/appointments/slots.ts`, `lib/db/appointments.ts`, migration `20260928020000_appointments.sql` |
 
 Security checklist row 22: "A learner books only for themselves, only a free slot inside their own window, only once at a time; who holds another slot is never shown; managers manage only their own team's blocks and bookings; the unique index is the arbiter under concurrency | ✅ | `tests/integration/appointments.test.ts`, `tests/integration/appointments.rls.test.ts`, `tests/e2e/appointment.spec.ts`".
 
@@ -1440,7 +1440,7 @@ Expected: all green.
 
 - [ ] **Step 3: Commit, merge, deploy**
 
-`git add docs README.md && git commit -m "docs: D66, the appointment in the checklist, the UAT script and the runbook"`; then `finishing-a-development-branch`: fast-forward `main`, push, apply `20260928020000_appointments.sql` to staging through the Supabase MCP, `get_advisors`, confirm `/api/health` shows the new SHA; tell the owner to verify the holiday list in Settings.
+`git add docs README.md && git commit -m "docs: D67, the appointment in the checklist, the UAT script and the runbook"`; then `finishing-a-development-branch`: fast-forward `main`, push, apply `20260928020000_appointments.sql` to staging through the Supabase MCP, `get_advisors`, confirm `/api/health` shows the new SHA; tell the owner to verify the holiday list in Settings.
 
 ---
 

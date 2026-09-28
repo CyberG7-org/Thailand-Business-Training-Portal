@@ -218,6 +218,25 @@ export async function bookAppointment(
     if (error.code === '23505') throw new AppointmentError('The slot was just taken', 'slot_taken');
     throw error;
   }
+  // Spec §5.2: one upcoming appointment per learner. The gate above is check-then-insert, so
+  // two requests in flight can both pass it; the row created first keeps its place and the
+  // other is withdrawn, so the learner never holds two.
+  const { data: held, error: heldError } = await admin
+    .from('appointments')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'booked')
+    .gte('starts_at', now.toISOString())
+    .order('created_at')
+    .order('id');
+  if (heldError) throw heldError;
+  if (held && held.length > 1 && held[0].id !== data.id) {
+    await admin
+      .from('appointments')
+      .update({ status: 'cancelled', cancelled_at: now.toISOString(), cancelled_by: userId })
+      .eq('id', data.id);
+    throw new AppointmentError('Already booked', 'already_booked');
+  }
   return data;
 }
 

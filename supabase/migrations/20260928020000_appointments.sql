@@ -1,4 +1,4 @@
--- P16b: one calendar per team for the real bank visit (spec 2026-09-28 §5, §7; decision D66).
+-- P16b: one calendar per team for the real bank visit (spec 2026-09-28 §5, §7; decision D67).
 
 create table public.appointments (
   id uuid primary key default gen_random_uuid(),
