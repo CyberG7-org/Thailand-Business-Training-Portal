@@ -21,7 +21,7 @@ export async function loadProgressionFacts(
     getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
   ]);
-  const [snapshot, studyRows, quizRows, exam, cardRows] = await Promise.all([
+  const [snapshot, studyRows, quizRows, exam, cardRows, interviews] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     db
@@ -32,7 +32,10 @@ export async function loadProgressionFacts(
       .eq('status', 'submitted'),
     examPassedFor(userId),
     db.from('name_cards').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    db.from('interview_sessions').select('verdict').eq('user_id', userId),
   ]);
+  if (interviews.error) throw interviews.error;
+  const sessions = interviews.data ?? [];
 
   return {
     hasActiveAssignment: assignment !== null,
@@ -45,8 +48,9 @@ export async function loadProgressionFacts(
       ? { availableFrom: snapshot.available_from, expiresAt: snapshot.expires_at }
       : null,
     today: options.today ?? todayInBangkok(),
-    interviewSessions: 0,
-    interviewReady: false,
+    interviewSessions: sessions.length,
+    // Ready is one-way (spec §3): the first session that ended ready settles it.
+    interviewReady: sessions.some((s) => s.verdict === 'ready'),
     appointmentBooked: false,
     policy: { requireExamPassForInterview, requireExamPassForNameCard },
   };
@@ -73,6 +77,7 @@ export async function loadProgressionFactsForUsers(
     study,
     attempts,
     cards,
+    interviews,
   ] = await Promise.all([
     getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
@@ -95,8 +100,9 @@ export async function loadProgressionFactsForUsers(
       .eq('status', 'submitted')
       .order('submitted_at', { ascending: false }),
     db.from('name_cards').select('user_id').in('user_id', userIds),
+    db.from('interview_sessions').select('user_id, verdict').in('user_id', userIds),
   ]);
-  for (const r of [assignments, snapshots, study, attempts, cards]) {
+  for (const r of [assignments, snapshots, study, attempts, cards, interviews]) {
     if (r.error) throw r.error;
   }
 
@@ -116,8 +122,17 @@ export async function loadProgressionFactsForUsers(
     else examRows.set(a.user_id, [...(examRows.get(a.user_id) ?? []), { result: a.result }]);
   }
 
+  const interviewByUser = new Map<string, { sessions: number; ready: boolean }>();
+  for (const s of interviews.data ?? []) {
+    const cur = interviewByUser.get(s.user_id) ?? { sessions: 0, ready: false };
+    cur.sessions += 1;
+    if (s.verdict === 'ready') cur.ready = true;
+    interviewByUser.set(s.user_id, cur);
+  }
+
   for (const userId of userIds) {
     const exams = examRows.get(userId) ?? [];
+    const interview = interviewByUser.get(userId) ?? { sessions: 0, ready: false };
     const examPassed =
       examPassRule === 'latest'
         ? exams[0]?.result === 'pass'
@@ -134,8 +149,8 @@ export async function loadProgressionFactsForUsers(
         ? { availableFrom: eligibility.available_from, expiresAt: eligibility.expires_at }
         : null,
       today,
-      interviewSessions: 0,
-      interviewReady: false,
+      interviewSessions: interview.sessions,
+      interviewReady: interview.ready,
       appointmentBooked: false,
       policy: { requireExamPassForInterview, requireExamPassForNameCard },
     });
