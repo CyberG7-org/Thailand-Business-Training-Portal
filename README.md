@@ -1,14 +1,15 @@
 # Thailand Business Training & Bank Verification Portal
 
-Provisioned-login training portal: DBD-linked study, quiz, exam, Thai name card, DBD+45-day
-bank-verification unlock, Thai Vapi call training. Spec: `docs/superpowers/specs/`.
+Provisioned-login training portal: DBD-linked study, quiz, exam, Thai name card, a Thai
+readiness interview with an AI bank assessor, and the DBD+45-day bank-appointment unlock.
+Spec: `docs/superpowers/specs/`.
 
 ## Documentation
 
 | Doc                                 | Purpose                                                  |
 | ----------------------------------- | -------------------------------------------------------- |
-| `docs/superpowers/specs/`           | Foundation spec (P0–P2) and slice specs P3–P14           |
-| `docs/decisions-log.md`             | Every product/technical decision (D1–D44)                |
+| `docs/superpowers/specs/`           | Foundation spec (P0–P2) and slice specs P3–P16           |
+| `docs/decisions-log.md`             | Every product/technical decision (D1–D65)                |
 | `docs/adr/`                         | Architecture decision records                            |
 | `docs/security-checklist.md`        | Security review verdicts and what verifies each item     |
 | `docs/runbooks/production-setup.md` | Supabase + Vercel + provider setup, env vars, smoke test |

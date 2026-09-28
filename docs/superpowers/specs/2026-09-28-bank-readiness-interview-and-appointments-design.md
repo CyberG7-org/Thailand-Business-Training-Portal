@@ -2,11 +2,11 @@
 
 |            |                                                                                                                          |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Status     | Draft for owner review                                                                                                   |
+| Status     | Approved 2026-09-28. P16a (the six steps and the readiness interview) implemented; P16b (appointments) pending           |
 | Date       | 2026-09-28                                                                                                               |
 | Supersedes | PRD §5.9 "Bank Verification Call Training" (the Vapi voice call) and the `bank` stage of the foundation spec §6          |
 | Reference  | The owner's Telegram transcripts of an AI bank assessor (`../Telegram Bot/6–16.png`): the behaviour to recreate, in chat |
-| Decisions  | D63–D66 (recorded when the first slice merges)                                                                           |
+| Decisions  | D64 (the interview), D65 (the six steps); P16b records its own                                                          |
 
 ## 1. Why
 

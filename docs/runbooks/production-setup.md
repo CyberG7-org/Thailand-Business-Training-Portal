@@ -10,7 +10,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    pnpm exec supabase link --project-ref <ref>
    pnpm exec supabase db push
    ```
-   All migrations (0001–0015) apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`, `recordings`) are created private by the migrations.
+   All migrations apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`) are created private by the migrations. A project that ran the voice call keeps an empty `recordings` bucket: delete it in the dashboard (Storage → recordings), since SQL may not remove storage rows.
 3. **Do not** run `seed.sql` / `seed_questions.sql` in production (they hold sample content only). Load real content through the admin UI.
 4. Auth settings (Dashboard → Authentication):
    - Providers → Email: enabled; **Confirm email: off** (accounts are provisioned by admins with `email_confirm`).
@@ -37,15 +37,12 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon key | public |
    | `SUPABASE_SERVICE_ROLE_KEY` | service-role key | **server only** — `pnpm check:secrets` guards the bundle |
    | `APP_INTERNAL_EMAIL_DOMAIN` | e.g. `learner.<your-domain>` | maps login ids to auth emails; never receives mail |
-   | `NEXT_PUBLIC_APP_URL` | `https://<your-domain>` | builds the Vapi webhook URL |
    | `CRON_SECRET` | long random string | Vercel Cron sends it automatically as a bearer token |
    | `ANTHROPIC_API_KEY` | Anthropic key | DBD extraction and AI question authoring; `EXTRACTION_PROVIDER=off` / `QUESTION_GEN_PROVIDER=off` to disable either |
    | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | ElevenLabs | Thai read-aloud; `TTS_PROVIDER=off` to disable |
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |
-   | `VAPI_PUBLIC_KEY` | Vapi *public* key | sent to the browser per call |
-   | `VAPI_WEBHOOK_SECRET` | long random string | Vapi sends it as `x-vapi-secret` |
-   | `VAPI_*` overrides | optional | transcriber/voice/LLM (see `.env.example`) |
+   | `INTERVIEW_PROVIDER` | `claude` | the AI bank officer of the readiness interview (Sonnet 5 turns, Opus 5 narrative) on the same `ANTHROPIC_API_KEY` |
    | `PINECONE_API_KEY`, `PINECONE_NAMESPACE` | Pinecone key; namespace `production` (staging: `staging`) | DBD retrieval index (P14); `VECTOR_PROVIDER=off` to disable; optional `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES` |
    | `DIRECT_READ_MAX_PAGES` | optional, default 20 | documents with more pages are never sent whole to the model; they fill in from their transcripts once indexed (P14c); with `VECTOR_PROVIDER=off` documents travel whole up to 100 pages instead |
    | `TRANSCRIPT_SWEEP_PAGES` | optional, default 10 | transcript pages per list-sweep call when filling a record from an oversized document (P14c); lower it if sweeps report `too_large` |
@@ -79,10 +76,10 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 5. After an upload the fields fill in within about 1–3 minutes (D46: the cron reads the pack; reload the record page) — the page says *reading in the background* meanwhile.
 6. Uploads never pass through Vercel (D45): the browser sends each PDF straight to the `dbd-documents` bucket, so the `NEXT_PUBLIC_SUPABASE_URL` must be reachable from admins' browsers (it is, by design) and the bucket's `file_size_limit` (30 MB) is the only size cap.
 
-### Vapi (bank-call training)
-- Create the account, copy the **public** key. The assistant is transient (built per call by the app), so no dashboard assistant is required; the webhook URL and `x-vapi-secret` header travel with each call config.
-- Validate Thai end-to-end on a staging deploy before the pilot (spike S1): transcription language `th`, a Thai voice (defaults: Deepgram nova-2 + ElevenLabs multilingual; Azure `th-TH-PremwadeeNeural` is the fallback via `VAPI_VOICE_PROVIDER=azure`).
-- Replace `PLACEHOLDER_BANK_OFFICER_SCRIPT` in `lib/integrations/vapi/config.ts` with the owner's approved script (open item #14).
+### Readiness interview (the AI bank assessor)
+- No extra account: the interview runs on the Anthropic key already set for extraction. Set `INTERVIEW_PROVIDER=claude` (or leave it unset with the key present); the suites force `fake`.
+- On a project that ran the voice call, delete the `VAPI_*` and `NEXT_PUBLIC_APP_URL` variables in Vercel and the empty `recordings` bucket in Supabase — the call is gone (D64).
+- Have the owner read a real session's transcript on staging (Admin → Readiness interviews) before the pilot: the persona lives in `lib/integrations/interview/claude.ts`.
 
 ## 4. Content before go-live
 
@@ -97,7 +94,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
 1. `/api/health` → 200.
 2. Admin login → create a test learner → create+confirm a DBD record with an issue date 46+ days ago → assign.
-3. Learner login → dashboard shows the company and the bank date → open a study card → quiz → exam → name card PDF → bank call (real provider) → hang up → recording and transcript appear under Admin → Call training.
+3. Learner login → dashboard shows the company and the bank date → open a study card → quiz → exam → name card PDF → readiness interview (real officer) → a verdict and its debrief → the session appears under Admin → Readiness interviews.
 4. Admin → Notifications shows the exam-result rows as `sent`; Telegram/email received.
 5. Upload a multi-page PDF to a record → the document shows *Queued* → within two minutes *Ready (N pages)* → **Ask the documents** returns a page-cited answer.
 6. Delete the test learner (Admin → Users → disable, or SQL).
