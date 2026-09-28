@@ -7,6 +7,7 @@
 | App up + DB reachable | `GET /api/health` (poll every 1–5 min from an external uptime monitor) | `200 {"ok":true,"db":"ok"}`; providers show the intended names, not `off` |
 | Notification queue | Admin → Notifications | no rows stuck in `failed`; `queued` rows clear within a minute (cron) |
 | Interview sessions | Admin → Readiness interviews | sessions end `completed` with a verdict; `abandoned` = idle over 30 minutes, no verdict; a run of `not_configured` errors means the provider resolved to `off` |
+| Appointments | Admin → Bank appointments | upcoming bookings by day, blocked hours listed; each December the admin extends `appointment_holidays` in Settings with next year’s Bank of Thailand list (a missing holiday leaves the day bookable) |
 | Vercel | Project → Logs (filter `/api/cron` and the `/interview` server actions) and Runtime errors | no 5xx |
 | Supabase | Project → Logs → Postgres / Auth; Reports → Database size, Storage | no RLS errors, storage growth in line with uploads |
 

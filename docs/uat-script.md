@@ -31,6 +31,9 @@ Run on the staging deployment with real provider keys. One admin tester and two 
 | B8 | Appointment gating | After a ready interview, before the +45-day date | Appointment locked with "bookable from" and the Thai date; the interview itself opens on exam pass whatever the date (test by setting the policy days on staging) | BR-003/004 |
 | B9 | Readiness interview | Start the interview; answer the officer in Thai — first evade ("ไม่ทราบ") three times, then start again and answer from the certificate | The officer never states a company fact; the evasions end "not yet ready" with the reasons and the correct values in the debrief; the retry ends "ready"; the dashboard marks the interview done and the appointment follows the date | INTERVIEW |
 | B10 | Isolation | Try another learner's quiz/exam/interview URLs | 404 | SEC |
+| B11 | Appointment booking | After a ready interview and past the date, open Appointment; pick a free slot two weeks out | The slot books; the dashboard shows the date, time and the manager's name; the manager's Bank appointments page lists it under the day with the company | APPT |
+| B12 | One learner per slot | A teammate opens the same week | The taken slot shows as taken and cannot be pressed; after the first learner cancels, it is free again | APPT |
+| B13 | Blocks and holidays | The manager blocks an afternoon; the admin checks the holiday list in Settings | Blocked hours and bank holidays show as unavailable; the 2026 list matches the Bank of Thailand announcement and next year is added each December | APPT |
 
 ## C. Thai QA (language reviewer)
 
