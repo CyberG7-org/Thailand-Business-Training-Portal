@@ -37,13 +37,40 @@
       "issuedOn": "证书签发日期",
       "openCertificate": "打开证书（PDF）",
       "natureOfBusiness": "公司业务",
-      "productsServices": "产品/服务"
+      "productsServices": "产品/服务",
+      "tag": "DBD 记录"
     },
     "bank": {
       "title": "银行验证",
       "pending": "资格日期待定 — 缺少证书签发日期。",
       "available": "现已开放。",
       "lockedUntil": "自 {date} 起开放"
+    },
+    "hero": {
+      "kicker": "银行身份验证准备"
+    },
+    "next": {
+      "study": "下一步是学习资料。请先阅读关于贵公司的学习卡片，再进行测验。",
+      "quiz": "下一步是评估测验，帮助你了解考试前需要复习的内容。",
+      "exam": "下一步是考试。通过考试后即可解锁银行验证通话。",
+      "nameCard": "下一步是名片。请在银行验证通话前创建名片。",
+      "bank": "你已准备好进行银行验证通话。",
+      "done": "你已完成所有步骤，做得好。"
+    },
+    "cta": {
+      "open": "前往{step}",
+      "lastResult": "查看上次结果"
+    },
+    "progress": {
+      "ring": "已完成 5 步中的 {done} 步",
+      "stepsDone": "已完成步骤",
+      "lastScore": "上次考试成绩",
+      "passMark": "及格线",
+      "noExam": "尚未考试"
+    },
+    "steps": {
+      "title": "你的步骤",
+      "hint": "请按顺序完成"
     }
   },
   "admin": {
@@ -540,7 +567,14 @@
       "missing_issue_date": "缺少证书签发日期"
     },
     "open": "打开",
-    "stepOf": "第 {n} 步（共 5 步）"
+    "stepOf": "第 {n} 步（共 5 步）",
+    "short": {
+      "study": "学习",
+      "quiz": "测验",
+      "exam": "考试",
+      "nameCard": "名片",
+      "bank": "银行"
+    }
   },
   "progression": {
     "UNASSIGNED": "未分配",

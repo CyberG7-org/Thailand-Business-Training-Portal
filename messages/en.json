@@ -37,13 +37,40 @@
       "issuedOn": "Certificate issued on",
       "openCertificate": "Open certificate (PDF)",
       "natureOfBusiness": "What the business does",
-      "productsServices": "Products / services"
+      "productsServices": "Products / services",
+      "tag": "DBD record"
     },
     "bank": {
       "title": "Bank verification",
       "pending": "Eligibility date pending — the certificate issue date is missing.",
       "available": "Available now.",
       "lockedUntil": "Available from {date}"
+    },
+    "hero": {
+      "kicker": "Bank verification preparation"
+    },
+    "next": {
+      "study": "Your next step is the study material. Read the cards about your company before the quiz.",
+      "quiz": "Your next step is the evaluation quiz. It shows what to review before the exam.",
+      "exam": "Your next step is the exam. Passing it unlocks the bank verification call.",
+      "nameCard": "Your next step is the name card. Create it before the bank verification call.",
+      "bank": "You are ready for the bank verification call.",
+      "done": "You have completed every step. Well done."
+    },
+    "cta": {
+      "open": "Open {step}",
+      "lastResult": "Review last result"
+    },
+    "progress": {
+      "ring": "{done} of 5 steps done",
+      "stepsDone": "steps done",
+      "lastScore": "Last exam score",
+      "passMark": "Needed to pass",
+      "noExam": "No exam yet"
+    },
+    "steps": {
+      "title": "Your steps",
+      "hint": "Complete them in order"
     }
   },
   "admin": {
@@ -540,7 +567,14 @@
       "missing_issue_date": "Certificate issue date missing"
     },
     "open": "Open",
-    "stepOf": "Step {n} of 5"
+    "stepOf": "Step {n} of 5",
+    "short": {
+      "study": "Study",
+      "quiz": "Quiz",
+      "exam": "Exam",
+      "nameCard": "Card",
+      "bank": "Bank"
+    }
   },
   "progression": {
     "UNASSIGNED": "Unassigned",

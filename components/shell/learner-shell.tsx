@@ -11,7 +11,7 @@ import { StepSegments } from './step-segments';
  * The shared learner shell (design handoff, "Shared shell"): a navy band holding the glass
  * header, the back pill, the step segments and the page title, with the page's content on the
  * dot grid below. A page passes only what differs; the user and the stage statuses are read once
- * per request.
+ * per request. The dashboard swaps the title for its hero and adds the stepper to the band.
  */
 export async function LearnerShell({
   title,
@@ -19,9 +19,12 @@ export async function LearnerShell({
   intro,
   step,
   home = false,
+  hero,
+  bandFooter,
   children,
 }: {
-  title: ReactNode;
+  /** The page title in the band; the dashboard passes `hero` instead. */
+  title?: ReactNode;
   /** Kept for the tests that read the page title by id. */
   titleTestId?: string;
   intro?: ReactNode;
@@ -29,6 +32,10 @@ export async function LearnerShell({
   step?: StageKey;
   /** The dashboard: no back pill and no segments. */
   home?: boolean;
+  /** Replaces the title block; must carry the page's h1. */
+  hero?: ReactNode;
+  /** Rendered at the foot of the band, still on navy (the dashboard's stepper). */
+  bandFooter?: ReactNode;
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
@@ -43,15 +50,20 @@ export async function LearnerShell({
             {step && <StepSegments current={step} statuses={statuses} />}
           </div>
         )}
-        <h1
-          data-testid={titleTestId}
-          className="mt-6 font-display text-[26px] leading-[1.35] font-medium text-white md:text-[32px]"
-        >
-          {title}
-        </h1>
-        {intro && (
-          <p className="mt-2 max-w-[680px] text-base leading-[1.75] text-brand-100">{intro}</p>
+        {hero ?? (
+          <>
+            <h1
+              data-testid={titleTestId}
+              className="mt-6 font-display text-[26px] leading-[1.35] font-medium text-white md:text-[32px]"
+            >
+              {title}
+            </h1>
+            {intro && (
+              <p className="mt-2 max-w-[680px] text-base leading-[1.75] text-brand-100">{intro}</p>
+            )}
+          </>
         )}
+        {bandFooter}
       </div>
       <main className="px-4 py-6 md:px-12 md:py-7">{children}</main>
     </>

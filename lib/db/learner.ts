@@ -47,3 +47,20 @@ export async function createMyDocumentSignedUrl(
   if (error) return null;
   return data.signedUrl;
 }
+
+/** The learner's most recent submitted exam attempt, for the dashboard's score and result link. */
+export async function latestSubmittedExam(
+  db: Db,
+  userId: string,
+): Promise<{ id: string; score: number | null; max_score: number | null } | null> {
+  const { data } = await db
+    .from('assessment_attempts')
+    .select('id, score, max_score')
+    .eq('user_id', userId)
+    .eq('kind', 'exam')
+    .eq('status', 'submitted')
+    .order('submitted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data;
+}

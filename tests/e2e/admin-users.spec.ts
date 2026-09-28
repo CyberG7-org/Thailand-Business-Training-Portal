@@ -32,7 +32,7 @@ test('a learner is created inside a team, with an allocated code', async ({ page
   await switchTo(page, learner, LEARNER_PASSWORD);
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await expect(page.getByRole('heading', { name: 'ยินดีต้อนรับ E2E Learner' })).toBeVisible();
-  await expect(page.getByText(company)).toBeVisible();
+  await expect(page.getByTestId('company-name')).toHaveText(company);
 });
 
 test('the admin must say which team', async ({ page }) => {

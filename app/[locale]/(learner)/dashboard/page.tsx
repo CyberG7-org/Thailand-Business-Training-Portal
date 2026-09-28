@@ -1,42 +1,46 @@
-import { LearnerShell } from '@/components/shell/learner-shell';
-import { displayLoginId } from '@/lib/domain/login-id';
 import { getTranslations } from 'next-intl/server';
-import { StageCard } from '@/components/stage-card';
+import { LearnerShell } from '@/components/shell/learner-shell';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
-import { createMyDocumentSignedUrl, getMyCompany } from '@/lib/db/learner';
+import { getPolicy } from '@/lib/config/policy';
+import { createMyDocumentSignedUrl, getMyCompany, latestSubmittedExam } from '@/lib/db/learner';
 import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
+import { displayLoginId } from '@/lib/domain/login-id';
 import { STAGE_KEYS, stageStatuses, type StageInfo, type StageKey } from '@/lib/domain/progression';
+import { currentStage, doneCount } from '@/lib/domain/stage-progress';
 import { formatDate } from '@/lib/domain/thai-date';
+import { CompanyCard } from './company-card';
+import { Hero } from './hero';
+import { ProgressCard } from './progress-card';
+import { STAGE_ROUTES, type StageRow } from './stage-row';
+import { Stepper } from './stepper';
+import { StepsList } from './steps-list';
 
 const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
-
-/** Routes exist only for stages whose slice has shipped; the rest show status without a link. */
-const STAGE_ROUTES: Partial<Record<StageKey, string>> = {
-  study: '/study',
-  quiz: '/quiz',
-  exam: '/exam',
-  nameCard: '/name-card',
-  bank: '/bank-call',
-};
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const t = await getTranslations('dashboard');
-  const ts = await getTranslations('stages');
-  const db = await createSupabaseServerClient();
+  const [t, ts, db] = await Promise.all([
+    getTranslations('dashboard'),
+    getTranslations('stages'),
+    createSupabaseServerClient(),
+  ]);
   const loc = locale as AppLocale;
 
-  const [mine, facts] = await Promise.all([
+  const [mine, facts, lastExam, passMark] = await Promise.all([
     getMyCompany(db, user.id),
     loadProgressionFacts(db, user.id),
+    latestSubmittedExam(db, user.id),
+    getPolicy('exam_passing_mark_percent'),
   ]);
   const stages = stageStatuses(facts);
+  const current = currentStage(stages);
+  const done = doneCount(stages);
 
   const detailFor = (key: StageKey, info: StageInfo): string | null => {
     if (key === 'bank') {
@@ -49,91 +53,132 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     if (info.reason) return ts(`reasons.${info.reason}`);
     return null;
   };
+  const rows: StageRow[] = STAGE_KEYS.map((key) => {
+    const info = stages[key];
+    const open = info.status !== 'locked' && info.status !== 'pending';
+    return {
+      key,
+      info,
+      title: ts(`titles.${key}`),
+      shortTitle: ts(`short.${key}`),
+      statusLabel: ts(`status.${info.status}`),
+      detail: detailFor(key, info),
+      href: open ? STAGE_ROUTES[key] : null,
+      current: key === current,
+    };
+  });
 
-  const stageCards = (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {STAGE_KEYS.map((key) => {
-        const info = stages[key];
-        const href =
-          info.status === 'locked' || info.status === 'pending'
-            ? null
-            : (STAGE_ROUTES[key] ?? null);
-        return (
-          <StageCard
-            key={key}
-            stage={key}
-            info={info}
-            title={ts(`titles.${key}`)}
-            statusLabel={ts(`status.${info.status}`)}
-            detail={detailFor(key, info)}
-            href={href}
-            actionLabel={ts('open')}
-          />
-        );
-      })}
-    </div>
-  );
-
+  // The one line under the welcome: the next step, or why it is not open yet.
+  const currentRow = rows.find((r) => r.current) ?? null;
+  const line = !mine
+    ? t('noCompany')
+    : currentRow === null
+      ? t('next.done')
+      : (currentRow.href === null && currentRow.detail) || t(`next.${currentRow.key}`);
+  const primary =
+    currentRow?.href && mine
+      ? { href: currentRow.href, label: t('cta.open', { step: currentRow.title }) }
+      : null;
+  const secondary = lastExam
+    ? { href: `/exam/${lastExam.id}/result`, label: t('cta.lastResult') }
+    : null;
   const welcome = t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) });
 
-  if (!mine) {
-    return (
-      <LearnerShell title={welcome} home>
-        <section className="grid gap-6">
-          <p data-testid="no-company">{t('noCompany')}</p>
-          {stageCards}
-        </section>
-      </LearnerShell>
-    );
-  }
+  const progress = (
+    <ProgressCard
+      done={done}
+      total={STAGE_KEYS.length}
+      ringLabel={t('progress.ring', { done })}
+      stepsDoneLabel={t('progress.stepsDone')}
+      lastScoreLabel={t('progress.lastScore')}
+      lastScore={
+        lastExam ? `${lastExam.score ?? 0} / ${lastExam.max_score ?? 0}` : t('progress.noExam')
+      }
+      passMarkLabel={t('progress.passMark')}
+      passMark={`${passMark}%`}
+    />
+  );
 
-  const record = mine.dbd_records;
-  const documentUrl = await createMyDocumentSignedUrl(user.id, record.id);
-  const directors = (record.directors as unknown as Director[] | null) ?? [];
+  const record = mine?.dbd_records ?? null;
+  const documentUrl = record ? await createMyDocumentSignedUrl(user.id, record.id) : null;
+  const directors = (record?.directors as unknown as Director[] | null) ?? [];
   // What the company does and sells is the manager's answer, not a certificate fact (Level 4).
-  const interview = readStructuredData(record.structured_data).interview ?? EMPTY_INTERVIEW_PROFILE;
+  const interview = record
+    ? (readStructuredData(record.structured_data).interview ?? EMPTY_INTERVIEW_PROFILE)
+    : EMPTY_INTERVIEW_PROFILE;
 
   return (
-    <LearnerShell title={welcome} home>
-      <section className="grid gap-6">
-        {stageCards}
-
-        <div className="rounded border p-4">
-          <h2 className="font-semibold">{t('company.title')}</h2>
-          <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
-            <dt>{t('company.name')}</dt>
-            <dd data-testid="company-name">{record.company_name_th ?? '—'}</dd>
-            <dt>{t('company.juristicId')}</dt>
-            <dd>{record.juristic_id ?? '—'}</dd>
-            <dt>{t('company.registeredCapital')}</dt>
-            <dd>
-              {record.registered_capital == null
+    <LearnerShell
+      home
+      hero={
+        <Hero
+          kicker={t('hero.kicker')}
+          company={record?.company_name_th ?? null}
+          welcome={welcome}
+          line={line}
+          lineTestId={mine ? undefined : 'no-company'}
+          primary={primary}
+          secondary={secondary}
+        >
+          {progress}
+        </Hero>
+      }
+      bandFooter={<Stepper rows={rows} />}
+    >
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start">
+        <StepsList
+          rows={rows}
+          title={t('steps.title')}
+          hint={t('steps.hint')}
+          openLabel={ts('open')}
+        />
+        {record && (
+          <CompanyCard
+            labels={{
+              title: t('company.title'),
+              tag: t('company.tag'),
+              juristicId: t('company.juristicId'),
+              registeredCapital: t('company.registeredCapital'),
+              address: t('company.address'),
+              directors: t('company.directors'),
+              issuedOn: t('company.issuedOn'),
+              natureOfBusiness: t('company.natureOfBusiness'),
+              productsServices: t('company.productsServices'),
+              openCertificate: t('company.openCertificate'),
+            }}
+            nameTh={record.company_name_th ?? '—'}
+            nameEn={record.company_name_en}
+            juristicId={record.juristic_id ?? '—'}
+            registeredCapital={
+              record.registered_capital == null
                 ? '—'
-                : `${Number(record.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`}
-            </dd>
-            <dt>{t('company.address')}</dt>
-            <dd>{record.head_office_address ?? '—'}</dd>
-            <dt>{t('company.natureOfBusiness')}</dt>
-            <dd data-testid="company-nature">{interview.nature_of_business ?? '—'}</dd>
-            <dt>{t('company.productsServices')}</dt>
-            <dd data-testid="company-products">{interview.products_services ?? '—'}</dd>
-            <dt>{t('company.directors')}</dt>
-            <dd>{directors.length ? directors.map((d) => d.name_th).join(', ') : '—'}</dd>
-            <dt>{t('company.issuedOn')}</dt>
-            <dd>{record.issued_on ? formatDate(record.issued_on, loc) : '—'}</dd>
-          </dl>
-          {documentUrl && (
-            <a
-              href={documentUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-block text-sm underline"
-            >
-              {t('company.openCertificate')}
-            </a>
-          )}
-        </div>
-      </section>
+                : `${Number(record.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`
+            }
+            details={[
+              { label: t('company.address'), value: record.head_office_address ?? '—' },
+              {
+                label: t('company.directors'),
+                value: directors.length ? directors.map((d) => d.name_th).join(', ') : '—',
+              },
+              {
+                label: t('company.issuedOn'),
+                value: record.issued_on ? formatDate(record.issued_on, loc) : '—',
+              },
+              {
+                label: t('company.natureOfBusiness'),
+                value: interview.nature_of_business ?? '—',
+                testId: 'company-nature',
+              },
+              {
+                label: t('company.productsServices'),
+                value: interview.products_services ?? '—',
+                testId: 'company-products',
+              },
+            ]}
+            documentUrl={documentUrl}
+          />
+        )}
+      </div>
     </LearnerShell>
   );
 }
