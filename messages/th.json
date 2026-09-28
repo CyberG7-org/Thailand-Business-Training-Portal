@@ -673,6 +673,11 @@
       "already_answered": "ข้อนี้ตอบแล้ว",
       "unanswered": "กรุณาตอบให้ครบทุกข้อก่อน",
       "invalid_key": "ตัวเลือกไม่ถูกต้อง"
+    },
+    "meta": {
+      "questions": "จำนวนข้อ",
+      "passingMark": "เกณฑ์ผ่าน",
+      "attempt": "ครั้งที่"
     }
   },
   "nameCard": {

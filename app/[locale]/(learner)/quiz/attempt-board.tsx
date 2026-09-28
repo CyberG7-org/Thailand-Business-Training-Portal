@@ -18,7 +18,8 @@ export type BoardQuestion = {
 
 /**
  * The whole attempt on one page (D57): every question in order, answers posted as they are given
- * so a reload resumes exactly, and a panel that tracks progress and holds Submit.
+ * so a reload resumes exactly, and a panel that tracks progress and holds Submit. The panel is a
+ * sticky glass bar on a phone and a card beside the questions on a desktop (handoff, 03/04).
  */
 export function AttemptBoard({
   attemptId,
@@ -52,9 +53,10 @@ export function AttemptBoard({
   const done = answered.size;
   const percent = total === 0 ? 0 : Math.round((done / total) * 100);
   const nextUnanswered = questions.find((q) => !answered.has(q.questionId));
+  const bar = instantFeedback ? 'bg-brand-600' : 'bg-brand-700';
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,780px)_16rem] lg:items-start lg:justify-center lg:gap-8">
       <ol className="grid gap-4">
         {questions.map((q) => (
           <li key={q.questionId}>
@@ -79,21 +81,31 @@ export function AttemptBoard({
         data-testid="attempt-progress"
         data-answered={done}
         data-total={total}
-        className="sticky top-0 z-10 order-first grid gap-3 border-b bg-white py-3 lg:top-6 lg:order-last lg:rounded lg:border lg:p-4"
+        className="glass-strong sticky top-2 z-10 order-first grid gap-3 rounded-card px-4 py-3 text-ink-900 lg:sticky lg:top-6 lg:order-last lg:bg-white lg:p-5 lg:shadow-raised"
       >
-        <p className="text-sm font-semibold">{t('answeredOf', { answered: done, total })}</p>
+        <p className="text-sm font-semibold tabular-nums">
+          {t('answeredOf', { answered: done, total })}
+        </p>
         <div
-          className="h-2 w-full overflow-hidden rounded bg-gray-200"
+          className="h-1.5 w-full overflow-hidden rounded-[3px] bg-ink-100"
           role="progressbar"
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
         >
-          <div className="h-full bg-gray-900" style={{ width: `${percent}%` }} />
+          <div
+            className={'h-full rounded-[3px] transition-[width] duration-300 ' + bar}
+            style={{ width: percent + '%' }}
+          />
         </div>
-        <p className="text-xs text-gray-600">{t('percentDone', { percent })}</p>
+        <p className="text-sm leading-[1.7] text-ink-700 tabular-nums">
+          {t('percentDone', { percent })}
+        </p>
         {nextUnanswered && (
-          <a href={`#q-${nextUnanswered.position}`} className="text-sm underline">
+          <a
+            href={'#q-' + nextUnanswered.position}
+            className="text-sm font-medium text-brand-700 underline underline-offset-[3px]"
+          >
             {t('jumpNext')}
           </a>
         )}
@@ -104,7 +116,7 @@ export function AttemptBoard({
             type="submit"
             disabled={done < total}
             data-testid={submitTestId}
-            className="w-full rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+            className="flex min-h-12 w-full items-center justify-center rounded-control bg-brand-600 px-6 text-base font-semibold text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitLabel}
           </button>

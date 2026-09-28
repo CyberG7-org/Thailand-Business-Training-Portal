@@ -673,6 +673,11 @@
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。"
+    },
+    "meta": {
+      "questions": "题数",
+      "passingMark": "及格线",
+      "attempt": "第几次"
     }
   },
   "nameCard": {

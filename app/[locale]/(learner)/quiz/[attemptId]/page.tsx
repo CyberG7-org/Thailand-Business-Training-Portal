@@ -39,7 +39,7 @@ export default async function QuizAttemptPage({
   });
 
   return (
-    <LearnerShell title={t('title')} step="quiz">
+    <LearnerShell title={t('title')} intro={t('intro')} step="quiz">
       <section className="grid gap-4">
         <AttemptBoard
           attemptId={attempt.id}

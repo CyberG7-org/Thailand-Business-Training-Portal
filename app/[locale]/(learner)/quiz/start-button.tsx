@@ -11,10 +11,13 @@ export function StartQuizButton({ resume }: { resume: boolean }) {
     error: null,
   });
   return (
-    <form action={formAction} className="grid gap-2">
+    <form action={formAction} className="grid gap-3">
       <input type="hidden" name="locale" value={locale} />
       {state.error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p
+          role="alert"
+          className="rounded-control bg-bad-50 px-3.5 py-2.5 text-sm font-medium text-bad-600"
+        >
           {t(`errors.${state.error}` as never)}
         </p>
       )}
@@ -22,7 +25,7 @@ export function StartQuizButton({ resume }: { resume: boolean }) {
         type="submit"
         disabled={pending}
         data-testid="start-quiz"
-        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+        className="inline-flex min-h-12 items-center justify-center justify-self-start rounded-control bg-brand-600 px-6 text-base font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
       >
         {resume ? t('resume') : t('start')}
       </button>

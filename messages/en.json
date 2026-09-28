@@ -673,6 +673,11 @@
       "already_answered": "This question is already answered.",
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option."
+    },
+    "meta": {
+      "questions": "Questions",
+      "passingMark": "Passing mark",
+      "attempt": "Attempt"
     }
   },
   "nameCard": {
