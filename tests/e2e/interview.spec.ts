@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { E2E_PASSWORD } from './fixtures';
-import { loginAs } from './helpers';
+import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
+import { loginAs, switchTo } from './helpers';
 import { seedLearnerWithCompany, seedPassedExam } from './seed';
 
 /**
@@ -84,6 +84,22 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-interview-status')).toHaveText('เสร็จสิ้น');
   await expect(page.getByTestId('stage-appointment-status')).toHaveText('พร้อมใช้งาน');
+
+  // The staff side: the newest session of this learner is the ready one, with its transcript
+  // and the officer's per-answer assessments.
+  await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/interviews');
+  const row = page
+    .locator('[data-testid^="admin-interview-"]')
+    .filter({ hasText: company })
+    .first();
+  await expect(row).toContainText('พร้อมแล้ว');
+  await row.getByRole('link').click();
+  await expect(page).toHaveURL(/\/th\/admin\/interviews\/[0-9a-f-]{36}$/);
+  await expect(
+    page.getByTestId('admin-transcript').locator('[data-role="officer"]').first(),
+  ).toContainText('สวัสดี');
+  await expect(page.getByTestId('admin-assessments')).toContainText('ถูกต้อง');
 });
 
 test('the learner can end the interview early and is told to try again', async ({ page }) => {

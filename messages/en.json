@@ -80,6 +80,7 @@
       "dbdRecords": "DBD records",
       "content": "Study content",
       "questions": "Question bank",
+      "interviews": "Readiness interviews",
       "notifications": "Notifications",
       "settings": "Policy settings",
       "audit": "Audit log",
@@ -519,6 +520,40 @@
       "suspendHint": "Suspending a manager stops their sign-in. Their learners keep studying and their companies stay visible to you.",
       "empty": "No managers yet.",
       "rename": "Rename"
+    },
+    "interviews": {
+      "title": "Readiness interviews",
+      "intro": "Every interview held by a learner of your team, with its verdict and the officer’s assessment of each answer.",
+      "empty": "No interviews yet",
+      "learner": "Learner",
+      "company": "Company",
+      "started": "Started",
+      "status": "Status",
+      "verdict": "Verdict",
+      "open": "Open",
+      "detailTitle": "Interview detail",
+      "transcript": "Transcript",
+      "assessments": "Assessment by question",
+      "narrative": "The officer’s summary",
+      "noVerdict": "No verdict yet",
+      "back": "Back to the interviews",
+      "statuses": {
+        "in_progress": "In progress",
+        "completed": "Completed",
+        "abandoned": "Abandoned"
+      },
+      "verdicts": {
+        "ready": "Ready",
+        "not_ready": "Not yet ready"
+      },
+      "assessment": {
+        "correct": "Correct",
+        "partial": "Partly right",
+        "wrong": "Wrong",
+        "evasive": "Evaded",
+        "pasted": "Pasted",
+        "off_topic": "Off topic"
+      }
     }
   },
   "stages": {

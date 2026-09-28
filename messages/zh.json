@@ -80,6 +80,7 @@
       "dbdRecords": "DBD 记录",
       "content": "学习内容",
       "questions": "题库",
+      "interviews": "准备度面谈",
       "notifications": "通知",
       "settings": "策略设置",
       "audit": "审计日志",
@@ -519,6 +520,40 @@
       "suspendHint": "停用经理后其无法登录，但团队中的学员仍可继续学习，公司记录对您依然可见。",
       "empty": "暂无经理。",
       "rename": "重命名"
+    },
+    "interviews": {
+      "title": "准备度面谈",
+      "intro": "你团队学员的每一次面谈，附结论与逐题评估。",
+      "empty": "尚无面谈",
+      "learner": "学员",
+      "company": "公司",
+      "started": "开始时间",
+      "status": "状态",
+      "verdict": "结论",
+      "open": "打开",
+      "detailTitle": "面谈详情",
+      "transcript": "对话记录",
+      "assessments": "逐题评估",
+      "narrative": "专员总结",
+      "noVerdict": "尚无结论",
+      "back": "返回面谈列表",
+      "statuses": {
+        "in_progress": "进行中",
+        "completed": "已完成",
+        "abandoned": "未完成"
+      },
+      "verdicts": {
+        "ready": "已准备好",
+        "not_ready": "尚未准备好"
+      },
+      "assessment": {
+        "correct": "正确",
+        "partial": "部分正确",
+        "wrong": "错误",
+        "evasive": "回避",
+        "pasted": "复制粘贴",
+        "off_topic": "答非所问"
+      }
     }
   },
   "stages": {
