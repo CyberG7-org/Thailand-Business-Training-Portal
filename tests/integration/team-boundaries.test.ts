@@ -123,48 +123,23 @@ describe('the team boundary holds on writes, deletes and buckets', () => {
     expect(mine).toBeNull();
   });
 
-  it('shows a manager the recordings and name cards of their own team', async () => {
-    const { data: session } = await svc
-      .from('call_sessions')
-      .insert({ user_id: a.learner.id, dbd_record_id: a.recordId, modality: 'fake' })
-      .select()
-      .single();
-    const recordingPath = `${session!.id}/${Date.now()}.mp3`;
-    await svc.storage
-      .from('recordings')
-      .upload(recordingPath, Buffer.from('id3'), { contentType: 'audio/mpeg' });
+  it('shows a manager the name cards of their own team', async () => {
     const cardPath = `${a.learner.id}/${Date.now()}.pdf`;
     await svc.storage.from('name-cards').upload(cardPath, pdf, { contentType: 'application/pdf' });
 
-    const recording = await a.asManager.storage.from('recordings').download(recordingPath);
-    expect(recording.error).toBeNull();
     const card = await a.asManager.storage.from('name-cards').download(cardPath);
     expect(card.error).toBeNull();
 
-    const theirs = await b.asManager.storage.from('recordings').download(recordingPath);
-    expect(theirs.data).toBeNull();
     const theirCard = await b.asManager.storage.from('name-cards').download(cardPath);
     expect(theirCard.data).toBeNull();
   });
 
-  it('refuses a manager deleting a recording or a name card', async () => {
-    const { data: session } = await svc
-      .from('call_sessions')
-      .insert({ user_id: a.learner.id, dbd_record_id: a.recordId, modality: 'fake' })
-      .select()
-      .single();
-    const recordingPath = `${session!.id}/${Date.now()}-del.mp3`;
-    await svc.storage
-      .from('recordings')
-      .upload(recordingPath, Buffer.from('id3'), { contentType: 'audio/mpeg' });
+  it('refuses a manager deleting a name card', async () => {
     const cardPath = `${a.learner.id}/${Date.now()}-del.pdf`;
     await svc.storage.from('name-cards').upload(cardPath, pdf, { contentType: 'application/pdf' });
 
-    await a.asManager.storage.from('recordings').remove([recordingPath]);
     await a.asManager.storage.from('name-cards').remove([cardPath]);
 
-    const recording = await svc.storage.from('recordings').download(recordingPath);
-    expect(recording.error).toBeNull();
     const card = await svc.storage.from('name-cards').download(cardPath);
     expect(card.error).toBeNull();
   });

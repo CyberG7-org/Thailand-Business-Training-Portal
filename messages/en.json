@@ -40,11 +40,10 @@
       "productsServices": "Products / services",
       "tag": "DBD record"
     },
-    "bank": {
-      "title": "Bank verification",
+    "appointment": {
       "pending": "Eligibility date pending — the certificate issue date is missing.",
-      "available": "Available now.",
-      "lockedUntil": "Available from {date}"
+      "available": "You can book now.",
+      "lockedUntil": "Bookable from {date}"
     },
     "hero": {
       "kicker": "Bank verification preparation"
@@ -54,7 +53,8 @@
       "quiz": "Your next step is the evaluation quiz. It shows what to review before the exam.",
       "exam": "Your next step is the exam. Passing it unlocks the bank verification call.",
       "nameCard": "Your next step is the name card. Create it before the bank verification call.",
-      "bank": "You are ready for the bank verification call.",
+      "interview": "Your next step is the readiness interview. The officer asks about your company, in Thai.",
+      "appointment": "You are ready. Your next step is the bank appointment.",
       "done": "You have completed every step. Well done."
     },
     "cta": {
@@ -62,7 +62,7 @@
       "lastResult": "Review last result"
     },
     "progress": {
-      "ring": "{done} of 5 steps done",
+      "ring": "{done} of {total} steps done",
       "stepsDone": "steps done",
       "lastScore": "Last exam score",
       "passMark": "Needed to pass",
@@ -81,7 +81,6 @@
       "content": "Study content",
       "questions": "Question bank",
       "notifications": "Notifications",
-      "calls": "Call training",
       "settings": "Policy settings",
       "audit": "Audit log",
       "managers": "Managers"
@@ -358,24 +357,6 @@
       "lastError": "Last error",
       "requeue": "Requeue"
     },
-    "calls": {
-      "title": "Bank call training",
-      "detailTitle": "Call session",
-      "empty": "No call sessions yet",
-      "learner": "Learner",
-      "company": "Company",
-      "modality": "Modality",
-      "status": "Status",
-      "started": "Started",
-      "ended": "Ended",
-      "endedReason": "Ended reason",
-      "providerCallId": "Provider call id",
-      "recording": "Recording",
-      "noRecording": "No recording stored",
-      "transcript": "Transcript",
-      "noTranscript": "No transcript",
-      "open": "Open"
-    },
     "settings": {
       "title": "Policy settings",
       "intro": "These values drive the business rules (policy_config). Every change is audited with the admin who made it.",
@@ -438,13 +419,9 @@
           "label": "Require exam pass for the name card",
           "help": "When on, learners must pass the exam before creating a card"
         },
-        "require_exam_pass_for_bank_call": {
-          "label": "Require exam pass for the bank call",
-          "help": "When on, learners must pass the exam before practising calls (default: on)"
-        },
-        "call_max_sessions": {
-          "label": "Maximum practice calls",
-          "help": "Blank = unlimited"
+        "require_exam_pass_for_interview": {
+          "label": "Exam pass required before the readiness interview",
+          "help": "When on, a learner must pass the exam before starting the readiness interview."
         },
         "telegram_admin_chat_ids": {
           "label": "Admin Telegram chat ids",
@@ -550,7 +527,8 @@
       "quiz": "Evaluation quiz",
       "exam": "Exam",
       "nameCard": "Name card",
-      "bank": "Bank verification"
+      "interview": "Readiness interview",
+      "appointment": "Bank appointment"
     },
     "status": {
       "locked": "Locked",
@@ -564,16 +542,18 @@
       "exam_required": "Pass the exam first",
       "before_available_from": "Not yet available",
       "expired": "Access period has ended",
-      "missing_issue_date": "Certificate issue date missing"
+      "missing_issue_date": "Certificate issue date missing",
+      "interview_required": "Pass the readiness interview first"
     },
     "open": "Open",
-    "stepOf": "Step {n} of 5",
+    "stepOf": "Step {n} of {total}",
     "short": {
       "study": "Study",
       "quiz": "Quiz",
       "exam": "Exam",
       "nameCard": "Card",
-      "bank": "Bank"
+      "interview": "Interview",
+      "appointment": "Booking"
     }
   },
   "progression": {
@@ -584,8 +564,9 @@
     "EXAM_PASSED": "Exam passed",
     "WAITING_BANK_ELIGIBILITY": "Waiting for bank eligibility",
     "BANK_ELIGIBLE": "Bank eligible",
-    "CALL_TRAINING_STARTED": "Call training started",
-    "CALL_TRAINING_COMPLETED": "Call training completed"
+    "INTERVIEW_STARTED": "Interview started",
+    "INTERVIEW_READY": "Ready for the bank",
+    "APPOINTMENT_BOOKED": "Appointment booked"
   },
   "study": {
     "title": "Study material",
@@ -682,10 +663,9 @@
       "attempt": "Attempt"
     },
     "reviewHeading": "Your answers",
-    "passedNext": "You passed. The bank verification call training is now open.",
-    "passedNextCard": "You passed. Your next step is the name card.",
+    "passedNext": "You passed. The readiness interview is now open.",
     "notPassedNext": "Not passed this time. Review the answers below and try again when you are ready.",
-    "toBankCall": "Go to bank call training",
+    "toInterview": "Go to the readiness interview",
     "retake": "Retake exam"
   },
   "nameCard": {
@@ -715,46 +695,5 @@
     "holderName": "Full name (Thai)",
     "holderNameEn": "Full name (English, optional)",
     "holderNameHint": "As it should be printed on the card"
-  },
-  "bankCall": {
-    "title": "Bank verification call training",
-    "intro": "A simulated bank officer calls you in Thai and asks about your company. Answer from your DBD certificate. The conversation is recorded for admin review.",
-    "tips": {
-      "quiet": "Find a quiet place and use headphones if you can",
-      "microphone": "Allow the browser to use your microphone when asked",
-      "facts": "Have the company name, head office address, registered capital and directors ready"
-    },
-    "start": "Start call",
-    "startAgain": "Start another call",
-    "hangUp": "Hang up",
-    "simulate": "Simulate the call to the end",
-    "fakeHint": "Test mode: no call provider is configured, so a sample transcript is stored instead.",
-    "assistantSpeaking": "Officer speaking",
-    "history": "Call history",
-    "transcript": "Show transcript",
-    "phase": {
-      "idle": "Ready to start",
-      "starting": "Preparing the call…",
-      "connecting": "Connecting…",
-      "live": "In call",
-      "ending": "Hanging up…",
-      "ended": "Call ended",
-      "error": "Something went wrong"
-    },
-    "status": {
-      "initiated": "Initiated",
-      "in_progress": "In progress",
-      "completed": "Completed",
-      "partial": "Completed (incomplete data)",
-      "failed": "Failed"
-    },
-    "errors": {
-      "not_open": "This stage is not open yet",
-      "max_sessions": "You have used all available practice calls",
-      "not_configured": "Call training is not configured. Please contact an admin.",
-      "no_assignment": "No company has been assigned to you",
-      "not_found": "Call session not found",
-      "call_failed": "The call failed. Please try again."
-    }
   }
 }

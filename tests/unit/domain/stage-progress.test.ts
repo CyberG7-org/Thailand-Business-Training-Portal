@@ -7,7 +7,8 @@ const statuses = (o: Partial<Record<StageKey, StageStatus>>): Record<StageKey, S
   quiz: { status: o.quiz ?? 'available' },
   exam: { status: o.exam ?? 'available' },
   nameCard: { status: o.nameCard ?? 'available' },
-  bank: { status: o.bank ?? 'locked' },
+  interview: { status: o.interview ?? 'locked' },
+  appointment: { status: o.appointment ?? 'locked' },
 });
 
 /** The dashboard's "next step" is the step after the last one done, whatever lies before it. */
@@ -20,16 +21,23 @@ describe('currentStage', () => {
     expect(currentStage(statuses({ exam: 'done' }))).toBe('nameCard');
   });
 
-  it('is the locked bank step once everything before it is done', () => {
+  it('is the locked interview step once everything before it is done', () => {
     expect(
       currentStage(statuses({ study: 'done', quiz: 'done', exam: 'done', nameCard: 'done' })),
-    ).toBe('bank');
+    ).toBe('interview');
   });
 
   it('is nothing once every step is done', () => {
     expect(
       currentStage(
-        statuses({ study: 'done', quiz: 'done', exam: 'done', nameCard: 'done', bank: 'done' }),
+        statuses({
+          study: 'done',
+          quiz: 'done',
+          exam: 'done',
+          nameCard: 'done',
+          interview: 'done',
+          appointment: 'done',
+        }),
       ),
     ).toBeNull();
   });

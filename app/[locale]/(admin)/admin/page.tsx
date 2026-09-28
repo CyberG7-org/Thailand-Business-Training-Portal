@@ -8,7 +8,6 @@ const STAFF_LINKS = [
   ['/admin/dbd-records', 'dbdRecords'],
   ['/admin/content', 'content'],
   ['/admin/questions', 'questions'],
-  ['/admin/calls', 'calls'],
   // Spec §9: a manager's audit view is their own team; RLS narrows it through the view.
   ['/admin/audit', 'audit'],
 ] as const;

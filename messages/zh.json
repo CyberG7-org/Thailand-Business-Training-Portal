@@ -40,11 +40,10 @@
       "productsServices": "产品/服务",
       "tag": "DBD 记录"
     },
-    "bank": {
-      "title": "银行验证",
-      "pending": "资格日期待定 — 缺少证书签发日期。",
-      "available": "现已开放。",
-      "lockedUntil": "自 {date} 起开放"
+    "appointment": {
+      "pending": "无法计算可预约日期：缺少证书签发日期。",
+      "available": "现在可以预约。",
+      "lockedUntil": "可自 {date} 起预约"
     },
     "hero": {
       "kicker": "银行身份验证准备"
@@ -54,7 +53,8 @@
       "quiz": "下一步是评估测验，帮助你了解考试前需要复习的内容。",
       "exam": "下一步是考试。通过考试后即可解锁银行验证通话。",
       "nameCard": "下一步是名片。请在银行验证通话前创建名片。",
-      "bank": "你已准备好进行银行验证通话。",
+      "interview": "下一步是准备度面谈。面谈官会用泰语询问贵公司的情况。",
+      "appointment": "你已准备好。下一步是预约银行。",
       "done": "你已完成所有步骤，做得好。"
     },
     "cta": {
@@ -62,7 +62,7 @@
       "lastResult": "查看上次结果"
     },
     "progress": {
-      "ring": "已完成 5 步中的 {done} 步",
+      "ring": "已完成 {total} 步中的 {done} 步",
       "stepsDone": "已完成步骤",
       "lastScore": "上次考试成绩",
       "passMark": "及格线",
@@ -81,7 +81,6 @@
       "content": "学习内容",
       "questions": "题库",
       "notifications": "通知",
-      "calls": "通话训练",
       "settings": "策略设置",
       "audit": "审计日志",
       "managers": "经理"
@@ -358,24 +357,6 @@
       "lastError": "最近错误",
       "requeue": "重新排队"
     },
-    "calls": {
-      "title": "银行通话训练",
-      "detailTitle": "通话记录",
-      "empty": "暂无通话记录",
-      "learner": "学员",
-      "company": "公司",
-      "modality": "方式",
-      "status": "状态",
-      "started": "开始时间",
-      "ended": "结束时间",
-      "endedReason": "结束原因",
-      "providerCallId": "服务商通话编号",
-      "recording": "录音",
-      "noRecording": "没有录音",
-      "transcript": "对话记录",
-      "noTranscript": "没有对话记录",
-      "open": "打开"
-    },
     "settings": {
       "title": "策略设置",
       "intro": "这些值决定系统的业务规则（policy_config）。每次修改都会记录操作的管理员。",
@@ -438,13 +419,9 @@
           "label": "制作名片需先通过考试",
           "help": "开启后，学员须先通过考试才能制作名片"
         },
-        "require_exam_pass_for_bank_call": {
-          "label": "银行通话训练需先通过考试",
-          "help": "开启后，学员须先通过考试才能开始通话训练（默认开启）"
-        },
-        "call_max_sessions": {
-          "label": "练习通话最多次数",
-          "help": "留空 = 不限"
+        "require_exam_pass_for_interview": {
+          "label": "准备度面谈前须通过考试",
+          "help": "开启后，学员必须先通过考试才能开始准备度面谈。"
         },
         "telegram_admin_chat_ids": {
           "label": "管理员 Telegram 聊天 ID",
@@ -550,7 +527,8 @@
       "quiz": "评估测验",
       "exam": "考试",
       "nameCard": "名片",
-      "bank": "银行验证"
+      "interview": "准备度面谈",
+      "appointment": "银行预约"
     },
     "status": {
       "locked": "已锁定",
@@ -564,16 +542,18 @@
       "exam_required": "请先通过考试",
       "before_available_from": "尚未开放",
       "expired": "访问期限已结束",
-      "missing_issue_date": "缺少证书签发日期"
+      "missing_issue_date": "缺少证书签发日期",
+      "interview_required": "请先通过准备度面谈"
     },
     "open": "打开",
-    "stepOf": "第 {n} 步（共 5 步）",
+    "stepOf": "第 {n} 步（共 {total} 步）",
     "short": {
       "study": "学习",
       "quiz": "测验",
       "exam": "考试",
       "nameCard": "名片",
-      "bank": "银行"
+      "interview": "面谈",
+      "appointment": "预约"
     }
   },
   "progression": {
@@ -584,8 +564,9 @@
     "EXAM_PASSED": "考试已通过",
     "WAITING_BANK_ELIGIBILITY": "等待银行验证资格",
     "BANK_ELIGIBLE": "可进行银行验证",
-    "CALL_TRAINING_STARTED": "已开始通话培训",
-    "CALL_TRAINING_COMPLETED": "通话培训已完成"
+    "INTERVIEW_STARTED": "已开始面谈",
+    "INTERVIEW_READY": "已准备好",
+    "APPOINTMENT_BOOKED": "已预约银行"
   },
   "study": {
     "title": "学习资料",
@@ -682,10 +663,9 @@
       "attempt": "第几次"
     },
     "reviewHeading": "你的答案",
-    "passedNext": "你已通过考试。银行验证通话训练现已开放。",
-    "passedNextCard": "你已通过考试。下一步是名片。",
+    "passedNext": "你已通过考试。准备度面谈现已开放。",
     "notPassedNext": "这次未通过。请查看下方答案，准备好后再试一次。",
-    "toBankCall": "前往银行通话训练",
+    "toInterview": "前往准备度面谈",
     "retake": "重新考试"
   },
   "nameCard": {
@@ -715,46 +695,5 @@
     "holderName": "姓名（泰文）",
     "holderNameEn": "姓名（英文，可选）",
     "holderNameHint": "按名片上应印的写法填写"
-  },
-  "bankCall": {
-    "title": "银行身份核实通话训练",
-    "intro": "系统会模拟银行工作人员用泰语致电询问您的公司信息。请按照公司注册证明作答。对话会被记录以供管理员审核。",
-    "tips": {
-      "quiet": "请在安静的环境中进行，尽量使用耳机",
-      "microphone": "浏览器请求时请允许使用麦克风",
-      "facts": "准备好公司名称、总部地址、注册资本和董事名单"
-    },
-    "start": "开始通话",
-    "startAgain": "再次开始通话",
-    "hangUp": "挂断",
-    "simulate": "模拟通话至结束",
-    "fakeHint": "测试模式：尚未配置通话服务商，系统将保存示例对话记录。",
-    "assistantSpeaking": "工作人员正在说话",
-    "history": "通话历史",
-    "transcript": "查看对话记录",
-    "phase": {
-      "idle": "准备开始",
-      "starting": "正在准备通话…",
-      "connecting": "正在连接…",
-      "live": "通话中",
-      "ending": "正在挂断…",
-      "ended": "通话已结束",
-      "error": "出现错误"
-    },
-    "status": {
-      "initiated": "已发起",
-      "in_progress": "进行中",
-      "completed": "已完成",
-      "partial": "已完成（数据不完整）",
-      "failed": "失败"
-    },
-    "errors": {
-      "not_open": "此阶段尚未开放",
-      "max_sessions": "您已用完可用的练习通话次数",
-      "not_configured": "通话训练尚未配置，请联系管理员。",
-      "no_assignment": "尚未为您分配公司",
-      "not_found": "未找到该通话记录",
-      "call_failed": "通话失败，请重试。"
-    }
   }
 }

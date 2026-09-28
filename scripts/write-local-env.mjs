@@ -35,9 +35,8 @@ const managed = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: anonKey,
   SUPABASE_SERVICE_ROLE_KEY: serviceKey,
   APP_INTERNAL_EMAIL_DOMAIN: 'learner.portal.internal',
-  // Dev-only secrets so the cron and webhook routes are exercisable locally and in CI.
+  // A dev-only secret so the cron route is exercisable locally and in CI.
   CRON_SECRET: 'local-cron-secret-for-dev',
-  VAPI_WEBHOOK_SECRET: 'local-vapi-webhook-secret',
 };
 
 const kept = existsSync('.env.local')

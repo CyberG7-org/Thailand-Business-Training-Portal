@@ -16,12 +16,12 @@ export async function loadProgressionFacts(
   userId: string,
   options: { today?: ISODate } = {},
 ): Promise<ProgressionFacts> {
-  const [assignment, requireExamPassForBankCall, requireExamPassForNameCard] = await Promise.all([
+  const [assignment, requireExamPassForInterview, requireExamPassForNameCard] = await Promise.all([
     getActiveAssignmentForUser(db, userId),
-    getPolicy('require_exam_pass_for_bank_call'),
+    getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
   ]);
-  const [snapshot, studyRows, quizRows, exam, cardRows, callRows, callsDone] = await Promise.all([
+  const [snapshot, studyRows, quizRows, exam, cardRows] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
     db
@@ -32,12 +32,6 @@ export async function loadProgressionFacts(
       .eq('status', 'submitted'),
     examPassedFor(userId),
     db.from('name_cards').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    db.from('call_sessions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    db
-      .from('call_sessions')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .in('status', ['completed', 'partial']),
   ]);
 
   return {
@@ -51,9 +45,10 @@ export async function loadProgressionFacts(
       ? { availableFrom: snapshot.available_from, expiresAt: snapshot.expires_at }
       : null,
     today: options.today ?? todayInBangkok(),
-    callSessions: callRows.count ?? 0,
-    callsCompleted: callsDone.count ?? 0,
-    policy: { requireExamPassForBankCall, requireExamPassForNameCard },
+    interviewSessions: 0,
+    interviewReady: false,
+    appointmentBooked: false,
+    policy: { requireExamPassForInterview, requireExamPassForNameCard },
   };
 }
 
@@ -70,7 +65,7 @@ export async function loadProgressionFactsForUsers(
   if (userIds.length === 0) return out;
   const today = options.today ?? todayInBangkok();
   const [
-    requireExamPassForBankCall,
+    requireExamPassForInterview,
     requireExamPassForNameCard,
     examPassRule,
     assignments,
@@ -78,9 +73,8 @@ export async function loadProgressionFactsForUsers(
     study,
     attempts,
     cards,
-    calls,
   ] = await Promise.all([
-    getPolicy('require_exam_pass_for_bank_call'),
+    getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
     getPolicy('exam_pass_rule'),
     db
@@ -101,9 +95,8 @@ export async function loadProgressionFactsForUsers(
       .eq('status', 'submitted')
       .order('submitted_at', { ascending: false }),
     db.from('name_cards').select('user_id').in('user_id', userIds),
-    db.from('call_sessions').select('user_id, status').in('user_id', userIds),
   ]);
-  for (const r of [assignments, snapshots, study, attempts, cards, calls]) {
+  for (const r of [assignments, snapshots, study, attempts, cards]) {
     if (r.error) throw r.error;
   }
 
@@ -122,13 +115,6 @@ export async function loadProgressionFactsForUsers(
     if (a.kind === 'quiz') quizCount.set(a.user_id, (quizCount.get(a.user_id) ?? 0) + 1);
     else examRows.set(a.user_id, [...(examRows.get(a.user_id) ?? []), { result: a.result }]);
   }
-  const callCount = new Map<string, { sessions: number; completed: number }>();
-  for (const c of calls.data ?? []) {
-    const cur = callCount.get(c.user_id) ?? { sessions: 0, completed: 0 };
-    cur.sessions += 1;
-    if (c.status === 'completed' || c.status === 'partial') cur.completed += 1;
-    callCount.set(c.user_id, cur);
-  }
 
   for (const userId of userIds) {
     const exams = examRows.get(userId) ?? [];
@@ -137,7 +123,6 @@ export async function loadProgressionFactsForUsers(
         ? exams[0]?.result === 'pass'
         : exams.some((e) => e.result === 'pass');
     const eligibility = latestSnapshot.get(userId) ?? null;
-    const c = callCount.get(userId) ?? { sessions: 0, completed: 0 };
     out.set(userId, {
       hasActiveAssignment: assignmentByUser.has(userId),
       studyOpened: studied.has(userId),
@@ -149,9 +134,10 @@ export async function loadProgressionFactsForUsers(
         ? { availableFrom: eligibility.available_from, expiresAt: eligibility.expires_at }
         : null,
       today,
-      callSessions: c.sessions,
-      callsCompleted: c.completed,
-      policy: { requireExamPassForBankCall, requireExamPassForNameCard },
+      interviewSessions: 0,
+      interviewReady: false,
+      appointmentBooked: false,
+      policy: { requireExamPassForInterview, requireExamPassForNameCard },
     });
   }
   return out;

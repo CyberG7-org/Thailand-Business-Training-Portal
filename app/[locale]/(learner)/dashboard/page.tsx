@@ -43,12 +43,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const done = doneCount(stages);
 
   const detailFor = (key: StageKey, info: StageInfo): string | null => {
-    if (key === 'bank') {
+    if (key === 'appointment') {
       if (info.reason === 'before_available_from' && facts.eligibility) {
-        return t('bank.lockedUntil', { date: formatDate(facts.eligibility.availableFrom, loc) });
+        return t('appointment.lockedUntil', {
+          date: formatDate(facts.eligibility.availableFrom, loc),
+        });
       }
-      if (info.reason === 'missing_issue_date') return t('bank.pending');
-      if (info.status === 'available') return t('bank.available');
+      if (info.reason === 'missing_issue_date') return t('appointment.pending');
+      if (info.status === 'available') return t('appointment.available');
     }
     if (info.reason) return ts(`reasons.${info.reason}`);
     return null;
@@ -63,7 +65,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       shortTitle: ts(`short.${key}`),
       statusLabel: ts(`status.${info.status}`),
       detail: detailFor(key, info),
-      href: open ? STAGE_ROUTES[key] : null,
+      href: open ? (STAGE_ROUTES[key] ?? null) : null,
       current: key === current,
     };
   });
@@ -88,7 +90,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     <ProgressCard
       done={done}
       total={STAGE_KEYS.length}
-      ringLabel={t('progress.ring', { done })}
+      ringLabel={t('progress.ring', { done, total: STAGE_KEYS.length })}
       stepsDoneLabel={t('progress.stepsDone')}
       lastScoreLabel={t('progress.lastScore')}
       lastScore={

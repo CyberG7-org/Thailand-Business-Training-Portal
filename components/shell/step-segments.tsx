@@ -4,7 +4,7 @@ import { STAGE_KEYS, type StageInfo, type StageKey } from '@/lib/domain/progress
 /** Gold only for a step actually done; the current step is white, the rest faint. */
 const TONE = { done: 'bg-gold-500', current: 'bg-white', upcoming: 'bg-white/25' } as const;
 
-/** "Step n of 5" and the five segments on the band, read from the learner's real progress. */
+/** "Step n of N" and one segment per step on the band, read from the learner's real progress. */
 export async function StepSegments({
   current,
   statuses,
@@ -19,7 +19,7 @@ export async function StepSegments({
       data-testid="step-segments"
       className="flex items-center gap-3 text-sm font-medium text-brand-100 tabular-nums"
     >
-      <span>{t('stepOf', { n })}</span>
+      <span>{t('stepOf', { n, total: STAGE_KEYS.length })}</span>
       <div className="flex gap-1" aria-hidden="true">
         {STAGE_KEYS.map((key) => {
           const state =

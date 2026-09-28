@@ -10,7 +10,6 @@ import {
 import { bannedLiterals } from '@/lib/integrations/question-gen/dbd-reference';
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import { DBD_CERTIFICATE_REFERENCE } from '@/lib/integrations/question-gen/dbd-reference';
-import { BANK_OFFICER_SCRIPT } from '@/lib/integrations/vapi/config';
 
 describe('bank-interview concepts', () => {
   it('lists the 16 questions from the bank, each with placeholders that exist', () => {
@@ -27,11 +26,6 @@ describe('bank-interview concepts', () => {
   it('is what the question generator and the call script are built on', () => {
     for (const concept of BANK_INTERVIEW_CONCEPTS) {
       expect(DBD_CERTIFICATE_REFERENCE).toContain(concept.question.en);
-    }
-    // The officer script covers every concept (numbered 1–16) and reads every fact variable.
-    for (let i = 1; i <= 16; i++) expect(BANK_OFFICER_SCRIPT).toMatch(new RegExp(`\\n${i}\\. `));
-    for (const v of ['my_shares', 'account_purpose', 'operations_status', 'shareholders_count']) {
-      expect(BANK_OFFICER_SCRIPT).toContain(`{{${v}}}`);
     }
   });
 

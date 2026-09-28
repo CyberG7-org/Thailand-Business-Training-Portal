@@ -13,7 +13,7 @@ export function currentStage(statuses: Record<StageKey, StageInfo>): StageKey | 
   return STAGE_KEYS[lastDone + 1] ?? null;
 }
 
-/** How many of the five steps are done, for the progress ring. */
+/** How many of the steps are done, for the progress ring. */
 export function doneCount(statuses: Record<StageKey, StageInfo>): number {
   return STAGE_KEYS.filter((key) => statuses[key].status === 'done').length;
 }

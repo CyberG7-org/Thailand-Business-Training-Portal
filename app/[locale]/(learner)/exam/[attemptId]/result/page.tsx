@@ -36,13 +36,14 @@ export default async function ExamResultPage({
     cachedStageStatuses(user.id),
   ]);
   const passed = attempt.result === 'pass';
-  const bankOpen = ['available', 'in_progress', 'done'].includes(stages.bank.status);
+  const interviewOpen = ['available', 'in_progress', 'done'].includes(stages.interview.status);
 
-  // What comes next: the bank call when it is open, the name card until then, or another try.
-  const line = passed ? (bankOpen ? t('passedNext') : t('passedNextCard')) : t('notPassedNext');
+  // What comes next: the readiness interview when it is open, the name card until then, or
+  // another try.
+  const line = passed ? t('passedNext') : t('notPassedNext');
   const primary = passed
-    ? bankOpen
-      ? { href: '/bank-call', label: t('toBankCall') }
+    ? interviewOpen
+      ? { href: '/interview', label: t('toInterview') }
       : { href: '/name-card', label: td('cta.open', { step: ts('titles.nameCard') }) }
     : { href: '/exam', label: t('retake') };
   const score = (attempt.score ?? 0) + ' / ' + (attempt.max_score ?? 0);

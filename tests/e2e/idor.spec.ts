@@ -31,14 +31,18 @@ test('a learner cannot open another learner’s attempts, results, calls, or adm
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(404);
   }
-  for (const path of ['/th/admin', '/th/admin/users', '/th/admin/calls', '/th/admin/settings']) {
+  for (const path of [
+    '/th/admin',
+    '/th/admin/users',
+    '/th/admin/interviews',
+    '/th/admin/settings',
+  ]) {
     await page.goto(path);
     await expect(page, path).toHaveURL(/\/th\/dashboard$/);
   }
 
   // Secret-bearing endpoints refuse anonymous and unsigned calls.
   expect((await request.get('/api/cron/notifications')).status()).toBe(401);
-  expect((await request.post('/api/webhooks/vapi', { data: {} })).status()).toBe(401);
   expect((await request.get('/api/tts?material=x')).status()).toBe(401);
 
   // Hardening headers are present on every response.
@@ -54,6 +58,6 @@ test('the health probe reports database reachability and provider names without 
   const response = await request.get('/api/health');
   expect(response.status()).toBe(200);
   const body = await response.json();
-  expect(body).toMatchObject({ ok: true, db: 'ok', providers: { vapi: 'fake' } });
-  expect(JSON.stringify(body)).not.toContain('local-vapi-webhook-secret');
+  expect(body).toMatchObject({ ok: true, db: 'ok', providers: { extraction: 'fake' } });
+  expect(JSON.stringify(body)).not.toContain('local-cron-secret-for-dev');
 });

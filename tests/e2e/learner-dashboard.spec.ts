@@ -3,15 +3,19 @@ import { E2E_ADMIN, E2E_LEARNER, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
-test('a learner sees their company and the bank stage locked behind the exam, with the date', async ({
+test('a learner sees their company and the interview locked behind the exam, the appointment behind the interview', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท แดชบอร์ด จำกัด', '2099-01-01');
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page.getByTestId('company-name')).toHaveText('บริษัท แดชบอร์ด จำกัด');
-  // Default policy: exam pass required before the bank stage (decision D9).
-  await expect(page.getByTestId('stage-bank-status')).toHaveText('ล็อก');
-  await expect(page.getByTestId('stage-bank')).toContainText('ต้องสอบผ่านก่อน');
+  // Default policy: exam pass required before the interview (decision D9, renamed in P16).
+  await expect(page.getByTestId('stage-interview-status')).toHaveText('ล็อก');
+  await expect(page.getByTestId('stage-interview')).toContainText('ต้องสอบผ่านก่อน');
+  await expect(page.getByTestId('stage-appointment-status')).toHaveText('ล็อก');
+  await expect(page.getByTestId('stage-appointment')).toContainText(
+    'ต้องผ่านการสัมภาษณ์ความพร้อมก่อน',
+  );
   await expect(page.getByTestId('stage-quiz-status')).toHaveText('พร้อมใช้งาน');
   await expect(page.getByTestId('stage-study-status')).toHaveText('พร้อมใช้งาน');
 });
@@ -22,7 +26,7 @@ test('a learner whose certificate has no issue date still sees the pending reaso
   const loginId = await seedLearnerWithCompany('บริษัท ไม่มีวันที่ จำกัด', null);
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page.getByTestId('company-name')).toHaveText('บริษัท ไม่มีวันที่ จำกัด');
-  await expect(page.getByTestId('stage-bank-status')).toHaveText('ล็อก');
+  await expect(page.getByTestId('stage-appointment-status')).toHaveText('ล็อก');
 });
 
 test('a learner with no assignment sees the no-company message and every stage locked', async ({
@@ -30,7 +34,7 @@ test('a learner with no assignment sees the no-company message and every stage l
 }) => {
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
   await expect(page.getByTestId('no-company')).toBeVisible();
-  for (const stage of ['study', 'quiz', 'exam', 'nameCard', 'bank']) {
+  for (const stage of ['study', 'quiz', 'exam', 'nameCard', 'interview', 'appointment']) {
     await expect(page.getByTestId(`stage-${stage}-status`)).toHaveText('ล็อก');
   }
 });

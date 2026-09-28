@@ -8,7 +8,7 @@ import { seedLearnerWithCompany, seedPassedExam } from './seed';
  * blue band and a warn tag when not, the next step as the primary action, and the answers
  * reviewed in a solid list under "Your answers".
  */
-test('a passed exam gets the gold band, the medallion and the way to the bank call', async ({
+test('a passed exam gets the gold band, the medallion and the way to the interview', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท ผลสอบผ่าน จำกัด', '2026-07-13');
@@ -24,8 +24,8 @@ test('a passed exam gets the gold band, the medallion and the way to the bank ca
   await expect(badge).toContainText('สอบผ่าน');
   await expect(badge.getByTestId('medallion')).toBeVisible();
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
-  await expect(page.getByTestId('exam-next')).toHaveText(/ไปฝึกโทรกับธนาคาร/);
-  await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/bank-call');
+  await expect(page.getByTestId('exam-next')).toHaveText(/ไปสัมภาษณ์ความพร้อม/);
+  await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/interview');
   await expect(page.getByRole('link', { name: 'หน้าหลัก' })).toHaveAttribute(
     'href',
     '/th/dashboard',

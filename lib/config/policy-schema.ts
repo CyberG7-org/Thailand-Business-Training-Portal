@@ -57,11 +57,7 @@ export const POLICY_FIELDS = {
     schema: z.enum(['any', 'latest']),
   },
   require_exam_pass_for_name_card: { control: { kind: 'boolean' }, schema: z.boolean() },
-  require_exam_pass_for_bank_call: { control: { kind: 'boolean' }, schema: z.boolean() },
-  call_max_sessions: {
-    control: { kind: 'number', min: 1, max: 100, nullable: true },
-    schema: nullableInt(1, 100),
-  },
+  require_exam_pass_for_interview: { control: { kind: 'boolean' }, schema: z.boolean() },
   telegram_admin_chat_ids: { control: { kind: 'list' }, schema: stringList },
   email_admin_recipients: {
     control: { kind: 'list' },

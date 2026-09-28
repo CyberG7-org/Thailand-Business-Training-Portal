@@ -11,7 +11,7 @@ test('the login page shows the steps, the hint and a working show/hide password'
   page,
 }) => {
   await page.goto('/th/login');
-  await expect(page.getByTestId('login-stages').getByRole('listitem')).toHaveCount(5);
+  await expect(page.getByTestId('login-stages').getByRole('listitem')).toHaveCount(6);
   await expect(page.getByText('ใช้รหัสผู้ใช้และรหัสผ่านที่ได้รับจากผู้ดูแลระบบ')).toBeVisible();
   await expect(page.locator('img[src*="photo-skyline"]')).toHaveCount(1);
 

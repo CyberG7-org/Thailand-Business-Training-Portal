@@ -29,7 +29,7 @@ describe('policy schema', () => {
       ok: false,
       error: 'not_a_number',
     });
-    expect(parsePolicyInput('require_exam_pass_for_bank_call', 'false')).toEqual({
+    expect(parsePolicyInput('require_exam_pass_for_interview', 'false')).toEqual({
       ok: true,
       value: false,
     });

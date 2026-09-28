@@ -10,7 +10,7 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
   try {
     await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
     await page.goto('/th/admin/settings');
-    const field = page.getByTestId('setting-require_exam_pass_for_bank_call');
+    const field = page.getByTestId('setting-require_exam_pass_for_interview');
     await field.locator('select[name="value"]').selectOption('false');
     await field.getByRole('button', { name: 'บันทึก' }).click();
     await expect(field.getByTestId('setting-saved')).toBeVisible();
@@ -22,7 +22,7 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
     await mark.getByRole('button', { name: 'บันทึก' }).click();
     await expect(mark.getByTestId('setting-error')).toBeVisible();
 
-    await page.goto('/th/admin/audit?entity=policy_config&id=require_exam_pass_for_bank_call');
+    await page.goto('/th/admin/audit?entity=policy_config&id=require_exam_pass_for_interview');
     const row = page.locator('tr', { hasText: 'policy_config.update' }).first();
     // Codes are stored lower-case and shown upper-case (spec §3.3).
     await expect(row).toContainText(E2E_ADMIN.loginId.toUpperCase());
@@ -31,8 +31,8 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
     await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
 
     await loginAs(page, learner, E2E_PASSWORD);
-    await expect(page.getByTestId('stage-bank-status')).toHaveText('พร้อมใช้งาน');
+    await expect(page.getByTestId('stage-interview-status')).toHaveText('พร้อมใช้งาน');
   } finally {
-    await setPolicy('require_exam_pass_for_bank_call', true);
+    await setPolicy('require_exam_pass_for_interview', true);
   }
 });

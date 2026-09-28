@@ -1,17 +1,18 @@
 import { isBankStageOpen, type EligibilityWindow } from './eligibility';
 import type { ISODate } from './thai-date';
 
-/** PRD §8 states plus UNASSIGNED (the PRD's list starts at "DBD is assigned"). */
+/** PRD §8 states plus UNASSIGNED, with the interview and appointment states of P16. */
 export type ProgressionState =
   | 'UNASSIGNED'
   | 'PROVISIONED'
   | 'LEARNING'
   | 'EXAM_PENDING'
   | 'EXAM_PASSED'
+  | 'INTERVIEW_STARTED'
+  | 'INTERVIEW_READY'
   | 'WAITING_BANK_ELIGIBILITY'
   | 'BANK_ELIGIBLE'
-  | 'CALL_TRAINING_STARTED'
-  | 'CALL_TRAINING_COMPLETED';
+  | 'APPOINTMENT_BOOKED';
 
 export type ProgressionFacts = {
   hasActiveAssignment: boolean;
@@ -23,44 +24,72 @@ export type ProgressionFacts = {
   nameCardCreated: boolean;
   eligibility: EligibilityWindow | null;
   today: ISODate;
-  callSessions: number;
-  callsCompleted: number;
-  policy: { requireExamPassForBankCall: boolean; requireExamPassForNameCard: boolean };
+  /** Readiness interviews (P16): how many were held, and whether one ended ready. */
+  interviewSessions: number;
+  interviewReady: boolean;
+  /** An upcoming booked appointment (P16b); false until that slice lands. */
+  appointmentBooked: boolean;
+  policy: { requireExamPassForInterview: boolean; requireExamPassForNameCard: boolean };
 };
 
-export type StageKey = 'study' | 'quiz' | 'exam' | 'nameCard' | 'bank';
+export type StageKey = 'study' | 'quiz' | 'exam' | 'nameCard' | 'interview' | 'appointment';
 export type StageStatus = 'locked' | 'pending' | 'available' | 'in_progress' | 'done';
 export type StageReason =
-  'no_assignment' | 'exam_required' | 'before_available_from' | 'expired' | 'missing_issue_date';
+  | 'no_assignment'
+  | 'exam_required'
+  | 'interview_required'
+  | 'before_available_from'
+  | 'expired'
+  | 'missing_issue_date';
 export type StageInfo = { status: StageStatus; reason?: StageReason };
 
-export const STAGE_KEYS: readonly StageKey[] = ['study', 'quiz', 'exam', 'nameCard', 'bank'];
+export const STAGE_KEYS: readonly StageKey[] = [
+  'study',
+  'quiz',
+  'exam',
+  'nameCard',
+  'interview',
+  'appointment',
+];
 
-function bankGate(f: ProgressionFacts): StageInfo {
+/** The readiness interview opens once the exam is passed (policy) and stays open for practice. */
+function interviewGate(f: ProgressionFacts): StageInfo {
   if (!f.hasActiveAssignment) return { status: 'locked', reason: 'no_assignment' };
-  if (f.policy.requireExamPassForBankCall && !f.examPassed) {
+  if (f.policy.requireExamPassForInterview && !f.examPassed) {
     return { status: 'locked', reason: 'exam_required' };
   }
+  if (f.interviewReady) return { status: 'done' };
+  if (f.interviewSessions > 0) return { status: 'in_progress' };
+  return { status: 'available' };
+}
+
+/** The appointment needs a ready learner and an open eligibility window (BR-002). */
+function appointmentGate(f: ProgressionFacts): StageInfo {
+  if (!f.hasActiveAssignment) return { status: 'locked', reason: 'no_assignment' };
+  if (!f.interviewReady) return { status: 'locked', reason: 'interview_required' };
   if (!f.eligibility) return { status: 'pending', reason: 'missing_issue_date' };
   if (f.today < f.eligibility.availableFrom) {
     return { status: 'locked', reason: 'before_available_from' };
   }
   if (!isBankStageOpen(f.eligibility, f.today)) return { status: 'locked', reason: 'expired' };
-  if (f.callsCompleted > 0) return { status: 'done' };
-  if (f.callSessions > 0) return { status: 'in_progress' };
+  if (f.appointmentBooked) return { status: 'done' };
   return { status: 'available' };
 }
 
-/** Eligibility and exam pass are independent conditions (PRD §8 note); the state is derived every read. */
+/** Eligibility and readiness are independent conditions; the state is derived every read. */
 export function deriveProgression(f: ProgressionFacts): ProgressionState {
   if (!f.hasActiveAssignment) return 'UNASSIGNED';
-  if (f.callsCompleted > 0) return 'CALL_TRAINING_COMPLETED';
-  if (f.callSessions > 0) return 'CALL_TRAINING_STARTED';
-  const bank = bankGate(f);
-  if (bank.status === 'available') return 'BANK_ELIGIBLE';
-  if (f.examPassed) {
-    return f.eligibility && bank.reason !== 'expired' ? 'WAITING_BANK_ELIGIBILITY' : 'EXAM_PASSED';
+  if (f.appointmentBooked) return 'APPOINTMENT_BOOKED';
+  if (f.interviewReady) {
+    const gate = appointmentGate(f);
+    if (gate.status === 'available') return 'BANK_ELIGIBLE';
+    if (gate.reason === 'before_available_from' || gate.reason === 'missing_issue_date') {
+      return 'WAITING_BANK_ELIGIBILITY';
+    }
+    return 'INTERVIEW_READY';
   }
+  if (f.interviewSessions > 0) return 'INTERVIEW_STARTED';
+  if (f.examPassed) return 'EXAM_PASSED';
   if (f.examSubmitted > 0) return 'EXAM_PENDING';
   if (f.studyOpened || f.quizAttempts > 0) return 'LEARNING';
   return 'PROVISIONED';
@@ -69,7 +98,14 @@ export function deriveProgression(f: ProgressionFacts): ProgressionState {
 export function stageStatuses(f: ProgressionFacts): Record<StageKey, StageInfo> {
   if (!f.hasActiveAssignment) {
     const locked: StageInfo = { status: 'locked', reason: 'no_assignment' };
-    return { study: locked, quiz: locked, exam: locked, nameCard: locked, bank: locked };
+    return {
+      study: locked,
+      quiz: locked,
+      exam: locked,
+      nameCard: locked,
+      interview: locked,
+      appointment: locked,
+    };
   }
   const study: StageInfo = { status: f.studyOpened ? 'in_progress' : 'available' };
   const quiz: StageInfo = { status: f.quizAttempts > 0 ? 'done' : 'available' };
@@ -82,5 +118,12 @@ export function stageStatuses(f: ProgressionFacts): Record<StageKey, StageInfo> 
   } else {
     nameCard = { status: f.nameCardCreated ? 'done' : 'available' };
   }
-  return { study, quiz, exam, nameCard, bank: bankGate(f) };
+  return {
+    study,
+    quiz,
+    exam,
+    nameCard,
+    interview: interviewGate(f),
+    appointment: appointmentGate(f),
+  };
 }

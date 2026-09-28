@@ -4,7 +4,6 @@ import { resolveExtractionProvider } from '@/lib/integrations/extraction';
 import { resolveNotifyProvider } from '@/lib/integrations/notify';
 import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen';
 import { resolveTtsProvider } from '@/lib/integrations/tts';
-import { resolveVapiProvider } from '@/lib/integrations/vapi';
 import { resolveVectorProvider } from '@/lib/integrations/vector';
 
 export const dynamic = 'force-dynamic';
@@ -33,12 +32,10 @@ export async function GET() {
       extraction: resolveExtractionProvider(),
       tts: resolveTtsProvider(),
       notify: resolveNotifyProvider(),
-      vapi: resolveVapiProvider(),
       questionGen: resolveQuestionGenProvider(),
       vector: resolveVectorProvider(),
     },
     cronConfigured: Boolean(process.env.CRON_SECRET),
-    webhookConfigured: Boolean(process.env.VAPI_WEBHOOK_SECRET),
     version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',
   };
   return NextResponse.json(body, {

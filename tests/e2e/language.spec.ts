@@ -11,7 +11,7 @@ test('switching language re-renders and persists; the next login lands on it', a
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);
   await expect(page.getByRole('heading', { name: `Welcome, ${loginId}` })).toBeVisible();
-  await expect(page.getByTestId('stage-bank-status')).toHaveText('Locked');
+  await expect(page.getByTestId('stage-interview-status')).toHaveText('Locked');
 
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/en\/login$/);

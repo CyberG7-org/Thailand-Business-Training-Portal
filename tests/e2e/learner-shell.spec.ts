@@ -18,9 +18,9 @@ test('a learner page shows the band with the step segments and a back pill; the 
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
 
   await page.goto('/th/study');
-  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 1 จาก 5');
+  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 1 จาก 6');
   const segments = page.getByTestId('step-segments').locator('[data-state]');
-  await expect(segments).toHaveCount(5);
+  await expect(segments).toHaveCount(6);
   await expect(segments.nth(0)).toHaveAttribute('data-state', 'current');
   // Nothing is done yet, so no segment claims gold.
   await expect(page.getByTestId('step-segments').locator('[data-state="done"]')).toHaveCount(0);
