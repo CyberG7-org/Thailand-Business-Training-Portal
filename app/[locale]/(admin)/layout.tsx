@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AppHeader } from '@/components/app-header';
+import { StaffShell } from '@/components/staff/staff-shell';
 import { requireStaff } from '@/lib/auth/session';
 
 export default async function AdminLayout({
@@ -11,10 +11,5 @@ export default async function AdminLayout({
 }) {
   const { locale } = await params;
   const user = await requireStaff(locale);
-  return (
-    <div className="min-h-screen">
-      <AppHeader user={user} admin />
-      <main className="p-6">{children}</main>
-    </div>
-  );
+  return <StaffShell user={user}>{children}</StaffShell>;
 }

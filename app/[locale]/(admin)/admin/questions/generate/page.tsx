@@ -40,21 +40,19 @@ export default async function GenerateQuestionsPage({
   const t = await getTranslations('admin.generate');
   return (
     <section className="grid gap-4">
-      <Link href="/admin/questions" className="text-sm underline">
+      <Link href="/admin/questions" className="staff-link text-sm">
         ← {t('back')}
       </Link>
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <p className="max-w-2xl text-sm text-gray-700">{t('intro')}</p>
+      <h1 className="staff-title">{t('title')}</h1>
+      <p className="staff-intro">{t('intro')}</p>
       {provider === 'off' ? (
-        <p data-testid="generate-off" className="max-w-2xl rounded border bg-gray-50 p-3 text-sm">
+        <p data-testid="generate-off" className="staff-notice-info max-w-2xl">
           {t('errors.not_configured')}
         </p>
       ) : (
         <>
           {provider === 'fake' && (
-            <p className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-xs">
-              {t('fakeNotice')}
-            </p>
+            <p className="staff-notice-warn max-w-2xl text-xs">{t('fakeNotice')}</p>
           )}
           <GenerateForm cards={cards} references={references} />
         </>

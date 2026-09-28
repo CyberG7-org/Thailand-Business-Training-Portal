@@ -40,30 +40,30 @@ export function InterviewForm({
   return (
     <form
       action={formAction}
-      className="grid max-w-2xl gap-3 rounded border p-4"
+      className="staff-card grid max-w-2xl gap-3"
       data-testid="interview-answers"
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={recordId} />
       <h2 className="text-sm font-semibold">{t('levels.interview')}</h2>
-      <p className="text-xs text-gray-600">{t('interviewHint')}</p>
+      <p className="text-xs text-ink-500">{t('interviewHint')}</p>
       {BANK_FIELDS.map((field) => (
         <label key={field} className="text-sm">
           {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
           <input
             name={`interview_${field}`}
             defaultValue={answers[field] ?? ''}
-            className="mt-1 w-full rounded border px-2 py-1"
+            className="staff-input mt-1"
           />
         </label>
       ))}
       {state.error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-bad-600">
           {state.error}
         </p>
       )}
       {state.ok && (
-        <p role="status" data-testid="interview-saved" className="text-sm text-green-700">
+        <p role="status" data-testid="interview-saved" className="text-sm text-ok-600">
           {t('saved')}
         </p>
       )}
@@ -71,7 +71,7 @@ export function InterviewForm({
         type="submit"
         disabled={pending}
         data-testid="save-interview"
-        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+        className="staff-btn justify-self-start"
       >
         {t('saveInterview')}
       </button>

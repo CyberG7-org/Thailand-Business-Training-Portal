@@ -22,18 +22,18 @@ export function SettingForm({
   const locale = useLocale();
   const t = useTranslations('admin.settings');
   const [state, formAction, pending] = useActionState(updatePolicyAction, initial);
-  const inputClass = 'mt-1 w-full rounded border px-2 py-1';
+  const inputClass = 'staff-input mt-1';
   return (
     <form
       action={formAction}
-      className="grid gap-2 rounded border p-4"
+      className="staff-card grid gap-2"
       data-testid={`setting-${policyKey}`}
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="key" value={policyKey} />
       <label className="text-sm font-medium">
         {t(`keys.${policyKey}.label`)}
-        <span className="block text-xs font-normal text-gray-600">
+        <span className="block text-xs font-normal text-ink-500">
           {t(`keys.${policyKey}.help`)}
         </span>
         {control.kind === 'number' && (
@@ -76,26 +76,22 @@ export function SettingForm({
         )}
       </label>
       {state.error && (
-        <p role="alert" data-testid="setting-error" className="text-sm text-red-700">
+        <p role="alert" data-testid="setting-error" className="text-sm text-bad-600">
           {KNOWN_ERRORS.includes(state.error)
             ? t(`errors.${state.error}` as 'errors.required')
             : state.error}
         </p>
       )}
       {state.ok && (
-        <p role="status" data-testid="setting-saved" className="text-sm text-green-700">
+        <p role="status" data-testid="setting-saved" className="text-sm text-ok-600">
           {t('saved')}
         </p>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-ink-500">
           {updatedAt ? t('updatedAt', { at: new Date(updatedAt).toLocaleString(locale) }) : ''}
         </span>
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-gray-900 px-3 py-1 text-sm text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending} className="staff-btn staff-btn-sm">
           {t('save')}
         </button>
       </div>

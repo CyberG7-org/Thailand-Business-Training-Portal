@@ -25,7 +25,7 @@ export function LocalizationForm({
   const [state, formAction, pending] = useActionState(saveLocalizationAction, initial);
   const [uploadState, uploadAction, uploading] = useActionState(uploadStudyPdfAction, initial);
   return (
-    <div className="grid gap-3 rounded border p-4" data-testid={`localization-${language}`}>
+    <div className="staff-card grid gap-3" data-testid={`localization-${language}`}>
       <h3 className="font-semibold">
         {LANGUAGE_LABELS[language]}
         {localization ? '' : ` — ${t('missing')}`}
@@ -40,7 +40,7 @@ export function LocalizationForm({
             name="title"
             defaultValue={localization?.title ?? ''}
             required
-            className="mt-1 w-full rounded border px-2 py-1"
+            className="staff-input mt-1"
           />
         </label>
         {materialType === 'card' && (
@@ -50,9 +50,9 @@ export function LocalizationForm({
               name="body"
               rows={10}
               defaultValue={localization?.body ?? ''}
-              className="mt-1 w-full rounded border px-2 py-1 font-mono text-xs"
+              className="staff-input mt-1 font-mono text-sm"
             />
-            <span className="text-xs text-gray-500">{t('bodyHint')}</span>
+            <span className="text-xs text-ink-500">{t('bodyHint')}</span>
           </label>
         )}
         {language === 'th' && materialType === 'card' && (
@@ -66,20 +66,16 @@ export function LocalizationForm({
           </label>
         )}
         {state.error && (
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-sm text-bad-600">
             {state.error}
           </p>
         )}
         {state.ok && (
-          <p role="status" className="text-sm text-green-700">
+          <p role="status" className="text-sm text-ok-600">
             {t('saved')}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending} className="staff-btn">
           {t('saveLanguage')}
         </button>
       </form>
@@ -97,20 +93,16 @@ export function LocalizationForm({
             className="text-sm"
           />
           {uploadState.error && (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-bad-600">
               {uploadState.error}
             </p>
           )}
           {uploadState.ok && (
-            <p role="status" className="text-sm text-green-700">
+            <p role="status" className="text-sm text-ok-600">
               {t('uploaded')}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={uploading}
-            className="rounded border px-4 py-2 disabled:opacity-50"
-          >
+          <button type="submit" disabled={uploading} className="staff-btn-ghost">
             {t('uploadPdf')}
           </button>
         </form>

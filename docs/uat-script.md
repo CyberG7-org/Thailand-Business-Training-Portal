@@ -16,6 +16,8 @@ Run on the staging deployment with real provider keys. One admin tester and two 
 | A8 | Notifications | After a learner's exam, open Admin → Notifications | Telegram and email rows `sent`; a failed row can be requeued | NOTIF |
 | A9 | Interview review | After a learner's interview, open Admin → Readiness interviews → session | Status `completed` with the verdict; the officer's Thai narrative and each answer's assessment readable; the transcript in Thai | INTERVIEW |
 | A10 | Access control | As a learner, open `/admin`, `/admin/users`, another learner's attempt URL | Redirected to dashboard / 404 | SEC |
+| A11 | Staff sidebar | Sign in as the admin, then as a manager; open the admin home and a few sections on a laptop and on a phone | The sidebar lists Team / Content / Learners / System with the current section marked; a manager sees no Managers, Notifications or Settings; on a phone the sidebar is one strip that scrolls sideways and no page scrolls sideways as a whole; tables scroll inside their card | UI |
+| A12 | Staff forms and pages | Create a learner, edit a DBD record, change a policy setting, open an interview session and the appointments day list | Inputs are solid white and comfortable to tap; primary buttons are navy; errors read in red, success in green; Back and Home pills sit under the header on every page below the home and are absent on the home | UI |
 
 ## B. Learner
 

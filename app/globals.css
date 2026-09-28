@@ -358,4 +358,190 @@
       radial-gradient(900px 520px at 85% 0%, rgb(36 88 198 / 0.6), transparent 60%),
       linear-gradient(165deg, var(--color-brand-900) 0%, var(--color-brand-700) 100%);
   }
+
+  /* The staff area (admin and manager screens): the learner portal's tokens, denser. Pages
+     render inside `main.staff`; the classes below are the shared patterns every page uses —
+     titles, cards, tables that scroll sideways on a phone, solid inputs, buttons, tags and
+     notices. Never glass on anything read or typed. */
+  .staff h1,
+  .staff-title {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.4;
+    font-weight: 600;
+    color: var(--color-brand-900);
+    text-wrap: balance;
+  }
+  .staff h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.45;
+    font-weight: 600;
+    color: var(--color-brand-900);
+  }
+  @media (min-width: 768px) {
+    .staff h1,
+    .staff-title {
+      font-size: 28px;
+    }
+  }
+  .staff-intro {
+    max-width: 68ch;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-ink-700);
+  }
+  .staff-card {
+    background: var(--color-white);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raised);
+    padding: 16px;
+  }
+  @media (min-width: 768px) {
+    .staff-card {
+      padding: 20px 24px;
+    }
+  }
+  .staff-table-wrap {
+    overflow-x: auto;
+    background: var(--color-white);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-raised);
+  }
+  .staff-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .staff-table thead th {
+    padding: 12px 16px;
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+    font-weight: 600;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--color-brand-100);
+  }
+  .staff-table td {
+    padding: 12px 16px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-ink-100);
+  }
+  .staff-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .staff-table tbody tr:hover td {
+    background: var(--color-ink-50);
+  }
+  .staff-input {
+    min-height: 44px;
+    width: 100%;
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius-control);
+    background: var(--color-white);
+    padding: 8px 12px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-ink-900);
+  }
+  textarea.staff-input {
+    min-height: 96px;
+  }
+  .staff-input:read-only,
+  .staff-input:disabled {
+    background: var(--color-ink-50);
+    color: var(--color-ink-700);
+  }
+  .staff-btn,
+  .staff-btn-ghost,
+  .staff-btn-ok {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: var(--radius-control);
+    padding: 0 20px;
+    font-size: 14px;
+    font-weight: 600;
+    transition:
+      background-color 150ms,
+      color 150ms;
+  }
+  .staff-btn {
+    background: var(--color-brand-600);
+    color: var(--color-white);
+  }
+  .staff-btn:hover {
+    background: var(--color-brand-700);
+  }
+  .staff-btn-ghost {
+    border: 1px solid var(--color-ink-300);
+    background: var(--color-white);
+    color: var(--color-ink-700);
+  }
+  .staff-btn-ghost:hover {
+    background: var(--color-ink-50);
+  }
+  .staff-btn-ok {
+    background: var(--color-ok-600);
+    color: var(--color-white);
+  }
+  .staff-btn:disabled,
+  .staff-btn-ghost:disabled,
+  .staff-btn-ok:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .staff-btn-sm {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .staff-link {
+    color: var(--color-brand-600);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .staff-link:hover {
+    color: var(--color-brand-700);
+  }
+  .staff-tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 1px 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    font-weight: 600;
+    background: var(--color-ink-100);
+    color: var(--color-ink-700);
+  }
+  .staff-notice-ok,
+  .staff-notice-warn,
+  .staff-notice-bad,
+  .staff-notice-info {
+    border-radius: var(--radius-control);
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.7;
+    font-weight: 500;
+  }
+  .staff-notice-ok {
+    background: var(--color-ok-50);
+    color: var(--color-ok-600);
+  }
+  .staff-notice-warn {
+    background: var(--color-warn-50);
+    color: var(--color-warn-700);
+  }
+  .staff-notice-bad {
+    background: var(--color-bad-50);
+    color: var(--color-bad-600);
+  }
+  .staff-notice-info {
+    background: var(--color-brand-50);
+    color: var(--color-brand-700);
+  }
 }

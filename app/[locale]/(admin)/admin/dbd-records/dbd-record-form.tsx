@@ -81,7 +81,7 @@ export function DbdRecordForm({
   const answers = interview;
   const missingAnswers = missingBusinessAnswers(answers);
   const profile = business ?? EMPTY_BUSINESS_PROFILE;
-  const inputClass = 'mt-1 w-full rounded border px-2 py-1 read-only:bg-gray-100';
+  const inputClass = 'staff-input mt-1';
 
   /**
    * Record value wins; otherwise the extraction suggestion (if any). A stored value that equals
@@ -121,7 +121,7 @@ export function DbdRecordForm({
     return (
       <span
         data-testid={`suggestion-${name}`}
-        className={`block text-xs ${low ? 'text-amber-700' : 'text-gray-500'}`}
+        className={`block text-xs ${low ? 'text-warn-700' : 'text-ink-500'}`}
       >
         {t('suggestedFromDocument', { confidence: pct })}
         {sourceLabel(name)}
@@ -138,7 +138,7 @@ export function DbdRecordForm({
     return (
       <span
         data-testid={`provenance-${name}`}
-        className={`block text-xs ${low ? 'text-amber-700' : 'text-gray-500'}`}
+        className={`block text-xs ${low ? 'text-warn-700' : 'text-ink-500'}`}
       >
         {t('suggestedFromDocument', { confidence: Math.round(p.confidence * 100) })}
         {sourceLabel(name)}
@@ -161,12 +161,12 @@ export function DbdRecordForm({
           name={name}
           defaultValue={shown}
           readOnly={locked}
-          className={`${inputClass} ${low ? 'border-amber-500 bg-amber-50' : ''}`}
+          className={`${inputClass} ${low ? 'border-warn-600 bg-warn-50' : ''}`}
         />
-        {DATE_FIELDS.has(name) && <span className="text-xs text-gray-500">{t('dateHint')}</span>}
+        {DATE_FIELDS.has(name) && <span className="text-xs text-ink-500">{t('dateHint')}</span>}
         {suggestionNote(name, suggested)}
         {state.fieldErrors[name] && (
-          <span role="alert" className="block text-xs text-red-700">
+          <span role="alert" className="block text-xs text-bad-600">
             {state.fieldErrors[name]}
           </span>
         )}
@@ -186,7 +186,7 @@ export function DbdRecordForm({
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={record?.id ?? ''} />
 
-      <fieldset className="grid gap-3 rounded border p-4">
+      <fieldset className="staff-card grid gap-3">
         <legend className="px-1 text-sm font-semibold">{t('levels.identity')}</legend>
         {IDENTITY_FIELDS.map(renderField)}
         <label className="text-sm">
@@ -198,13 +198,13 @@ export function DbdRecordForm({
             defaultValue={directorsDefault.value}
             className={inputClass}
           />
-          <span className="text-xs text-gray-500">{t('directorsHint')}</span>
+          <span className="text-xs text-ink-500">{t('directorsHint')}</span>
           {suggestionNote('directors_text', directorsDefault.suggested)}
         </label>
 
         <div className="grid gap-3 border-t pt-3">
           {missingAnswers.length > 0 && (
-            <p data-testid="answers-missing" className="text-sm text-amber-800">
+            <p data-testid="answers-missing" className="text-sm text-warn-700">
               {t('answersMissing', {
                 fields: missingAnswers
                   .map((f) => t(`interviewFields.${f}` as 'interviewFields.account_purpose'))
@@ -212,11 +212,11 @@ export function DbdRecordForm({
               })}
             </p>
           )}
-          <p className="text-xs font-semibold text-gray-700">{t('interviewGroups.contact')}</p>
+          <p className="text-xs font-semibold text-ink-700">{t('interviewGroups.contact')}</p>
           {CONTACT_FIELDS.map((field) => (
             <label key={field} className="text-sm">
               {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
-              <span className="text-red-700"> *</span>
+              <span className="text-bad-600"> *</span>
               <input
                 name={`interview_${field}`}
                 type={field === 'contact_email' ? 'email' : 'text'}
@@ -225,11 +225,11 @@ export function DbdRecordForm({
               />
             </label>
           ))}
-          <p className="text-xs font-semibold text-gray-700">{t('interviewGroups.business')}</p>
+          <p className="text-xs font-semibold text-ink-700">{t('interviewGroups.business')}</p>
           {BUSINESS_ANSWER_FIELDS.map((field) => (
             <label key={field} className="text-sm">
               {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
-              <span className="text-red-700"> *</span>
+              <span className="text-bad-600"> *</span>
               <textarea
                 name={`interview_${field}`}
                 rows={3}
@@ -242,7 +242,7 @@ export function DbdRecordForm({
       </fieldset>
 
       {record && (
-        <fieldset className="grid gap-3 rounded border p-4" data-testid="business-profile">
+        <fieldset className="staff-card grid gap-3" data-testid="business-profile">
           <legend className="px-1 text-sm font-semibold">{t('levels.business')}</legend>
           <label className="text-sm">
             {t('fields.objectives')}
@@ -253,7 +253,7 @@ export function DbdRecordForm({
               defaultValue={objectivesToText(profile.objectives)}
               className={inputClass}
             />
-            <span className="text-xs text-gray-500">{t('objectivesHint')}</span>
+            <span className="text-xs text-ink-500">{t('objectivesHint')}</span>
             {levelTwoNote('objectives')}
           </label>
           <label className="text-sm">
@@ -265,7 +265,7 @@ export function DbdRecordForm({
               defaultValue={listToText(profile.business_categories)}
               className={inputClass}
             />
-            <span className="text-xs text-gray-500">{t('onePerLine')}</span>
+            <span className="text-xs text-ink-500">{t('onePerLine')}</span>
             {levelTwoNote('business_categories')}
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -316,7 +316,7 @@ export function DbdRecordForm({
               defaultValue={shareholdersToText(profile.shareholders)}
               className={inputClass}
             />
-            <span className="text-xs text-gray-500">{t('shareholdersHint')}</span>
+            <span className="text-xs text-ink-500">{t('shareholdersHint')}</span>
             {levelTwoNote('shareholders')}
           </label>
           <label className="text-sm">
@@ -328,42 +328,38 @@ export function DbdRecordForm({
               defaultValue={promotersToText(profile.promoters)}
               className={inputClass}
             />
-            <span className="text-xs text-gray-500">{t('promotersHint')}</span>
+            <span className="text-xs text-ink-500">{t('promotersHint')}</span>
             {levelTwoNote('promoters')}
           </label>
           {['objectives', 'business_categories', 'share_structure', 'shareholders', 'promoters']
             .filter((k) => state.fieldErrors[k])
             .map((k) => (
-              <span key={k} role="alert" className="block text-xs text-red-700">
+              <span key={k} role="alert" className="block text-xs text-bad-600">
                 {k}: {state.fieldErrors[k]}
               </span>
             ))}
         </fieldset>
       )}
 
-      <fieldset className="grid gap-3 rounded border p-4">
+      <fieldset className="staff-card grid gap-3">
         <legend className="px-1 text-sm font-semibold">{t('levels.document')}</legend>
         {DOCUMENT_FIELDS.map(renderField)}
       </fieldset>
 
       {state.error && state.error !== 'validation' && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-bad-600">
           {state.error === 'answers-required' ? t('errors.answers-required') : state.error}
         </p>
       )}
       {state.ok && (
-        <p role="status" className="text-sm text-green-700">
+        <p role="status" className="text-sm text-ok-600">
           {t('saved')}
         </p>
       )}
       {/* Always present: the four answers above stay editable after confirmation, and a
           record confirmed before they were required still owes them. The certificate inputs are
           read-only once confirmed, so saving then rewrites them unchanged. */}
-      <button
-        type="submit"
-        disabled={pending}
-        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className="staff-btn justify-self-start">
         {t('save')}
       </button>
     </form>

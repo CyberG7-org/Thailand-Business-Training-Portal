@@ -76,10 +76,10 @@ export default async function DbdRecordPage({
 
   return (
     <section className="grid gap-6">
-      <Link href="/admin/dbd-records" className="text-sm underline">
+      <Link href="/admin/dbd-records" className="staff-link text-sm">
         ← {t('title')}
       </Link>
-      <h1 className="text-2xl font-semibold">{record.company_name_th ?? t('untitled')}</h1>
+      <h1 className="staff-title">{record.company_name_th ?? t('untitled')}</h1>
       <RecordTools
         id={record.id}
         status={record.extraction_status}
@@ -101,32 +101,22 @@ export default async function DbdRecordPage({
         <p
           role="alert"
           data-testid="vector-unavailable-banner"
-          className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm"
+          className="staff-notice-warn max-w-2xl"
         >
           {t('index.removeUnavailable')}
         </p>
       )}
       {extraction === 'failed' && (
-        <p
-          data-testid="autofill-banner"
-          className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm"
-        >
+        <p data-testid="autofill-banner" className="staff-notice-warn max-w-2xl">
           {t('uploadedButNotRead', { reason: extractionError ?? '' })}
         </p>
       )}
       {extraction === 'skipped' && (
-        <p
-          data-testid="autofill-banner"
-          className="max-w-2xl rounded border bg-gray-50 p-3 text-sm"
-        >
+        <p data-testid="autofill-banner" className="staff-notice-info max-w-2xl">
           {t('extractionNotConfigured')}
         </p>
       )}
-      {suggestions && (
-        <p className="max-w-2xl rounded border border-amber-300 bg-amber-50 p-3 text-sm">
-          {t('reviewSuggestions')}
-        </p>
-      )}
+      {suggestions && <p className="staff-notice-warn max-w-2xl">{t('reviewSuggestions')}</p>}
       <DbdRecordForm
         record={record}
         suggestions={suggestions}

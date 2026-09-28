@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { ChevronIcon } from '@/components/icons';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 
@@ -20,19 +21,29 @@ const ADMIN_LINKS = [
   ['/admin/settings', 'settings'],
 ] as const;
 
+/** The staff home: one card per section; the suite reads the list by `admin-nav`. */
 export default async function AdminHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireStaff(locale);
   const t = await getTranslations('admin');
   const links = user.role === 'admin' ? [...ADMIN_LINKS, ...STAFF_LINKS] : STAFF_LINKS;
   return (
-    <section>
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <ul className="mt-4 list-disc pl-6" data-testid="admin-nav">
+    <section className="grid gap-5">
+      <div>
+        <h1>{t('title')}</h1>
+        <p className="staff-intro mt-1">{t('home.intro')}</p>
+      </div>
+      <ul data-testid="admin-nav" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {links.map(([href, key]) => (
           <li key={href}>
-            <Link href={href} className="underline">
-              {t(`nav.${key}` as 'nav.users')}
+            <Link
+              href={href}
+              className="staff-card flex min-h-[84px] items-center justify-between gap-3 transition-colors hover:bg-brand-50"
+            >
+              <span className="text-base font-semibold text-brand-900">
+                {t(`nav.${key}` as 'nav.users')}
+              </span>
+              <ChevronIcon className="shrink-0 text-ink-500" />
             </Link>
           </li>
         ))}

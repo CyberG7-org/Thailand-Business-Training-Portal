@@ -57,14 +57,14 @@ export function NewUserForm({
     ? (teams.find((team) => team.id === teamId)?.nextLoginId ?? null)
     : nextLoginId;
   return (
-    <form action={formAction} className="grid max-w-md gap-3 rounded border p-4">
+    <form action={formAction} className="staff-card grid max-w-md gap-3">
       <input type="hidden" name="locale" value={locale} />
       <h2 className="font-semibold">{t('new')}</h2>
       {teams && (
         <label className="text-sm">
           {t('team')}
           {teams.length === 0 ? (
-            <p data-testid="no-manager" className="text-sm text-amber-800">
+            <p data-testid="no-manager" className="text-sm text-warn-700">
               {t('noManager')}
             </p>
           ) : (
@@ -73,7 +73,7 @@ export function NewUserForm({
               required
               value={teamId}
               onChange={(e) => setTeamId(e.target.value)}
-              className="mt-1 w-full rounded border px-2 py-1"
+              className="staff-input mt-1"
             >
               <option value="">{t('chooseTeam')}</option>
               {teams.map((team) => (
@@ -94,18 +94,13 @@ export function NewUserForm({
           data-testid="next-login-id"
           value={nextCode ? displayLoginId(nextCode) : ''}
           placeholder={teams && !teamId ? t('nextLoginIdChooseTeam') : undefined}
-          className="mt-1 w-full rounded border bg-gray-50 px-2 py-1 font-mono text-gray-700"
+          className="staff-input mt-1 font-mono"
         />
-        <span className="mt-1 block text-xs text-gray-600">{t('nextLoginIdHint')}</span>
+        <span className="mt-1 block text-xs text-ink-500">{t('nextLoginIdHint')}</span>
       </label>
       <label className="text-sm">
         {t('learnerName')}
-        <input
-          name="displayName"
-          required
-          maxLength={120}
-          className="mt-1 w-full rounded border px-2 py-1"
-        />
+        <input name="displayName" required maxLength={120} className="staff-input mt-1" />
       </label>
       <label className="text-sm">
         {t('password')}
@@ -115,17 +110,12 @@ export function NewUserForm({
           required
           minLength={10}
           autoComplete="off"
-          className="mt-1 w-full rounded border px-2 py-1"
+          className="staff-input mt-1"
         />
       </label>
       <label className="text-sm">
         {t('company')}
-        <select
-          name="dbdRecordId"
-          required
-          defaultValue=""
-          className="mt-1 w-full rounded border px-2 py-1"
-        >
+        <select name="dbdRecordId" required defaultValue="" className="staff-input mt-1">
           <option value="">{t('chooseCompany')}</option>
           {offered.map((c) => (
             <option key={c.id} value={c.id} disabled={!c.confirmed}>
@@ -133,11 +123,11 @@ export function NewUserForm({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-gray-600">
+        <span className="mt-1 block text-xs text-ink-500">
           {confirmed.length === 0 ? (
             <>
               {t('noConfirmedCompany')}{' '}
-              <Link href="/admin/dbd-records" className="underline">
+              <Link href="/admin/dbd-records" className="staff-link">
                 {t('goToRecords')}
               </Link>
             </>
@@ -147,23 +137,19 @@ export function NewUserForm({
         </span>
       </label>
       {state.error && (
-        <p role="alert" data-testid="create-user-error" className="text-sm text-red-700">
+        <p role="alert" data-testid="create-user-error" className="text-sm text-bad-600">
           {state.error}
         </p>
       )}
       {state.ok && (
-        <p role="status" data-testid="create-user-status" className="text-sm text-green-700">
+        <p role="status" data-testid="create-user-status" className="text-sm text-ok-600">
           {t('createdFor', {
             loginId: displayLoginId(state.createdLoginId),
             company: state.company ?? '',
           })}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending || confirmed.length === 0}
-        className="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending || confirmed.length === 0} className="staff-btn">
         {t('create')}
       </button>
     </form>

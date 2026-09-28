@@ -12,8 +12,8 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
   const t = await getTranslations('admin.settings');
   return (
     <section className="grid gap-4">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <p className="max-w-2xl text-sm text-gray-700">{t('intro')}</p>
+      <h1 className="staff-title">{t('title')}</h1>
+      <p className="staff-intro">{t('intro')}</p>
       <div className="grid max-w-3xl gap-3 md:grid-cols-2">
         {rows.map((row) => (
           <SettingForm

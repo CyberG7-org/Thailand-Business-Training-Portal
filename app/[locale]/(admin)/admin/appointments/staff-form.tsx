@@ -28,7 +28,7 @@ export function StaffForm({
         {children}
       </fieldset>
       {state.error && (
-        <p role="alert" className="mt-1 text-xs text-red-700">
+        <p role="alert" className="mt-1 text-xs text-bad-600">
           {t(`errors.${state.error}` as never)}
         </p>
       )}

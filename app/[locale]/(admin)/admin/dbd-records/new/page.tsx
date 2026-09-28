@@ -17,10 +17,10 @@ export default async function NewDbdRecordPage({
   const t = await getTranslations('admin.dbd');
   return (
     <section className="grid gap-6">
-      <h1 className="text-2xl font-semibold">{t('new')}</h1>
+      <h1 className="staff-title">{t('new')}</h1>
       <UploadFirstForm extractionAvailable={getDbdExtractor() !== null} />
       <details className="max-w-2xl">
-        <summary data-testid="manual-form-toggle" className="cursor-pointer text-sm text-gray-700">
+        <summary data-testid="manual-form-toggle" className="cursor-pointer text-sm text-ink-700">
           {t('orEnterManually')}
         </summary>
         <div className="mt-3">

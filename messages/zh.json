@@ -603,6 +603,19 @@
       "adminCalendar": "管理员日历",
       "allTeams": "所有团队",
       "show": "显示"
+    },
+    "navGroups": {
+      "team": "团队",
+      "content": "内容",
+      "learners": "学员",
+      "system": "系统"
+    },
+    "roles": {
+      "admin": "管理员",
+      "manager": "经理"
+    },
+    "home": {
+      "intro": "选择要管理的板块。经理只能看到自己的团队。"
     }
   },
   "stages": {

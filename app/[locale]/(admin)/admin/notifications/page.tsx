@@ -15,43 +15,45 @@ export default async function NotificationsPage({
   const t = await getTranslations('admin.notifications');
   return (
     <section className="grid gap-4">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2">{t('event')}</th>
-            <th>{t('channel')}</th>
-            <th>{t('destination')}</th>
-            <th>{t('status')}</th>
-            <th>{t('attempts')}</th>
-            <th>{t('lastError')}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((n) => (
-            <tr key={n.id} className="border-b" data-testid={`notification-${n.idempotency_key}`}>
-              <td className="py-2">{n.event_type}</td>
-              <td>{n.channel}</td>
-              <td>{n.destination_ref ?? '—'}</td>
-              <td data-testid="notification-status">{n.status}</td>
-              <td>{n.attempts}</td>
-              <td className="max-w-xs truncate text-red-700">{n.last_error ?? ''}</td>
-              <td>
-                {n.status !== 'sent' && (
-                  <form action={requeueAction}>
-                    <input type="hidden" name="locale" value={locale} />
-                    <input type="hidden" name="id" value={n.id} />
-                    <button type="submit" className="rounded border px-2 py-0.5 text-xs">
-                      {t('requeue')}
-                    </button>
-                  </form>
-                )}
-              </td>
+      <h1 className="staff-title">{t('title')}</h1>
+      <div className="staff-table-wrap">
+        <table className="staff-table">
+          <thead>
+            <tr>
+              <th>{t('event')}</th>
+              <th>{t('channel')}</th>
+              <th>{t('destination')}</th>
+              <th>{t('status')}</th>
+              <th>{t('attempts')}</th>
+              <th>{t('lastError')}</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((n) => (
+              <tr key={n.id} data-testid={`notification-${n.idempotency_key}`}>
+                <td>{n.event_type}</td>
+                <td>{n.channel}</td>
+                <td>{n.destination_ref ?? '—'}</td>
+                <td data-testid="notification-status">{n.status}</td>
+                <td>{n.attempts}</td>
+                <td className="max-w-xs truncate text-bad-600">{n.last_error ?? ''}</td>
+                <td>
+                  {n.status !== 'sent' && (
+                    <form action={requeueAction}>
+                      <input type="hidden" name="locale" value={locale} />
+                      <input type="hidden" name="id" value={n.id} />
+                      <button type="submit" className="staff-btn-ghost staff-btn-sm">
+                        {t('requeue')}
+                      </button>
+                    </form>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

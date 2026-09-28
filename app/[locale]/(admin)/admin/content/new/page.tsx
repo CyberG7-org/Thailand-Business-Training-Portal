@@ -8,7 +8,7 @@ export default async function NewContentPage({ params }: { params: Promise<{ loc
   const t = await getTranslations('admin.content');
   return (
     <section className="grid gap-4">
-      <h1 className="text-2xl font-semibold">{t('new')}</h1>
+      <h1 className="staff-title">{t('new')}</h1>
       <MaterialForm material={null} />
     </section>
   );

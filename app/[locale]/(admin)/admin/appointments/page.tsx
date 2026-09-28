@@ -9,7 +9,7 @@ import { formatDate, todayInBangkok } from '@/lib/domain/thai-date';
 import { blockAction, cancelBookingAction, unblockAction } from './actions';
 import { StaffForm } from './staff-form';
 
-const inputClass = 'rounded border px-2 py-1';
+const inputClass = 'staff-input';
 
 /**
  * Upcoming bookings by day for the caller's team (spec §5.3) — every team for the admin, with a
@@ -59,8 +59,8 @@ export default async function AppointmentsPage({
   return (
     <section className="grid gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-gray-700">{t('intro')}</p>
+        <h1 className="staff-title">{t('title')}</h1>
+        <p className="staff-intro mt-1">{t('intro')}</p>
       </div>
 
       {staff.role === 'admin' && (
@@ -82,14 +82,14 @@ export default async function AppointmentsPage({
               </option>
             ))}
           </select>
-          <button type="submit" className="rounded border px-3 py-1">
+          <button type="submit" className="staff-btn-ghost staff-btn-sm">
             {t('show')}
           </button>
         </form>
       )}
 
       {bookings.length === 0 ? (
-        <p data-testid="admin-appointments-empty" className="text-sm text-gray-700">
+        <p data-testid="admin-appointments-empty" className="text-sm text-ink-700">
           {t('empty')}
         </p>
       ) : (
@@ -97,14 +97,14 @@ export default async function AppointmentsPage({
           {[...byDay.entries()].map(([day, rows]) => (
             <section key={day} className="grid gap-2">
               <h2 className="font-semibold">{formatDate(day, loc)}</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
+              <div className="staff-table-wrap">
+                <table className="staff-table">
                   <thead>
-                    <tr className="border-b">
-                      <th className="py-2 pr-3">{t('time')}</th>
-                      <th className="pr-3">{t('learner')}</th>
-                      <th className="pr-3">{t('company')}</th>
-                      {staff.role === 'admin' && <th className="pr-3">{t('team')}</th>}
+                    <tr>
+                      <th>{t('time')}</th>
+                      <th>{t('learner')}</th>
+                      <th>{t('company')}</th>
+                      {staff.role === 'admin' && <th>{t('team')}</th>}
                       <th />
                     </tr>
                   </thead>
@@ -113,26 +113,24 @@ export default async function AppointmentsPage({
                       <tr
                         key={b.id}
                         data-testid={'admin-appointment-' + b.id}
-                        className="border-b align-top"
+                        className="align-top"
                       >
-                        <td className="py-2 pr-3 whitespace-nowrap tabular-nums">
+                        <td className="whitespace-nowrap tabular-nums">
                           {bangkokTimeLabel(b.starts_at)}–{bangkokTimeLabel(b.ends_at)}
                         </td>
-                        <td className="pr-3">
+                        <td>
                           {displayLoginId(b.profiles.login_id)}
                           {b.profiles.display_name ? ' · ' + b.profiles.display_name : ''}
                         </td>
-                        <td className="pr-3">{b.dbd_records?.company_name_th ?? '—'}</td>
-                        {staff.role === 'admin' && (
-                          <td className="pr-3">{managerCode(b.team_id)}</td>
-                        )}
+                        <td>{b.dbd_records?.company_name_th ?? '—'}</td>
+                        {staff.role === 'admin' && <td>{managerCode(b.team_id)}</td>}
                         <td>
                           <StaffForm action={cancelBookingAction}>
                             <input type="hidden" name="appointmentId" value={b.id} />
                             <button
                               type="submit"
                               data-testid={'cancel-' + b.id}
-                              className="rounded border px-3 py-1 text-xs"
+                              className="staff-btn-ghost staff-btn-sm"
                             >
                               {t('cancel')}
                             </button>
@@ -157,19 +155,19 @@ export default async function AppointmentsPage({
                 <li
                   key={b.id}
                   data-testid={'block-' + b.id}
-                  className="flex flex-wrap items-center gap-3 border-b py-1"
+                  className="flex flex-wrap items-center gap-3 border-b border-ink-100 py-2"
                 >
                   <span className="tabular-nums">
                     {formatDate(bangkokDateOf(b.starts_at), loc)} {bangkokTimeLabel(b.starts_at)}–
                     {bangkokTimeLabel(b.ends_at)}
                   </span>
-                  <span className="text-gray-700">{b.reason ?? ''}</span>
+                  <span className="text-ink-700">{b.reason ?? ''}</span>
                   <StaffForm action={unblockAction}>
                     <input type="hidden" name="blockId" value={b.id} />
                     <button
                       type="submit"
                       data-testid={'unblock-' + b.id}
-                      className="rounded border px-2 py-0.5 text-xs"
+                      className="staff-btn-ghost staff-btn-sm"
                     >
                       {t('unblock')}
                     </button>
@@ -214,7 +212,7 @@ export default async function AppointmentsPage({
               {t('reason')}
               <input type="text" name="reason" maxLength={200} className={inputClass} />
             </label>
-            <button type="submit" className="rounded border px-3 py-1">
+            <button type="submit" className="staff-btn-ghost staff-btn-sm">
               {t('block')}
             </button>
           </StaffForm>

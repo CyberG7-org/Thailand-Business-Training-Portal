@@ -39,7 +39,7 @@ export function ManagerRowControls({
           type="submit"
           disabled={statusPending}
           data-testid="toggle-status"
-          className="text-xs underline disabled:opacity-50"
+          className="staff-link text-xs disabled:opacity-50"
         >
           {next === 'disabled' ? t('disable') : t('enable')}
         </button>
@@ -51,13 +51,13 @@ export function ManagerRowControls({
           name="displayName"
           defaultValue={displayName ?? ''}
           placeholder={t('displayName')}
-          className="w-36 rounded border px-1 py-0.5 text-xs"
+          className="staff-input staff-btn-sm w-36 text-sm"
         />
         <button
           type="submit"
           disabled={namePending}
           data-testid="rename-manager"
-          className="text-xs underline disabled:opacity-50"
+          className="staff-link text-xs disabled:opacity-50"
         >
           {t('rename')}
         </button>
@@ -70,23 +70,23 @@ export function ManagerRowControls({
           type="password"
           minLength={10}
           placeholder={t('resetPassword')}
-          className="w-36 rounded border px-1 py-0.5 text-xs"
+          className="staff-input staff-btn-sm w-36 text-sm"
         />
         <button
           type="submit"
           disabled={pwPending}
           data-testid="reset-password"
-          className="text-xs underline disabled:opacity-50"
+          className="staff-link text-xs disabled:opacity-50"
         >
           {t('resetPassword')}
         </button>
       </form>
       {(statusState.error ?? pwState.error ?? nameState.error) && (
-        <span role="alert" className="text-xs text-red-700">
+        <span role="alert" className="text-xs text-bad-600">
           {statusState.error ?? pwState.error ?? nameState.error}
         </span>
       )}
-      {pwState.ok && <span className="text-xs text-green-700">{t('passwordUpdated')}</span>}
+      {pwState.ok && <span className="text-xs text-ok-600">{t('passwordUpdated')}</span>}
     </div>
   );
 }

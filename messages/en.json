@@ -603,6 +603,19 @@
       "adminCalendar": "Admin calendar",
       "allTeams": "All teams",
       "show": "Show"
+    },
+    "navGroups": {
+      "team": "Team",
+      "content": "Content",
+      "learners": "Learners",
+      "system": "System"
+    },
+    "roles": {
+      "admin": "Administrator",
+      "manager": "Manager"
+    },
+    "home": {
+      "intro": "Pick a section to manage. A manager sees their own team only."
     }
   },
   "stages": {

@@ -26,10 +26,10 @@ export default async function QuestionDetailPage({
   const missing = LOCALES.filter((l) => !present.has(l));
   return (
     <section className="grid gap-6">
-      <Link href="/admin/questions" className="text-sm underline">
+      <Link href="/admin/questions" className="staff-link text-sm">
         ← {t('title')}
       </Link>
-      <h1 className="text-2xl font-semibold">{question.question_key}</h1>
+      <h1 className="staff-title">{question.question_key}</h1>
       <div className="grid gap-4 md:grid-cols-2">
         <QuestionForm question={question} />
         <ApprovalForm question={question} />

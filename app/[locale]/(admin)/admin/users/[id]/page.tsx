@@ -63,10 +63,10 @@ export default async function UserDetailPage({
   const t = await getTranslations('admin.users');
   return (
     <section className="grid gap-6">
-      <Link href="/admin/users" className="text-sm underline">
+      <Link href="/admin/users" className="staff-link text-sm">
         ← {t('title')}
       </Link>
-      <h1 className="text-2xl font-semibold">{displayLoginId(user.login_id)}</h1>
+      <h1 className="staff-title">{displayLoginId(user.login_id)}</h1>
       <dl className="grid max-w-md grid-cols-2 gap-1 text-sm">
         <dt>{t('displayName')}</dt>
         <dd>{user.display_name ?? '—'}</dd>

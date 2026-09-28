@@ -108,52 +108,54 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
 
   return (
     <section className="grid gap-6">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
+      <h1 className="staff-title">{t('title')}</h1>
       <NewUserForm
         companies={companies}
         teams={teams}
         nextLoginId={teams ? null : (nextCodes.get(staff.id) ?? null)}
       />
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2">{t('loginId')}</th>
-            <th>{t('displayName')}</th>
-            <th>{t('company')}</th>
-            <th>{t('team')}</th>
-            <th>{t('role')}</th>
-            <th>{t('status')}</th>
-            <th>{t('progression')}</th>
-            <th>{t('appointment')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((u) => (
-            <tr key={u.id} className="border-b">
-              <td className="py-2">
-                <Link href={`/admin/users/${u.id}`} className="underline">
-                  {displayLoginId(u.login_id)}
-                </Link>
-              </td>
-              <td>{u.display_name ?? '—'}</td>
-              <td data-testid={`company-${u.login_id}`}>{u.company ?? '—'}</td>
-              <td data-testid={`team-${u.login_id}`}>
-                {u.manager_id ? (teamCodeOf.get(u.manager_id) ?? '—') : '—'}
-              </td>
-              <td>{u.role}</td>
-              <td>{u.status}</td>
-              <td data-testid={`progression-${u.login_id}`}>
-                {u.progression ? tp(u.progression) : '—'}
-              </td>
-              <td data-testid={`appointment-${u.login_id}`} className="whitespace-nowrap">
-                {u.booking
-                  ? `${formatDate(bangkokDateOf(u.booking), locale as AppLocale)} ${bangkokTimeLabel(u.booking)}`
-                  : '—'}
-              </td>
+      <div className="staff-table-wrap">
+        <table className="staff-table">
+          <thead>
+            <tr>
+              <th>{t('loginId')}</th>
+              <th>{t('displayName')}</th>
+              <th>{t('company')}</th>
+              <th>{t('team')}</th>
+              <th>{t('role')}</th>
+              <th>{t('status')}</th>
+              <th>{t('progression')}</th>
+              <th>{t('appointment')}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((u) => (
+              <tr key={u.id}>
+                <td>
+                  <Link href={`/admin/users/${u.id}`} className="staff-link">
+                    {displayLoginId(u.login_id)}
+                  </Link>
+                </td>
+                <td>{u.display_name ?? '—'}</td>
+                <td data-testid={`company-${u.login_id}`}>{u.company ?? '—'}</td>
+                <td data-testid={`team-${u.login_id}`}>
+                  {u.manager_id ? (teamCodeOf.get(u.manager_id) ?? '—') : '—'}
+                </td>
+                <td>{u.role}</td>
+                <td>{u.status}</td>
+                <td data-testid={`progression-${u.login_id}`}>
+                  {u.progression ? tp(u.progression) : '—'}
+                </td>
+                <td data-testid={`appointment-${u.login_id}`} className="whitespace-nowrap">
+                  {u.booking
+                    ? `${formatDate(bangkokDateOf(u.booking), locale as AppLocale)} ${bangkokTimeLabel(u.booking)}`
+                    : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

@@ -32,38 +32,40 @@ export default async function ManagersPage({ params }: { params: Promise<{ local
 
   return (
     <section className="grid gap-6">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
+      <h1 className="staff-title">{t('title')}</h1>
       <NewManagerForm />
-      <p className="text-xs text-gray-600">{t('suspendHint')}</p>
+      <p className="text-xs text-ink-500">{t('suspendHint')}</p>
       {(managers ?? []).length === 0 ? (
         <p className="text-sm">{t('empty')}</p>
       ) : (
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="py-2">{t('code')}</th>
-              <th>{t('displayName')}</th>
-              <th>{t('learners')}</th>
-              <th>{t('records')}</th>
-              <th>{t('status')}</th>
-              <th>{t('actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(managers ?? []).map((m) => (
-              <tr key={m.id} className="border-b" data-testid={`manager-${m.login_id}`}>
-                <td className="py-2 font-mono">{displayLoginId(m.login_id)}</td>
-                <td>{m.display_name ?? '—'}</td>
-                <td data-testid="learner-count">{count(learners, 'manager_id', m.id)}</td>
-                <td data-testid="record-count">{count(records, 'team_id', m.id)}</td>
-                <td>{m.status}</td>
-                <td>
-                  <ManagerRowControls id={m.id} status={m.status} displayName={m.display_name} />
-                </td>
+        <div className="staff-table-wrap">
+          <table className="staff-table">
+            <thead>
+              <tr>
+                <th>{t('code')}</th>
+                <th>{t('displayName')}</th>
+                <th>{t('learners')}</th>
+                <th>{t('records')}</th>
+                <th>{t('status')}</th>
+                <th>{t('actions')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(managers ?? []).map((m) => (
+                <tr key={m.id} data-testid={`manager-${m.login_id}`}>
+                  <td className="font-mono">{displayLoginId(m.login_id)}</td>
+                  <td>{m.display_name ?? '—'}</td>
+                  <td data-testid="learner-count">{count(learners, 'manager_id', m.id)}</td>
+                  <td data-testid="record-count">{count(records, 'team_id', m.id)}</td>
+                  <td>{m.status}</td>
+                  <td>
+                    <ManagerRowControls id={m.id} status={m.status} displayName={m.display_name} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   );

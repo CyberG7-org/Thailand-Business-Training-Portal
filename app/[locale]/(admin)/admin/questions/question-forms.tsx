@@ -23,14 +23,14 @@ const PLACEHOLDER_EXAMPLES =
 function Feedback({ state, savedLabel }: { state: QuestionState; savedLabel: string }) {
   if (state.error) {
     return (
-      <p role="alert" className="text-sm text-red-700">
+      <p role="alert" className="text-sm text-bad-600">
         {state.error}
       </p>
     );
   }
   if (state.ok) {
     return (
-      <p role="status" className="text-sm text-green-700">
+      <p role="status" className="text-sm text-ok-600">
         {savedLabel}
       </p>
     );
@@ -43,7 +43,7 @@ export function QuestionForm({ question }: { question: QuestionRow | null }) {
   const t = useTranslations('admin.questions');
   const [state, formAction, pending] = useActionState(saveQuestionAction, initial);
   return (
-    <form action={formAction} className="grid max-w-md gap-3 rounded border p-4">
+    <form action={formAction} className="staff-card grid max-w-md gap-3">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={question?.id ?? ''} />
       <label className="text-sm">
@@ -53,7 +53,7 @@ export function QuestionForm({ question }: { question: QuestionRow | null }) {
           defaultValue={question?.question_key ?? ''}
           readOnly={question !== null}
           required
-          className="mt-1 w-full rounded border px-2 py-1 read-only:bg-gray-100"
+          className="staff-input mt-1"
         />
       </label>
       <fieldset className="text-sm">
@@ -82,17 +82,13 @@ export function QuestionForm({ question }: { question: QuestionRow | null }) {
         {t('active')}
       </label>
       {question && (
-        <p className="text-xs text-gray-600" data-testid="question-dependencies">
+        <p className="text-xs text-ink-500" data-testid="question-dependencies">
           {t('kind')}: {question.kind} · {t('dependencies')}:{' '}
           {question.dbd_field_dependencies.join(', ') || '—'}
         </p>
       )}
       <Feedback state={state} savedLabel={t('saved')} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className="staff-btn">
         {t('save')}
       </button>
     </form>
@@ -104,29 +100,20 @@ export function ApprovalForm({ question }: { question: QuestionRow }) {
   const t = useTranslations('admin.questions');
   const [state, formAction, pending] = useActionState(setApprovalAction, initial);
   return (
-    <form action={formAction} className="grid max-w-md gap-2 rounded border p-4">
+    <form action={formAction} className="staff-card grid max-w-md gap-2">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="questionId" value={question.id} />
       <p className="text-sm">
         {t('status')}: <span data-testid="question-status">{question.approval_status}</span>
       </p>
-      <select
-        name="status"
-        defaultValue={question.approval_status}
-        className="rounded border px-2 py-1 text-sm"
-      >
+      <select name="status" defaultValue={question.approval_status} className="staff-input">
         <option value="draft">draft</option>
         <option value="approved">approved</option>
         <option value="retired">retired</option>
       </select>
-      <p className="text-xs text-gray-500">{t('approvalHint')}</p>
+      <p className="text-xs text-ink-500">{t('approvalHint')}</p>
       <Feedback state={state} savedLabel={t('saved')} />
-      <button
-        type="submit"
-        disabled={pending}
-        data-testid="set-status"
-        className="rounded border px-4 py-2 disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} data-testid="set-status" className="staff-btn-ghost">
         {t('setStatus')}
       </button>
     </form>
@@ -148,11 +135,7 @@ export function QuestionLocalizationForm({
   const options = (localization?.options as unknown as QuestionOption[] | undefined) ?? [];
   const textFor = (key: string) => options.find((o) => o.key === key)?.text ?? '';
   return (
-    <form
-      action={formAction}
-      className="grid gap-2 rounded border p-4"
-      data-testid={`qloc-${language}`}
-    >
+    <form action={formAction} className="staff-card grid gap-2" data-testid={`qloc-${language}`}>
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="questionId" value={questionId} />
       <input type="hidden" name="language" value={language} />
@@ -167,17 +150,13 @@ export function QuestionLocalizationForm({
           rows={2}
           required
           defaultValue={localization?.prompt ?? ''}
-          className="mt-1 w-full rounded border px-2 py-1"
+          className="staff-input mt-1"
         />
       </label>
       {KEYS.map((key) => (
         <label key={key} className="text-sm">
           {t('option', { key })}
-          <input
-            name={`option_${key}`}
-            defaultValue={textFor(key)}
-            className="mt-1 w-full rounded border px-2 py-1"
-          />
+          <input name={`option_${key}`} defaultValue={textFor(key)} className="staff-input mt-1" />
         </label>
       ))}
       <label className="text-sm">
@@ -185,7 +164,7 @@ export function QuestionLocalizationForm({
         <select
           name="correctKey"
           defaultValue={localization?.correct_key ?? 'A'}
-          className="mt-1 rounded border px-2 py-1"
+          className="staff-input mt-1"
         >
           {KEYS.map((k) => (
             <option key={k} value={k}>
@@ -200,7 +179,7 @@ export function QuestionLocalizationForm({
           name="explanation"
           rows={2}
           defaultValue={localization?.explanation ?? ''}
-          className="mt-1 w-full rounded border px-2 py-1"
+          className="staff-input mt-1"
         />
       </label>
       {language === 'th' && (
@@ -213,15 +192,11 @@ export function QuestionLocalizationForm({
           {t('ttsEnabled')}
         </label>
       )}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-ink-500">
         {t('placeholderHint')} <code>{PLACEHOLDER_EXAMPLES}</code>
       </p>
       <Feedback state={state} savedLabel={t('saved')} />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className="staff-btn">
         {t('saveLanguage')}
       </button>
     </form>
@@ -245,7 +220,7 @@ export function FillMissingLanguagesForm({
   // Once everything is filled the form only needs to keep showing what it just did.
   if (missing.length === 0 && !state.ok) return null;
   return (
-    <form action={formAction} className="grid max-w-md gap-2 rounded border p-4">
+    <form action={formAction} className="staff-card grid max-w-md gap-2">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="questionId" value={questionId} />
       {missing.length > 0 && (
@@ -256,14 +231,14 @@ export function FillMissingLanguagesForm({
         </p>
       )}
       {state.error && (
-        <p role="alert" data-testid="fill-error" className="text-sm text-red-700">
+        <p role="alert" data-testid="fill-error" className="text-sm text-bad-600">
           {FILL_ERRORS.includes(state.error)
             ? t(`fillErrors.${state.error}` as 'fillErrors.not_configured')
             : state.error}
         </p>
       )}
       {state.ok && (
-        <p role="status" data-testid="fill-done" className="text-sm text-green-700">
+        <p role="status" data-testid="fill-done" className="text-sm text-ok-600">
           {t('fillDone', { count: state.written.length })}
         </p>
       )}
@@ -272,7 +247,7 @@ export function FillMissingLanguagesForm({
           type="submit"
           disabled={pending}
           data-testid="fill-missing"
-          className="justify-self-start rounded border px-4 py-2 disabled:opacity-50"
+          className="staff-btn-ghost justify-self-start"
         >
           {pending ? t('filling') : t('fillMissing')}
         </button>

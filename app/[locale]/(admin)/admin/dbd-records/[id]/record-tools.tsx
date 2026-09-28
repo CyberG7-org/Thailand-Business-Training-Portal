@@ -56,14 +56,14 @@ function FillOutcome({ state }: { state: ToolState }) {
   const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === state.extractionError);
   if (state.extraction === 'queued') {
     return (
-      <p role="status" data-testid="extract-status" className="text-sm text-gray-700">
+      <p role="status" data-testid="extract-status" className="text-sm text-ink-700">
         {t('readingQueued')}
       </p>
     );
   }
   if (state.extraction === 'failed') {
     return (
-      <p role="alert" data-testid="extract-error" className="text-sm text-amber-700">
+      <p role="alert" data-testid="extract-error" className="text-sm text-warn-700">
         {t('uploadedButNotRead', {
           reason: extractErrorKey
             ? t(`extractErrors.${extractErrorKey}`)
@@ -73,7 +73,7 @@ function FillOutcome({ state }: { state: ToolState }) {
     );
   }
   return (
-    <p role="status" className="text-sm text-green-700">
+    <p role="status" className="text-sm text-ok-600">
       {t('uploaded')}
     </p>
   );
@@ -125,7 +125,7 @@ export function RecordTools({
 
   return (
     <div className="grid max-w-2xl gap-4">
-      <div className="grid gap-3 rounded border p-4">
+      <div className="staff-card grid gap-3">
         <p className="text-sm font-semibold">{t('documents')}</p>
         {documents.length === 0 ? (
           <p className="text-sm">{t('documentMissing')}</p>
@@ -133,12 +133,12 @@ export function RecordTools({
           <ul className="grid gap-1 text-sm" data-testid="document-list">
             {documents.map((doc, i) => (
               <li key={doc.id} className="flex flex-wrap items-center gap-2">
-                <span className="text-gray-500">{i + 1}.</span>
+                <span className="text-ink-500">{i + 1}.</span>
                 <span>{doc.name}</span>
-                <span className="rounded bg-gray-100 px-1 text-xs" data-testid="document-type">
+                <span className="staff-tag" data-testid="document-type">
                   {typeLabel(doc.type)}
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-ink-500">
                   {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
                 </span>
                 <span
@@ -147,10 +147,10 @@ export function RecordTools({
                   title={doc.indexError ?? undefined}
                   className={`rounded px-1 text-xs ${
                     doc.indexStatus === 'ready'
-                      ? 'bg-green-100'
+                      ? 'bg-ok-50'
                       : doc.indexStatus === 'failed'
-                        ? 'bg-red-100'
-                        : 'bg-gray-100'
+                        ? 'bg-bad-50'
+                        : 'bg-ink-100'
                   }`}
                 >
                   {t(`index.status.${doc.indexStatus}` as 'index.status.ready', {
@@ -165,7 +165,7 @@ export function RecordTools({
                     <input type="hidden" name="documentId" value={doc.id} />
                     <button
                       type="submit"
-                      className="text-xs underline"
+                      className="staff-link text-xs"
                       data-testid="reindex-button"
                     >
                       {doc.indexStatus === 'failed'
@@ -181,7 +181,7 @@ export function RecordTools({
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="id" value={id} />
                     <input type="hidden" name="documentId" value={doc.id} />
-                    <button type="submit" className="text-xs text-red-700 underline">
+                    <button type="submit" className="text-xs text-bad-600 underline">
                       {t('removeDocument')}
                     </button>
                   </form>
@@ -190,16 +190,14 @@ export function RecordTools({
             ))}
           </ul>
         )}
-        {documents.length > 0 && <p className="text-xs text-gray-600">{t('index.hint')}</p>}
+        {documents.length > 0 && <p className="text-xs text-ink-500">{t('index.hint')}</p>}
         {reading && (
           <p
             role={reading.status === 'failed' ? 'alert' : 'status'}
             data-testid="reading-status"
             data-state={reading.status}
             className={`rounded p-2 text-sm ${
-              reading.status === 'failed'
-                ? 'bg-amber-50 text-amber-800'
-                : 'bg-gray-50 text-gray-700'
+              reading.status === 'failed' ? 'bg-warn-50 text-warn-700' : 'bg-ink-50 text-ink-700'
             }`}
           >
             {reading.status === 'failed'
@@ -215,7 +213,7 @@ export function RecordTools({
         )}
 
         <div className="grid gap-2 border-t pt-3">
-          <p className="text-xs text-gray-600">
+          <p className="text-xs text-ink-500">
             {extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
           </p>
           {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
@@ -235,7 +233,7 @@ export function RecordTools({
               className="text-sm"
             />
             {uploadState.error && (
-              <p role="alert" className="text-sm text-red-700">
+              <p role="alert" className="text-sm text-bad-600">
                 {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
               </p>
             )}
@@ -243,7 +241,7 @@ export function RecordTools({
             <button
               type="submit"
               disabled={uploading || locked}
-              className="justify-self-start rounded border px-4 py-2 disabled:opacity-50"
+              className="staff-btn-ghost justify-self-start"
             >
               {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
             </button>
@@ -255,13 +253,13 @@ export function RecordTools({
               type="submit"
               disabled={!canExtract || extracting || uploading}
               data-testid="extract-button"
-              className="justify-self-start rounded border px-4 py-2 disabled:opacity-50"
+              className="staff-btn-ghost justify-self-start"
               title={t('extractHint')}
             >
               {extracting ? t('extracting') : t('reExtract')}
             </button>
             {extractState.error && (
-              <p role="alert" data-testid="extract-error" className="text-sm text-red-700">
+              <p role="alert" data-testid="extract-error" className="text-sm text-bad-600">
                 {extractErrorKey ? t(`extractErrors.${extractErrorKey}`) : extractState.error}
               </p>
             )}
@@ -270,24 +268,24 @@ export function RecordTools({
         </div>
       </div>
 
-      <form action={confirmAction} className="grid gap-2 rounded border p-4">
+      <form action={confirmAction} className="staff-card grid gap-2">
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="id" value={id} />
         <p className="text-sm">
           {t('status')}: <span data-testid="record-status">{status}</span>
         </p>
         {refused && (
-          <p role="alert" data-testid="confirm-error" className="text-sm text-red-700">
+          <p role="alert" data-testid="confirm-error" className="text-sm text-bad-600">
             {t('missingForConfirmation', { fields: refused.map(fieldLabel).join(', ') })}
           </p>
         )}
         {confirmState.error && !refused && (
-          <p role="alert" data-testid="confirm-error" className="text-sm text-red-700">
+          <p role="alert" data-testid="confirm-error" className="text-sm text-bad-600">
             {confirmState.error}
           </p>
         )}
         {!locked && missing.length > 0 && (
-          <p data-testid="confirm-blocked" className="text-sm text-amber-800">
+          <p data-testid="confirm-blocked" className="text-sm text-warn-700">
             {t('answersMissing', { fields: missing.map(fieldLabel).join(', ') })}
           </p>
         )}
@@ -295,7 +293,7 @@ export function RecordTools({
           <button
             type="submit"
             disabled={confirming || missing.length > 0}
-            className="rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
+            className="staff-btn-ok"
           >
             {t('confirm')}
           </button>

@@ -8,7 +8,7 @@ export default async function NewQuestionPage({ params }: { params: Promise<{ lo
   const t = await getTranslations('admin.questions');
   return (
     <section className="grid gap-4">
-      <h1 className="text-2xl font-semibold">{t('new')}</h1>
+      <h1 className="staff-title">{t('new')}</h1>
       <QuestionForm question={null} />
     </section>
   );

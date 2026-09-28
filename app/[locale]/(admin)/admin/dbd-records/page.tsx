@@ -22,44 +22,43 @@ export default async function DbdRecordsPage({ params }: { params: Promise<{ loc
   return (
     <section className="grid gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{t('title')}</h1>
-        <Link
-          href="/admin/dbd-records/new"
-          className="rounded bg-gray-900 px-3 py-1 text-sm text-white"
-        >
+        <h1 className="staff-title">{t('title')}</h1>
+        <Link href="/admin/dbd-records/new" className="staff-btn staff-btn-sm">
           {t('new')}
         </Link>
       </div>
-      <table className="w-full text-left text-sm">
-        <thead>
-          <tr className="border-b">
-            <th className="py-2">{t('fields.companyNameTh')}</th>
-            {showTeam && <th>{t('team')}</th>}
-            <th>{t('fields.juristicId')}</th>
-            <th>{t('fields.issuedOn')}</th>
-            <th>{t('status')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {records.map((r) => (
-            <tr key={r.id} className="border-b">
-              <td className="py-2">
-                <Link href={`/admin/dbd-records/${r.id}`} className="underline">
-                  {r.company_name_th ?? '—'}
-                </Link>
-              </td>
-              {showTeam && (
-                <td data-testid={`record-team-${r.id}`}>
-                  {r.team_id ? (teamCodeOf.get(r.team_id) ?? '—') : '—'}
-                </td>
-              )}
-              <td>{r.juristic_id ?? '—'}</td>
-              <td>{r.issued_on ? formatDate(r.issued_on, locale as Locale) : '—'}</td>
-              <td>{r.extraction_status}</td>
+      <div className="staff-table-wrap">
+        <table className="staff-table">
+          <thead>
+            <tr>
+              <th>{t('fields.companyNameTh')}</th>
+              {showTeam && <th>{t('team')}</th>}
+              <th>{t('fields.juristicId')}</th>
+              <th>{t('fields.issuedOn')}</th>
+              <th>{t('status')}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {records.map((r) => (
+              <tr key={r.id}>
+                <td>
+                  <Link href={`/admin/dbd-records/${r.id}`} className="staff-link">
+                    {r.company_name_th ?? '—'}
+                  </Link>
+                </td>
+                {showTeam && (
+                  <td data-testid={`record-team-${r.id}`}>
+                    {r.team_id ? (teamCodeOf.get(r.team_id) ?? '—') : '—'}
+                  </td>
+                )}
+                <td>{r.juristic_id ?? '—'}</td>
+                <td>{r.issued_on ? formatDate(r.issued_on, locale as Locale) : '—'}</td>
+                <td>{r.extraction_status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }

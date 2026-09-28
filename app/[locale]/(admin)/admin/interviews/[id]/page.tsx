@@ -57,11 +57,11 @@ export default async function InterviewDetailPage({
 
   return (
     <section className="grid gap-4">
-      <Link href="/admin/interviews" className="text-sm underline">
+      <Link href="/admin/interviews" className="staff-link text-sm">
         {t('back')}
       </Link>
-      <h1 className="text-2xl font-semibold">{t('detailTitle')}</h1>
-      <p className="text-sm text-gray-700">
+      <h1 className="staff-title">{t('detailTitle')}</h1>
+      <p className="text-sm text-ink-700">
         {profile ? displayLoginId(profile.login_id) : '—'}
         {profile?.display_name ? ' · ' + profile.display_name : ''}
         {' · '}
@@ -76,11 +76,11 @@ export default async function InterviewDetailPage({
         </span>
       </p>
 
-      <div data-testid="admin-assessments" className="grid gap-3 rounded border p-4">
+      <div data-testid="admin-assessments" className="staff-card grid gap-3">
         <h2 className="font-semibold">{t('assessments')}</h2>
         {summary?.narrative && (
           <div>
-            <h3 className="text-sm font-medium text-gray-700">{t('narrative')}</h3>
+            <h3 className="text-sm font-medium text-ink-700">{t('narrative')}</h3>
             <p lang="th" className="text-sm">
               {summary.narrative}
             </p>
@@ -94,7 +94,7 @@ export default async function InterviewDetailPage({
                 {' — '}
                 {t(`assessment.${r.verdict}`)}
                 {r.note ? (
-                  <span lang="th" className="text-gray-600">
+                  <span lang="th" className="text-ink-500">
                     {' — ' + r.note}
                   </span>
                 ) : null}
@@ -102,7 +102,7 @@ export default async function InterviewDetailPage({
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-700">{t('noVerdict')}</p>
+          <p className="text-sm text-ink-700">{t('noVerdict')}</p>
         )}
       </div>
 
@@ -117,18 +117,18 @@ export default async function InterviewDetailPage({
                 key={turn.id}
                 data-role={turn.role}
                 className={
-                  'max-w-[85%] rounded border px-3 py-2 text-sm ' +
-                  (turn.role === 'officer' ? 'bg-gray-50' : 'ml-auto bg-white')
+                  'max-w-[85%] rounded-control border border-ink-100 px-3 py-2 text-sm ' +
+                  (turn.role === 'officer' ? 'bg-ink-50' : 'ml-auto bg-white')
                 }
               >
-                <span className="block text-xs text-gray-600">
+                <span className="block text-xs text-ink-500">
                   {turn.role === 'officer' ? ti('chat.officer') : ti('chat.you')}
                 </span>
                 <p lang="th" className="whitespace-pre-wrap">
                   {turn.content}
                 </p>
                 {av && a?.concept ? (
-                  <p className="mt-1 text-xs text-gray-600">
+                  <p className="mt-1 text-xs text-ink-500">
                     {label(a.concept)} — {t(`assessment.${av}`)}
                     {a.note ? ' — ' + a.note : ''}
                   </p>

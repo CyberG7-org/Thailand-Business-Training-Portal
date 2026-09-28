@@ -39,7 +39,7 @@ export function AssignmentPanel({
   );
   const assignErrorKey = ASSIGN_ERROR_KEYS.find((k) => k === assignState.error);
   return (
-    <div className="grid max-w-md gap-2 rounded border p-4">
+    <div className="staff-card grid max-w-md gap-2">
       <h2 className="font-semibold">{t('title')}</h2>
       {current ? (
         <form action={deactAction} className="grid gap-2">
@@ -55,15 +55,11 @@ export function AssignmentPanel({
               : t('eligibilityPending')}
           </p>
           {deactState.error && (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-bad-600">
               {deactState.error}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={deactivating}
-            className="rounded border px-4 py-2 disabled:opacity-50"
-          >
+          <button type="submit" disabled={deactivating} className="staff-btn-ghost">
             {t('deactivate')}
           </button>
         </form>
@@ -71,7 +67,7 @@ export function AssignmentPanel({
         <form action={assignAction} className="grid gap-2">
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="userId" value={userId} />
-          <select name="dbdRecordId" defaultValue="" className="rounded border px-2 py-1 text-sm">
+          <select name="dbdRecordId" defaultValue="" className="staff-input">
             <option value="">{t('choose')}</option>
             {options.map((o) => (
               <option key={o.id} value={o.id}>
@@ -81,15 +77,11 @@ export function AssignmentPanel({
             ))}
           </select>
           {assignState.error && (
-            <p role="alert" className="text-sm text-red-700">
+            <p role="alert" className="text-sm text-bad-600">
               {assignErrorKey ? t(`errors.${assignErrorKey}`) : assignState.error}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={assigning}
-            className="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-          >
+          <button type="submit" disabled={assigning} className="staff-btn">
             {t('assign')}
           </button>
         </form>

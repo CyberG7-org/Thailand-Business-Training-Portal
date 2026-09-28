@@ -28,10 +28,10 @@ export function GenerateForm({
   const [state, formAction, pending] = useActionState(generateQuestionsAction, initial);
   const [count, setCount] = useState(10);
   const [templateCount, setTemplateCount] = useState(10);
-  const inputClass = 'mt-1 w-full rounded border px-2 py-1';
+  const inputClass = 'staff-input mt-1';
 
   return (
-    <form action={formAction} className="grid max-w-2xl gap-4 rounded border p-4">
+    <form action={formAction} className="staff-card grid max-w-2xl gap-4">
       <input type="hidden" name="locale" value={locale} />
 
       <label className="text-sm">
@@ -49,14 +49,17 @@ export function GenerateForm({
             </option>
           ))}
         </select>
-        <span className="text-xs text-gray-500">{t('referenceHint')}</span>
+        <span className="text-xs text-ink-500">{t('referenceHint')}</span>
       </label>
 
       <fieldset className="grid gap-2">
         <legend className="text-sm font-medium">{t('material')}</legend>
-        <p className="text-xs text-gray-600">{t('materialHint')}</p>
+        <p className="text-xs text-ink-500">{t('materialHint')}</p>
         {cards.length > 0 && (
-          <div className="grid gap-1 rounded border p-2 text-sm" data-testid="study-card-picker">
+          <div
+            className="grid gap-1 rounded-control border border-ink-100 p-2 text-sm"
+            data-testid="study-card-picker"
+          >
             {cards.map((card) => (
               <label key={card.id} className="flex items-center gap-2">
                 <input type="checkbox" name="study_material_ids" value={card.id} />
@@ -82,7 +85,7 @@ export function GenerateForm({
             accept=".pdf,.docx,.txt,.md"
             className="mt-1 block w-full text-sm"
           />
-          <span className="text-xs text-gray-500">{t('fileHint')}</span>
+          <span className="text-xs text-ink-500">{t('fileHint')}</span>
         </label>
       </fieldset>
 
@@ -117,7 +120,7 @@ export function GenerateForm({
             data-testid="template-count"
             className={inputClass}
           />
-          <span className="text-xs text-gray-500">{t('templateHint')}</span>
+          <span className="text-xs text-ink-500">{t('templateHint')}</span>
         </label>
         <label className="text-sm">
           {t('difficulty')}
@@ -145,7 +148,7 @@ export function GenerateForm({
       </label>
 
       {state.error && (
-        <div role="alert" data-testid="generate-error" className="text-sm text-red-700">
+        <div role="alert" data-testid="generate-error" className="text-sm text-bad-600">
           {KNOWN_ERRORS.includes(state.error)
             ? t(`errors.${state.error}` as 'errors.no_material')
             : state.error}
@@ -163,7 +166,7 @@ export function GenerateForm({
         type="submit"
         disabled={pending}
         data-testid="generate-submit"
-        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+        className="staff-btn justify-self-start"
       >
         {pending ? t('generating') : t('generate')}
       </button>

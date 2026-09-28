@@ -22,10 +22,10 @@ export default async function ContentDetailPage({
   const t = await getTranslations('admin.content');
   return (
     <section className="grid gap-6">
-      <Link href="/admin/content" className="text-sm underline">
+      <Link href="/admin/content" className="staff-link text-sm">
         ← {t('title')}
       </Link>
-      <h1 className="text-2xl font-semibold">{material.content_key}</h1>
+      <h1 className="staff-title">{material.content_key}</h1>
       <MaterialForm material={material} />
       <div className="grid gap-4 lg:grid-cols-3">
         {LOCALES.map((language) => (

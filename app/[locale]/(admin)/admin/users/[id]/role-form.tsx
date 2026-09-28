@@ -27,18 +27,14 @@ export function RoleForm({
   const locale = useLocale();
   const t = useTranslations('admin.role');
   const [state, formAction, pending] = useActionState(updateAssignmentRoleAction, initial);
-  const inputClass = 'mt-1 w-full rounded border px-2 py-1';
+  const inputClass = 'staff-input mt-1';
   return (
-    <form
-      action={formAction}
-      className="grid max-w-md gap-3 rounded border p-4"
-      data-testid="role-form"
-    >
+    <form action={formAction} className="staff-card grid max-w-md gap-3" data-testid="role-form">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="assignmentId" value={assignmentId} />
       <h2 className="font-semibold">{t('title')}</h2>
-      <p className="text-xs text-gray-600">{t('hint')}</p>
+      <p className="text-xs text-ink-500">{t('hint')}</p>
       <label className="text-sm">
         {t('holderName')}
         <input
@@ -53,7 +49,7 @@ export function RoleForm({
             <option key={name} value={name} />
           ))}
         </datalist>
-        <span className="text-xs text-gray-500">{t('holderHint')}</span>
+        <span className="text-xs text-ink-500">{t('holderHint')}</span>
       </label>
       <label className="text-sm">
         {t('position')}
@@ -78,20 +74,16 @@ export function RoleForm({
         />
       </label>
       {state.error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-bad-600">
           {state.error}
         </p>
       )}
       {state.message === 'role-saved' && (
-        <p role="status" data-testid="role-saved" className="text-sm text-green-700">
+        <p role="status" data-testid="role-saved" className="text-sm text-ok-600">
           {t('saved')}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className="staff-btn justify-self-start">
         {t('save')}
       </button>
     </form>

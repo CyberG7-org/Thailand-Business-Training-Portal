@@ -15,11 +15,11 @@ export function UploadFirstForm({ extractionAvailable }: { extractionAvailable: 
         e.preventDefault();
         submit(e.currentTarget);
       }}
-      className="grid max-w-2xl gap-3 rounded border border-gray-900 p-4"
+      className="staff-card grid max-w-2xl gap-3"
       data-testid="upload-first"
     >
       <h2 className="font-semibold">{t('uploadFirstTitle')}</h2>
-      <p className="text-sm text-gray-700">
+      <p className="text-sm text-ink-700">
         {extractionAvailable ? t('uploadFirstHint') : t('uploadFirstNoExtraction')}
       </p>
       <input
@@ -32,7 +32,7 @@ export function UploadFirstForm({ extractionAvailable }: { extractionAvailable: 
         className="text-sm"
       />
       {state.error && (
-        <p role="alert" className="text-sm text-red-700">
+        <p role="alert" className="text-sm text-bad-600">
           {errorKey ? t(`errors.${errorKey}`) : state.error}
         </p>
       )}
@@ -40,7 +40,7 @@ export function UploadFirstForm({ extractionAvailable }: { extractionAvailable: 
         type="submit"
         disabled={pending}
         data-testid="upload-first-submit"
-        className="justify-self-start rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+        className="staff-btn justify-self-start"
       >
         {pending ? t('uploadingAndReading') : t('uploadAndFill')}
       </button>

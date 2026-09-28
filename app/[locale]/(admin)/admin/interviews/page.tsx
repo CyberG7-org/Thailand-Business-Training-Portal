@@ -28,22 +28,22 @@ export default async function InterviewsPage({ params }: { params: Promise<{ loc
   });
   return (
     <section className="grid gap-4">
-      <h1 className="text-2xl font-semibold">{t('title')}</h1>
-      <p className="max-w-2xl text-sm text-gray-700">{t('intro')}</p>
+      <h1 className="staff-title">{t('title')}</h1>
+      <p className="staff-intro">{t('intro')}</p>
       {rows.length === 0 ? (
-        <p data-testid="admin-interviews-empty" className="text-sm text-gray-700">
+        <p data-testid="admin-interviews-empty" className="text-sm text-ink-700">
           {t('empty')}
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        <div className="staff-table-wrap">
+          <table className="staff-table">
             <thead>
-              <tr className="border-b">
-                <th className="py-2 pr-3">{t('learner')}</th>
-                <th className="pr-3">{t('company')}</th>
-                <th className="pr-3">{t('started')}</th>
-                <th className="pr-3">{t('status')}</th>
-                <th className="pr-3">{t('verdict')}</th>
+              <tr>
+                <th>{t('learner')}</th>
+                <th>{t('company')}</th>
+                <th>{t('started')}</th>
+                <th>{t('status')}</th>
+                <th>{t('verdict')}</th>
                 <th />
               </tr>
             </thead>
@@ -51,25 +51,21 @@ export default async function InterviewsPage({ params }: { params: Promise<{ loc
               {rows.map((s) => {
                 const verdict = verdictOf(s.verdict);
                 return (
-                  <tr
-                    key={s.id}
-                    data-testid={'admin-interview-' + s.id}
-                    className="border-b align-top"
-                  >
-                    <td className="py-2 pr-3">
+                  <tr key={s.id} data-testid={'admin-interview-' + s.id} className="align-top">
+                    <td>
                       {displayLoginId(s.profiles.login_id)}
                       {s.profiles.display_name ? ' · ' + s.profiles.display_name : ''}
                     </td>
-                    <td className="pr-3">{s.dbd_records?.company_name_th ?? '—'}</td>
+                    <td>{s.dbd_records?.company_name_th ?? '—'}</td>
                     <td className="pr-3 whitespace-nowrap">
                       {dates.format(new Date(s.started_at))}
                     </td>
-                    <td className="pr-3">{t(`statuses.${statusOf(s.status)}`)}</td>
-                    <td className="pr-3" data-verdict={verdict ?? undefined}>
+                    <td>{t(`statuses.${statusOf(s.status)}`)}</td>
+                    <td data-verdict={verdict ?? undefined}>
                       {verdict ? t(`verdicts.${verdict}`) : t('noVerdict')}
                     </td>
                     <td>
-                      <Link href={'/admin/interviews/' + s.id} className="underline">
+                      <Link href={'/admin/interviews/' + s.id} className="staff-link">
                         {t('open')}
                       </Link>
                     </td>
