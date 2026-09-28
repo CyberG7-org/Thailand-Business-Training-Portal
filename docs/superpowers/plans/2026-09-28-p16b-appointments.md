@@ -1402,7 +1402,7 @@ git commit -m "feat(appointments): the learner's week picker, the booked card an
   await expect(page.locator('[data-testid^="block-"]').filter({ hasText: 'ประชุมทีม' })).toHaveCount(1);
 ```
 
-and, for the teammate step, add after the taken-slot assertions: `await expect(page.locator(\`[data-testid="slot-${bangkokDateTime(from, 13)}"]\`)).toHaveAttribute('data-state', 'blocked');` (import `bangkokDateTime` from `@/lib/domain/appointments/slots`; the e2e tsconfig resolves `@/`).
+and, for the teammate step, add after the taken-slot assertions: `await expect(page.locator(\`[data-testid="slot-${bangkokDateTime(from, 13)}"]\`)).toHaveAttribute('data-state', 'blocked');` (the e2e specs do not import from `@/`, so define in the spec `const slotIso = (date: string, hour: number) => new Date(date + 'T' + String(hour).padStart(2, '0') + ':00:00+07:00').toISOString();` and use `slotIso(from, 13)`).
 
 - [ ] **Step 2: Run them to verify they fail** — `pnpm exec playwright test tests/e2e/manager-access.spec.ts tests/e2e/appointment.spec.ts` → FAIL (404).
 
