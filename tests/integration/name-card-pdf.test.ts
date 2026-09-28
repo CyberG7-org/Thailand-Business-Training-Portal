@@ -1,21 +1,9 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import { PDFDocument } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
 import { NAME_CARD_COPY, buildNameCardData } from '@/lib/domain/name-card';
 import { countPages } from '@/lib/pdf/slice';
 import { ReactPdfRenderer } from '@/lib/integrations/pdf/name-card';
-
-function hasPdftotext(): boolean {
-  try {
-    execFileSync('pdftotext', ['-v'], { stdio: 'ignore' });
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { pdfTextItems } from './pdf-text';
 
 describe('name card PDF (spike S3)', () => {
   it('renders Thai text and digits with the embedded font', async () => {
@@ -41,20 +29,27 @@ describe('name card PDF (spike S3)', () => {
     expect(width).toBeCloseTo(90 * 2.8346, 0);
     expect(height).toBeCloseTo(54 * 2.8346, 0);
 
-    if (!hasPdftotext()) return;
-    const dir = mkdtempSync(path.join(tmpdir(), 'namecard-'));
-    try {
-      const file = path.join(dir, 'card.pdf');
-      writeFileSync(file, bytes);
-      const text = execFileSync('pdftotext', ['-layout', file, '-'], { encoding: 'utf8' });
-      expect(text).toContain('081-234-5678');
-      expect(text).toContain('0105569000123');
-      expect(text).toContain('SAMPLE TESTER');
-      expect(text.replace(/\s/g, '')).toContain(NAME_CARD_COPY.tagline.replace(/\s/g, ''));
-      expect(text.replace(/\s/g, '')).toContain('สายไฟ');
-      expect(text.replace(/\s/g, '')).toContain('บริษัท'.replace(/\s/g, ''));
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
+    // What a viewer shows: the record's values, the shared copy, and Thai broken between
+    // words. Letter-spaced text comes back a glyph per item, so compare without whitespace;
+    // a hyphen at the end of an item is the layout engine breaking inside a word.
+    const items = (await pdfTextItems(bytes)).flat();
+    const squashed = items.join('').replace(/\s/g, '');
+    for (const expected of [
+      '081-234-5678',
+      '0105569000123',
+      'SAMPLETESTER',
+      NAME_CARD_COPY.tagline.replace(/\s/g, ''),
+      'นางสาวตัวอย่างทดสอบ',
+      'สายไฟ',
+      'บริษัท',
+    ]) {
+      expect(squashed).toContain(expected);
     }
+    expect(items.filter((item) => item.trimEnd().endsWith('-'))).toEqual([]);
+    // Words with sara am (ำ) keep every glyph; the viewer may give the vowel back as one
+    // code point or two. Every Thai word on this card is its own text object.
+    expect(squashed).toMatch(/นามบัตรจ.{1,2}กัด/);
+    expect(squashed).toMatch(/ตัวอย่างอ.{1,2}เภอตัวอย่าง/);
+    expect(squashed).toMatch(/ส.{1,2}หรับงาน/);
   });
 });

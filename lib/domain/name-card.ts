@@ -129,14 +129,30 @@ export function buildNameCardData(
   };
 }
 
+const isThai = (s: string) => /[฀-๿]/.test(s);
+
 /**
- * Inserts zero-width spaces at Thai word boundaries so the PDF layout engine can wrap
- * space-less Thai text (spike S3). Latin text is unaffected.
+ * Splits text into the pieces a line may break between: Thai words (Intl.Segmenter knows
+ * the Thai dictionary), and Latin words or numbers such as "99/9" kept whole, each with the
+ * space after it. Thai has no spaces between words and the PDF layout engine hyphenates any
+ * break it makes inside a word, so the card lays each piece out as its own box in a row that
+ * wraps (spike S3). Without a segmenter the text is one piece.
  */
-export function withThaiBreaks(text: string): string {
-  if (typeof Intl === 'undefined' || !('Segmenter' in Intl)) return text;
+export function thaiWords(text: string): string[] {
+  const clean = text.trim().replace(/\s+/g, ' ');
+  if (!clean) return [];
+  if (typeof Intl === 'undefined' || !('Segmenter' in Intl)) return [clean];
   const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
-  let out = '';
-  for (const { segment } of segmenter.segment(text)) out += segment + '\u200b';
+  const out: string[] = [];
+  for (const { segment } of segmenter.segment(clean)) {
+    const prev = out[out.length - 1];
+    if (segment === ' ' && prev !== undefined) {
+      out[out.length - 1] = prev + ' '; // the space rides on the word before it
+    } else if (prev === undefined || prev.endsWith(' ') || isThai(segment) || isThai(prev)) {
+      out.push(segment);
+    } else {
+      out[out.length - 1] = prev + segment; // "99" + "/" + "9" stays one piece
+    }
+  }
   return out;
 }

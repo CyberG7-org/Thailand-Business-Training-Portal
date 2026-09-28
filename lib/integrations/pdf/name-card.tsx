@@ -12,12 +12,50 @@ import {
   Rect,
   Stop,
   StyleSheet,
+  type Styles,
   Svg,
   Text,
   View,
   renderToBuffer,
 } from '@react-pdf/renderer';
-import { NAME_CARD_COPY, withThaiBreaks, type NameCardData } from '@/lib/domain/name-card';
+import { NAME_CARD_COPY, thaiWords, type NameCardData } from '@/lib/domain/name-card';
+
+type Style = Styles[string];
+
+/** Nothing on a card is hyphenated; the engine reads this from the Text node itself. */
+const wholeWord = (word: string): string[] => [word];
+
+/**
+ * Sara am (ำ) as one code point loses a glyph in the engine's glyph maps (a word's first or
+ * last one); written as its two marks (nikhahit + sara aa) it draws the same and keeps them all.
+ */
+const shape = (text: string): string => text.replaceAll('\u0e33', '\u0e4d\u0e32');
+
+function T({ children, style }: { style?: Style | Style[]; children?: React.ReactNode }) {
+  return (
+    <Text hyphenationCallback={wholeWord} style={style}>
+      {typeof children === 'string' ? shape(children) : children}
+    </Text>
+  );
+}
+
+/**
+ * Thai text that wraps between words and never hyphenates: each piece from thaiWords is its
+ * own Text in a row that wraps, so the row breaks between pieces and the text engine, which
+ * hyphenates any break it makes inside a word, never has to break. `style` is the type;
+ * margins and clipping go on `box`.
+ */
+function ThaiText({ style, box, children }: { style: Style; box?: Style; children: string }) {
+  return (
+    <View style={[{ flexDirection: 'row', flexWrap: 'wrap' }, box ?? {}]}>
+      {thaiWords(children).map((word, i) => (
+        <T key={i} style={style}>
+          {word}
+        </T>
+      ))}
+    </View>
+  );
+}
 
 const FONT_DIR = path.join(process.cwd(), 'assets', 'fonts');
 let registered = false;
@@ -52,8 +90,6 @@ function registerFonts() {
         ]
       : sarabun,
   });
-  // Thai has no spaces between words; disable hyphenation and rely on the ZWSP breaks we insert.
-  Font.registerHyphenationCallback((word) => [word]);
   registered = true;
 }
 
@@ -95,7 +131,7 @@ const s = StyleSheet.create({
     lineHeight: 1.3,
   },
   companyEn: { fontSize: 5.2, color: C.ink700, letterSpacing: 0.9, marginTop: 3 },
-  nature: { fontSize: 5.6, color: C.ink700, lineHeight: 1.5, marginTop: 7 },
+  nature: { fontSize: 5.6, color: C.ink700, lineHeight: 1.5 },
   tagline: {
     alignSelf: 'flex-start',
     marginTop: 7,
@@ -152,7 +188,7 @@ const s = StyleSheet.create({
     marginRight: 4.5,
     marginTop: 0.5,
   },
-  factText: { fontSize: 5.8, lineHeight: 1.4, flex: 1 },
+  factText: { fontSize: 5.8, lineHeight: 1.4 },
   factSub: { fontSize: 4.4, color: C.ink500, marginTop: 0.5 },
   label: { fontSize: 4.4, color: C.ink500, letterSpacing: 0.5, marginBottom: 1.5 },
   products: { fontSize: 5.6, lineHeight: 1.5 },
@@ -194,17 +230,24 @@ function Fact({
   icon,
   children,
   sub,
+  thai,
 }: {
   icon: keyof typeof ICONS;
   children: string;
   sub?: string;
+  /** Thai text wraps between words (see ThaiText). */
+  thai?: boolean;
 }) {
   return (
     <View style={s.fact}>
       <Dot icon={icon} />
       <View style={{ flex: 1 }}>
-        <Text style={s.factText}>{children}</Text>
-        {sub && <Text style={s.factSub}>{sub}</Text>}
+        {thai ? (
+          <ThaiText style={s.factText}>{children}</ThaiText>
+        ) : (
+          <T style={s.factText}>{children}</T>
+        )}
+        {sub && <T style={s.factSub}>{sub}</T>}
       </View>
     </View>
   );
@@ -225,28 +268,28 @@ function Front({ data }: { data: NameCardData }) {
         <Polygon points={'118,0 121,0 95,' + H + ' 92,' + H} fill={C.gold500} />
       </Svg>
       <View style={[s.abs, { left: 12 * MM - 20, top: 11 * MM }]}>
-        <Text style={s.mono}>{data.companyInitials}</Text>
-        {data.companyNameEn && (
-          <Text style={s.monoSub}>{shortEnglishName(data.companyNameEn)}</Text>
-        )}
+        <T style={s.mono}>{data.companyInitials}</T>
+        {data.companyNameEn && <T style={s.monoSub}>{shortEnglishName(data.companyNameEn)}</T>}
       </View>
       <View style={[s.abs, { left: 130, top: 12 * MM, width: W - 130 - 12 }]}>
-        <Text style={s.companyTh}>{withThaiBreaks(data.companyNameTh)}</Text>
-        {data.companyNameEn && <Text style={s.companyEn}>{data.companyNameEn.toUpperCase()}</Text>}
-        <Text style={s.tagline}>{NAME_CARD_COPY.tagline}</Text>
+        <ThaiText style={s.companyTh}>{data.companyNameTh}</ThaiText>
+        {data.companyNameEn && <T style={s.companyEn}>{data.companyNameEn.toUpperCase()}</T>}
+        <T style={s.tagline}>{NAME_CARD_COPY.tagline}</T>
         {data.natureOfBusiness && (
           <View style={{ maxHeight: 30, overflow: 'hidden' }}>
-            <Text style={s.nature}>{withThaiBreaks(data.natureOfBusiness)}</Text>
+            <ThaiText style={s.nature} box={{ marginTop: 7 }}>
+              {data.natureOfBusiness}
+            </ThaiText>
           </View>
         )}
       </View>
-      <View style={[s.abs, { left: 12 * MM - 20, bottom: 9 * MM, width: 92 }]}>
-        <Text style={s.sloganTh}>{withThaiBreaks(NAME_CARD_COPY.sloganTh)}</Text>
-        <Text style={s.sloganEn}>{NAME_CARD_COPY.sloganEn}</Text>
+      <View style={[s.abs, { left: 12 * MM - 20, bottom: 9 * MM, width: 78 }]}>
+        <ThaiText style={s.sloganTh}>{NAME_CARD_COPY.sloganTh}</ThaiText>
+        <T style={s.sloganEn}>{NAME_CARD_COPY.sloganEn}</T>
       </View>
       <View style={[s.abs, { left: 130, right: 12, bottom: 9 }]}>
         <View style={s.rule} />
-        {data.juristicId && <Text style={s.reg}>{'เลขทะเบียนนิติบุคคล ' + data.juristicId}</Text>}
+        {data.juristicId && <T style={s.reg}>{'เลขทะเบียนนิติบุคคล ' + data.juristicId}</T>}
       </View>
     </Page>
   );
@@ -266,18 +309,20 @@ function Back({ data }: { data: NameCardData }) {
         </Defs>
         <Rect x={0} y={0} width={W} height={3} fill="url(#strip)" />
       </Svg>
-      <Text style={[s.abs, s.watermark, { right: 4, bottom: 0 }]}>{data.companyInitials}</Text>
-      <Text style={[s.abs, s.backTagline, { right: 12, top: 12, width: 70 }]}>
+      <T style={[s.abs, s.watermark, { right: 4, bottom: 0 }]}>{data.companyInitials}</T>
+      <T style={[s.abs, s.backTagline, { right: 12, top: 12, width: 70 }]}>
         {NAME_CARD_COPY.tagline.split(' · ').join('\n')}
-      </Text>
+      </T>
       <View style={[s.abs, { left: 12, top: 12, width: 170 }]}>
-        <Text style={s.holderTh}>{withThaiBreaks(data.holderName)}</Text>
-        {data.holderNameEn && <Text style={s.holderEn}>{data.holderNameEn.toUpperCase()}</Text>}
+        <ThaiText style={s.holderTh}>{data.holderName}</ThaiText>
+        {data.holderNameEn && <T style={s.holderEn}>{data.holderNameEn.toUpperCase()}</T>}
       </View>
       <View style={[s.abs, { left: 12, top: 62, width: 150 }]}>
         <Fact icon="phone">{data.phoneDisplay}</Fact>
         {data.email && <Fact icon="mail">{data.email}</Fact>}
-        <Fact icon="pin">{withThaiBreaks(data.address)}</Fact>
+        <Fact icon="pin" thai>
+          {data.address}
+        </Fact>
         {data.juristicId && (
           <Fact icon="hash" sub="เลขทะเบียนนิติบุคคล · Corporate Registration No.">
             {data.juristicId}
@@ -291,11 +336,11 @@ function Back({ data }: { data: NameCardData }) {
             { left: 172, top: 62, width: W - 172 - 12, maxHeight: 62, overflow: 'hidden' },
           ]}
         >
-          <Text style={s.label}>สินค้า / บริการ · PRODUCTS / SERVICES</Text>
-          <Text style={s.products}>{withThaiBreaks(data.productsServices)}</Text>
+          <T style={s.label}>สินค้า / บริการ · PRODUCTS / SERVICES</T>
+          <ThaiText style={s.products}>{data.productsServices}</ThaiText>
         </View>
       )}
-      <Text style={[s.abs, s.meta, { left: 12, bottom: 5 }]}>{data.templateVersion}</Text>
+      <T style={[s.abs, s.meta, { left: 12, bottom: 5 }]}>{data.templateVersion}</T>
     </Page>
   );
 }

@@ -5,7 +5,7 @@ import {
   buildNameCardData,
   companyInitials,
   missingNameCardFields,
-  withThaiBreaks,
+  thaiWords,
   type NameCardSource,
 } from '@/lib/domain/name-card';
 import { formatThaiMobile, normalizeThaiMobile } from '@/lib/domain/phone';
@@ -102,10 +102,20 @@ describe('NAME_CARD_COPY', () => {
   });
 });
 
-describe('withThaiBreaks', () => {
-  it('inserts zero-width spaces between Thai words and leaves Latin readable', () => {
-    const out = withThaiBreaks('บริษัททดสอบจำกัด TEST');
-    expect(out.replace(/\u200b/g, '')).toBe('บริษัททดสอบจำกัด TEST');
-    expect(out.split('\u200b').length).toBeGreaterThan(2);
+/** Thai has no spaces between words; the card breaks lines between the pieces this returns. */
+describe('thaiWords', () => {
+  it('splits Thai into dictionary words and keeps Latin words and digits whole', () => {
+    const words = thaiWords('บริษัททดสอบจำกัด 99/9 TEST');
+    expect(words.join('')).toBe('บริษัททดสอบจำกัด 99/9 TEST');
+    expect(words.filter((w) => /[฀-๿]/.test(w)).length).toBeGreaterThan(1);
+    expect(words).toContain('99/9 ');
+    expect(words).toContain('TEST');
+  });
+
+  it('keeps a space on the word before it, so no piece starts with one or is only space', () => {
+    const words = thaiWords('  หมู่ 1   ตำบลตัวอย่าง \n');
+    expect(words.join('')).toBe('หมู่ 1 ตำบลตัวอย่าง');
+    expect(words.every((w) => w.trim().length > 0 && !w.startsWith(' '))).toBe(true);
+    expect(thaiWords('   ')).toEqual([]);
   });
 });
