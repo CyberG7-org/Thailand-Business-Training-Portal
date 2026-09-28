@@ -618,7 +618,9 @@
     "summary": {
       "ofTotal": "{done} of {total}"
     },
-    "allDone": "All cards done"
+    "allDone": "All cards done",
+    "cardOf": "Card {n} of {total}",
+    "nextCard": "Card {n}: {title}"
   },
   "quiz": {
     "title": "Evaluation quiz",

@@ -202,6 +202,112 @@
     animation: pulse-ring 1.8s ease-out 1.2s infinite;
   }
 
+  /* A study card's rendered Markdown (handoff, 02): body 16/1.75, Trirong headings, the
+     bank-asks table with a brand-50 header row and ink-100 dividers. Under 768px the table
+     stacks: each row becomes a block with the question as its label. */
+  .study-article {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--color-ink-900);
+  }
+  .study-article > * + * {
+    margin-top: 1em;
+  }
+  .study-article h1,
+  .study-article h2,
+  .study-article h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-brand-900);
+    text-wrap: balance;
+  }
+  .study-article h1 {
+    font-size: 24px;
+    line-height: 1.4;
+  }
+  .study-article h2 {
+    font-size: 22px;
+    line-height: 1.45;
+  }
+  .study-article h3 {
+    font-size: 18px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .study-article p,
+  .study-article li {
+    max-width: 68ch;
+    text-wrap: pretty;
+  }
+  .study-article ul,
+  .study-article ol {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 22px;
+  }
+  .study-article ul {
+    list-style: disc;
+  }
+  .study-article ol {
+    list-style: decimal;
+  }
+  .study-article strong {
+    font-weight: 600;
+  }
+  .study-article a {
+    color: var(--color-brand-600);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .study-article table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .study-article th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-brand-700);
+    background: var(--color-brand-50);
+    border-bottom: 1px solid var(--color-brand-100);
+  }
+  .study-article td {
+    padding: 12px 14px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--color-ink-100);
+  }
+  .study-article td:first-child {
+    color: var(--color-ink-700);
+  }
+  @media (max-width: 767px) {
+    .study-article table,
+    .study-article tbody,
+    .study-article tr,
+    .study-article td {
+      display: block;
+    }
+    .study-article thead {
+      display: none;
+    }
+    .study-article tr {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-ink-100);
+    }
+    .study-article td {
+      padding: 0;
+      border: 0;
+    }
+    .study-article td:first-child {
+      font-size: 14px;
+      line-height: 1.7;
+      font-weight: 500;
+      color: var(--color-ink-500);
+    }
+  }
+
   /* The navy band across the top of every learner page: rings, a blue glow top-right, and the
      brand gradient underneath. */
   .band {

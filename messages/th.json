@@ -618,7 +618,9 @@
     "summary": {
       "ofTotal": "{done} จาก {total}"
     },
-    "allDone": "อ่านครบทุกบทเรียนแล้ว"
+    "allDone": "อ่านครบทุกบทเรียนแล้ว",
+    "cardOf": "บทเรียนที่ {n} จาก {total}",
+    "nextCard": "บทเรียนที่ {n}: {title}"
   },
   "quiz": {
     "title": "แบบทดสอบประเมิน",

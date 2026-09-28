@@ -132,3 +132,40 @@ export async function disableProfileOnly(loginId: string): Promise<void> {
     .eq('login_id', loginId);
   if (error) throw error;
 }
+
+/** A Thai study card with a table and tips, for the screens that lay tables out. Returns its key. */
+export async function seedStudyCard(): Promise<string> {
+  const admin = svc();
+  const key = 'e2e-table-' + Date.now();
+  const { data: creator } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+    .limit(1)
+    .single();
+  const { data: material, error } = await admin
+    .from('study_materials')
+    .insert({
+      content_key: key,
+      type: 'card',
+      sort_order: 99,
+      active: true,
+      created_by: creator?.id ?? null,
+    })
+    .select('id')
+    .single();
+  if (error || !material) throw error ?? new Error('study card not created');
+  const { error: locError } = await admin.from('study_material_localizations').insert({
+    material_id: material.id,
+    language: 'th',
+    title: 'บทเรียนตาราง ' + key,
+    body:
+      '# หัวข้อ\n\nตอบตาม **หนังสือรับรอง** เสมอ\n\n' +
+      '| ธนาคารถาม | คำตอบของคุณ |\n|---|---|\n' +
+      '| ชื่อบริษัท | บริษัท ทดสอบ จำกัด |\n| เลขทะเบียนนิติบุคคล | 0105568233704 |\n\n' +
+      '### เคล็ดลับ\n\n- บอกชื่อเต็มตามที่จดทะเบียน\n- วันที่ใช้ตามหนังสือรับรอง',
+    tts_enabled: false,
+  });
+  if (locError) throw locError;
+  return key;
+}

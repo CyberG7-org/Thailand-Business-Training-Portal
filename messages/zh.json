@@ -618,7 +618,9 @@
     "summary": {
       "ofTotal": "{total} 张中的 {done} 张"
     },
-    "allDone": "所有卡片已完成"
+    "allDone": "所有卡片已完成",
+    "cardOf": "第 {n} 张，共 {total} 张",
+    "nextCard": "第 {n} 张：{title}"
   },
   "quiz": {
     "title": "评估测验",

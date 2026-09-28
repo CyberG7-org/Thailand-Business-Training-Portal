@@ -11,7 +11,8 @@ import { StepSegments } from './step-segments';
  * The shared learner shell (design handoff, "Shared shell"): a navy band holding the glass
  * header, the back pill, the step segments and the page title, with the page's content on the
  * dot grid below. A page passes only what differs; the user and the stage statuses are read once
- * per request. The dashboard swaps the title for its hero and adds the stepper to the band.
+ * per request. The dashboard swaps the title for its hero and adds the stepper to the band; a
+ * card page points the back pill at its list and shows its place there instead of the steps.
  */
 export async function LearnerShell({
   title,
@@ -19,6 +20,8 @@ export async function LearnerShell({
   intro,
   step,
   home = false,
+  back,
+  subBarRight,
   hero,
   bandFooter,
   children,
@@ -32,6 +35,10 @@ export async function LearnerShell({
   step?: StageKey;
   /** The dashboard: no back pill and no segments. */
   home?: boolean;
+  /** A fixed destination for the back pill; otherwise it steps back through the history. */
+  back?: { href: string; label: string };
+  /** Replaces the step segments on the right of the sub-bar. */
+  subBarRight?: ReactNode;
   /** Replaces the title block; must carry the page's h1. */
   hero?: ReactNode;
   /** Rendered at the foot of the band, still on navy (the dashboard's stepper). */
@@ -39,15 +46,15 @@ export async function LearnerShell({
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
-  const statuses = step && user ? await cachedStageStatuses(user.id) : null;
+  const statuses = step && !subBarRight && user ? await cachedStageStatuses(user.id) : null;
   return (
     <>
       <div className="band rounded-b-[28px] px-4 pt-4 pb-8 md:rounded-b-[36px] md:px-6 md:pb-10">
         <ShellHeader user={user} />
         {!home && (
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-            <BackPill home="/dashboard" label={t('back')} />
-            {step && <StepSegments current={step} statuses={statuses} />}
+            <BackPill home="/dashboard" label={back?.label ?? t('back')} href={back?.href} />
+            {subBarRight ?? (step && <StepSegments current={step} statuses={statuses} />)}
           </div>
         )}
         {hero ?? (
