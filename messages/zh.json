@@ -668,6 +668,57 @@
     "toInterview": "前往准备度面谈",
     "retake": "重新考试"
   },
+  "interview": {
+    "title": "准备度面谈",
+    "intro": "AI 银行专员将用泰语像正式面谈一样提问：询问贵公司情况、核对登记证明，并给出你是否准备好的结论。可无限次重复。",
+    "thaiOnly": "面谈全程使用泰语。",
+    "start": "开始面谈",
+    "resume": "继续面谈",
+    "history": "过往面谈",
+    "verdict": {
+      "ready": "已准备好",
+      "not_ready": "尚未准备好",
+      "abandoned": "未完成"
+    },
+    "chat": {
+      "placeholder": "请用泰语输入回答…",
+      "send": "发送",
+      "end": "结束面谈",
+      "typing": "专员正在输入…",
+      "officer": "银行专员",
+      "you": "你",
+      "limit": "最多 {max} 个字符"
+    },
+    "debrief": {
+      "title": "面谈结果",
+      "reasons": "你的逐题回答",
+      "correctValue": "证明文件记载：{value}",
+      "review": "复习卡片",
+      "transcript": "对话记录",
+      "tryAgain": "再试一次",
+      "toDashboard": "首页"
+    },
+    "assessment": {
+      "correct": "正确",
+      "partial": "部分正确",
+      "wrong": "错误",
+      "evasive": "回避",
+      "pasted": "复制粘贴",
+      "off_topic": "答非所问"
+    },
+    "concept": {
+      "juristic_id": "法人注册号"
+    },
+    "errors": {
+      "not_open": "面谈尚未开放。",
+      "not_configured": "尚未配置面谈官。",
+      "no_assignment": "尚未为你分配公司。",
+      "closed": "本次面谈已结束。",
+      "too_long": "消息过长。",
+      "not_found": "找不到面谈。",
+      "unknown": "出错了，请重试。"
+    }
+  },
   "nameCard": {
     "title": "名片",
     "intro": "所有公司使用同一设计，内容来自贵公司的记录以及你填写的姓名和电话。可预览、下载 PDF 或发送到 Telegram。",

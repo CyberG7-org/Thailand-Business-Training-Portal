@@ -668,6 +668,57 @@
     "toInterview": "Go to the readiness interview",
     "retake": "Retake exam"
   },
+  "interview": {
+    "title": "Readiness interview",
+    "intro": "An AI bank officer interviews you in Thai, as on the day: questions about your company, checked against the certificate, and a verdict on whether you are ready. Repeat as often as you like.",
+    "thaiOnly": "The interview is entirely in Thai.",
+    "start": "Start the interview",
+    "resume": "Continue the interview",
+    "history": "Past interviews",
+    "verdict": {
+      "ready": "Ready",
+      "not_ready": "Not yet ready",
+      "abandoned": "Not finished"
+    },
+    "chat": {
+      "placeholder": "Type your answer in Thai…",
+      "send": "Send",
+      "end": "End the interview",
+      "typing": "The officer is typing…",
+      "officer": "Bank officer",
+      "you": "You",
+      "limit": "Up to {max} characters"
+    },
+    "debrief": {
+      "title": "Interview result",
+      "reasons": "Your answers, one by one",
+      "correctValue": "On the certificate: {value}",
+      "review": "Review the card",
+      "transcript": "Transcript",
+      "tryAgain": "Try again",
+      "toDashboard": "Dashboard"
+    },
+    "assessment": {
+      "correct": "Correct",
+      "partial": "Partly right",
+      "wrong": "Wrong",
+      "evasive": "Evaded",
+      "pasted": "Pasted",
+      "off_topic": "Off topic"
+    },
+    "concept": {
+      "juristic_id": "Registration number"
+    },
+    "errors": {
+      "not_open": "The interview is not open yet.",
+      "not_configured": "The interviewer is not configured.",
+      "no_assignment": "No company has been assigned to you.",
+      "closed": "This interview has ended.",
+      "too_long": "The message is too long.",
+      "not_found": "Interview not found.",
+      "unknown": "Something went wrong. Please try again."
+    }
+  },
   "nameCard": {
     "title": "Name card",
     "intro": "One design for every company, filled from your company record plus the name and phone number you enter. Preview, download the PDF, or send it to Telegram.",
