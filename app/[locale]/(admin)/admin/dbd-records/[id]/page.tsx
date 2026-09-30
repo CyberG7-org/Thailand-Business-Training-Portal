@@ -2,16 +2,24 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
+import { listBusinessCategories } from '@/lib/db/business-categories';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { parseStoredExtraction } from '@/lib/db/extraction';
+import { geoLookup } from '@/lib/db/geo';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { conceptCoverage } from '@/lib/domain/concepts/resolve';
 import { missingFieldsForConfirmation } from '@/lib/domain/dbd-record';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
+import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
+import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
+import { AddressPanel } from './address-panel';
+import { CategoryPanel } from './category-panel';
+import { CoveragePanel } from './coverage-panel';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
 import { RecordTools, type DocumentSummary, type ReadingState } from './record-tools';
@@ -39,6 +47,18 @@ export default async function DbdRecordPage({
   const documents = await listDbdDocuments(db, id);
   const structured = readStructuredData(record.structured_data);
   const t = await getTranslations('admin.dbd');
+
+  // Derived on the fly when not stored yet (a record saved before P17a); never written on a GET.
+  const address =
+    structured.address ??
+    (await resolveRegisteredAddress(record.head_office_address, geoLookup(db)));
+  const categories = await listBusinessCategories(db, { activeOnly: true });
+  const labelOf = (c: (typeof categories)[number]) =>
+    locale === 'en' ? c.label_en : locale === 'zh' ? c.label_zh : c.label_th;
+  const coverage = conceptCoverage(
+    buildFactSheet({ record, structured, address, role: null }),
+    'company',
+  );
 
   // The reading runs in the background (D46): show the latest extract job, or that oversized
   // documents are still being indexed before their transcripts can fill the record.
@@ -97,6 +117,7 @@ export default async function DbdRecordPage({
         reading={reading}
         extractionAvailable={getDbdExtractor() !== null}
       />
+      <CoveragePanel coverage={coverage} />
       {error === 'vector_unavailable' && (
         <p
           role="alert"
@@ -124,6 +145,12 @@ export default async function DbdRecordPage({
         interview={structured.interview ?? null}
         provenance={structured.provenance ?? {}}
         documentNames={documents.map((d) => d.original_name)}
+      />
+      <AddressPanel address={address} stored={Boolean(structured.address)} />
+      <CategoryPanel
+        recordId={record.id}
+        assignment={structured.category ?? null}
+        options={categories.map((c) => ({ key: c.key, label: labelOf(c) }))}
       />
       <InterviewForm
         recordId={record.id}
