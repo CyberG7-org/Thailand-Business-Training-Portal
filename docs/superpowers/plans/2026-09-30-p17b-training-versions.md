@@ -775,7 +775,8 @@ Replace the `toTemplateRecord` function (from `export function toTemplateRecord(
 
 ```ts
 /** The old templates' record from the live row (moved to the domain in P17b, §11). */
-export { templateRecordFromRecord as toTemplateRecord } from '@/lib/domain/facts/snapshot';
+import { templateRecordFromRecord as toTemplateRecord } from '@/lib/domain/facts/snapshot';
+export { toTemplateRecord };
 ```
 
 and prune the imports it alone used: remove `myShareholding`, `EMPTY_INTERVIEW_PROFILE` and `LearnerRole` from the `@/lib/domain/bank-interview` import (keep the import only if something else in the file still uses a name from it — `pnpm lint` reports what is unused), remove `EMPTY_BUSINESS_PROFILE` and `readStructuredData` from `@/lib/domain/dbd-profile`, and `import type { Director }` — each only if no other use remains in the file.
