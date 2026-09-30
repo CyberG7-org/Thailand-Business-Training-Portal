@@ -13,6 +13,11 @@ describe('initialsOf', () => {
   });
 
   it('falls back to the login id when there is no display name', () => {
-    expect(initialsOf(null, 't01-03')).toBe('T0');
+    expect(initialsOf(null, 'owner')).toBe('OW');
+  });
+
+  it('skips the hyphens of a code, so T-G4 reads TG rather than "T-"', () => {
+    expect(initialsOf(null, 't-g4')).toBe('TG');
+    expect(initialsOf(null, 't-g4-l8')).toBe('TG');
   });
 });

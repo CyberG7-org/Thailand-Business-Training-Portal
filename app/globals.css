@@ -453,6 +453,29 @@
     background: var(--color-ink-50);
     color: var(--color-ink-700);
   }
+  /* A fixed prefix joined to its input: the T- or T-G4- before the typed part of a code (D69). */
+  .staff-input-group {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    align-items: stretch;
+  }
+  .staff-input-affix {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-ink-300);
+    border-right: 0;
+    border-radius: var(--radius-control) 0 0 var(--radius-control);
+    background: var(--color-ink-50);
+    padding: 0 12px;
+    color: var(--color-ink-700);
+    white-space: nowrap;
+  }
+  .staff-input-group > .staff-input {
+    min-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
   .staff-btn,
   .staff-btn-ghost,
   .staff-btn-ok {

@@ -1,30 +1,39 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { createConfirmedRecord, createLearner, createManager, loginAs, switchTo } from './helpers';
+import {
+  createConfirmedRecord,
+  createLearner,
+  createManager,
+  fillLoginSuffix,
+  loginAs,
+  selectTeam,
+  switchTo,
+} from './helpers';
 
 const MANAGER_PASSWORD = 'Manager-Password-1!';
 const LEARNER_PASSWORD = 'Learner-Pass-123';
 
-test('a learner is created inside a team, with an allocated code', async ({ page }) => {
+test('a learner is created inside a team, under a code typed after the team prefix', async ({
+  page,
+}) => {
   const company = `บริษัท ผู้เรียนใหม่ ${Date.now()} จำกัด`;
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'หัวหน้าทีม', MANAGER_PASSWORD);
+  expect(code).toMatch(/^T-[A-Z0-9]{2,6}$/);
   await createConfirmedRecord(page, {
     companyNameTh: company,
     juristicId: '0105568233704',
     issuedOn: '13/07/2569',
   });
 
-  // Before anything is typed the form says which code the next learner of the team gets, and
-  // asks for the learner's name (D66).
+  // Until a team is chosen there is no prefix to type after (D69).
   await page.goto('/th/admin/users');
-  await expect(page.getByTestId('next-login-id')).toHaveValue('');
-  const teamOption = page.locator('select[name="managerId"] option', { hasText: code });
-  await page
-    .locator('select[name="managerId"]')
-    .selectOption((await teamOption.getAttribute('value'))!);
-  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-01`);
-  await expect(page.getByTestId('next-login-id')).toHaveAttribute('readonly', '');
+  await expect(page.getByTestId('login-suffix')).toBeDisabled();
+  await selectTeam(page, code);
+  await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
+  // A free code is filled in: one letter and one digit, like G4.
+  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]$/);
+  await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
   await expect(page.locator('input[name="displayName"]')).toHaveAttribute('required', '');
 
   const learner = await createLearner(page, {
@@ -32,14 +41,14 @@ test('a learner is created inside a team, with an allocated code', async ({ page
     displayName: 'E2E Learner',
     company,
     team: code,
+    suffix: 'ab12',
   });
-  expect(learner).toBe(`${code.toLowerCase()}-01`);
+  expect(learner).toBe(`${code.toLowerCase()}-ab12`);
 
-  // The form has no language or role choice, and no typed login id: the code is allocated.
+  // The form has no language or role choice, and the prefix is not typed.
   await expect(page.locator('select[name="preferredLanguage"]')).toHaveCount(0);
   await expect(page.locator('select[name="role"]')).toHaveCount(0);
   await expect(page.locator('input[name="loginId"]')).toHaveCount(0);
-  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-02`);
   await expect(page.getByTestId(`company-${learner}`)).toHaveText(company);
   await expect(page.getByTestId(`team-${learner}`)).toHaveText(code);
 
@@ -47,6 +56,44 @@ test('a learner is created inside a team, with an allocated code', async ({ page
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await expect(page.getByRole('heading', { name: 'ยินดีต้อนรับ E2E Learner' })).toBeVisible();
   await expect(page.getByTestId('company-name')).toHaveText(company);
+});
+
+test('a taken code is flagged as it is typed and refused at create', async ({ page }) => {
+  const company = `บริษัท รหัสซ้ำ ${Date.now()} จำกัด`;
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const code = await createManager(page, 'ทีมรหัสซ้ำ', MANAGER_PASSWORD);
+  await createConfirmedRecord(page, {
+    companyNameTh: company,
+    juristicId: '0105568233704',
+    issuedOn: '13/07/2569',
+  });
+  await createLearner(page, { password: LEARNER_PASSWORD, company, team: code, suffix: 'Q7' });
+
+  await page.goto('/th/admin/users');
+  await selectTeam(page, code);
+  await fillLoginSuffix(page);
+  // Not case-sensitive: q7 is the Q7 already held.
+  await page.getByTestId('login-suffix').fill('q7');
+  await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'taken');
+  await expect(page.getByTestId('login-id-status')).toHaveText(
+    'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
+  );
+  await page.getByTestId('login-suffix').fill('Q-7');
+  await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
+
+  // Sent anyway, the server refuses it in the same words and creates nobody.
+  await page.getByTestId('login-suffix').fill('Q7');
+  await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
+  await page.locator('input[name="displayName"]').fill('ผู้เรียนซ้ำ');
+  const option = page.locator('select[name="dbdRecordId"] option', { hasText: company });
+  await page
+    .locator('select[name="dbdRecordId"]')
+    .selectOption((await option.getAttribute('value'))!);
+  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  await expect(page.getByTestId('create-user-error')).toHaveText(
+    'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
+  );
+  await expect(page.getByRole('link', { name: `${code}-Q7`, exact: true })).toHaveCount(1);
 });
 
 test('the admin must say which team', async ({ page }) => {
@@ -82,19 +129,17 @@ test('a learner is not created without a name', async ({ page }) => {
   });
 
   await page.goto('/th/admin/users');
-  const teamOption = page.locator('select[name="managerId"] option', { hasText: code });
-  await page
-    .locator('select[name="managerId"]')
-    .selectOption((await teamOption.getAttribute('value'))!);
+  await selectTeam(page, code);
+  await fillLoginSuffix(page);
   await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: company });
   await page
     .locator('select[name="dbdRecordId"]')
     .selectOption((await option.getAttribute('value'))!);
-  // The name is required, so the browser keeps the form here and no code is spent.
+  // The name is required, so the browser keeps the form here and nobody is created.
   await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
   await expect(page.getByTestId('create-user-status')).toHaveCount(0);
-  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-01`);
+  await expect(page.getByTestId('login-suffix')).not.toHaveValue('');
 });
 
 test('a learner cannot be created without a confirmed company', async ({ page }) => {
@@ -141,7 +186,7 @@ test('admin can disable an account and it can no longer sign in', async ({ page 
     company,
     team: code,
   });
-  await page.getByRole('link', { name: learner.toUpperCase() }).click();
+  await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
   await page.getByRole('button', { name: 'ระงับบัญชี' }).click();
   await expect(page.getByTestId('account-status')).toHaveText('disabled');
 
@@ -170,10 +215,7 @@ test('the admin cannot pair a team with another team company', async ({ page }) 
   // The admin picks team B: team A's company must not be on offer for them.
   await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users');
-  const teamOption = page.locator('select[name="managerId"] option', { hasText: teamB });
-  await page
-    .locator('select[name="managerId"]')
-    .selectOption((await teamOption.getAttribute('value'))!);
+  await selectTeam(page, teamB);
   await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(company);
 });
 

@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { requireAdmin } from '@/lib/auth/session';
+import { suggestLoginSuffix } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import { displayLoginId } from '@/lib/domain/login-id';
+import { MANAGER_PREFIX, displayLoginId } from '@/lib/domain/login-id';
 import { NewManagerForm } from './new-manager-form';
 import { ManagerRowControls } from './row-controls';
 
@@ -33,7 +34,7 @@ export default async function ManagersPage({ params }: { params: Promise<{ local
   return (
     <section className="grid gap-6">
       <h1 className="staff-title">{t('title')}</h1>
-      <NewManagerForm />
+      <NewManagerForm initialSuffix={await suggestLoginSuffix(MANAGER_PREFIX)} />
       <p className="text-xs text-ink-500">{t('suspendHint')}</p>
       {(managers ?? []).length === 0 ? (
         <p className="text-sm">{t('empty')}</p>

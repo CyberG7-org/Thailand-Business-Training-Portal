@@ -11,6 +11,14 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    pnpm exec supabase db push
    ```
    All migrations apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`) are created private by the migrations. A project that ran the voice call keeps an empty `recordings` bucket: delete it in the dashboard (Storage → recordings), since SQL may not remove storage rows.
+
+   **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
+   ```sql
+   select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name
+     from public.profiles
+    where role in ('manager', 'learner') and login_id ~ '^t[0-9]+(-[0-9]+)?$'
+    order by login_id;
+   ```
 3. **Do not** run `seed.sql` / `seed_questions.sql` in production (they hold sample content only). Load real content through the admin UI.
 4. Auth settings (Dashboard → Authentication):
    - Providers → Email: enabled; **Confirm email: off** (accounts are provisioned by admins with `email_confirm`).

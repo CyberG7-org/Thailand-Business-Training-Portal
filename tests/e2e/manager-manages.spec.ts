@@ -17,14 +17,16 @@ test('a manager can open one of their learners and suspend them', async ({ page 
     juristicId: '0105568233711',
     issuedOn: '13/07/2569',
   });
-  // A manager's own team is implied, so the next code shows straight away (D66).
+  // A manager's own team is implied, so their prefix and a free code show straight away (D69).
   await page.goto('/th/admin/users');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
-  await expect(page.getByTestId('next-login-id')).toHaveValue(`${code}-01`);
+  await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
+  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]$/);
   const learner = await createLearner(page, { password: LEARNER_PASSWORD, company });
+  expect(learner).toMatch(new RegExp(`^${code.toLowerCase()}-[a-z][0-9]$`));
 
   await page.goto('/th/admin/users');
-  await page.getByRole('link', { name: learner.toUpperCase() }).click();
+  await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
   await expect(page).toHaveURL(/\/th\/admin\/users\/[0-9a-f-]{36}$/);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(learner.toUpperCase());
 
@@ -46,7 +48,9 @@ test('a manager cannot open a learner of another team', async ({ page }) => {
   });
   await createLearner(page, { password: LEARNER_PASSWORD, company });
   await page.goto('/th/admin/users');
-  const href = await page.getByRole('link', { name: /T\d+-\d+/ }).getAttribute('href');
+  const href = await page
+    .getByRole('link', { name: /^T-[A-Z0-9]+-[A-Z0-9]+$/ })
+    .getAttribute('href');
 
   await switchTo(page, teamB.toLowerCase(), MANAGER_PASSWORD);
   await page.goto(href!);

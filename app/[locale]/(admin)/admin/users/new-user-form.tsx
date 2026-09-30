@@ -1,9 +1,11 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { Link } from '@/i18n/navigation';
-import { displayLoginId } from '@/lib/domain/login-id';
+import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
+import { suggestLoginIdAction } from '../login-id-actions';
+import { LoginIdField } from '../login-id-field';
 import { createUserAction, type CreateUserState } from './actions';
 
 const initial: CreateUserState = { ok: false, error: null, createdLoginId: null, company: null };
@@ -27,35 +29,64 @@ export type TeamOption = {
   id: string;
   code: string;
   name: string | null;
-  /** The code the next learner of this team gets (D66). */
-  nextLoginId: string;
+  /** The manager's stored code, which prefixes every learner of the team (D69). */
+  loginId: string;
 };
 
 export function NewUserForm({
   companies,
   teams = null,
-  nextLoginId = null,
+  ownLoginId = null,
+  initialSuffix = null,
 }: {
   companies: CompanyOption[];
   /** Null for a manager: they create inside their own team (spec §7). */
   teams?: TeamOption[] | null;
-  /** A manager's own team's next code; the admin's comes with the team chosen. */
-  nextLoginId?: string | null;
+  /** A manager's own code; the admin's prefix comes with the team chosen. */
+  ownLoginId?: string | null;
+  /** A free suffix for a manager's own team; the admin's arrives once a team is chosen. */
+  initialSuffix?: string | null;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.users');
-  const [state, formAction, pending] = useActionState(createUserAction, initial);
   const [teamId, setTeamId] = useState('');
+  const [suggestion, setSuggestion] = useState({
+    suffix: initialSuffix,
+    busy: false,
+    version: 0,
+  });
+  // Only the latest request may land: an admin flicking between teams must not end up with a
+  // suggestion made for the team they left.
+  const latest = useRef(0);
+  const refreshSuggestion = async (managerId: string | undefined) => {
+    const request = ++latest.current;
+    const wanted = !teams || Boolean(managerId);
+    // Held empty until this team's suggestion lands, never showing the last team's code.
+    setSuggestion((s) => ({ suffix: null, busy: wanted, version: s.version + 1 }));
+    if (!wanted) return;
+    const { suffix } = await suggestLoginIdAction({ locale, kind: 'learner', managerId });
+    if (request === latest.current) {
+      setSuggestion((s) => ({ suffix, busy: false, version: s.version + 1 }));
+    }
+  };
+  const [state, formAction, pending] = useActionState(
+    async (prev: CreateUserState, formData: FormData) => {
+      const next = await createUserAction(prev, formData);
+      // The code just created is taken now, so a success brings the next suggestion (D69).
+      if (next.createdLoginId) await refreshSuggestion(teams ? teamId : undefined);
+      return next;
+    },
+    initial,
+  );
   // An admin choosing a team sees that team's companies and their own untied ones; a manager
   // (teams === null) sees whatever RLS already gave them.
   const offered = teams
     ? companies.filter((c) => !teamId || c.teamId === teamId || c.teamId == null)
     : companies;
   const confirmed = companies.filter((c) => c.confirmed);
-  // Nobody types a login id: the form says which code the next learner gets (D66).
-  const nextCode = teams
-    ? (teams.find((team) => team.id === teamId)?.nextLoginId ?? null)
-    : nextLoginId;
+  const teamLoginId = teams
+    ? (teams.find((team) => team.id === teamId)?.loginId ?? null)
+    : ownLoginId;
   return (
     <form action={formAction} className="staff-card grid max-w-md gap-3">
       <input type="hidden" name="locale" value={locale} />
@@ -72,7 +103,10 @@ export function NewUserForm({
               name="managerId"
               required
               value={teamId}
-              onChange={(e) => setTeamId(e.target.value)}
+              onChange={(e) => {
+                setTeamId(e.target.value);
+                void refreshSuggestion(e.target.value || undefined);
+              }}
               className="staff-input mt-1"
             >
               <option value="">{t('chooseTeam')}</option>
@@ -85,19 +119,14 @@ export function NewUserForm({
           )}
         </label>
       )}
-      <label className="text-sm">
-        {t('nextLoginId')}
-        <input
-          readOnly
-          aria-readonly="true"
-          tabIndex={-1}
-          data-testid="next-login-id"
-          value={nextCode ? displayLoginId(nextCode) : ''}
-          placeholder={teams && !teamId ? t('nextLoginIdChooseTeam') : undefined}
-          className="staff-input mt-1 font-mono"
-        />
-        <span className="mt-1 block text-xs text-ink-500">{t('nextLoginIdHint')}</span>
-      </label>
+      <LoginIdField
+        key={suggestion.version}
+        kind="learner"
+        prefix={teamLoginId ? learnerPrefix(teamLoginId) : null}
+        managerId={teams ? teamId || undefined : undefined}
+        initialSuffix={suggestion.suffix}
+        busy={suggestion.busy}
+      />
       <label className="text-sm">
         {t('learnerName')}
         <input name="displayName" required maxLength={120} className="staff-input mt-1" />

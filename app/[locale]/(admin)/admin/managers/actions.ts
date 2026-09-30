@@ -10,12 +10,13 @@ import {
   setAccountPassword,
   setAccountStatus,
 } from '@/lib/db/provisioning';
+import { loginIdErrorMessage } from '../login-id-errors';
 
 export type ManagerState = { ok: boolean; error: string | null; createdLoginId: string | null };
 
 const fail = (error: string): ManagerState => ({ ok: false, error, createdLoginId: null });
 
-/** Only the admin creates managers (spec §4). The code is allocated, never typed. */
+/** Only the admin creates managers (spec §4); they type the code after T- (D69). */
 export async function createManagerAction(
   _prev: ManagerState,
   formData: FormData,
@@ -25,6 +26,7 @@ export async function createManagerAction(
   try {
     const displayName = String(formData.get('displayName') ?? '') || undefined;
     const created = await createManagerAccount({
+      suffix: String(formData.get('loginSuffix') ?? ''),
       password: String(formData.get('password') ?? ''),
       displayName,
     });
@@ -36,7 +38,7 @@ export async function createManagerAction(
     revalidatePath(`/${locale}/admin/managers`);
     return { ok: true, error: null, createdLoginId: created.loginId };
   } catch (e) {
-    return fail(e instanceof ProvisioningError ? e.message : 'Unexpected error');
+    return fail(await loginIdErrorMessage(locale, e));
   }
 }
 
