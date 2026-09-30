@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache';
 import { requireStaff } from '@/lib/auth/session';
 import { assignDbdRecord } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
-import { ProvisioningError, createLearnerAccount } from '@/lib/db/provisioning';
+import { createLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { loginIdErrorMessage } from '../login-id-errors';
 
 export type CreateUserState = {
   ok: boolean;
@@ -38,7 +39,8 @@ export async function createUserAction(
   const managerId = staff.role === 'manager' ? staff.id : String(formData.get('managerId') ?? '');
   if (!managerId) return fail('Choose the team this learner belongs to');
 
-  // The learner is created with their name (D66); the code is never typed, it is allocated.
+  // The learner is created with their name (D66) and the code the staff member typed after the
+  // team's prefix (D69); the prefix itself is the server's, from the team.
   const displayName = String(formData.get('displayName') ?? '').trim();
   if (!displayName) return fail("Enter the learner's name");
 
@@ -57,12 +59,13 @@ export async function createUserAction(
   let created: { id: string; loginId: string };
   try {
     created = await createLearnerAccount({
+      suffix: String(formData.get('loginSuffix') ?? ''),
       password: String(formData.get('password') ?? ''),
       displayName,
       managerId,
     });
   } catch (e) {
-    return fail(e instanceof ProvisioningError ? e.message : 'Unexpected error');
+    return fail(await loginIdErrorMessage(locale, e));
   }
   await recordAccountAction(staff.id, 'create', created.id, {
     role: 'learner',

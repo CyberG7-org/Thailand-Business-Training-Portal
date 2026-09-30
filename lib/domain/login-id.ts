@@ -1,17 +1,59 @@
 /**
- * Login ids are stored lower-case, as every login id in this project is, and shown upper-case
- * so a code reads as what it is: T01 is a manager, T01-03 the third learner of that team
- * (spec §3.3). One helper, so `t01-03` can never reach a screen.
+ * Account codes (D69). Staff type the part after a fixed prefix: the owner gives a manager
+ * `T-` + a suffix (T-G4), a manager gives a learner their own code + `-` + a suffix (T-G4-L8).
+ * Codes are case-insensitive — stored lower-case, as every login id in this project is, and
+ * shown upper-case — so `t-g4` can never reach a screen.
  */
+export const MANAGER_PREFIX = 't-';
+
+/** The typed part: 2–6 letters or digits. No hyphen, so a suffix can never reach another team. */
+export const LOGIN_SUFFIX_PATTERN = /^[a-z0-9]{2,6}$/i;
+
+export function isValidLoginSuffix(suffix: string): boolean {
+  return LOGIN_SUFFIX_PATTERN.test(suffix);
+}
+
+export function managerLoginId(suffix: string): string {
+  return MANAGER_PREFIX + suffix.trim().toLowerCase();
+}
+
+/** Every learner code starts with their manager's whole code, whatever shape that code has. */
+export function learnerPrefix(managerLoginId: string): string {
+  return `${managerLoginId.trim().toLowerCase()}-`;
+}
+
+export function learnerLoginId(managerLoginId: string, suffix: string): string {
+  return learnerPrefix(managerLoginId) + suffix.trim().toLowerCase();
+}
+
 export function displayLoginId(loginId: string | null | undefined): string {
   const trimmed = loginId?.trim();
   return trimmed ? trimmed.toUpperCase() : '—';
 }
 
+// No i or o: handed over on paper or by phone they read as 1 and 0.
+const LETTERS = 'abcdefghjklmnpqrstuvwxyz';
+const DIGITS = '0123456789';
+
 /**
- * The code `allocate_login_id` writes for a counter value — lower-case, a single digit padded to
- * two — so a screen can say which code comes next before it is taken (D66).
+ * Suffixes to offer, all distinct. Two characters are one letter then one digit (G4, L8); longer
+ * ones keep the letter first and mix after it. Fewer come back than asked for only when the space
+ * of that length is smaller than `count`.
  */
-export function formatLoginCode(prefix: string, value: number): string {
-  return prefix.toLowerCase() + (value < 10 ? `0${value}` : String(value));
+export function suggestionCandidates(
+  count: number,
+  length = 2,
+  random: () => number = Math.random,
+): string[] {
+  const pick = (chars: string) => chars[Math.floor(random() * chars.length)];
+  const rest = length === 2 ? DIGITS : LETTERS + DIGITS;
+  const space = LETTERS.length * rest.length ** (length - 1);
+  const wanted = Math.min(count, space);
+  const found = new Set<string>();
+  for (let attempt = 0; found.size < wanted && attempt < wanted * 50; attempt++) {
+    let code = pick(LETTERS);
+    for (let i = 1; i < length; i++) code += pick(rest);
+    found.add(code);
+  }
+  return [...found];
 }

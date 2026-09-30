@@ -70,15 +70,21 @@ test('every list page fits a phone', async ({ page }) => {
   }
 });
 
-test('a select is drawn as editable; only the allocated code is drawn read-only', async ({
+test('a select and the typed code are drawn editable; only the fixed prefix is not', async ({
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/users');
   const background = (selector: string) =>
-    page.locator(selector).evaluate((el) => getComputedStyle(el).backgroundColor);
+    page
+      .locator(selector)
+      .first()
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+  await page.goto('/th/admin/users');
   expect(await background('select[name="dbdRecordId"]')).toBe('rgb(255, 255, 255)');
-  expect(await background('[data-testid="next-login-id"]')).not.toBe('rgb(255, 255, 255)');
+  await page.goto('/th/admin/managers');
+  await expect(page.getByTestId('login-suffix')).not.toHaveValue('');
+  expect(await background('[data-testid="login-suffix"]')).toBe('rgb(255, 255, 255)');
+  expect(await background('[data-testid="login-id-prefix"]')).not.toBe('rgb(255, 255, 255)');
 });
 
 test('small buttons are tappable and readable on a phone', async ({ page }) => {

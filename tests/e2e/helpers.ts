@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /** Submits the login form without waiting — use when the outcome is a failed login. */
 export async function login(page: Page, loginId: string, password: string) {
@@ -33,34 +33,72 @@ export async function openManualRecordForm(page: Page) {
   await expect(page.locator('input[name="company_name_th"]')).toBeVisible();
 }
 
-/** Creates a manager on the Managers page and returns their allocated code, e.g. "T01". */
-export async function createManager(page: Page, displayName: string, password: string) {
+/**
+ * Keeps the free code the form suggested (D69), or types `suffix` over it, and waits until the
+ * field says the code is available.
+ */
+export async function fillLoginSuffix(scope: Page | Locator, suffix?: string) {
+  const input = scope.getByTestId('login-suffix');
+  // The suggestion lands first; typing before it would be overwritten when it arrives.
+  await expect(input).not.toHaveValue('');
+  if (suffix) await input.fill(suffix);
+  await expect(scope.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
+}
+
+/**
+ * Picks the admin's team for a new learner by its code. Matched as the option's leading code,
+ * not a substring: T-G4 must not pick T-G45.
+ */
+export async function selectTeam(page: Page, code: string) {
+  const escaped = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const option = page
+    .locator('select[name="managerId"] option')
+    .filter({ hasText: new RegExp(`^${escaped}( —|$)`) });
+  await page
+    .locator('select[name="managerId"]')
+    .selectOption((await option.getAttribute('value'))!);
+}
+
+/**
+ * Creates a manager on the Managers page and returns their code as displayed, e.g. "T-G4": the
+ * suggestion unless `suffix` is given.
+ */
+export async function createManager(
+  page: Page,
+  displayName: string,
+  password: string,
+  suffix?: string,
+) {
   await page.goto('/th/admin/managers');
   // Every row carries a rename field of the same name, so scope to the create form.
   const form = page.locator('form:has([data-testid="create-manager"])');
+  await fillLoginSuffix(form, suffix);
   await form.locator('input[name="displayName"]').fill(displayName);
   await form.locator('input[name="password"]').fill(password);
   await page.getByTestId('create-manager').click();
   const created = page.getByTestId('created-manager');
   await expect(created).toBeVisible();
-  return (await created.textContent())!.match(/T\d+/)![0];
+  return (await created.textContent())!.match(/T-[A-Z0-9]+/)![0];
 }
 
 /**
- * Creates a learner on the Users page and returns their allocated code, e.g. "t01-01". The code
- * is allocated, never typed (spec §3.3); `team` is required when the caller is the admin.
+ * Creates a learner on the Users page and returns their stored code, e.g. "t-g4-l8": the team's
+ * code, a hyphen and the suggestion unless `suffix` is given (D69). `team` is required when the
+ * caller is the admin.
  */
 export async function createLearner(
   page: Page,
-  fields: { password: string; displayName?: string; company: string; team?: string },
+  fields: {
+    password: string;
+    displayName?: string;
+    company: string;
+    team?: string;
+    suffix?: string;
+  },
 ): Promise<string> {
   await page.goto('/th/admin/users');
-  if (fields.team) {
-    const teamOption = page.locator('select[name="managerId"] option', { hasText: fields.team });
-    await page
-      .locator('select[name="managerId"]')
-      .selectOption((await teamOption.getAttribute('value'))!);
-  }
+  if (fields.team) await selectTeam(page, fields.team);
+  await fillLoginSuffix(page, fields.suffix);
   await page.locator('input[name="password"]').fill(fields.password);
   // The name is required (D66); a spec that does not care gets a placeholder.
   await page.locator('input[name="displayName"]').fill(fields.displayName ?? 'ผู้เรียนทดสอบ');
@@ -71,7 +109,7 @@ export async function createLearner(
   await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
   const status = page.getByTestId('create-user-status');
   await expect(status).toBeVisible();
-  return (await status.textContent())!.match(/T\d+-\d+/)![0].toLowerCase();
+  return (await status.textContent())!.match(/T-[A-Z0-9]+-[A-Z0-9]+/)![0].toLowerCase();
 }
 
 export async function createConfirmedRecord(

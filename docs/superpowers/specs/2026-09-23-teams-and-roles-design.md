@@ -64,24 +64,29 @@ join rather than carrying their own copy of it.
 
 ### 3.3 Account codes
 
+> **Revised 2026-09-30 (D69):** codes are typed after a fixed prefix, not counted. The numbered
+> scheme below the table (T01, T01-01) was renamed by migration `20260930000000` to T-01, T-01-01.
+
 | | Format | Examples |
 |---|---|---|
-| Manager | `T` + number, padded to two digits | `T01`, `T02`, `T99`, `T100` |
-| Learner | manager code + `-` + number, padded to two digits | `T01-01`, `T01-99`, `T01-100` |
+| Manager | `T-` + 2–6 letters or digits, typed by the owner | `T-G4`, `T-01`, `T-SALES1` |
+| Learner | the manager's whole code + `-` + 2–6 letters or digits, typed by staff | `T-G4-L8`, `T-01-02` |
 | Admin | unchanged | `owner` |
 
 Rules:
 
-- Codes are allocated automatically: the next free number, taken from a counter that only ever
-  increases. **A number is never reused**, even if the account it belonged to is deleted, so an
-  exam result or audit entry always points at one person.
-- A number that never reached an account — the form or the auth service refused it — goes back
-  and is issued to the next attempt, provided nothing was allocated in between (D61).
-- Numbers pass 99 by growing a digit, not by failing.
-- Login ids are stored lower-case (`t01-03`) as all login ids already are, and displayed
-  upper-case (`T01-03`).
+- Staff type only the part after the prefix; the form starts with a free suggestion (one letter
+  and one digit, never I or O) that can be kept, replaced or overwritten, and says as it is typed
+  whether the code is free. The server composes the prefix from the team, so a code can never be
+  created under another team's prefix.
+- Before creating, the server checks the code against every account, active or disabled; a
+  taken one is refused with "already taken", including the loser of two simultaneous creations.
+- A disabled account keeps its code for good. Only an account deleted by hand frees one — the
+  admin UI never deletes accounts, so in practice a code still points at one person.
+- Login ids are stored lower-case (`t-g4-l8`) as all login ids already are, and displayed
+  upper-case (`T-G4-L8`). Once created, a login id cannot be changed from a signed-in session.
 - The existing `owner` account keeps its login id: the admin sits outside the team system, so a
-  team number would misrepresent it.
+  team code would misrepresent it.
 
 ## 4. Permissions
 

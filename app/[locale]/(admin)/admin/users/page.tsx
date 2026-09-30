@@ -3,12 +3,12 @@ import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireStaff } from '@/lib/auth/session';
 import { loadProgressionFactsForUsers } from '@/lib/db/progression';
-import { nextLearnerCodes } from '@/lib/db/provisioning';
+import { suggestLoginSuffix } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
 import { deriveProgression } from '@/lib/domain/progression';
 import { formatDate } from '@/lib/domain/thai-date';
-import { displayLoginId } from '@/lib/domain/login-id';
+import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
 import { NewUserForm, type CompanyOption, type TeamOption } from './new-user-form';
 
 export default async function UsersPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -33,19 +33,15 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
           .eq('status', 'active')
           .order('login_id')
       : { data: null };
-  // The form shows the code the next learner gets while the name is typed (D66): one per team
-  // on offer for the admin, the manager's own team otherwise. Only teams already listed here.
-  const nextCodes = await nextLearnerCodes(
-    managers
-      ? managers.map((m) => ({ id: m.id, loginId: m.login_id }))
-      : [{ id: staff.id, loginId: staff.loginId }],
-  );
+  // The code field comes prefilled with a free suffix (D69): straight away for a manager, whose
+  // team is implied; for the admin once a team is chosen, as the prefix depends on it.
+  const initialSuffix = managers ? null : await suggestLoginSuffix(learnerPrefix(staff.loginId));
   const teams: TeamOption[] | null = managers
     ? managers.map((m) => ({
         id: m.id,
         code: displayLoginId(m.login_id),
         name: m.display_name,
-        nextLoginId: nextCodes.get(m.id) ?? '',
+        loginId: m.login_id,
       }))
     : null;
   const teamCodeOf = new Map((managers ?? []).map((m) => [m.id, displayLoginId(m.login_id)]));
@@ -112,7 +108,8 @@ export default async function UsersPage({ params }: { params: Promise<{ locale: 
       <NewUserForm
         companies={companies}
         teams={teams}
-        nextLoginId={teams ? null : (nextCodes.get(staff.id) ?? null)}
+        ownLoginId={teams ? null : staff.loginId}
+        initialSuffix={initialSuffix}
       />
       <div className="staff-table-wrap">
         <table className="staff-table">

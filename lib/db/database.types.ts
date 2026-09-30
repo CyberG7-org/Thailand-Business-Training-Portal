@@ -771,21 +771,6 @@ export type Database = {
           },
         ]
       }
-      login_id_counters: {
-        Row: {
-          next_value: number
-          scope: string
-        }
-        Insert: {
-          next_value?: number
-          scope: string
-        }
-        Update: {
-          next_value?: number
-          scope?: string
-        }
-        Relationships: []
-      }
       name_cards: {
         Row: {
           created_at: string
@@ -1321,10 +1306,6 @@ export type Database = {
       }
     }
     Functions: {
-      allocate_login_id: {
-        Args: { p_prefix: string; p_scope: string }
-        Returns: string
-      }
       claim_index_jobs: {
         Args: { p_limit?: number }
         Returns: {
@@ -1426,10 +1407,7 @@ export type Database = {
         Returns: number
       }
       record_in_my_team: { Args: { p_record: string }; Returns: boolean }
-      release_login_id: {
-        Args: { p_scope: string; p_value: number }
-        Returns: boolean
-      }
+      rename_legacy_login_ids: { Args: never; Returns: number }
       set_my_preferred_language: {
         Args: { p_lang: string }
         Returns: undefined

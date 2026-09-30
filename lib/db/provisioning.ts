@@ -1,9 +1,18 @@
 import 'server-only';
 import { z } from 'zod';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
-import { formatLoginCode } from '@/lib/domain/login-id';
+import {
+  MANAGER_PREFIX,
+  isValidLoginSuffix,
+  learnerPrefix,
+  suggestionCandidates,
+} from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
 import { serverEnv } from './env';
+
+/** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
+export const LOGIN_ID_TAKEN = 'This login ID is already taken — choose another';
+export const LOGIN_SUFFIX_INVALID = 'A login ID takes 2–6 letters or digits';
 
 export const newAccountSchema = z.object({
   loginId: z
@@ -20,7 +29,7 @@ export type NewAccountInput = z.input<typeof newAccountSchema>;
 export class ProvisioningError extends Error {
   constructor(
     message: string,
-    public readonly code: 'duplicate' | 'invalid' | 'unknown' | 'no-manager',
+    public readonly code: 'duplicate' | 'invalid' | 'invalid-login-id' | 'unknown' | 'no-manager',
   ) {
     super(message);
     this.name = 'ProvisioningError';
@@ -52,8 +61,10 @@ export async function createAccount(
   });
   if (error || !data.user) {
     const message = error?.message ?? 'createUser returned no user';
+    // Two staff typing the same code at the same moment both pass the pre-check; the auth
+    // service's unique email refuses the second, which is told the same thing.
     if (/already|exists|registered/i.test(message)) {
-      throw new ProvisioningError('Login ID already exists', 'duplicate');
+      throw new ProvisioningError(LOGIN_ID_TAKEN, 'duplicate');
     }
     throw new ProvisioningError(message, 'unknown');
   }
@@ -71,10 +82,7 @@ type Deps = { createAccount: typeof createAccount };
 
 const newPersonSchema = newAccountSchema.omit({ loginId: true, role: true });
 
-/**
- * Everything the form can get wrong is checked before a code is taken: a rejected password used
- * to cost a team its number (the first manager on staging came out as T02).
- */
+/** Everything the form can get wrong is checked before the auth service is asked. */
 function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
   const parsed = newPersonSchema.safeParse(input);
   if (!parsed.success) {
@@ -83,94 +91,126 @@ function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
   return parsed.data;
 }
 
-/** One round trip to the counter; it serialises on its own row, so concurrent callers queue. */
-async function allocate(scope: string, prefix: string): Promise<string> {
-  const { data, error } = await createSupabaseAdminClient().rpc('allocate_login_id', {
-    p_scope: scope,
-    p_prefix: prefix,
-  });
-  if (error || !data) throw new ProvisioningError(error?.message ?? 'No code allocated', 'unknown');
-  return data as string;
+/** Staff type only the part after the prefix; the prefix is always the server's (D69). */
+function parseSuffix(suffix: string): string {
+  const trimmed = suffix.trim();
+  if (!isValidLoginSuffix(trimmed)) {
+    throw new ProvisioningError(LOGIN_SUFFIX_INVALID, 'invalid-login-id');
+  }
+  return trimmed.toLowerCase();
+}
+
+/** The codes among these that an account already holds — active or disabled, any role. */
+async function takenAmong(loginIds: string[]): Promise<Set<string>> {
+  if (loginIds.length === 0) return new Set();
+  const { data, error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .select('login_id')
+    .in(
+      'login_id',
+      loginIds.map((id) => id.toLowerCase()),
+    );
+  if (error) throw new ProvisioningError(error.message, 'unknown');
+  return new Set((data ?? []).map((row) => row.login_id));
 }
 
 /**
- * Hands a number back when no account came of it. The database takes it only while it is still
- * the latest one issued, so nothing allocated in between is crossed. A failure here leaves a
- * gap, which the caller's own error already explains, so it is not raised.
+ * Whether an account holds this code. Read with the service role, since a manager's RLS hides
+ * other teams — the answer is one yes or no about a code under a prefix the caller may use. A
+ * disabled account keeps its code; only an account deleted by hand frees one.
  */
-async function release(scope: string, prefix: string, loginId: string): Promise<void> {
-  await createSupabaseAdminClient().rpc('release_login_id', {
-    p_scope: scope,
-    p_value: Number.parseInt(loginId.slice(prefix.length), 10),
-  });
+export async function isLoginIdTaken(loginId: string): Promise<boolean> {
+  return (await takenAmong([loginId])).has(loginId.toLowerCase());
 }
 
 /**
- * Takes the next code and creates the account under it. A code is spent only by an account that
- * exists — except when the refusal is that the code is already taken, where handing it back
- * would issue the same code on every retry.
+ * The learner prefix of a team: an active manager's whole code plus `-`. A suspended manager's
+ * team is unreachable to everyone but the admin, so a learner created under one would have
+ * nobody to manage them; the database trigger checks the role, not the status.
  */
-async function createUnderNextCode(
-  scope: string,
+export async function learnerPrefixOf(managerId: string): Promise<string> {
+  const { data: manager } = await createSupabaseAdminClient()
+    .from('profiles')
+    .select('login_id, role, status')
+    .eq('id', managerId)
+    .maybeSingle();
+  if (!manager || manager.role !== 'manager') {
+    throw new ProvisioningError('That account is not a manager', 'no-manager');
+  }
+  if (manager.status !== 'active') {
+    throw new ProvisioningError('That manager is suspended', 'no-manager');
+  }
+  return learnerPrefix(manager.login_id);
+}
+
+/**
+ * A free suffix to prefill under a prefix: a batch of candidates checked in one query, one more
+ * character whenever a length has nothing free left in the batch. Nothing is reserved — the
+ * check at create is what counts.
+ */
+export async function suggestLoginSuffix(
   prefix: string,
+  candidates: (count: number, length: number) => string[] = suggestionCandidates,
+): Promise<string> {
+  for (let length = 2; length <= 6; length++) {
+    const offered = candidates(30, length);
+    const taken = await takenAmong(offered.map((suffix) => prefix + suffix));
+    const free = offered.find((suffix) => !taken.has(prefix + suffix));
+    if (free) return free;
+  }
+  throw new ProvisioningError('No free login ID to suggest', 'unknown');
+}
+
+/**
+ * Refuses a taken code before the auth service is asked, so the reason reads the same way. Two
+ * creations racing for one code both pass that check; the loser's refusal comes back from the
+ * auth service as a bare "Database error creating new user" (the unique index on the profile or
+ * the email), so a refusal is looked at again: if the code is held now, that was the reason.
+ */
+async function createUnderCode(
+  loginId: string,
   person: z.infer<typeof newPersonSchema> & { role: 'manager' | 'learner' },
   deps: Deps,
 ): Promise<{ id: string; loginId: string }> {
-  const loginId = await allocate(scope, prefix);
+  if (await isLoginIdTaken(loginId)) throw new ProvisioningError(LOGIN_ID_TAKEN, 'duplicate');
   try {
     return await deps.createAccount({ ...person, loginId });
   } catch (e) {
-    if (!(e instanceof ProvisioningError && e.code === 'duplicate')) {
-      await release(scope, prefix, loginId);
+    const duplicate = e instanceof ProvisioningError && e.code === 'duplicate';
+    if (!duplicate && (await isLoginIdTaken(loginId))) {
+      throw new ProvisioningError(LOGIN_ID_TAKEN, 'duplicate');
     }
     throw e;
   }
 }
 
-/**
- * A manager is a team. Their code comes from the one global counter and becomes the prefix every
- * learner of theirs is numbered under (spec §3.3).
- */
+/** A manager is a team: `T-` plus the suffix the owner typed, which prefixes every learner. */
 export async function createManagerAccount(
-  input: NewPerson,
+  input: NewPerson & { suffix: string },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
   const person = parsePerson(input);
-  return createUnderNextCode('manager', 't', { ...person, role: 'manager' }, deps);
+  const suffix = parseSuffix(input.suffix);
+  return createUnderCode(MANAGER_PREFIX + suffix, { ...person, role: 'manager' }, deps);
 }
 
 /**
- * A learner is numbered inside their manager's team, and carries `manager_id` so every
- * team-scoped policy can find them. The profile is created by a trigger from the auth user, so
- * the team is set immediately afterwards; `enforce_team_membership` rejects a non-manager parent.
+ * A learner's code is their manager's code, `-`, and the suffix typed; they carry `manager_id`
+ * so every team-scoped policy can find them. The profile is created by a trigger from the auth
+ * user, so the team is set immediately afterwards; `enforce_team_membership` rejects a
+ * non-manager parent.
  */
 export async function createLearnerAccount(
-  input: NewPerson & { managerId: string },
+  input: NewPerson & { managerId: string; suffix: string },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
   const person = parsePerson(input);
-  const admin = createSupabaseAdminClient();
-  const { data: manager } = await admin
-    .from('profiles')
-    .select('login_id, role, status')
-    .eq('id', input.managerId)
-    .maybeSingle();
-  if (!manager || manager.role !== 'manager') {
-    throw new ProvisioningError('That account is not a manager', 'no-manager');
-  }
-  // A suspended manager's team is unreachable to everyone but the admin, so a learner created
-  // under one would have nobody to manage them. The trigger checks the role, not the status.
-  if (manager.status !== 'active') {
-    throw new ProvisioningError('That manager is suspended', 'no-manager');
-  }
-  const created = await createUnderNextCode(
-    input.managerId,
-    `${manager.login_id}-`,
-    { ...person, role: 'learner' },
-    deps,
-  );
+  const suffix = parseSuffix(input.suffix);
+  const prefix = await learnerPrefixOf(input.managerId);
+  const created = await createUnderCode(prefix + suffix, { ...person, role: 'learner' }, deps);
   // `.select().single()` so a zero-row update is an error rather than a silent success: without
   // it a learner could be reported as created and belong to no team.
+  const admin = createSupabaseAdminClient();
   const { error } = await admin
     .from('profiles')
     .update({ manager_id: input.managerId })
@@ -183,33 +223,6 @@ export async function createLearnerAccount(
     throw new ProvisioningError(error.message, 'unknown');
   }
   return created;
-}
-
-/**
- * The code the next learner of each team will get, for the form to show while the name is
- * typed (D66); nothing is taken. Read with the service role, as the counters carry no policies,
- * so a caller passes only the teams it was already shown. A team that has allocated nothing
- * yet starts at 01, as the allocator does.
- */
-export async function nextLearnerCodes(
-  teams: { id: string; loginId: string }[],
-): Promise<Map<string, string>> {
-  if (teams.length === 0) return new Map();
-  const { data, error } = await createSupabaseAdminClient()
-    .from('login_id_counters')
-    .select('scope, next_value')
-    .in(
-      'scope',
-      teams.map((team) => team.id),
-    );
-  if (error) throw new ProvisioningError(error.message, 'unknown');
-  const nextValue = new Map((data ?? []).map((row) => [row.scope, row.next_value]));
-  return new Map(
-    teams.map((team) => [
-      team.id,
-      formatLoginCode(`${team.loginId}-`, nextValue.get(team.id) ?? 1),
-    ]),
-  );
 }
 
 export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {

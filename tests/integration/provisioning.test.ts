@@ -1,97 +1,95 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
+  LOGIN_ID_TAKEN,
   ProvisioningError,
   createLearnerAccount,
   createManagerAccount,
-  nextLearnerCodes,
+  isLoginIdTaken,
+  learnerPrefixOf,
+  suggestLoginSuffix,
 } from '@/lib/db/provisioning';
+import { MANAGER_PREFIX } from '@/lib/domain/login-id';
 import { adminClient, deleteTestUser } from './helpers';
 
 const svc = adminClient();
 const PASSWORD = 'Test-Password-123!';
 
-describe('provisioning allocates the code', () => {
+/** A six-character suffix no other run has used, so a persistent local database never collides. */
+const fresh = () => randomUUID().replaceAll('-', '').slice(0, 6);
+
+/** D69: staff type the code after a fixed prefix; the server composes and checks it. */
+describe('provisioning takes the typed code', () => {
   const created: string[] = [];
   afterAll(async () => {
     for (const id of created.reverse()) await deleteTestUser(id);
   });
 
-  it('gives managers t01, t02 … and never asks for a login id', async () => {
-    const first = await createManagerAccount({ password: PASSWORD, displayName: 'หนึ่ง' });
-    const second = await createManagerAccount({ password: PASSWORD, displayName: 'สอง' });
-    created.push(first.id, second.id);
-    expect(first.loginId).toMatch(/^t\d{2,}$/);
-    expect(second.loginId).not.toBe(first.loginId);
+  it('gives a manager T- plus the suffix typed, stored lower-case', async () => {
+    const suffix = fresh();
+    const manager = await createManagerAccount({
+      suffix: suffix.toUpperCase(),
+      password: PASSWORD,
+      displayName: 'หนึ่ง',
+    });
+    created.push(manager.id);
+    expect(manager.loginId).toBe(`t-${suffix}`);
 
     const { data } = await svc
       .from('profiles')
-      .select('role, manager_id')
-      .eq('id', first.id)
+      .select('login_id, role, manager_id')
+      .eq('id', manager.id)
       .single();
-    expect(data!.role).toBe('manager');
-    expect(data!.manager_id).toBeNull();
+    expect(data).toEqual({ login_id: `t-${suffix}`, role: 'manager', manager_id: null });
   });
 
-  it('gives a learner their manager code plus a number, and puts them in that team', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD, displayName: 'ทีม' });
+  it("gives a learner their manager's code, a hyphen and the suffix, in that team", async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
-    const one = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
-    const two = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
-    created.push(one.id, two.id);
+    const learner = await createLearnerAccount({
+      suffix: 'L8',
+      password: PASSWORD,
+      managerId: manager.id,
+    });
+    created.push(learner.id);
 
-    expect(one.loginId).toBe(`${manager.loginId}-01`);
-    expect(two.loginId).toBe(`${manager.loginId}-02`);
+    expect(learner.loginId).toBe(`${manager.loginId}-l8`);
     const { data } = await svc
       .from('profiles')
       .select('role, manager_id')
-      .eq('id', one.id)
+      .eq('id', learner.id)
       .single();
-    expect(data!.role).toBe('learner');
-    expect(data!.manager_id).toBe(manager.id);
+    expect(data).toEqual({ role: 'learner', manager_id: manager.id });
   });
 
-  it('never hands two concurrent creations the same code', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD });
-    created.push(manager.id);
-    const learners = await Promise.all(
-      Array.from({ length: 5 }, () =>
-        createLearnerAccount({ password: PASSWORD, managerId: manager.id }),
-      ),
-    );
-    created.push(...learners.map((l) => l.id));
-    expect(new Set(learners.map((l) => l.loginId)).size).toBe(5);
+  it('lets two teams use the same learner suffix, as their prefixes differ', async () => {
+    const a = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    const b = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(a.id, b.id);
+    const inA = await createLearnerAccount({ suffix: 'k2', password: PASSWORD, managerId: a.id });
+    const inB = await createLearnerAccount({ suffix: 'k2', password: PASSWORD, managerId: b.id });
+    created.push(inA.id, inB.id);
+    expect(inA.loginId).not.toBe(inB.loginId);
   });
 
-  it('refuses a learner under a suspended manager, and burns no code doing it', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD });
+  it('refuses a learner under a suspended manager', async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
     await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
-
     await expect(
-      createLearnerAccount({ password: PASSWORD, managerId: manager.id }),
-    ).rejects.toBeInstanceOf(ProvisioningError);
-
-    // The team's counter is untouched, so re-enabling the manager still starts at 01.
-    await svc.from('profiles').update({ status: 'active' }).eq('id', manager.id);
-    const first = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
-    created.push(first.id);
-    expect(first.loginId).toBe(`${manager.loginId}-01`);
+      createLearnerAccount({ suffix: 'a1', password: PASSWORD, managerId: manager.id }),
+    ).rejects.toMatchObject({ code: 'no-manager' });
   });
 
   it('leaves no account behind when the team cannot be set', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD });
-    created.push(manager.id);
-    // A parent that vanishes between the check and the write is the real shape of this failure.
-    const gone = crypto.randomUUID();
     const before = await svc
       .from('profiles')
       .select('*', { count: 'exact', head: true })
       .eq('role', 'learner');
-
+    // A parent that does not exist is refused before any account is made.
     await expect(
-      createLearnerAccount({ password: PASSWORD, managerId: gone }),
+      createLearnerAccount({ suffix: 'a1', password: PASSWORD, managerId: randomUUID() }),
     ).rejects.toBeInstanceOf(ProvisioningError);
-
     const after = await svc
       .from('profiles')
       .select('*', { count: 'exact', head: true })
@@ -100,113 +98,140 @@ describe('provisioning allocates the code', () => {
   });
 
   it('refuses a learner whose parent is not a manager', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD });
-    const learner = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    const learner = await createLearnerAccount({
+      suffix: 'b2',
+      password: PASSWORD,
+      managerId: manager.id,
+    });
     created.push(manager.id, learner.id);
     await expect(
-      createLearnerAccount({ password: PASSWORD, managerId: learner.id }),
-    ).rejects.toBeInstanceOf(ProvisioningError);
+      createLearnerAccount({ suffix: 'c3', password: PASSWORD, managerId: learner.id }),
+    ).rejects.toMatchObject({ code: 'no-manager' });
   });
 });
 
-/**
- * A code is spent only by an account that exists. The first manager on staging came out as T02
- * because a too-short password was rejected after the counter had already moved.
- */
-describe('provisioning spends a code only on an account that exists', () => {
+describe('a code is checked before it is created', () => {
   const created: string[] = [];
   afterAll(async () => {
     for (const id of created.reverse()) await deleteTestUser(id);
   });
 
-  async function nextManagerNumber(): Promise<number> {
-    const { data } = await svc
-      .from('login_id_counters')
-      .select('next_value')
-      .eq('scope', 'manager')
-      .maybeSingle();
-    return data?.next_value ?? 1;
-  }
-  const code = (n: number) => `t${n < 10 ? `0${n}` : n}`;
-
-  it('rejects a short password before taking a team code', async () => {
-    const before = await nextManagerNumber();
-    await expect(createManagerAccount({ password: 'short' })).rejects.toMatchObject({
-      code: 'invalid',
-    });
-    expect(await nextManagerNumber()).toBe(before);
-  });
-
-  it('rejects a short learner password without numbering the learner', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD });
-    created.push(manager.id);
-    await expect(
-      createLearnerAccount({ password: 'short', managerId: manager.id }),
-    ).rejects.toMatchObject({ code: 'invalid' });
-    const first = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
+  it('refuses a manager code another account holds, whatever the case typed', async () => {
+    const suffix = fresh();
+    const first = await createManagerAccount({ suffix, password: PASSWORD });
     created.push(first.id);
-    expect(first.loginId).toBe(`${manager.loginId}-01`);
+    await expect(
+      createManagerAccount({ suffix: suffix.toUpperCase(), password: PASSWORD }),
+    ).rejects.toMatchObject({ code: 'duplicate', message: LOGIN_ID_TAKEN });
   });
 
-  it('hands the code back when the auth service refuses the account', async () => {
-    const before = await nextManagerNumber();
+  it('refuses a learner code already in the team', async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(manager.id);
+    const one = await createLearnerAccount({
+      suffix: 'd4',
+      password: PASSWORD,
+      managerId: manager.id,
+    });
+    created.push(one.id);
     await expect(
-      createManagerAccount(
-        { password: PASSWORD },
-        {
-          createAccount: async () => {
-            throw new ProvisioningError('auth unavailable', 'unknown');
-          },
-        },
-      ),
-    ).rejects.toMatchObject({ code: 'unknown' });
-    expect(await nextManagerNumber()).toBe(before);
-    const next = await createManagerAccount({ password: PASSWORD });
-    created.push(next.id);
-    expect(next.loginId).toBe(code(before));
-  });
-
-  it('keeps the number when the refusal is that the code is already taken', async () => {
-    const before = await nextManagerNumber();
-    await expect(
-      createManagerAccount(
-        { password: PASSWORD },
-        {
-          createAccount: async () => {
-            throw new ProvisioningError('Login ID already exists', 'duplicate');
-          },
-        },
-      ),
+      createLearnerAccount({ suffix: 'D4', password: PASSWORD, managerId: manager.id }),
     ).rejects.toMatchObject({ code: 'duplicate' });
-    // Handing it back would issue the same taken code on every retry.
-    expect(await nextManagerNumber()).toBe(before + 1);
+  });
+
+  it('counts a disabled account as holding its code', async () => {
+    const suffix = fresh();
+    const manager = await createManagerAccount({ suffix, password: PASSWORD });
+    created.push(manager.id);
+    await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
+    expect(await isLoginIdTaken(`t-${suffix}`)).toBe(true);
+    expect(await isLoginIdTaken(`T-${suffix.toUpperCase()}`)).toBe(true);
+    expect(await isLoginIdTaken(`t-${fresh()}`)).toBe(false);
+  });
+
+  it('lets exactly one of two simultaneous creations have a code', async () => {
+    const suffix = fresh();
+    const results = await Promise.allSettled([
+      createManagerAccount({ suffix, password: PASSWORD }),
+      createManagerAccount({ suffix, password: PASSWORD }),
+    ]);
+    const won = results.filter((r) => r.status === 'fulfilled');
+    const lost = results.filter((r) => r.status === 'rejected');
+    for (const r of won) created.push(r.value.id);
+    expect(won).toHaveLength(1);
+    expect(lost).toHaveLength(1);
+    expect((lost[0] as PromiseRejectedResult).reason).toMatchObject({ code: 'duplicate' });
+  });
+
+  it('refuses a suffix that is not 2–6 letters or digits, before anything is asked', async () => {
+    for (const suffix of ['', 'x', 'abcdefg', 'g-4', 'ก4', 'a b']) {
+      await expect(
+        createManagerAccount(
+          { suffix, password: PASSWORD },
+          {
+            createAccount: async () => {
+              throw new Error('the auth service must not be asked');
+            },
+          },
+        ),
+        suffix,
+      ).rejects.toMatchObject({ code: 'invalid-login-id' });
+    }
+  });
+
+  it('refuses a short password before the code is looked at', async () => {
+    await expect(
+      createManagerAccount({ suffix: fresh(), password: 'short' }),
+    ).rejects.toMatchObject({ code: 'invalid' });
+  });
+
+  it('tells a racing loser the same thing the pre-check would have', async () => {
+    await expect(
+      createManagerAccount(
+        { suffix: fresh(), password: PASSWORD },
+        {
+          createAccount: async () => {
+            throw new ProvisioningError(LOGIN_ID_TAKEN, 'duplicate');
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ code: 'duplicate', message: LOGIN_ID_TAKEN });
   });
 });
 
-describe('the next code is shown before it is taken', () => {
+describe('suggestions', () => {
   const created: string[] = [];
   afterAll(async () => {
     for (const id of created.reverse()) await deleteTestUser(id);
   });
 
-  it('names the code the next learner of a team will get, without moving the counter', async () => {
-    const manager = await createManagerAccount({ password: PASSWORD, displayName: 'ทีมถัดไป' });
+  it('offers a free suffix, skipping one an account already holds', async () => {
+    const taken = fresh();
+    const free = fresh();
+    const manager = await createManagerAccount({ suffix: taken, password: PASSWORD });
     created.push(manager.id);
-    const team = { id: manager.id, loginId: manager.loginId };
-
-    // A fresh team has allocated nothing, so the first learner is -01; asking changes nothing.
-    expect(await nextLearnerCodes([team])).toEqual(
-      new Map([[manager.id, `${manager.loginId}-01`]]),
-    );
-    expect((await nextLearnerCodes([team])).get(manager.id)).toBe(`${manager.loginId}-01`);
-
-    const one = await createLearnerAccount({ password: PASSWORD, managerId: manager.id });
-    created.push(one.id);
-    expect(one.loginId).toBe(`${manager.loginId}-01`);
-    expect((await nextLearnerCodes([team])).get(manager.id)).toBe(`${manager.loginId}-02`);
+    expect(await suggestLoginSuffix(MANAGER_PREFIX, () => [taken, free])).toBe(free);
   });
 
-  it('answers only for the teams it is asked about', async () => {
-    expect(await nextLearnerCodes([])).toEqual(new Map());
+  it('grows a character when every candidate of a length is taken', async () => {
+    const taken = fresh();
+    const manager = await createManagerAccount({ suffix: taken, password: PASSWORD });
+    created.push(manager.id);
+    const longer = `${fresh()}`.slice(0, 3);
+    const offered = await suggestLoginSuffix(MANAGER_PREFIX, (_count, length) =>
+      length === 2 ? [taken] : [longer],
+    );
+    expect(offered).toBe(longer);
+  });
+
+  it("suggests two characters by default, under the team's own prefix", async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(manager.id);
+    const prefix = await learnerPrefixOf(manager.id);
+    expect(prefix).toBe(`${manager.loginId}-`);
+    const suffix = await suggestLoginSuffix(prefix);
+    expect(suffix).toMatch(/^[a-z][0-9]$/);
+    expect(await isLoginIdTaken(prefix + suffix)).toBe(false);
   });
 });
