@@ -2451,7 +2451,8 @@ git commit -m "feat(versions): the user page pins, moves and confirms the role (
 ```ts
 /** A learner on a confirmed, complete company (every company-level concept resolvable). */
 export async function seedLearnerWithCompleteCompany(companyNameTh: string): Promise<string> {
-  return seedLearnerWithCompany(companyNameTh, '2025-01-01', {
+  // Issued after registration (dbd_issue_not_before_registration).
+  return seedLearnerWithCompany(companyNameTh, '2026-08-05', {
     company_name_en: 'COMPLETE CO., LTD.',
     registered_on: '2026-04-16',
     registered_capital: 2_000_000,
@@ -2543,7 +2544,10 @@ import { seedInProgressAttempt, seedLearnerWithCompleteCompany, submitAttempt } 
 test('a learner is pinned to version 1, stays there when the facts change, and is moved on purpose', async ({
   page,
 }) => {
-  const learner = await seedLearnerWithCompleteCompany(`บริษัท รุ่น ${Date.now()} จำกัด`);
+  // Three pages, four reloads and a seeded attempt: more than the default budget.
+  test.setTimeout(90_000);
+  const company = `บริษัท รุ่น ${Date.now()} จำกัด`;
+  const learner = await seedLearnerWithCompleteCompany(company);
 
   // The learner's first look pins version 1 (plan decision 2).
   await loginAs(page, learner, E2E_PASSWORD);
@@ -2572,9 +2576,8 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '13');
 
   // A fact changes on the record: version 2, and the learner stays on 1.
-  await page.getByTestId('assigned-company').getByRole('link').first().click().catch(() => null);
   await page.goto('/th/admin/dbd-records');
-  await page.getByRole('link', { name: /บริษัท รุ่น/ }).first().click();
+  await page.getByRole('link', { name: company }).first().click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('training-versions')).toHaveAttribute('data-active', '1');
   await expect(page.getByTestId('version-complete')).toBeVisible();
