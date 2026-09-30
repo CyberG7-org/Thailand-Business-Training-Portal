@@ -22,6 +22,7 @@ export default defineConfig({
       INTERVIEW_PROVIDER: 'fake',
       QUESTION_GEN_PROVIDER: 'fake',
       VECTOR_PROVIDER: 'fake',
+      CATEGORY_MAP_PROVIDER: 'fake',
     },
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
