@@ -17,7 +17,10 @@ import {
   type TemplateRecord,
 } from '@/lib/domain/assessment/template';
 import { createSupabaseAdminClient } from './admin';
+import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { getActiveAssignmentForUser } from './assignments';
+import { pinnedFactsFor } from './pinning';
+import { getVersion, readSnapshot } from './training-versions';
 import type { Database, Json } from './database.types';
 
 type Db = SupabaseClient<Database>;
@@ -31,6 +34,7 @@ export class AssessmentError extends Error {
     message: string,
     public readonly code:
       | 'no_assignment'
+      | 'no_version'
       | 'no_questions'
       | 'not_found'
       | 'not_in_progress'
@@ -118,7 +122,10 @@ export async function getOrStartAttempt(args: {
 
   const assignment = await getActiveAssignmentForUser(admin, args.userId);
   if (!assignment) throw new AssessmentError('No active assignment', 'no_assignment');
-  const record = toTemplateRecord(assignment.dbd_records, assignment);
+  // Rendered from the pinned version (D75), never from the live row.
+  const pinned = await pinnedFactsFor(admin, assignment);
+  if (!pinned) throw new AssessmentError('No training version yet', 'no_version');
+  const record = templateRecordFromSnapshot(pinned.snapshot, pinned.role);
 
   const seed = `${args.userId}:${args.kind}:${Date.now()}`;
   const bank = await loadQuestionBank(admin, args.kind, args.language);
@@ -161,6 +168,7 @@ export async function getOrStartAttempt(args: {
       question_ids: rendered.map((r) => r.questionId),
       shuffle_seed: seed,
       passing_mark_snapshot: args.passingMarkPercent ?? null,
+      training_version_id: pinned.version.id,
     })
     .select()
     .single();
@@ -192,22 +200,30 @@ export type DisplayedQuestion = {
   explanation: string | null;
 };
 
-/** The learner's company as the templates see it, for an attempt (role from the current assignment). */
+/** The learner's company as the templates see it, for an attempt: its version, or the live row for an attempt from before P17b. */
 async function templateRecordForAttempt(
   admin: Db,
   attempt: AttemptRow,
 ): Promise<TemplateRecord | null> {
-  const [{ data: recordRow }, assignment] = await Promise.all([
-    attempt.dbd_record_id
-      ? admin.from('dbd_records').select('*').eq('id', attempt.dbd_record_id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    getActiveAssignmentForUser(admin, attempt.user_id),
-  ]);
+  const assignment = await getActiveAssignmentForUser(admin, attempt.user_id);
+  const sameRecord =
+    assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null;
+  if (attempt.training_version_id) {
+    const version = await getVersion(admin, attempt.training_version_id);
+    if (version) {
+      const snapshot = readSnapshot(version);
+      const pinned = sameRecord ? await pinnedFactsFor(admin, sameRecord) : null;
+      return templateRecordFromSnapshot(snapshot, pinned?.role ?? null);
+    }
+  }
+  if (!attempt.dbd_record_id) return null;
+  const { data: recordRow } = await admin
+    .from('dbd_records')
+    .select('*')
+    .eq('id', attempt.dbd_record_id)
+    .maybeSingle();
   if (!recordRow) return null;
-  return toTemplateRecord(
-    recordRow,
-    assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null,
-  );
+  return toTemplateRecord(recordRow, sameRecord);
 }
 
 /**

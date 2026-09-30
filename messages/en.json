@@ -895,7 +895,8 @@
       "not_in_progress": "This attempt is already closed.",
       "already_answered": "This question is already answered.",
       "unanswered": "Please answer every question first.",
-      "invalid_key": "Unknown option."
+      "invalid_key": "Unknown option.",
+      "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record."
     },
     "answeredOf": "{answered} of {total} answered",
     "percentDone": "{percent}% complete",
@@ -926,7 +927,8 @@
       "not_in_progress": "This attempt is already closed.",
       "already_answered": "This question is already answered.",
       "unanswered": "Please answer every question first.",
-      "invalid_key": "Unknown option."
+      "invalid_key": "Unknown option.",
+      "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record."
     },
     "meta": {
       "questions": "Questions",
@@ -990,7 +992,8 @@
       "not_found": "Interview not found.",
       "unknown": "Something went wrong. Please try again.",
       "expired": "The interview sat idle too long. Please start again.",
-      "no_facts": "The company record has nothing to verify yet. Ask your manager."
+      "no_facts": "The company record has nothing to verify yet. Ask your manager.",
+      "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record."
     },
     "closeReason": {
       "plan_complete": "Every question was asked.",

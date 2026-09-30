@@ -895,7 +895,8 @@
       "not_in_progress": "该测验已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
-      "invalid_key": "选项无效。"
+      "invalid_key": "选项无效。",
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
     "answeredOf": "已回答 {answered} / {total} 题",
     "percentDone": "完成 {percent}%",
@@ -926,7 +927,8 @@
       "not_in_progress": "该考试已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
-      "invalid_key": "选项无效。"
+      "invalid_key": "选项无效。",
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
     "meta": {
       "questions": "题数",
@@ -990,7 +992,8 @@
       "not_found": "找不到面谈。",
       "unknown": "出错了，请重试。",
       "expired": "面谈闲置过久，请重新开始。",
-      "no_facts": "公司记录尚无可核对的信息，请联系你的经理。"
+      "no_facts": "公司记录尚无可核对的信息，请联系你的经理。",
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
     "closeReason": {
       "plan_complete": "所有问题均已问完。",
