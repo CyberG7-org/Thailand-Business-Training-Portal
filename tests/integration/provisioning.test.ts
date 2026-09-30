@@ -292,4 +292,26 @@ describe('learner codes are one letter and two digits', () => {
     expect(await suggestLearnerSuffix(prefix, () => ['a01', 'b02'])).toBe('b02');
     expect(await suggestLearnerSuffix(prefix)).toMatch(/^[a-z][0-9]{2}$/);
   });
+
+  it('checks every code once the random batches find nothing free, as on a nearly full team', async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(manager.id);
+    const prefix = await learnerPrefixOf(manager.id);
+    for (const suffix of ['a00', 'a01']) {
+      const held = await createLearnerAccount({
+        suffix,
+        password: PASSWORD,
+        managerId: manager.id,
+      });
+      created.push(held.id);
+    }
+    // The batches offer only held codes; the full check skips both and takes the first left.
+    expect(
+      await suggestLearnerSuffix(
+        prefix,
+        () => ['a00', 'a01'],
+        () => 0,
+      ),
+    ).toBe('a02');
+  });
 });

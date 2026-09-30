@@ -4,6 +4,7 @@ import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
 import type { LearnerContact } from '@/lib/domain/learner-contact';
 import {
   MANAGER_PREFIX,
+  allLearnerSuffixes,
   isValidSuffixFor,
   learnerPrefix,
   learnerSuggestionCandidates,
@@ -11,6 +12,7 @@ import {
   type LoginIdKind,
 } from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
+import { inChunks } from './chunks';
 import { serverEnv } from './env';
 
 /** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
@@ -171,20 +173,36 @@ export async function suggestLoginSuffix(
   throw new ProvisioningError('No free login ID to suggest', 'unknown');
 }
 
+/** Learner codes per `.in()` filter in the full check: a code is ~12 characters, not a uuid's 36. */
+const LEARNER_CODE_CHUNK = 300;
+
 /**
- * A free learner suffix to prefill under a team's prefix (D83): one letter and two digits, a few
- * batches of candidates each checked in one query. Nothing is reserved; the create checks again.
+ * A free learner suffix to prefill under a team's prefix (D83): one letter and two digits. A
+ * couple of random batches, each checked in one query, find one on any team with room; a nearly
+ * full team can defeat them, so then every one of the 2,400 codes is checked and a free one
+ * picked, and "none free" means none. Nothing is reserved; the create checks again.
  */
 export async function suggestLearnerSuffix(
   prefix: string,
   candidates: (count: number) => string[] = learnerSuggestionCandidates,
+  random: () => number = Math.random,
 ): Promise<string> {
-  for (let batch = 0; batch < 5; batch++) {
+  for (let batch = 0; batch < 2; batch++) {
     const offered = candidates(40);
     const taken = await takenAmong(offered.map((suffix) => prefix + suffix));
     const free = offered.find((suffix) => !taken.has(prefix + suffix));
     if (free) return free;
   }
+  const every = allLearnerSuffixes();
+  const taken = new Set(
+    await inChunks(
+      every.map((suffix) => prefix + suffix),
+      async (chunk) => [...(await takenAmong(chunk))],
+      LEARNER_CODE_CHUNK,
+    ),
+  );
+  const left = every.filter((suffix) => !taken.has(prefix + suffix));
+  if (left.length > 0) return left[Math.floor(random() * left.length)];
   throw new ProvisioningError('No free login ID to suggest', 'unknown');
 }
 

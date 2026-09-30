@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MANAGER_PREFIX,
+  allLearnerSuffixes,
   displayLoginId,
   isValidLoginSuffix,
   isValidSuffixFor,
@@ -136,5 +137,19 @@ describe('learnerSuggestionCandidates', () => {
 
   it('stops at the size of the space: 24 letters × 100', () => {
     expect(learnerSuggestionCandidates(5000, seeded(2)).length).toBeLessThanOrEqual(2400);
+  });
+});
+
+describe('allLearnerSuffixes', () => {
+  it('lists all 2,400 codes the suggestion can offer, in order, each valid and never I or O', () => {
+    const codes = allLearnerSuffixes();
+    expect(codes).toHaveLength(2400);
+    expect(new Set(codes).size).toBe(2400);
+    expect(codes.slice(0, 3)).toEqual(['a00', 'a01', 'a02']);
+    expect(codes.at(-1)).toBe('z99');
+    for (const code of codes) {
+      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(isValidSuffixFor('learner', code)).toBe(true);
+    }
   });
 });

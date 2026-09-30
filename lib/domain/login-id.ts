@@ -85,3 +85,12 @@ export function learnerSuggestionCandidates(
   }
   return [...found];
 }
+
+/** Every learner suffix the suggestion can offer (D83), in order: a00 … z99, never I or O. */
+export function allLearnerSuffixes(): string[] {
+  const codes: string[] = [];
+  for (const letter of LETTERS) {
+    for (const tens of DIGITS) for (const units of DIGITS) codes.push(letter + tens + units);
+  }
+  return codes;
+}
