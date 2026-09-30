@@ -7,6 +7,7 @@ import type { Database } from './database.types';
 import { getDbdRecord, listDbdDocuments } from './dbd-records';
 import { parseStoredExtraction } from './extraction';
 import { recordToFormValues } from './record-form-values';
+import { syncAfterChange } from './training-versions';
 
 type Db = SupabaseClient<Database>;
 
@@ -73,5 +74,7 @@ export async function autoConfirmIfClean(db: Db, recordId: string): Promise<Auto
     .eq('id', recordId)
     .neq('extraction_status', 'confirmed');
   if (error) throw error;
+  // The first version of a record that confirmed itself (spec §5.6).
+  await syncAfterChange(recordId, null);
   return verdict;
 }
