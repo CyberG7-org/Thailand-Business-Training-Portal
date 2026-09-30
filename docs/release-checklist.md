@@ -10,7 +10,7 @@
 | G4 | The readiness interview validated on staging with the real officer (`INTERVIEW_PROVIDER=claude`): a full Thai session ends with a verdict and a sensible debrief | real session | ⏳ owner walkthrough |
 | G5 | Spike S2 — Thai TTS voice chosen | listen on staging | ⏳ needs `ELEVENLABS_API_KEY` |
 | G6 | Spike S4 — extraction accuracy on the real certificate | `node scripts/spike-extract.mts <pdf>` | ⏳ needs `ANTHROPIC_API_KEY` |
-| G7 | Owner content loaded: study cards (3 languages), approved question bank, policy settings | admin UI | ⏳ owner |
+| G7 | Owner content loaded: study cards (`pnpm content:starter`, D81), approved question bank, policy settings | script + admin UI | ⏳ owner |
 | G8 | Name-card design replaces `placeholder-v1` | `lib/integrations/pdf/name-card.tsx` | ⏳ owner design |
 | G9 | The officer persona reviewed by the owner on a real transcript | `lib/integrations/interview/claude.ts` | ⏳ owner review |
 | G10 | UAT script signed off (`docs/uat-script.md`) | staging | ⏳ |

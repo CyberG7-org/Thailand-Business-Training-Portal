@@ -11,17 +11,17 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
   {
     key: 'team',
     items: [
+      // "Create learner & DBD" (D80): a company's record pages sit under it too.
       { href: '/admin/users', key: 'users' },
+      { href: '/admin/learners', key: 'learners' },
       { href: '/admin/managers', key: 'managers', adminOnly: true },
     ],
   },
   {
+    // Study cards are the company's own content, read by its learners; staff no longer edit
+    // a shared library of them (D81).
     key: 'content',
-    items: [
-      { href: '/admin/dbd-records', key: 'dbdRecords' },
-      { href: '/admin/content', key: 'content' },
-      { href: '/admin/questions', key: 'questions' },
-    ],
+    items: [{ href: '/admin/questions', key: 'questions' }],
   },
   {
     key: 'learners',
@@ -35,8 +35,8 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
     items: [
       { href: '/admin/notifications', key: 'notifications', adminOnly: true },
       { href: '/admin/business-categories', key: 'businessCategories', adminOnly: true },
+      // No audit screen (D81): changes are still recorded in `audit_logs`, read with SQL.
       { href: '/admin/settings', key: 'settings', adminOnly: true },
-      { href: '/admin/audit', key: 'audit' },
     ],
   },
 ];
@@ -48,7 +48,17 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
 export function StaffNav({ role }: { role: Role }) {
   const t = useTranslations('admin');
   const pathname = usePathname();
-  const active = (href: string) => pathname === href || pathname.startsWith(href + '/');
+  // A company's record page belongs to "Create learner & DBD", where its list now lives (D80);
+  // a learner's page belongs to the learners list.
+  const active = (href: string) => {
+    if (href === '/admin/users') {
+      return pathname === href || pathname.startsWith('/admin/dbd-records');
+    }
+    if (href === '/admin/learners') {
+      return pathname === href || pathname.startsWith('/admin/users/');
+    }
+    return pathname === href || pathname.startsWith(href + '/');
+  };
   return (
     <nav
       data-testid="staff-nav"

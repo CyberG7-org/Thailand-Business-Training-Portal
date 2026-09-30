@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
+import type { LearnerContact } from '@/lib/domain/learner-contact';
 import {
   MANAGER_PREFIX,
   isValidLoginSuffix,
@@ -194,14 +195,24 @@ export async function createManagerAccount(
   return createUnderCode(MANAGER_PREFIX + suffix, { ...person, role: 'manager' }, deps);
 }
 
+/** A learner's contact details as profile columns (D80). */
+export function contactColumns(contact: LearnerContact) {
+  return {
+    phone: contact.phone,
+    contact_email: contact.contactEmail,
+    website: contact.website,
+    facebook_page: contact.facebookPage,
+  };
+}
+
 /**
  * A learner's code is their manager's code, `-`, and the suffix typed; they carry `manager_id`
  * so every team-scoped policy can find them. The profile is created by a trigger from the auth
- * user, so the team is set immediately afterwards; `enforce_team_membership` rejects a
- * non-manager parent.
+ * user, so the team — and the contact details the manager gave (D80) — are set immediately
+ * afterwards; `enforce_team_membership` rejects a non-manager parent.
  */
 export async function createLearnerAccount(
-  input: NewPerson & { managerId: string; suffix: string },
+  input: NewPerson & { managerId: string; suffix: string; contact?: LearnerContact },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
   const person = parsePerson(input);
@@ -213,7 +224,10 @@ export async function createLearnerAccount(
   const admin = createSupabaseAdminClient();
   const { error } = await admin
     .from('profiles')
-    .update({ manager_id: input.managerId })
+    .update({
+      manager_id: input.managerId,
+      ...(input.contact ? contactColumns(input.contact) : {}),
+    })
     .eq('id', created.id)
     .select('id')
     .single();

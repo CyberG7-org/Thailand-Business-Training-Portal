@@ -31,10 +31,14 @@ function Blocked({ children }: { children: string }) {
 export default async function NameCardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const [readiness, card] = await Promise.all([
+  const db = await createSupabaseServerClient();
+  const [readiness, card, { data: profile }] = await Promise.all([
     nameCardReadiness(user.id),
-    getMyLatestNameCard(await createSupabaseServerClient(), user.id),
+    getMyLatestNameCard(db, user.id),
+    // The phone the manager gave the learner (D80) fills the field until a card exists.
+    db.from('profiles').select('phone').eq('id', user.id).maybeSingle(),
   ]);
+  const savedPhone = card?.phone_number ?? profile?.phone ?? null;
   const pdfUrl = card ? await createMyNameCardUrl(user.id, card.id) : null;
   const t = await getTranslations('nameCard');
   const examBlocked = readiness.examRequired && !readiness.examPassed;
@@ -55,7 +59,7 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
         ) : (
           <GenerateForm
             hasCard={card !== null}
-            defaultPhone={card ? formatThaiMobile(card.phone_number) : ''}
+            defaultPhone={savedPhone ? formatThaiMobile(savedPhone) : ''}
             defaultHolderTh={card?.holder_name ?? readiness.defaultHolderName}
             defaultHolderEn={card?.holder_name_en ?? ''}
           />

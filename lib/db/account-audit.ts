@@ -9,7 +9,7 @@ import { createSupabaseAdminClient } from './admin';
  */
 export async function recordAccountAction(
   actorId: string,
-  action: 'create' | 'rename' | 'status' | 'password',
+  action: 'create' | 'rename' | 'status' | 'password' | 'contact',
   userId: string,
   after: Record<string, unknown> = {},
 ): Promise<void> {

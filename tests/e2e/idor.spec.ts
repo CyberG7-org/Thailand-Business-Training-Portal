@@ -34,6 +34,7 @@ test('a learner cannot open another learner’s attempts, results, calls, or adm
   for (const path of [
     '/th/admin',
     '/th/admin/users',
+    '/th/admin/learners',
     '/th/admin/interviews',
     '/th/admin/settings',
   ]) {

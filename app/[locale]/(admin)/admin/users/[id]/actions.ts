@@ -2,10 +2,22 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
 import { requireStaff, type CurrentUser } from '@/lib/auth/session';
+import { recordAccountAction } from '@/lib/db/account-audit';
 import { assignDbdRecord, deactivateAssignment, updateAssignmentRole } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
-import { ProvisioningError, setAccountPassword, setAccountStatus } from '@/lib/db/provisioning';
+import {
+  contactFromForm,
+  firstContactProblem,
+  learnerContactSchema,
+} from '@/lib/domain/learner-contact';
+import {
+  ProvisioningError,
+  contactColumns,
+  setAccountPassword,
+  setAccountStatus,
+} from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 
 export type AccountActionState = { message: string | null; error: string | null };
@@ -24,7 +36,7 @@ async function requireManageable(locale: string, userId: string): Promise<Curren
     .eq('id', userId)
     .eq('manager_id', staff.id)
     .maybeSingle();
-  if (!data) redirect(`/${locale}/admin/users`);
+  if (!data) redirect(`/${locale}/admin/learners`);
   return staff;
 }
 
@@ -115,6 +127,36 @@ export async function deactivateAssignmentAction(
   } catch (e) {
     return { message: null, error: errorMessage(e) };
   }
+}
+
+/**
+ * The contact details a manager gives their learner (D80). Written under the caller's own
+ * client, so RLS keeps a manager to their own team; audited like the other account changes.
+ */
+export async function updateContactAction(
+  _prev: AccountActionState,
+  formData: FormData,
+): Promise<AccountActionState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const userId = String(formData.get('userId') ?? '');
+  const staff = await requireManageable(locale, userId);
+  const parsed = learnerContactSchema.safeParse(contactFromForm(formData));
+  if (!parsed.success) {
+    const t = await getTranslations({ locale, namespace: 'admin.users.contact.errors' });
+    return { message: null, error: t(firstContactProblem(parsed.error)) };
+  }
+  const { error } = await (
+    await createSupabaseServerClient()
+  )
+    .from('profiles')
+    .update(contactColumns(parsed.data))
+    .eq('id', userId)
+    .select('id')
+    .single();
+  if (error) return { message: null, error: errorMessage(error) };
+  await recordAccountAction(staff.id, 'contact', userId, contactColumns(parsed.data));
+  revalidatePath(`/${locale}/admin/users/${userId}`);
+  return { message: 'contact-saved', error: null };
 }
 
 export async function updateAssignmentRoleAction(

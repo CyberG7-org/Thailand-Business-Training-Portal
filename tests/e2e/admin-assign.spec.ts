@@ -21,7 +21,8 @@ test('a learner created for a confirmed record is assigned to it, with the +45-d
   });
 
   const loginId = await createLearner(page, { password: 'Learner-Pass-123', company, team });
-  await page.getByRole('link', { name: loginId.toUpperCase() }).click();
+  await page.goto('/th/admin/learners');
+  await page.getByRole('link', { name: loginId.toUpperCase(), exact: true }).click();
   await expect(page.getByTestId('assigned-company')).toHaveText(company);
   await expect(page.getByTestId('available-from')).toContainText('27 สิงหาคม 2569');
 

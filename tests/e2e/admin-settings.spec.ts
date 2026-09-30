@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany, setPolicy } from './seed';
+import { auditRowsFor, seedLearnerWithCompany, setPolicy } from './seed';
 
 test('admin changes a policy; the learner dashboard follows and the audit log records the actor', async ({
   page,
@@ -22,12 +22,14 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
     await mark.getByRole('button', { name: 'บันทึก' }).click();
     await expect(mark.getByTestId('setting-error')).toBeVisible();
 
-    await page.goto('/th/admin/audit?entity=policy_config&id=require_exam_pass_for_interview');
-    const row = page.locator('tr', { hasText: 'policy_config.update' }).first();
-    // Codes are stored lower-case and shown upper-case (spec §3.3).
-    await expect(row).toContainText(E2E_ADMIN.loginId.toUpperCase());
-    await row.locator('summary').click();
-    await expect(row.getByTestId('audit-diff').filter({ hasText: 'value' })).toContainText('false');
+    // The change is recorded with the real actor (D30); there is no audit screen (D81).
+    const [row] = await auditRowsFor({
+      entityType: 'policy_config',
+      entityId: 'require_exam_pass_for_interview',
+      action: 'policy_config.update',
+    });
+    expect(row.actor_login_id).toBe(E2E_ADMIN.loginId);
+    expect((row.after as { value: unknown }).value).toBe(false);
     await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
 
     await loginAs(page, learner, E2E_PASSWORD);

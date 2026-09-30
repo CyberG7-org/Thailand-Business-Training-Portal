@@ -35,8 +35,8 @@ test('the admin cannot reassign a learner to another team company', async ({ pag
     team: teamA,
   });
 
-  await page.goto('/th/admin/users');
-  await page.getByRole('link', { name: learner.toUpperCase() }).click();
+  await page.goto('/th/admin/learners');
+  await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
   await expect(page.getByTestId('assigned-company')).toContainText(companyX);
   await page.getByRole('button', { name: 'ยกเลิกการมอบหมาย' }).click();
 

@@ -5,14 +5,12 @@ import { requireStaff } from '@/lib/auth/session';
 
 /** The doors a manager may open, in order; the admin gets these plus the admin-only ones. */
 const STAFF_LINKS = [
+  // "Create learner & DBD" holds the companies list too (D80).
   ['/admin/users', 'users'],
-  ['/admin/dbd-records', 'dbdRecords'],
-  ['/admin/content', 'content'],
+  ['/admin/learners', 'learners'],
   ['/admin/questions', 'questions'],
   ['/admin/interviews', 'interviews'],
   ['/admin/appointments', 'appointments'],
-  // Spec §9: a manager's audit view is their own team; RLS narrows it through the view.
-  ['/admin/audit', 'audit'],
 ] as const;
 
 const ADMIN_LINKS = [

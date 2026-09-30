@@ -12,10 +12,9 @@ test('a manager lands in the admin area and sees only their own doors', async ({
 
   await expect(page).toHaveURL(/\/th\/admin$/);
   const nav = page.getByTestId('admin-nav');
-  await expect(nav).toContainText('ข้อมูล DBD');
-  // Spec §9: a manager reads their own team's audit rows, so the door is theirs to open.
-  // (P15b asserted the absence of 'บันทึกการใช้งาน', a label that never existed — vacuous.)
-  await expect(nav).toContainText('บันทึกการเปลี่ยนแปลง');
+  await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
+  // No audit or study-content screens for anyone (D81).
+  await expect(nav).not.toContainText('บันทึกการเปลี่ยนแปลง');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
   await expect(nav).not.toContainText('ผู้จัดการ');
 });
@@ -56,19 +55,23 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
     issuedOn: '13/07/2569',
   });
 
-  // Their own record is still theirs after saving; the admin's is not visible at all.
+  // Their own record is still theirs after saving; the admin's is not visible at all. The list
+  // lives on "Create learner & DBD" now (D80); the old address forwards there.
   await page.goto('/th/admin/dbd-records');
-  await expect(page.locator('tbody')).toContainText(ownCompany);
-  await expect(page.locator('tbody')).not.toContainText(adminCompany);
+  await expect(page).toHaveURL(/\/th\/admin\/users/);
+  const companies = page.getByTestId('companies');
+  await expect(companies.locator('tbody')).toContainText(ownCompany);
+  await expect(companies.locator('tbody')).not.toContainText(adminCompany);
   // A manager sees no Team column: every record on their list is theirs.
   await expect(page.getByRole('columnheader', { name: 'ทีม' })).toHaveCount(0);
 
   // The admin sees both, and can tell which team uploaded which.
   await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/dbd-records');
-  await expect(page.getByRole('columnheader', { name: 'ทีม' })).toBeVisible();
-  await expect(page.locator('tr').filter({ hasText: ownCompany })).toContainText(code);
-  await expect(page.locator('tr').filter({ hasText: adminCompany })).not.toContainText(code);
+  await page.goto('/th/admin/users');
+  const all = page.getByTestId('companies');
+  await expect(all.getByRole('columnheader', { name: 'ทีม' })).toBeVisible();
+  await expect(all.locator('tr').filter({ hasText: ownCompany })).toContainText(code);
+  await expect(all.locator('tr').filter({ hasText: adminCompany })).not.toContainText(code);
 });
 
 test('a suspended manager loses the admin area on the next request', async ({ page, browser }) => {
@@ -108,30 +111,4 @@ test('the page guard reads the profile row, not the token', async ({ page, brows
   await managerPage.goto('/th/admin/dbd-records');
   await expect(managerPage).toHaveURL(/\/th\/login/);
   await managerContext.close();
-});
-
-test('a manager reads their own team in the audit log and nothing else', async ({ page }) => {
-  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  const code = await createManager(page, 'ผู้จัดการตรวจสอบ', MANAGER_PASSWORD);
-  // An admin action that must not appear for the manager: creating this very manager.
-  await page.goto('/th/admin/audit');
-  await expect(page.locator('tr').filter({ hasText: 'profiles.create' }).first()).toContainText(
-    code.toLowerCase(),
-  );
-
-  await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
-  const company = `บริษัท ตรวจสอบได้ ${Date.now()} จำกัด`;
-  await createConfirmedRecord(page, {
-    companyNameTh: company,
-    juristicId: '0105568233715',
-    issuedOn: '13/07/2569',
-  });
-
-  await page.goto('/th/admin/audit');
-  await expect(page).toHaveURL(/\/th\/admin\/audit$/);
-  // Their own upload is there; the admin's creation of their account is not.
-  await expect(page.locator('tr').filter({ hasText: 'dbd_records.insert' }).first()).toContainText(
-    code,
-  );
-  await expect(page.locator('tr').filter({ hasText: 'profiles.create' })).toHaveCount(0);
 });

@@ -77,21 +77,19 @@
   "admin": {
     "title": "管理",
     "nav": {
-      "users": "用户",
-      "dbdRecords": "DBD 记录",
-      "content": "学习内容",
+      "users": "创建学员与DBD",
       "questions": "题库",
       "interviews": "准备度面谈",
       "appointments": "银行预约",
       "notifications": "通知",
       "settings": "策略设置",
-      "audit": "审计日志",
       "managers": "经理",
+      "learners": "学员",
       "businessCategories": "业务类别"
     },
     "users": {
-      "title": "用户",
-      "new": "新建用户",
+      "title": "创建学员与DBD",
+      "new": "创建学员",
       "loginId": "登录ID",
       "password": "初始密码",
       "newPassword": "新密码",
@@ -109,14 +107,58 @@
       "unconfirmedCompany": "{name} — 尚未确认（{status}）",
       "companyHint": "学员的学习内容、题目和银行预约日期均来自该公司的 DBD 记录，只能选择已确认的记录。",
       "noConfirmedCompany": "尚无已确认的 DBD 记录，请先确认公司记录再创建学员。",
-      "goToRecords": "前往 DBD 记录",
+      "goToRecords": "可在下方“创建DBD”中创建。",
       "untitledCompany": "（公司名称缺失）",
       "createdFor": "已创建 {loginId} 并分配给 {company}",
       "team": "团队",
       "chooseTeam": "属于哪个团队？",
       "noManager": "请先创建经理——每位学员都属于某个团队。",
       "learnerName": "学员姓名",
-      "appointment": "预约"
+      "appointment": "预约",
+      "newIntro": "为学员设置登录ID、密码、姓名、联系方式以及所学习的已确认公司。",
+      "contact": {
+        "title": "联系方式",
+        "phone": "电话号码",
+        "contactEmail": "电子邮箱",
+        "website": "网站",
+        "facebookPage": "Facebook主页",
+        "optional": "（选填）",
+        "facebookPlaceholder": "主页名称或链接",
+        "save": "保存联系方式",
+        "saved": "已保存",
+        "errors": {
+          "phone": "请输入泰国手机号码，例如 081-234-5678",
+          "contactEmail": "请输入有效的电子邮箱",
+          "website": "请输入网址，例如 example.co.th",
+          "facebookPage": "请输入主页名称或 facebook.com 链接"
+        }
+      }
+    },
+    "learners": {
+      "title": "学员",
+      "intro": "您团队正在培训的所有学员。如需添加学员，请前往",
+      "toCreate": "创建学员与DBD"
+    },
+    "createDbd": {
+      "title": "创建DBD",
+      "intro": "上传公司的DBD文件并填写下面四项信息。系统会在后台读取文件并建立索引（1–3分钟）；所有信息都找到后，公司将自动确认，并可立即分配给学员。",
+      "introNoReader": "上传公司的DBD文件并填写下面四项信息。此处未设置自动读取，请稍后打开公司页面填写并确认。",
+      "documents": "DBD文件（PDF）",
+      "submit": "创建并分析",
+      "byHand": "或手动录入公司信息",
+      "answersInvalid": "请检查以下信息：{fields}",
+      "created": "已上传。系统正在读取文件——公司已列在下方，信息齐全后将自动确认。",
+      "createdNoReader": "已上传。请打开下方的公司页面填写并确认。",
+      "companies": "公司（DBD）",
+      "noCompanies": "暂无公司。",
+      "unnamed": "（名称尚未读取）",
+      "statuses": {
+        "confirmed_auto": "已自动确认",
+        "confirmed": "已确认",
+        "reading": "读取中…",
+        "unread": "无法读取",
+        "attention": "需要处理"
+      }
     },
     "loginIdField": {
       "label": "登录ID",
@@ -418,7 +460,8 @@
         "shareholder_count": "股东人数",
         "my_shares": "学员持股数",
         "my_share_percent": "学员持股比例"
-      }
+      },
+      "confirmedAutomatically": "已自动确认：所有信息均已从文件中读取，且四项信息齐全。"
     },
     "assignment": {
       "title": "已分配公司",
@@ -432,32 +475,6 @@
         "already-assigned": "该学员已有生效的分配",
         "not-confirmed": "仅可分配已确认的记录"
       }
-    },
-    "content": {
-      "title": "学习内容",
-      "new": "新建内容",
-      "key": "键",
-      "keyHint": "稳定标识符，例如 dbd-certificate-basics",
-      "type": "类型",
-      "typeCard": "课程（Markdown）",
-      "typePdf": "PDF",
-      "sortOrder": "排序",
-      "active": "启用（学员可见）",
-      "languages": "语言",
-      "save": "保存",
-      "saved": "已保存",
-      "missing": "尚未编写",
-      "body": "正文（Markdown）",
-      "bodyHint": "支持标题、列表、粗体和链接。不支持 HTML。",
-      "ttsEnabled": "启用泰语朗读（仅限已批准文本）",
-      "saveLanguage": "保存此语言",
-      "pdfUploaded": "PDF 已上传",
-      "pdfMissing": "尚未上传 PDF",
-      "uploadPdf": "上传 PDF",
-      "uploaded": "已上传",
-      "materialTitle": "标题",
-      "loadStarterCards": "加载银行面谈入门卡片（5 张）",
-      "starterLoaded": "新增 {count} 张卡片（已有的未改动）"
     },
     "questions": {
       "title": "题库",
@@ -616,20 +633,6 @@
           "help": "达到此值时直接采用匹配的类别；低于此值时，建议的类别需由经理或所有者审核。"
         }
       }
-    },
-    "audit": {
-      "title": "审计日志",
-      "entity": "表",
-      "entityId": "记录 ID",
-      "actor": "操作者",
-      "filter": "筛选",
-      "all": "全部",
-      "empty": "没有记录",
-      "when": "时间",
-      "action": "操作",
-      "changes": "变更",
-      "changed": "{count} 个字段已变更",
-      "system": "系统"
     },
     "generate": {
       "title": "用 AI 生成题目",

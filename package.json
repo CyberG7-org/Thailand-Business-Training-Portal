@@ -22,7 +22,8 @@
     "fixtures:pdf": "node scripts/make-fixture-pdf.mjs",
     "vector:setup": "node scripts/vector-setup.mjs",
     "vector:smoke": "node scripts/vector-smoke.mjs",
-    "geo:migration": "node scripts/build-geo-migration.mjs"
+    "geo:migration": "node scripts/build-geo-migration.mjs",
+    "content:starter": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/load-starter-cards.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",

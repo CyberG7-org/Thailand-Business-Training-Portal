@@ -2,11 +2,11 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState, useRef, useState } from 'react';
-import { Link } from '@/i18n/navigation';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
 import { suggestLoginIdAction } from '../login-id-actions';
 import { LoginIdField } from '../login-id-field';
 import { createUserAction, type CreateUserState } from './actions';
+import { LearnerContactFields } from './learner-contact-fields';
 
 const initial: CreateUserState = { ok: false, error: null, createdLoginId: null, company: null };
 
@@ -91,6 +91,7 @@ export function NewUserForm({
     <form action={formAction} className="staff-card grid max-w-md gap-3">
       <input type="hidden" name="locale" value={locale} />
       <h2 className="font-semibold">{t('new')}</h2>
+      <p className="text-sm text-ink-700">{t('newIntro')}</p>
       {teams && (
         <label className="text-sm">
           {t('team')}
@@ -128,10 +129,6 @@ export function NewUserForm({
         busy={suggestion.busy}
       />
       <label className="text-sm">
-        {t('learnerName')}
-        <input name="displayName" required maxLength={120} className="staff-input mt-1" />
-      </label>
-      <label className="text-sm">
         {t('password')}
         <input
           name="password"
@@ -143,6 +140,11 @@ export function NewUserForm({
         />
       </label>
       <label className="text-sm">
+        {t('learnerName')}
+        <input name="displayName" required maxLength={120} className="staff-input mt-1" />
+      </label>
+      <LearnerContactFields />
+      <label className="text-sm">
         {t('company')}
         <select name="dbdRecordId" required defaultValue="" className="staff-input mt-1">
           <option value="">{t('chooseCompany')}</option>
@@ -152,13 +154,13 @@ export function NewUserForm({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-xs text-ink-500">
+        <span className="mt-1 block text-sm text-ink-500">
           {confirmed.length === 0 ? (
             <>
               {t('noConfirmedCompany')}{' '}
-              <Link href="/admin/dbd-records" className="staff-link">
+              <a href="#create-dbd" className="staff-link">
                 {t('goToRecords')}
-              </Link>
+              </a>
             </>
           ) : (
             t('companyHint')

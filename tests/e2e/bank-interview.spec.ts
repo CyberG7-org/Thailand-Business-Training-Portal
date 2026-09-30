@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany } from './seed';
+import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 
 test('starter cards, interview answers and the learner role combine into a personalised study card', async ({
   page,
@@ -32,16 +32,11 @@ test('starter cards, interview answers and the learner role combine into a perso
 
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
 
-  // Starter cards load once; a second click adds nothing.
-  await page.goto('/th/admin/content');
-  await page.getByTestId('load-starter-cards').click();
-  await expect(page.getByTestId('starter-loaded')).toBeVisible();
-  await expect(page.locator('tbody')).toContainText('bank-interview-1-identity');
-  await page.getByTestId('load-starter-cards').click();
-  await expect(page.getByTestId('starter-loaded')).toContainText('0');
+  // The starter cards are in place, as `pnpm content:starter` puts them (D81).
+  await ensureStarterCards();
 
-  // Company-level interview answers on the record.
-  await page.goto('/th/admin/dbd-records');
+  // Company-level interview answers on the record, opened from the companies list (D80).
+  await page.goto('/th/admin/users');
   await page.getByRole('link', { name: 'บริษัท สัมภาษณ์ธนาคาร จำกัด' }).first().click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   const answers = page.getByTestId('interview-answers');
@@ -54,7 +49,7 @@ test('starter cards, interview answers and the learner role combine into a perso
   await expect(page.getByTestId('interview-saved')).toBeVisible();
 
   // The learner's own role on the assignment.
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner }).click();
   await page.waitForURL(/\/th\/admin\/users\/[0-9a-f-]{36}$/);
   const role = page.getByTestId('role-form');

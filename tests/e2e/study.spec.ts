@@ -1,34 +1,20 @@
 import { expect, test } from '@playwright/test';
-import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
+import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany } from './seed';
+import { seedLearnerWithCompany, seedLocalizedStudyCard } from './seed';
 
-test('admin writes a card in three languages; a learner reads it, progress is recorded, Thai read-aloud works', async ({
+test('a learner reads a card in three languages, progress is recorded, Thai read-aloud works', async ({
   page,
 }) => {
   const stamp = Date.now();
   const key = `e2e-card-${stamp}`;
   const thTitle = `บทเรียนทดสอบ ${stamp}`;
-  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/content/new');
-  await page.locator('input[name="contentKey"]').fill(key);
-  await page.getByRole('button', { name: 'บันทึก' }).click();
-  await page.waitForURL(/\/th\/admin\/content\/[0-9a-f-]{36}$/);
-
-  const texts = {
-    th: { title: thTitle, body: '# หัวข้อ\n\nเนื้อหา **สำคัญ** ของบทเรียน' },
+  // Staff no longer write cards (D81); the card is put in place the way the starter cards are.
+  await seedLocalizedStudyCard(key, {
+    th: { title: thTitle, body: '# หัวข้อ\n\nเนื้อหา **สำคัญ** ของบทเรียน', ttsEnabled: true },
     en: { title: 'Test lesson', body: '# Heading\n\nThe **important** content' },
     zh: { title: '测试课程', body: '# 标题\n\n**重要**内容' },
-  } as const;
-  for (const [lang, t] of Object.entries(texts)) {
-    const panel = page.getByTestId(`localization-${lang}`);
-    await panel.locator('input[name="title"]').fill(t.title);
-    await panel.locator('textarea[name="body"]').fill(t.body);
-    if (lang === 'th') await panel.locator('input[name="ttsEnabled"]').check();
-    await panel.getByRole('button', { name: 'บันทึกภาษานี้' }).click();
-    await expect(panel.getByRole('status')).toHaveText('บันทึกแล้ว');
-  }
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  });
 
   const learner = await seedLearnerWithCompany('บริษัท เรียนรู้ จำกัด', '2026-07-13');
   await loginAs(page, learner, E2E_PASSWORD);

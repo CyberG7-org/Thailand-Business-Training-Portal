@@ -3,6 +3,7 @@ import { getPolicy } from '@/lib/config/policy';
 import type { ProgressionFacts } from '@/lib/domain/progression';
 import { todayInBangkok, type ISODate } from '@/lib/domain/thai-date';
 import { getActiveAssignmentForUser, getLatestEligibility } from './assignments';
+import { IN_FILTER_CHUNK } from './chunks';
 import { examPassedFor } from './exam';
 import type { Database } from './database.types';
 
@@ -66,7 +67,8 @@ export async function loadProgressionFacts(
 
 /**
  * Same facts for many learners in a fixed number of queries (the admin users list). One
- * learner costs ~10 round trips; a list of 100 must not cost 1,000.
+ * learner costs ~10 round trips; a list of 100 must not cost 1,000. Longer lists are read 100
+ * learners at a time, since every query filters by the ids in its URL.
  */
 export async function loadProgressionFactsForUsers(
   db: Db,
@@ -75,6 +77,17 @@ export async function loadProgressionFactsForUsers(
 ): Promise<Map<string, ProgressionFacts>> {
   const out = new Map<string, ProgressionFacts>();
   if (userIds.length === 0) return out;
+  if (userIds.length > IN_FILTER_CHUNK) {
+    for (let i = 0; i < userIds.length; i += IN_FILTER_CHUNK) {
+      const part = await loadProgressionFactsForUsers(
+        db,
+        userIds.slice(i, i + IN_FILTER_CHUNK),
+        options,
+      );
+      for (const [id, facts] of part) out.set(id, facts);
+    }
+    return out;
+  }
   const today = options.today ?? todayInBangkok();
   const [
     requireExamPassForInterview,

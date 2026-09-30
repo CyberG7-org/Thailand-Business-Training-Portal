@@ -94,12 +94,18 @@ export default async function DbdRecordPage({
     if (parsed) suggestions = extractionToFormValues(parsed);
   }
 
+  const tn = await getTranslations('admin.nav');
   return (
     <section className="grid gap-6">
-      <Link href="/admin/dbd-records" className="staff-link text-sm">
-        ← {t('title')}
+      <Link href="/admin/users#create-dbd" className="staff-link text-sm">
+        ← {tn('users')}
       </Link>
       <h1 className="staff-title">{record.company_name_th ?? t('untitled')}</h1>
+      {record.confirmed_automatically && record.extraction_status === 'confirmed' && (
+        <p data-testid="confirmed-automatically" className="staff-notice-ok max-w-2xl">
+          {t('confirmedAutomatically')}
+        </p>
+      )}
       <RecordTools
         id={record.id}
         status={record.extraction_status}

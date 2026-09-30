@@ -263,6 +263,11 @@ export type IndexWorkerDeps = {
   extract?: ExtractRunner;
   /** Documents with more pages get a transcript fill when they become ready (default from env). */
   directReadMaxPages?: number;
+  /**
+   * Called once an extract or transcript job of a record is marked done — the moment a record
+   * may have become clean enough to confirm itself (D80). A failure here never fails the job.
+   */
+  afterReading?: (recordId: string) => Promise<unknown>;
 };
 
 export type IndexRunSummary = {
@@ -439,6 +444,19 @@ async function setJob(
   if (error) throw error;
 }
 
+/**
+ * The step after a record's reading finishes (D80: a clean record confirms itself). The job is
+ * already done; a failure here is logged and left for the manager's own Confirm.
+ */
+async function settleReading(deps: IndexWorkerDeps, recordId: string): Promise<void> {
+  if (!deps.afterReading) return;
+  try {
+    await deps.afterReading(recordId);
+  } catch (e) {
+    console.error(`after-reading step failed for record ${recordId}:`, e);
+  }
+}
+
 /** Backs a failed attempt off, or fails the job at the ceiling (`onFail` marks the document). */
 async function failAttempt(
   admin: Db,
@@ -538,6 +556,7 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
         } else {
           await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
           summary.extractions++;
+          await settleReading(deps, job.record_id);
         }
       } catch (e) {
         await failAttempt(admin, job, e instanceof Error ? e.message : String(e), now, summary);
@@ -578,6 +597,7 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
             next_page: 2,
           });
           summary.transcripts++;
+          await settleReading(deps, job.record_id);
         }
       } catch (e) {
         await failAttempt(admin, job, e instanceof Error ? e.message : String(e), now, summary);
