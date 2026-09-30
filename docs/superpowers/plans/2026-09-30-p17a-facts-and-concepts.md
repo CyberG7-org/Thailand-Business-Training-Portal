@@ -22,6 +22,9 @@
   - one e2e file: `pnpm exec playwright test <path> --reporter=line`
 - After every migration: `pnpm db:reset` then `pnpm db:types` (commit `lib/db/database.types.ts` with the migration).
 - New migrations are timestamped after `20260930000000`: `20261001010000` (geography), `20261001020000` (categories), `20261001030000` (concepts).
+
+> **Execution notes (2026-09-30, Owner-approved run).** A parallel, uncommitted work stream (D80, branch `feat/learners-and-dbd`) already uses `20260930010000`, so P17a's three migrations were moved to `2026100101/02/03 0000` to sort after it. P17a runs in its own worktree (`../portal-p17a`) with its own local Supabase stack (project id `thailand-training-portal-p17a`, ports 553xx; that `supabase/config.toml` change is local only and never committed), so neither stream resets the other's database. The category mapper follows the repository's model convention — one `MODEL` constant per Claude adapter (`lib/integrations/{extraction,question-gen,rag}/…`) — rather than a new configuration scheme.
+
 - Every user-facing string goes into all three of `messages/th.json`, `en.json`, `zh.json` (the unit suite fails on a missing or empty key). Thai text is never below 14px in new UI (`text-sm` or larger).
 
 ## File map
