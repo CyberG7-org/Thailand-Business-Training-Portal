@@ -86,7 +86,8 @@
       "notifications": "Notifications",
       "settings": "Policy settings",
       "audit": "Audit log",
-      "managers": "Managers"
+      "managers": "Managers",
+      "businessCategories": "Business categories"
     },
     "users": {
       "title": "Users",
@@ -767,6 +768,25 @@
     },
     "home": {
       "intro": "Pick a section to manage. A manager sees their own team only."
+    },
+    "businessCategories": {
+      "title": "Business categories",
+      "intro": "The controlled list the automatic mapping chooses from and the MCQ draws business distractors from. Retire a category by switching it off; keys never change.",
+      "key": "Key",
+      "keyHint": "Lower-case letters, digits and _; permanent once created.",
+      "labelTh": "Thai label",
+      "labelEn": "English label",
+      "labelZh": "Chinese label",
+      "sortOrder": "Order",
+      "active": "Active",
+      "add": "Add category",
+      "save": "Save",
+      "saved": "Saved",
+      "errors": {
+        "duplicate": "That key already exists",
+        "invalid": "Check the key and fill every label",
+        "failed": "Could not save"
+      }
     }
   },
   "stages": {

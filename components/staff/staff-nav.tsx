@@ -34,6 +34,7 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
     key: 'system',
     items: [
       { href: '/admin/notifications', key: 'notifications', adminOnly: true },
+      { href: '/admin/business-categories', key: 'businessCategories', adminOnly: true },
       { href: '/admin/settings', key: 'settings', adminOnly: true },
       { href: '/admin/audit', key: 'audit' },
     ],

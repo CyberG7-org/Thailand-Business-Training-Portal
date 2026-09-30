@@ -18,6 +18,7 @@ const STAFF_LINKS = [
 const ADMIN_LINKS = [
   ['/admin/managers', 'managers'],
   ['/admin/notifications', 'notifications'],
+  ['/admin/business-categories', 'businessCategories'],
   ['/admin/settings', 'settings'],
 ] as const;
 

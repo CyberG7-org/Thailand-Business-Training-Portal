@@ -86,7 +86,8 @@
       "notifications": "通知",
       "settings": "策略设置",
       "audit": "审计日志",
-      "managers": "经理"
+      "managers": "经理",
+      "businessCategories": "业务类别"
     },
     "users": {
       "title": "用户",
@@ -767,6 +768,25 @@
     },
     "home": {
       "intro": "选择要管理的板块。经理只能看到自己的团队。"
+    },
+    "businessCategories": {
+      "title": "业务类别",
+      "intro": "自动匹配从此受控列表中选择，选择题也从中生成业务干扰项。停用类别请将其关闭；代码永不更改。",
+      "key": "代码",
+      "keyHint": "小写字母、数字和 _；创建后不可更改。",
+      "labelTh": "泰文名称",
+      "labelEn": "英文名称",
+      "labelZh": "中文名称",
+      "sortOrder": "顺序",
+      "active": "启用",
+      "add": "添加类别",
+      "save": "保存",
+      "saved": "已保存",
+      "errors": {
+        "duplicate": "该代码已存在",
+        "invalid": "请检查代码并填写所有名称",
+        "failed": "无法保存"
+      }
     }
   },
   "stages": {
