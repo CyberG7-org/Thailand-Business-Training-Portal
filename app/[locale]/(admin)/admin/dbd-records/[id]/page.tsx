@@ -4,14 +4,13 @@ import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { listBusinessCategories } from '@/lib/db/business-categories';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
+import { currentAddress } from '@/lib/db/derived-facts';
 import { parseStoredExtraction } from '@/lib/db/extraction';
-import { geoLookup } from '@/lib/db/geo';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { conceptCoverage } from '@/lib/domain/concepts/resolve';
 import { missingFieldsForConfirmation } from '@/lib/domain/dbd-record';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
-import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
@@ -49,9 +48,7 @@ export default async function DbdRecordPage({
   const t = await getTranslations('admin.dbd');
 
   // Derived on the fly when not stored yet (a record saved before P17a); never written on a GET.
-  const address =
-    structured.address ??
-    (await resolveRegisteredAddress(record.head_office_address, geoLookup(db)));
+  const address = await currentAddress(db, record, structured);
   const categories = await listBusinessCategories(db, { activeOnly: true });
   const labelOf = (c: (typeof categories)[number]) =>
     locale === 'en' ? c.label_en : locale === 'zh' ? c.label_zh : c.label_th;

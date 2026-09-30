@@ -9,8 +9,9 @@ import {
   getLatestEligibility,
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
+import { currentAddress } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import { conceptCoverage } from '@/lib/domain/concepts/resolve';
+import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { formatDate } from '@/lib/domain/thai-date';
 import { AccountControls } from './account-controls';
@@ -64,26 +65,27 @@ export default async function UserDetailPage({
       ].filter((name, i, all) => name && all.indexOf(name) === i)
     : [];
 
-  // Assignment scope (spec §7.3): the ROLE concepts are checked for this learner.
-  const coverage = active
-    ? (() => {
-        const structured = readStructuredData(active.dbd_records.structured_data);
-        return conceptCoverage(
-          buildFactSheet({
-            record: active.dbd_records,
-            structured,
-            address: structured.address ?? null,
-            role: {
-              holder_name: active.holder_name,
-              position: active.position,
-              responsibilities: active.responsibilities,
-              relationship_to_shareholders: active.relationship_to_shareholders,
-            },
-          }),
-          'assignment',
-        );
-      })()
-    : null;
+  // Assignment scope (spec §7.3): the ROLE concepts are checked for this learner. A record saved
+  // before P17a has no stored address yet; as on the record page, its printed address is
+  // resolved on the fly and never written on a read.
+  let coverage: Coverage | null = null;
+  if (active) {
+    const structured = readStructuredData(active.dbd_records.structured_data);
+    coverage = conceptCoverage(
+      buildFactSheet({
+        record: active.dbd_records,
+        structured,
+        address: await currentAddress(db, active.dbd_records, structured),
+        role: {
+          holder_name: active.holder_name,
+          position: active.position,
+          responsibilities: active.responsibilities,
+          relationship_to_shareholders: active.relationship_to_shareholders,
+        },
+      }),
+      'assignment',
+    );
+  }
 
   const t = await getTranslations('admin.users');
   const tl = await getTranslations('admin.learners');

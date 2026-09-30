@@ -3,7 +3,9 @@ import {
   refreshDerivedFacts,
   remapBusinessCategory,
   setBusinessCategory,
+  updateStructuredData,
 } from '@/lib/db/derived-facts';
+import { manualCategory } from '@/lib/domain/business-category';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { FakeCategoryMapper } from '@/lib/integrations/category-map/fake';
 import { adminClient, createTestUser, deleteTestUser, type TestUser } from './helpers';
@@ -144,5 +146,39 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     } finally {
       await svc.from('dbd_records').delete().eq('id', data.id);
     }
+  });
+
+  it('keeps an edit that lands between the read and the write of a choice (CAS with retry)', async () => {
+    let landed = false;
+    const result = await updateStructuredData(svc, recordId, async (stored) => {
+      // Another save arrives after this attempt read the record and before it writes.
+      if (!landed) {
+        landed = true;
+        await setInterview(recordId, { main_clients: 'ลูกค้าที่มาระหว่างเขียน' });
+      }
+      return {
+        ...stored,
+        category: manualCategory('furniture_home', 'h', new Date().toISOString()),
+      };
+    });
+    expect(result).toBe('updated');
+    const s = await stored(recordId);
+    expect(s.interview?.main_clients).toBe('ลูกค้าที่มาระหว่างเขียน');
+    expect(s.category).toMatchObject({ key: 'furniture_home', source: 'manual' });
+  });
+
+  it('reports a race it could not settle instead of overwriting', async () => {
+    const result = await updateStructuredData(
+      svc,
+      recordId,
+      async (stored) => {
+        await setInterview(recordId, { main_clients: `ลูกค้า ${Date.now()}` });
+        return { ...stored, category: null };
+      },
+      2,
+    );
+    expect(result).toBe('raced');
+    // The stale snapshot never landed: the last concurrent edit and the category are both intact.
+    expect((await stored(recordId)).category).toMatchObject({ key: 'furniture_home' });
   });
 });

@@ -7,8 +7,28 @@ import {
   openManualRecordForm,
   switchTo,
 } from './helpers';
+import { seedLearnerWithCompany } from './seed';
 
 const ROI_ET = 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด';
+
+test('a learner page resolves a legacy record’s printed address for its readiness', async ({
+  page,
+}) => {
+  // A record saved before P17a: a printed address and nothing derived from it yet.
+  const learner = await seedLearnerWithCompany('บริษัท ที่อยู่เดิม จำกัด', '2025-01-01', {
+    head_office_address: ROI_ET,
+  });
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/learners');
+  await page.getByRole('link', { name: learner }).click();
+  await page.waitForURL(/\/th\/admin\/users\/[0-9a-f-]{36}$/);
+
+  const coverage = page.getByTestId('assignment-coverage');
+  await expect(coverage).toHaveAttribute('data-scope', 'assignment');
+  await expect(coverage.getByTestId('coverage-mcq')).toHaveAttribute('data-total', '30');
+  // The address counts as present here exactly as on the record page.
+  await expect(coverage.locator('[data-fact="address"]')).toHaveCount(0);
+});
 
 test('a record reads its address, maps its category, and shows what is still missing', async ({
   page,
