@@ -16,17 +16,9 @@ import {
   renderTemplateLenient,
   type TemplateRecord,
 } from '@/lib/domain/assessment/template';
-import {
-  EMPTY_INTERVIEW_PROFILE,
-  myShareholding,
-  type LearnerRole,
-} from '@/lib/domain/bank-interview';
-import { EMPTY_BUSINESS_PROFILE, readStructuredData } from '@/lib/domain/dbd-profile';
-import type { Director } from '@/lib/domain/dbd-record';
 import { createSupabaseAdminClient } from './admin';
 import { getActiveAssignmentForUser } from './assignments';
 import type { Database, Json } from './database.types';
-import type { DbdRecordRow } from './dbd-records';
 
 type Db = SupabaseClient<Database>;
 export type AttemptKind = 'quiz' | 'exam';
@@ -53,53 +45,9 @@ export class AssessmentError extends Error {
 
 type BankQuestion = SelectableQuestion & { text: QuestionText };
 
-export function toTemplateRecord(
-  record: DbdRecordRow,
-  role: LearnerRole | null = null,
-): TemplateRecord {
-  const structured = readStructuredData(record.structured_data);
-  const business = structured.business ?? EMPTY_BUSINESS_PROFILE;
-  const interview = structured.interview ?? EMPTY_INTERVIEW_PROFILE;
-  const directors = (record.directors as unknown as Director[] | null) ?? null;
-  const mine = myShareholding(business, role?.holder_name ?? null);
-  return {
-    company_name_th: record.company_name_th,
-    company_name_en: record.company_name_en,
-    juristic_id: record.juristic_id,
-    certificate_no: record.certificate_no,
-    registered_capital: record.registered_capital,
-    head_office_address: record.head_office_address,
-    registered_on: record.registered_on,
-    issued_on: record.issued_on,
-    directors: (record.directors as unknown as Director[] | null) ?? null,
-    objectives_count: record.objectives_count,
-    signing_authority: record.signing_authority,
-    province: record.province,
-    objectives: business.objectives.length ? business.objectives : null,
-    business_categories: business.business_categories.length ? business.business_categories : null,
-    shareholders: business.shareholders.length ? business.shareholders : null,
-    promoters: business.promoters.length ? business.promoters : null,
-    total_shares: business.share_structure.total_shares,
-    par_value: business.share_structure.par_value,
-    directors_count: directors && directors.length > 0 ? directors.length : null,
-    shareholders_count: business.shareholders.length > 0 ? business.shareholders.length : null,
-    nature_of_business: interview.nature_of_business,
-    products_services: interview.products_services,
-    account_purpose: interview.account_purpose,
-    monthly_volume: interview.monthly_volume,
-    clients_location: interview.clients_location,
-    suppliers_location: interview.suppliers_location,
-    source_of_funds: interview.source_of_funds,
-    business_address: interview.business_address,
-    operations_status: interview.operations_status,
-    my_name: role?.holder_name ?? null,
-    my_position: role?.position ?? null,
-    my_responsibilities: role?.responsibilities ?? null,
-    my_relationship: role?.relationship_to_shareholders ?? null,
-    my_shares: mine.shares,
-    my_share_percent: mine.percent,
-  };
-}
+/** The old templates' record from the live row (moved to the domain in P17b, §11). */
+import { templateRecordFromRecord as toTemplateRecord } from '@/lib/domain/facts/snapshot';
+export { toTemplateRecord };
 
 /** Approved questions with the localization for `language` (service role: correct keys included). */
 export async function loadQuestionBank(
