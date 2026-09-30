@@ -38,7 +38,7 @@ export async function createManagerAction(
     revalidatePath(`/${locale}/admin/managers`);
     return { ok: true, error: null, createdLoginId: created.loginId };
   } catch (e) {
-    return fail(await loginIdErrorMessage(locale, e));
+    return fail(await loginIdErrorMessage(locale, e, 'manager'));
   }
 }
 

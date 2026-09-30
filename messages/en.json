@@ -169,7 +169,9 @@
       "taken": "This login ID is already taken — choose another",
       "invalid": "Use 2–6 letters or numbers only",
       "noTeam": "This team cannot take new learners",
-      "chooseTeam": "Choose a team first"
+      "chooseTeam": "Choose a team first",
+      "hintLearner": "One letter and two numbers, e.g. D42. A free code is filled in — keep it, press ↻ for another, or type your own.",
+      "invalidLearner": "Use one letter and two numbers, e.g. D42"
     },
     "dbd": {
       "title": "DBD records",

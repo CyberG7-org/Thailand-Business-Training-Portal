@@ -1,12 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import {
+  LEARNER_SUFFIX_INVALID,
   LOGIN_ID_TAKEN,
   ProvisioningError,
   createLearnerAccount,
   createManagerAccount,
   isLoginIdTaken,
   learnerPrefixOf,
+  suggestLearnerSuffix,
   suggestLoginSuffix,
 } from '@/lib/db/provisioning';
 import { MANAGER_PREFIX } from '@/lib/domain/login-id';
@@ -47,13 +49,13 @@ describe('provisioning takes the typed code', () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
     const learner = await createLearnerAccount({
-      suffix: 'L8',
+      suffix: 'L08',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(learner.id);
 
-    expect(learner.loginId).toBe(`${manager.loginId}-l8`);
+    expect(learner.loginId).toBe(`${manager.loginId}-l08`);
     const { data } = await svc
       .from('profiles')
       .select('role, manager_id')
@@ -66,8 +68,8 @@ describe('provisioning takes the typed code', () => {
     const a = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     const b = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(a.id, b.id);
-    const inA = await createLearnerAccount({ suffix: 'k2', password: PASSWORD, managerId: a.id });
-    const inB = await createLearnerAccount({ suffix: 'k2', password: PASSWORD, managerId: b.id });
+    const inA = await createLearnerAccount({ suffix: 'k02', password: PASSWORD, managerId: a.id });
+    const inB = await createLearnerAccount({ suffix: 'k02', password: PASSWORD, managerId: b.id });
     created.push(inA.id, inB.id);
     expect(inA.loginId).not.toBe(inB.loginId);
   });
@@ -77,7 +79,7 @@ describe('provisioning takes the typed code', () => {
     created.push(manager.id);
     await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
     await expect(
-      createLearnerAccount({ suffix: 'a1', password: PASSWORD, managerId: manager.id }),
+      createLearnerAccount({ suffix: 'a01', password: PASSWORD, managerId: manager.id }),
     ).rejects.toMatchObject({ code: 'no-manager' });
   });
 
@@ -88,7 +90,7 @@ describe('provisioning takes the typed code', () => {
       .eq('role', 'learner');
     // A parent that does not exist is refused before any account is made.
     await expect(
-      createLearnerAccount({ suffix: 'a1', password: PASSWORD, managerId: randomUUID() }),
+      createLearnerAccount({ suffix: 'a01', password: PASSWORD, managerId: randomUUID() }),
     ).rejects.toBeInstanceOf(ProvisioningError);
     const after = await svc
       .from('profiles')
@@ -100,13 +102,13 @@ describe('provisioning takes the typed code', () => {
   it('refuses a learner whose parent is not a manager', async () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     const learner = await createLearnerAccount({
-      suffix: 'b2',
+      suffix: 'b02',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(manager.id, learner.id);
     await expect(
-      createLearnerAccount({ suffix: 'c3', password: PASSWORD, managerId: learner.id }),
+      createLearnerAccount({ suffix: 'c03', password: PASSWORD, managerId: learner.id }),
     ).rejects.toMatchObject({ code: 'no-manager' });
   });
 });
@@ -130,13 +132,13 @@ describe('a code is checked before it is created', () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
     const one = await createLearnerAccount({
-      suffix: 'd4',
+      suffix: 'd04',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(one.id);
     await expect(
-      createLearnerAccount({ suffix: 'D4', password: PASSWORD, managerId: manager.id }),
+      createLearnerAccount({ suffix: 'D04', password: PASSWORD, managerId: manager.id }),
     ).rejects.toMatchObject({ code: 'duplicate' });
   });
 
@@ -233,5 +235,61 @@ describe('suggestions', () => {
     const suffix = await suggestLoginSuffix(prefix);
     expect(suffix).toMatch(/^[a-z][0-9]$/);
     expect(await isLoginIdTaken(prefix + suffix)).toBe(false);
+  });
+});
+
+/** D83: a learner's code is the team's prefix and one letter and two digits. */
+describe('learner codes are one letter and two digits', () => {
+  const created: string[] = [];
+  afterAll(async () => {
+    for (const id of created.reverse()) await deleteTestUser(id);
+  });
+
+  it('refuses any other shape for a learner, before anything is asked', async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(manager.id);
+    for (const suffix of ['L8', 'AB12', '142', 'LL1', 'L080']) {
+      await expect(
+        createLearnerAccount(
+          { suffix, password: PASSWORD, managerId: manager.id },
+          {
+            createAccount: async () => {
+              throw new Error('the auth service must not be asked');
+            },
+          },
+        ),
+        suffix,
+      ).rejects.toMatchObject({ code: 'invalid-login-id', message: LEARNER_SUFFIX_INVALID });
+    }
+    const learner = await createLearnerAccount({
+      suffix: 'd42',
+      password: PASSWORD,
+      managerId: manager.id,
+    });
+    created.push(learner.id);
+    expect(learner.loginId).toBe(`${manager.loginId}-d42`);
+  });
+
+  it('keeps the manager rule: 2–6 letters or digits', async () => {
+    const manager = await createManagerAccount({
+      suffix: `m${fresh().slice(0, 3)}`,
+      password: PASSWORD,
+    });
+    created.push(manager.id);
+    expect(manager.loginId).toMatch(/^t-m[a-z0-9]{3}$/);
+  });
+
+  it('suggests one letter and two digits under the team, skipping a taken one', async () => {
+    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(manager.id);
+    const prefix = await learnerPrefixOf(manager.id);
+    const held = await createLearnerAccount({
+      suffix: 'a01',
+      password: PASSWORD,
+      managerId: manager.id,
+    });
+    created.push(held.id);
+    expect(await suggestLearnerSuffix(prefix, () => ['a01', 'b02'])).toBe('b02');
+    expect(await suggestLearnerSuffix(prefix)).toMatch(/^[a-z][0-9]{2}$/);
   });
 });
