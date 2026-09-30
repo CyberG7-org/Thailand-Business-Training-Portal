@@ -84,7 +84,7 @@
       "notifications": "通知",
       "settings": "策略设置",
       "managers": "经理",
-      "learners": "学员"
+      "learners": "学员记录"
     },
     "users": {
       "title": "创建学员与DBD",
@@ -134,9 +134,45 @@
       }
     },
     "learners": {
-      "title": "学员",
-      "intro": "您团队正在培训的所有学员。如需添加学员，请前往",
-      "toCreate": "创建学员与DBD"
+      "title": "学员记录",
+      "intro": "您团队正在培训的所有学员：公司、MCQ与聊天机器人结果以及预约。如需添加学员，请前往",
+      "toCreate": "创建学员与DBD",
+      "empty": "暂无学员。",
+      "backToRecord": "← 学员记录",
+      "columns": {
+        "loginId": "登录ID",
+        "company": "公司名称",
+        "issuedOn": "DBD签发日期",
+        "mcq": "MCQ",
+        "chatbot": "聊天机器人",
+        "appointment": "预约"
+      },
+      "results": {
+        "pass": "通过",
+        "fail": "未通过",
+        "in_progress": "进行中",
+        "abandoned": "已中止"
+      },
+      "history": {
+        "attempt": "次数",
+        "date": "日期",
+        "result": "结果"
+      },
+      "mcq": {
+        "title": "MCQ记录",
+        "empty": "暂无MCQ记录。",
+        "score": "得分",
+        "review": "查看答题",
+        "reviewTitle": "MCQ 第{no}次",
+        "reviewHeading": "题目与答案",
+        "backToHistory": "← MCQ记录"
+      },
+      "chatbot": {
+        "title": "聊天机器人记录",
+        "empty": "暂无聊天机器人记录。",
+        "review": "查看对话",
+        "backToHistory": "← 聊天机器人记录"
+      }
     },
     "createDbd": {
       "title": "创建DBD",

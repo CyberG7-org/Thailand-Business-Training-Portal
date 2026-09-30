@@ -23,7 +23,7 @@ Set the uptime monitor to alert on non-200 from `/api/health` for 3 consecutive 
 
 | Symptom | First checks | Fix |
 |---|---|---|
-| Learners cannot log in | `/api/health` db status; Supabase Auth logs; account `status` in Admin → Learners | disabled account → re-enable; Auth outage → wait/escalate to Supabase status |
+| Learners cannot log in | `/api/health` db status; Supabase Auth logs; account `status` on the learner's page (Admin → Learner Record → their Login ID) | disabled account → re-enable; Auth outage → wait/escalate to Supabase status |
 | Exam results not delivered | Admin → Notifications: `failed` with `last_error` | fix key/chat id (`/admin/settings`), then **Requeue**; cron must be listed under Vercel → Cron Jobs |
 | Interview will not start | `/api/health` → `interview` must be `claude` (staging/production) or `fake` (local); Vercel runtime logs for the `/interview` actions | `off` → `ANTHROPIC_API_KEY` missing in Vercel env; a model error surfaces to the learner as "something went wrong" and the session stays resumable for 30 minutes |
 | Wrong bank date for a learner | `eligibility_snapshots` latest row for the user; DBD record `issued_on` | correct `issued_on` on the record (trigger recomputes) or the policy days in `/admin/settings` (recomputes for everyone) |
