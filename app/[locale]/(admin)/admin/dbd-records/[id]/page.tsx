@@ -13,12 +13,14 @@ import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { countAssignmentsBehind, listVersions } from '@/lib/db/training-versions';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
 import { AddressPanel } from './address-panel';
 import { CategoryPanel } from './category-panel';
 import { CoveragePanel } from './coverage-panel';
+import { TrainingVersionsPanel } from './training-versions-panel';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
 import { RecordTools, type DocumentSummary, type ReadingState } from './record-tools';
@@ -56,6 +58,9 @@ export default async function DbdRecordPage({
     buildFactSheet({ record, structured, address, role: null }),
     'company',
   );
+  const versions = await listVersions(db, record.id);
+  const activeVersion = versions.find((v) => v.status === 'active') ?? null;
+  const behind = activeVersion ? await countAssignmentsBehind(db, record.id, activeVersion.id) : 0;
 
   // The reading runs in the background (D46): show the latest extract job, or that oversized
   // documents are still being indexed before their transcripts can fill the record.
@@ -121,6 +126,7 @@ export default async function DbdRecordPage({
         extractionAvailable={getDbdExtractor() !== null}
       />
       <CoveragePanel coverage={coverage} />
+      <TrainingVersionsPanel versions={versions} behind={behind} />
       {error === 'vector_unavailable' && (
         <p
           role="alert"

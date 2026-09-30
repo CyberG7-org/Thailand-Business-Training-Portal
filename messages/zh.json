@@ -461,7 +461,22 @@
         "my_shares": "学员持股数",
         "my_share_percent": "学员持股比例"
       },
-      "confirmedAutomatically": "已自动确认：所有信息均已从文件中读取，且四项信息齐全。"
+      "confirmedAutomatically": "已自动确认：所有信息均已从文件中读取，且四项信息齐全。",
+      "versions": {
+        "title": "培训版本",
+        "intro": "学员学习和评估所依据的是这些信息的冻结副本。改变信息的保存会生成新版本；在人员操作之前，没有学员会被移到新版本。",
+        "none": "尚无版本——记录尚未确认。",
+        "active": "版本 {n}——自 {date} 起生效",
+        "complete": "公司层面已完整：选择题 29 个概念和银行面谈 12 个概念全部可解析。",
+        "incomplete": "尚不完整——仍缺少：",
+        "behind": "{count, plural, =0 {所有学员都在此版本。} other {# 名学员仍在旧版本。}}",
+        "history": "历史",
+        "status": {
+          "active": "生效",
+          "superseded": "已替代",
+          "draft": "草稿"
+        }
+      }
     },
     "assignment": {
       "title": "已分配公司",

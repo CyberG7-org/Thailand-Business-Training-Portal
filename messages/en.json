@@ -461,7 +461,22 @@
         "my_shares": "Learner's shares",
         "my_share_percent": "Learner's share percentage"
       },
-      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the four details were given."
+      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the four details were given.",
+      "versions": {
+        "title": "Training versions",
+        "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
+        "none": "No version yet — the record has not been confirmed.",
+        "active": "Version {n} — active since {date}",
+        "complete": "Complete at company scope: every one of the 29 MCQ and 12 bank-interview concepts resolves.",
+        "incomplete": "Not complete yet — still missing:",
+        "behind": "{count, plural, =0 {Every learner is on this version.} one {# learner is on an older version.} other {# learners are on older versions.}}",
+        "history": "History",
+        "status": {
+          "active": "active",
+          "superseded": "superseded",
+          "draft": "draft"
+        }
+      }
     },
     "assignment": {
       "title": "Assigned company",
