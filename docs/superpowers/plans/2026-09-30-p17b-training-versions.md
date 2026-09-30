@@ -140,13 +140,8 @@ describe('company_training_versions', () => {
     expect(revive.error?.code).toBe('23514');
   });
 
-  it('refuses an active version whose sheet is not marked complete', async () => {
-    const { error } = await insertVersion(team.recordId, {
-      version_no: 3,
-      status: 'active',
-      activated_at: new Date().toISOString(),
-      company_complete: false,
-    });
+  it('refuses an active version without an activation time', async () => {
+    const { error } = await insertVersion(team.recordId, { version_no: 3, status: 'active' });
     expect(error?.code).toBe('23514');
   });
 
@@ -243,7 +238,8 @@ create table public.company_training_versions (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (dbd_record_id, version_no),
-  check (status <> 'active' or (activated_at is not null and company_complete)),
+  -- Activation is not gated on completeness (plan decision 1); it is gated on exceptions from P17c.
+  check (status <> 'active' or activated_at is not null),
   check (status <> 'superseded' or (activated_at is not null and superseded_at is not null))
 );
 
@@ -310,6 +306,18 @@ create policy "training versions: admins and owning managers read"
     )
   );
 
+-- The pin (§5.6): which version an assignment studies and is evaluated on, and the learner's
+-- role as confirmed against it (plan decision 4).
+alter table public.user_dbd_assignments
+  add column training_version_id uuid references public.company_training_versions (id),
+  add column role_snapshot jsonb,
+  add column role_confirmed_at timestamptz,
+  add column role_confirmed_by uuid references public.profiles (id) on delete set null,
+  add constraint user_dbd_assignments_role_confirmed
+    check ((role_snapshot is null) = (role_confirmed_at is null));
+create index user_dbd_assignments_version_idx
+  on public.user_dbd_assignments (training_version_id);
+
 -- The learner reads exactly the version their active assignment pins (plan decision 3).
 create policy "training versions: learners read their pinned version"
   on public.company_training_versions
@@ -322,18 +330,6 @@ create policy "training versions: learners read their pinned version"
         and a.active
     )
   );
-
--- The pin (§5.6): which version an assignment studies and is evaluated on, and the learner's
--- role as confirmed against it (plan decision 4).
-alter table public.user_dbd_assignments
-  add column training_version_id uuid references public.company_training_versions (id),
-  add column role_snapshot jsonb,
-  add column role_confirmed_at timestamptz,
-  add column role_confirmed_by uuid references public.profiles (id) on delete set null,
-  add constraint user_dbd_assignments_role_confirmed
-    check ((role_snapshot is null) = (role_confirmed_at is null));
-create index user_dbd_assignments_version_idx
-  on public.user_dbd_assignments (training_version_id);
 
 -- A pin points at a version of the assignment's own record.
 create or replace function public.assignment_version_matches()
