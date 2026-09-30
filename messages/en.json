@@ -132,6 +132,30 @@
           "website": "Enter a web address, e.g. example.co.th",
           "facebookPage": "Enter the page name or its facebook.com link"
         }
+      },
+      "version": {
+        "title": "Training version",
+        "pinned": "On version {n}",
+        "none": "No version pinned yet — the company's facts are not versioned.",
+        "newer": "Version {n} is newer.",
+        "current": "This is the company's current version.",
+        "move": "Move to version {n}",
+        "moveHint": "Results on the old version no longer count. Refused while a quiz, exam or interview is in progress.",
+        "roleConfirmed": "Role confirmed on {date}",
+        "roleUnconfirmed": "The role is not confirmed: the learner's own concepts do not count until it is.",
+        "confirmRole": "Confirm role",
+        "messages": {
+          "moved": "Moved to version {n}.",
+          "role-confirmed": "Role confirmed."
+        },
+        "errors": {
+          "evaluation-in-progress": "A quiz, exam or interview is in progress; try again when it is finished.",
+          "not-active": "That is not the company's current version.",
+          "other-record": "That version belongs to another company.",
+          "not-found": "Not found.",
+          "no-version": "The company has no version yet.",
+          "role-missing": "Write the learner's name as in the DBD documents first."
+        }
       }
     },
     "learners": {

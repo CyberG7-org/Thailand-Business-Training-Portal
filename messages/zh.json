@@ -132,6 +132,30 @@
           "website": "请输入网址，例如 example.co.th",
           "facebookPage": "请输入主页名称或 facebook.com 链接"
         }
+      },
+      "version": {
+        "title": "培训版本",
+        "pinned": "当前在版本 {n}",
+        "none": "尚未固定版本——公司信息尚未有版本。",
+        "newer": "版本 {n} 更新。",
+        "current": "这已是公司的当前版本。",
+        "move": "移到版本 {n}",
+        "moveHint": "旧版本上的成绩不再计入。测验、考试或面谈进行中时无法移动。",
+        "roleConfirmed": "角色已于 {date} 确认",
+        "roleUnconfirmed": "角色尚未确认：确认之前，学员本人的概念不计入。",
+        "confirmRole": "确认角色",
+        "messages": {
+          "moved": "已移到版本 {n}。",
+          "role-confirmed": "角色已确认。"
+        },
+        "errors": {
+          "evaluation-in-progress": "测验、考试或面谈正在进行中，请在结束后重试。",
+          "not-active": "这不是公司的当前版本。",
+          "other-record": "该版本属于另一家公司。",
+          "not-found": "未找到。",
+          "no-version": "公司尚无版本。",
+          "role-missing": "请先填写学员在 DBD 文件中的姓名。"
+        }
       }
     },
     "learners": {
