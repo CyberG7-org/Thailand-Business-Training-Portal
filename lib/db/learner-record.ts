@@ -151,16 +151,22 @@ export type ExamAttemptSummary = {
   submittedAt: string | null;
 };
 
-/** The learner's exam attempts, newest first (the MCQ history, D82). */
+/**
+ * The learner's exam attempts, newest first (the MCQ history, D82) — all of them, a page at a
+ * time, since retakes can be unlimited and a single request stops at the API's row limit.
+ */
 export async function listExamAttempts(db: Db, learnerId: string): Promise<ExamAttemptSummary[]> {
-  const { data, error } = await db
-    .from('assessment_attempts')
-    .select('id, attempt_no, status, result, score, max_score, started_at, submitted_at')
-    .eq('user_id', learnerId)
-    .eq('kind', 'exam')
-    .order('attempt_no', { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map((a) => ({
+  const data = await allRows((from, to) =>
+    db
+      .from('assessment_attempts')
+      .select('id, attempt_no, status, result, score, max_score, started_at, submitted_at')
+      .eq('user_id', learnerId)
+      .eq('kind', 'exam')
+      .order('attempt_no', { ascending: false })
+      .order('id')
+      .range(from, to),
+  );
+  return data.map((a) => ({
     id: a.id,
     attemptNo: a.attempt_no,
     status: a.status,
@@ -182,19 +188,25 @@ export type InterviewSessionSummary = {
   endedAt: string | null;
 };
 
-/** The learner's interview sessions, newest first (the Chatbot history, D82). */
+/**
+ * The learner's interview sessions, newest first (the Chatbot history, D82) — all of them, read a
+ * page at a time: the numbering counts from the first, so a list cut off at the API's row limit
+ * would lose the newest sessions and misnumber the rest.
+ */
 export async function listInterviewSessions(
   db: Db,
   learnerId: string,
 ): Promise<InterviewSessionSummary[]> {
-  const { data, error } = await db
-    .from('interview_sessions')
-    .select('id, status, verdict, started_at, ended_at')
-    .eq('user_id', learnerId)
-    .order('started_at', { ascending: true })
-    .order('id');
-  if (error) throw error;
-  return (data ?? [])
+  const data = await allRows((from, to) =>
+    db
+      .from('interview_sessions')
+      .select('id, status, verdict, started_at, ended_at')
+      .eq('user_id', learnerId)
+      .order('started_at', { ascending: true })
+      .order('id')
+      .range(from, to),
+  );
+  return data
     .map((s, i) => ({
       id: s.id,
       attemptNo: i + 1,

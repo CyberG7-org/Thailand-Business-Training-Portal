@@ -40,6 +40,9 @@ test('a learner’s MCQ attempts and Chatbot conversations open from the Learner
   await page.goto('/th/admin/learners');
   await page.getByTestId(`mcq-${learner}`).getByRole('link').click();
   await expect(page).toHaveURL(/\/th\/admin\/learners\/[0-9a-f-]{36}\/mcq$/);
+  // The sidebar keeps Learner Record marked on every page under it.
+  const current = page.getByTestId('staff-nav').locator('[aria-current="page"]');
+  await expect(current).toHaveText(/บันทึกผู้เรียน/);
   await expect(page.getByTestId('history-learner')).toContainText(company);
   const attempts = page.getByTestId('mcq-history').locator('tbody tr');
   await expect(attempts).toHaveCount(2);
@@ -48,6 +51,7 @@ test('a learner’s MCQ attempts and Chatbot conversations open from the Learner
   await expect(page.getByTestId('mcq-attempt-1')).toContainText('ไม่ผ่าน');
   await page.getByTestId('mcq-attempt-1').getByRole('link', { name: 'ดูคำตอบ' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('MCQ ครั้งที่ 1');
+  await expect(current).toHaveText(/บันทึกผู้เรียน/);
   await expect(page.getByTestId('mcq-review-score')).toContainText('0 / 1');
   await expect(page.getByText(prompt)).toBeVisible();
   await page.getByTestId('history-back').click();
@@ -66,6 +70,7 @@ test('a learner’s MCQ attempts and Chatbot conversations open from the Learner
   await expect(transcript).toContainText('ไม่ทราบค่ะ');
   await expect(page.getByTestId('admin-verdict')).toHaveAttribute('data-verdict', 'not_ready');
   await expect(page.getByRole('link', { name: '← ประวัติแชตบอต' })).toBeVisible();
+  await expect(current).toHaveText(/บันทึกผู้เรียน/);
 });
 
 test('another learner’s attempt or session cannot be opened under this learner', async ({

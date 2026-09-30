@@ -143,3 +143,44 @@ describe('Learner Record', () => {
     expect(await getLearnerHeader(svc, team.manager.id)).toBeNull();
   });
 });
+
+/**
+ * A history longer than the API's row limit (max_rows = 1000) is read in full: cut off, it would
+ * lose the newest sessions and misnumber the rest.
+ */
+describe('a history longer than one page', () => {
+  let team: Team;
+  beforeAll(async () => {
+    team = await seedTeam('ประวัติยาว');
+    await confirmRecord(team.recordId, team.manager.id);
+    await svc
+      .from('user_dbd_assignments')
+      .insert({ user_id: team.learner.id, dbd_record_id: team.recordId });
+    const start = Date.parse('2026-01-01T00:00:00Z');
+    const { error } = await svc.from('interview_sessions').insert(
+      Array.from({ length: 1005 }, (_, i) => ({
+        user_id: team.learner.id,
+        dbd_record_id: team.recordId,
+        status: 'abandoned',
+        verdict: null,
+        plan: { items: [], cursor: 0 },
+        provider: 'fake',
+        started_at: new Date(start + i * 60_000).toISOString(),
+      })),
+    );
+    if (error) throw error;
+  });
+  afterAll(async () => {
+    await svc.from('interview_sessions').delete().eq('user_id', team.learner.id);
+    await svc.from('user_dbd_assignments').delete().eq('user_id', team.learner.id);
+    await deleteTeam(team);
+  });
+
+  it('lists every session, the newest first and numbered 1005', async () => {
+    const sessions = await listInterviewSessions(team.asManager, team.learner.id);
+    expect(sessions).toHaveLength(1005);
+    expect(sessions[0].attemptNo).toBe(1005);
+    expect(sessions[0].startedAt).toMatch(/^2026-01-01T16:44/);
+    expect(sessions.at(-1)!.attemptNo).toBe(1);
+  });
+});
