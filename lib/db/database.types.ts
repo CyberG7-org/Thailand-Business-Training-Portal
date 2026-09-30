@@ -616,6 +616,120 @@ export type Database = {
           },
         ]
       }
+      geo_districts: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+          prefix_th: string
+          province_id: number
+        }
+        Insert: {
+          id: number
+          name_en: string
+          name_th: string
+          prefix_th: string
+          province_id: number
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+          prefix_th?: string
+          province_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_districts_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "geo_provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geo_provinces: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+          region_id: number
+        }
+        Insert: {
+          id: number
+          name_en: string
+          name_th: string
+          region_id: number
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+          region_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_provinces_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "geo_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geo_regions: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+        }
+        Insert: {
+          id: number
+          name_en: string
+          name_th: string
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+        }
+        Relationships: []
+      }
+      geo_subdistricts: {
+        Row: {
+          district_id: number
+          id: number
+          name_en: string
+          name_th: string
+          postcode: string
+          prefix_th: string
+        }
+        Insert: {
+          district_id: number
+          id: number
+          name_en: string
+          name_th: string
+          postcode: string
+          prefix_th: string
+        }
+        Update: {
+          district_id?: number
+          id?: number
+          name_en?: string
+          name_th?: string
+          postcode?: string
+          prefix_th?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_subdistricts_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "geo_districts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       index_jobs: {
         Row: {
           attempts: number

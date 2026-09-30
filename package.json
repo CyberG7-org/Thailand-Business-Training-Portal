@@ -21,7 +21,8 @@
     "check:secrets": "node scripts/check-client-secrets.mjs",
     "fixtures:pdf": "node scripts/make-fixture-pdf.mjs",
     "vector:setup": "node scripts/vector-setup.mjs",
-    "vector:smoke": "node scripts/vector-smoke.mjs"
+    "vector:smoke": "node scripts/vector-smoke.mjs",
+    "geo:migration": "node scripts/build-geo-migration.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
