@@ -649,6 +649,54 @@ export type Database = {
           },
         ]
       }
+      evaluation_concepts: {
+        Row: {
+          alternate_when: string[]
+          answer_type: string
+          critical: boolean
+          domain: string
+          facts: string[]
+          interview_match: string | null
+          interview_slot: number | null
+          key: string
+          mcq_order: number | null
+          source: string
+          title_en: string
+          title_th: string
+          title_zh: string
+        }
+        Insert: {
+          alternate_when?: string[]
+          answer_type: string
+          critical?: boolean
+          domain: string
+          facts?: string[]
+          interview_match?: string | null
+          interview_slot?: number | null
+          key: string
+          mcq_order?: number | null
+          source: string
+          title_en: string
+          title_th: string
+          title_zh: string
+        }
+        Update: {
+          alternate_when?: string[]
+          answer_type?: string
+          critical?: boolean
+          domain?: string
+          facts?: string[]
+          interview_match?: string | null
+          interview_slot?: number | null
+          key?: string
+          mcq_order?: number | null
+          source?: string
+          title_en?: string
+          title_th?: string
+          title_zh?: string
+        }
+        Relationships: []
+      }
       geo_districts: {
         Row: {
           id: number
