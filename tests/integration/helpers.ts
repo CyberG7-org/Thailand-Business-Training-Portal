@@ -167,3 +167,63 @@ export async function deleteTeam(team: Team): Promise<void> {
   await deleteTestUser(team.learner.id);
   await deleteTestUser(team.manager.id);
 }
+
+/** Every company-level concept resolvable (29 / 12): the record columns and the structured data. */
+export const COMPLETE_RECORD = {
+  company_name_th: 'บริษัท ครบถ้วน จำกัด',
+  company_name_en: 'COMPLETE CO., LTD.',
+  registered_on: '2026-04-16',
+  registered_capital: 2_000_000,
+  directors: [{ name_th: 'นางสาวกุลธิดา พลเยี่ยม', name_en: null }],
+  signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',
+  head_office_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+} as const;
+
+export const COMPLETE_STRUCTURED = {
+  business: {
+    shareholders: [
+      { name: 'นางสาวกุลธิดา พลเยี่ยม', nationality: 'ไทย', shares: 18000, percent: null },
+      { name: 'นายสมชาย ใจดี', nationality: 'ไทย', shares: 2000, percent: null },
+    ],
+    share_structure: {
+      total_shares: 20000,
+      par_value: 100,
+      paid_up_capital: null,
+      share_type: null,
+    },
+  },
+  interview: {
+    ...CONFIRMED_ANSWERS.interview,
+    nature_of_business: 'ค้าส่งและค้าปลีกเสื้อผ้า',
+    products_services: 'ชุดเดรส เสื้อ กระโปรงสตรี',
+    business_purpose: 'จำหน่ายเสื้อผ้าสตรีในภาคอีสาน',
+    main_clients: 'ร้านค้าปลีกเสื้อผ้า',
+    client_origin: 'หน้าร้านและออนไลน์',
+    main_suppliers: 'โรงงานตัดเย็บในกรุงเทพฯ',
+    business_address: 'ร้อยเอ็ด',
+    monthly_revenue: '300,000 บาท',
+    revenue_basis: 'ลูกค้า 30 ราย เฉลี่ย 10,000 บาท',
+    average_transaction: '10,000 บาท',
+    monthly_transactions: '30',
+    source_of_funds: 'เงินออมของกรรมการ',
+    first_incoming_funds: 'ทุนจดทะเบียนจากผู้ถือหุ้น',
+    account_purpose: 'รับชำระค่าสินค้า',
+    promptpay_qr_purpose: 'ให้ลูกค้าชำระเงินสะดวก',
+    customer_examples: 'ร้านบุษบา ร้อยเอ็ด',
+    customer_profile: 'ร้านค้าปลีกในประเทศ',
+    transaction_details: 'โอนผ่านบัญชีบริษัท',
+    operations_started: 'yes',
+    has_existing_customers: 'yes',
+    has_completed_transactions: 'yes',
+    has_regular_suppliers: 'yes',
+  },
+} as const;
+
+/** Makes a confirmed record's sheet complete at company scope (spec §5.6). */
+export async function completeRecord(recordId: string): Promise<void> {
+  const { error } = await adminClient()
+    .from('dbd_records')
+    .update({ ...COMPLETE_RECORD, structured_data: COMPLETE_STRUCTURED } as never)
+    .eq('id', recordId);
+  if (error) throw error;
+}
