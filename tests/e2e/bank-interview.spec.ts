@@ -40,9 +40,9 @@ test('starter cards, interview answers and the learner role combine into a perso
   await page.getByRole('link', { name: 'บริษัท สัมภาษณ์ธนาคาร จำกัด' }).first().click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   const answers = page.getByTestId('interview-answers');
-  await answers
-    .locator('input[name="interview_account_purpose"]')
-    .fill('รับชำระค่าสินค้าจากลูกค้า');
+  await answers.locator('[name="interview_account_purpose"]').fill('รับชำระค่าสินค้าจากลูกค้า');
+  // The earlier answers sit behind a closed disclosure (P17a, spec §5.4); open it to fill them.
+  await answers.getByTestId('legacy-answers').locator('summary').click();
   await answers.locator('input[name="interview_monthly_volume"]').fill('ประมาณ 300,000 บาท');
   await answers.locator('input[name="interview_operations_status"]').fill('เริ่มดำเนินการแล้ว');
   await page.getByTestId('save-interview').click();

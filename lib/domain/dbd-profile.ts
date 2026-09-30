@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { interviewProfileSchema, type InterviewProfile } from './bank-interview';
+import { categoryAssignmentSchema, type CategoryAssignment } from './business-category';
+import { registeredAddressSchema, type RegisteredAddress } from './geo/resolve';
 
 /**
  * Level 2 of the three-level DBD model (decision D38): the business profile that comes from the
@@ -91,20 +93,31 @@ export type StructuredData = {
   interview?: InterviewProfile;
   document_type?: string | null;
   provenance?: Provenance;
+  /** The printed address resolved against Thai geography (P17a, D73). */
+  address?: RegisteredAddress | null;
+  /** The mapped business category (P17a, D73). */
+  category?: CategoryAssignment | null;
 };
 
-/** Reads the JSON column defensively: anything malformed counts as empty. */
+/**
+ * Reads the JSON column defensively: anything malformed counts as empty. Every writer spreads
+ * this result back, so a key missing here is erased by the next save — new keys start here.
+ */
 export function readStructuredData(raw: unknown): StructuredData {
-  if (!raw || typeof raw !== 'object') return {};
+  if (!raw || typeof raw !== 'object') return { address: null, category: null };
   const data = raw as Record<string, unknown>;
   const business = businessProfileSchema.safeParse(data.business ?? {});
   const interview = interviewProfileSchema.safeParse(data.interview ?? {});
+  const address = registeredAddressSchema.safeParse(data.address);
+  const category = categoryAssignmentSchema.safeParse(data.category);
   return {
     business: business.success ? business.data : EMPTY_BUSINESS_PROFILE,
     interview: interview.success ? interview.data : interviewProfileSchema.parse({}),
     document_type: typeof data.document_type === 'string' ? data.document_type : null,
     provenance:
       data.provenance && typeof data.provenance === 'object' ? (data.provenance as Provenance) : {},
+    address: address.success ? address.data : null,
+    category: category.success ? category.data : null,
   };
 }
 

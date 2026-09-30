@@ -281,6 +281,39 @@ export type Database = {
         }
         Relationships: []
       }
+      business_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          key: string
+          label_en: string
+          label_th: string
+          label_zh: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          key: string
+          label_en: string
+          label_th: string
+          label_zh: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          key?: string
+          label_en?: string
+          label_th?: string
+          label_zh?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dbd_chunks: {
         Row: {
           char_count: number
@@ -615,6 +648,168 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluation_concepts: {
+        Row: {
+          alternate_when: string[]
+          answer_type: string
+          critical: boolean
+          domain: string
+          facts: string[]
+          interview_match: string | null
+          interview_slot: number | null
+          key: string
+          mcq_order: number | null
+          source: string
+          title_en: string
+          title_th: string
+          title_zh: string
+        }
+        Insert: {
+          alternate_when?: string[]
+          answer_type: string
+          critical?: boolean
+          domain: string
+          facts?: string[]
+          interview_match?: string | null
+          interview_slot?: number | null
+          key: string
+          mcq_order?: number | null
+          source: string
+          title_en: string
+          title_th: string
+          title_zh: string
+        }
+        Update: {
+          alternate_when?: string[]
+          answer_type?: string
+          critical?: boolean
+          domain?: string
+          facts?: string[]
+          interview_match?: string | null
+          interview_slot?: number | null
+          key?: string
+          mcq_order?: number | null
+          source?: string
+          title_en?: string
+          title_th?: string
+          title_zh?: string
+        }
+        Relationships: []
+      }
+      geo_districts: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+          prefix_th: string
+          province_id: number
+        }
+        Insert: {
+          id: number
+          name_en: string
+          name_th: string
+          prefix_th: string
+          province_id: number
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+          prefix_th?: string
+          province_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_districts_province_id_fkey"
+            columns: ["province_id"]
+            isOneToOne: false
+            referencedRelation: "geo_provinces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geo_provinces: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+          region_id: number
+        }
+        Insert: {
+          id: number
+          name_en: string
+          name_th: string
+          region_id: number
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+          region_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_provinces_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "geo_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      geo_regions: {
+        Row: {
+          id: number
+          name_en: string
+          name_th: string
+        }
+        Insert: {
+          id: number
+          name_en: string
+          name_th: string
+        }
+        Update: {
+          id?: number
+          name_en?: string
+          name_th?: string
+        }
+        Relationships: []
+      }
+      geo_subdistricts: {
+        Row: {
+          district_id: number
+          id: number
+          name_en: string
+          name_th: string
+          postcode: string
+          prefix_th: string
+        }
+        Insert: {
+          district_id: number
+          id: number
+          name_en: string
+          name_th: string
+          postcode: string
+          prefix_th: string
+        }
+        Update: {
+          district_id?: number
+          id?: number
+          name_en?: string
+          name_th?: string
+          postcode?: string
+          prefix_th?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "geo_subdistricts_district_id_fkey"
+            columns: ["district_id"]
+            isOneToOne: false
+            referencedRelation: "geo_districts"
             referencedColumns: ["id"]
           },
         ]

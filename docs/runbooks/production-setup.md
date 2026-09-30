@@ -12,6 +12,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    ```
    All migrations apply in order; buckets (`dbd-documents`, `study-materials`, `tts-cache`, `name-cards`) are created private by the migrations. A project that ran the voice call keeps an empty `recordings` bucket: delete it in the dashboard (Storage → recordings), since SQL may not remove storage rows.
 
+   **Thai geography (P17a).** Migration `20261001010000_thai_geography.sql` is about 0.7 MB — the whole country (6 regions, 77 provinces, 930 districts, 7,436 subdistricts) from the pinned `kongvut/thai-province-data` dataset. It runs once and takes a few seconds longer than the others; regenerate it only with `pnpm geo:migration` when the pin changes.
+
    **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
    ```sql
    select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name
@@ -51,6 +53,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |
    | `INTERVIEW_PROVIDER` | `claude` | the AI bank officer of the readiness interview (Sonnet 5 turns, Opus 5 narrative) on the same `ANTHROPIC_API_KEY` |
+   | `CATEGORY_MAP_PROVIDER` | `claude` (or unset with the Anthropic key) | maps `nature_of_business` to a business category (P17a) on the same `ANTHROPIC_API_KEY`; `off` to disable — the record page then asks a person to choose |
    | `PINECONE_API_KEY`, `PINECONE_NAMESPACE` | Pinecone key; namespace `production` (staging: `staging`) | DBD retrieval index (P14); `VECTOR_PROVIDER=off` to disable; optional `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES` |
    | `DIRECT_READ_MAX_PAGES` | optional, default 20 | documents with more pages are never sent whole to the model; they fill in from their transcripts once indexed (P14c); with `VECTOR_PROVIDER=off` documents travel whole up to 100 pages instead |
    | `TRANSCRIPT_SWEEP_PAGES` | optional, default 10 | transcript pages per list-sweep call when filling a record from an oversized document (P14c); lower it if sweeps report `too_large` |
