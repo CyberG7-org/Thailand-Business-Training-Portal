@@ -433,6 +433,7 @@ export type Database = {
           company_name_en: string | null
           company_name_th: string | null
           confirmed_at: string | null
+          confirmed_automatically: boolean
           confirmed_by: string | null
           created_at: string
           created_by: string | null
@@ -461,6 +462,7 @@ export type Database = {
           company_name_en?: string | null
           company_name_th?: string | null
           confirmed_at?: string | null
+          confirmed_automatically?: boolean
           confirmed_by?: string | null
           created_at?: string
           created_by?: string | null
@@ -489,6 +491,7 @@ export type Database = {
           company_name_en?: string | null
           company_name_th?: string | null
           confirmed_at?: string | null
+          confirmed_automatically?: boolean
           confirmed_by?: string | null
           created_at?: string
           created_by?: string | null
@@ -901,37 +904,49 @@ export type Database = {
       }
       profiles: {
         Row: {
+          contact_email: string | null
           created_at: string
           display_name: string | null
+          facebook_page: string | null
           id: string
           login_id: string
           manager_id: string | null
+          phone: string | null
           preferred_language: string
           role: string
           status: string
           updated_at: string
+          website: string | null
         }
         Insert: {
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          facebook_page?: string | null
           id: string
           login_id: string
           manager_id?: string | null
+          phone?: string | null
           preferred_language?: string
           role: string
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          contact_email?: string | null
           created_at?: string
           display_name?: string | null
+          facebook_page?: string | null
           id?: string
           login_id?: string
           manager_id?: string | null
+          phone?: string | null
           preferred_language?: string
           role?: string
           status?: string
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {

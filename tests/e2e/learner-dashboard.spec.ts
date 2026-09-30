@@ -42,7 +42,7 @@ test('a learner with no assignment sees the no-company message and every stage l
 test('admin sees each learner’s derived progression', async ({ page }) => {
   const assigned = await seedLearnerWithCompany('บริษัท ความคืบหน้า จำกัด', '2026-07-13');
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/learners');
   await expect(page.getByTestId(`progression-${assigned}`)).toHaveText('เตรียมบัญชีแล้ว');
   await expect(page.getByTestId(`progression-${E2E_LEARNER.loginId}`)).toHaveText('ยังไม่มอบหมาย');
 });

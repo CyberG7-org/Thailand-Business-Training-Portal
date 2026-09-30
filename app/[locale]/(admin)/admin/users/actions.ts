@@ -1,11 +1,17 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { requireStaff } from '@/lib/auth/session';
 import { assignDbdRecord } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
 import { createLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import {
+  contactFromForm,
+  firstContactProblem,
+  learnerContactSchema,
+} from '@/lib/domain/learner-contact';
 import { loginIdErrorMessage } from '../login-id-errors';
 
 export type CreateUserState = {
@@ -44,6 +50,13 @@ export async function createUserAction(
   const displayName = String(formData.get('displayName') ?? '').trim();
   if (!displayName) return fail("Enter the learner's name");
 
+  // The contact details the manager gives the learner (D80), checked before any account exists.
+  const contact = learnerContactSchema.safeParse(contactFromForm(formData));
+  if (!contact.success) {
+    const t = await getTranslations({ locale, namespace: 'admin.users.contact.errors' });
+    return fail(t(firstContactProblem(contact.error)));
+  }
+
   const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
   if (!dbdRecordId) return fail('Choose the company the learner belongs to');
   const { data: record, error: recordError } = await db
@@ -63,6 +76,7 @@ export async function createUserAction(
       password: String(formData.get('password') ?? ''),
       displayName,
       managerId,
+      contact: contact.data,
     });
   } catch (e) {
     return fail(await loginIdErrorMessage(locale, e));

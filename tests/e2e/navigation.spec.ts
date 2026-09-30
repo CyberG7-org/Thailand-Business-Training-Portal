@@ -8,7 +8,7 @@ test('every page below the home offers Back and Home; the home page does not', a
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
   await expect(page.getByTestId('nav-home')).toHaveCount(0);
 
-  await page.getByRole('link', { name: 'ผู้ใช้' }).first().click();
+  await page.getByRole('link', { name: 'สร้างผู้เรียนและ DBD' }).first().click();
   await expect(page).toHaveURL(/\/th\/admin\/users$/);
   await page.getByTestId('nav-back').click();
   await expect(page).toHaveURL(/\/th\/admin$/);

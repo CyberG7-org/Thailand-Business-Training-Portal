@@ -15,6 +15,7 @@ import { AccountControls } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import { AssignmentPanel } from './assignment-panel';
+import { ContactForm } from './contact-form';
 import { RoleForm } from './role-form';
 
 export default async function UserDetailPage({
@@ -61,10 +62,11 @@ export default async function UserDetailPage({
     : [];
 
   const t = await getTranslations('admin.users');
+  const tl = await getTranslations('admin.learners');
   return (
     <section className="grid gap-6">
-      <Link href="/admin/users" className="staff-link text-sm">
-        ← {t('title')}
+      <Link href="/admin/learners" className="staff-link text-sm">
+        ← {tl('title')}
       </Link>
       <h1 className="staff-title">{displayLoginId(user.login_id)}</h1>
       <dl className="grid max-w-md grid-cols-2 gap-1 text-sm">
@@ -75,6 +77,17 @@ export default async function UserDetailPage({
         <dt>{t('status')}</dt>
         <dd data-testid="account-status">{user.status}</dd>
       </dl>
+      {user.role === 'learner' && (
+        <ContactForm
+          userId={user.id}
+          contact={{
+            phone: user.phone ?? undefined,
+            contactEmail: user.contact_email ?? undefined,
+            website: user.website,
+            facebookPage: user.facebook_page,
+          }}
+        />
+      )}
       <AssignmentPanel userId={user.id} current={current} options={options} />
       {active && (
         <RoleForm
