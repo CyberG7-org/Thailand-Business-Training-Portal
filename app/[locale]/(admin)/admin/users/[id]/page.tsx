@@ -10,10 +10,13 @@ import {
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { conceptCoverage } from '@/lib/domain/concepts/resolve';
+import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { formatDate } from '@/lib/domain/thai-date';
 import { AccountControls } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
+import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
 import { AssignmentPanel } from './assignment-panel';
 import { RoleForm } from './role-form';
 
@@ -60,6 +63,27 @@ export default async function UserDetailPage({
       ].filter((name, i, all) => name && all.indexOf(name) === i)
     : [];
 
+  // Assignment scope (spec §7.3): the ROLE concepts are checked for this learner.
+  const coverage = active
+    ? (() => {
+        const structured = readStructuredData(active.dbd_records.structured_data);
+        return conceptCoverage(
+          buildFactSheet({
+            record: active.dbd_records,
+            structured,
+            address: structured.address ?? null,
+            role: {
+              holder_name: active.holder_name,
+              position: active.position,
+              responsibilities: active.responsibilities,
+              relationship_to_shareholders: active.relationship_to_shareholders,
+            },
+          }),
+          'assignment',
+        );
+      })()
+    : null;
+
   const t = await getTranslations('admin.users');
   return (
     <section className="grid gap-6">
@@ -89,6 +113,7 @@ export default async function UserDetailPage({
           people={people}
         />
       )}
+      {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}
       <AccountControls userId={user.id} status={user.status as 'active' | 'disabled'} />
     </section>
   );
