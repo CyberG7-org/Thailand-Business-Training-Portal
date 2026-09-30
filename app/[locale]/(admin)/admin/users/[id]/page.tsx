@@ -9,11 +9,15 @@ import {
   getLatestEligibility,
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
+import { currentAddress } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
+import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { formatDate } from '@/lib/domain/thai-date';
 import { AccountControls } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
+import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
 import { AssignmentPanel } from './assignment-panel';
 import { ContactForm } from './contact-form';
 import { RoleForm } from './role-form';
@@ -61,6 +65,28 @@ export default async function UserDetailPage({
       ].filter((name, i, all) => name && all.indexOf(name) === i)
     : [];
 
+  // Assignment scope (spec §7.3): the ROLE concepts are checked for this learner. A record saved
+  // before P17a has no stored address yet; as on the record page, its printed address is
+  // resolved on the fly and never written on a read.
+  let coverage: Coverage | null = null;
+  if (active) {
+    const structured = readStructuredData(active.dbd_records.structured_data);
+    coverage = conceptCoverage(
+      buildFactSheet({
+        record: active.dbd_records,
+        structured,
+        address: await currentAddress(db, active.dbd_records, structured),
+        role: {
+          holder_name: active.holder_name,
+          position: active.position,
+          responsibilities: active.responsibilities,
+          relationship_to_shareholders: active.relationship_to_shareholders,
+        },
+      }),
+      'assignment',
+    );
+  }
+
   const t = await getTranslations('admin.users');
   const tl = await getTranslations('admin.learners');
   return (
@@ -102,6 +128,7 @@ export default async function UserDetailPage({
           people={people}
         />
       )}
+      {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}
       <AccountControls userId={user.id} status={user.status as 'active' | 'disabled'} />
     </section>
   );

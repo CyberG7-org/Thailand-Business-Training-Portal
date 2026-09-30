@@ -22,6 +22,7 @@ for (const name of [
   'INTERVIEW_PROVIDER',
   'QUESTION_GEN_PROVIDER',
   'VECTOR_PROVIDER',
+  'CATEGORY_MAP_PROVIDER',
 ]) {
   process.env[name] = 'fake';
 }

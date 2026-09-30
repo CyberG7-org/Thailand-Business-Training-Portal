@@ -203,20 +203,67 @@ const optionalProse = z.preprocess(
   z.string().trim().max(2000).nullable().default(null),
 );
 
+/** A yes/no company fact the manager states; blank is "not stated yet" (spec §5.4). */
+const yesNo = z.preprocess(
+  (v) => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.enum(['yes', 'no']).nullable().default(null),
+);
+export type YesNo = 'yes' | 'no';
+
+/**
+ * Status facts select alternate question wording (D73). They are stated before an evaluation and
+ * never inferred during one; `learner_is_shareholder` is derived per assignment instead.
+ */
+export const COMPANY_STATUS_FACTS = [
+  'operations_started',
+  'has_existing_customers',
+  'has_completed_transactions',
+  'has_regular_suppliers',
+] as const;
+export type CompanyStatusFact = (typeof COMPANY_STATUS_FACTS)[number];
+
+/** Answers written before P17a; kept as written and never remapped (spec §5.4). */
+export const LEGACY_INTERVIEW_FIELDS = [
+  'monthly_volume',
+  'clients_location',
+  'suppliers_location',
+  'operations_status',
+] as const;
+
 export const interviewProfileSchema = z.object({
   contact_email: optionalEmail,
   contact_phone: optionalText,
   nature_of_business: optionalProse,
   products_services: optionalProse,
   account_purpose: optionalText,
+  source_of_funds: optionalText,
+  business_address: optionalText,
+  // P17a (spec §5.4): the facts the 37 registry concepts read.
+  business_purpose: optionalProse,
+  main_clients: optionalProse,
+  client_origin: optionalProse,
+  main_suppliers: optionalProse,
+  monthly_revenue: optionalText,
+  revenue_basis: optionalProse,
+  average_transaction: optionalText,
+  monthly_transactions: optionalText,
+  first_incoming_funds: optionalProse,
+  promptpay_qr_purpose: optionalProse,
+  customer_examples: optionalProse,
+  customer_profile: optionalProse,
+  transaction_details: optionalProse,
+  operations_started: yesNo,
+  has_existing_customers: yesNo,
+  has_completed_transactions: yesNo,
+  has_regular_suppliers: yesNo,
+  // Earlier answers, kept as written.
   monthly_volume: optionalText,
   clients_location: optionalText,
   suppliers_location: optionalText,
-  source_of_funds: optionalText,
-  business_address: optionalText,
   operations_status: optionalText,
 });
 export type InterviewProfile = z.output<typeof interviewProfileSchema>;
+export type InterviewTextField = Exclude<keyof InterviewProfile, CompanyStatusFact>;
 export const EMPTY_INTERVIEW_PROFILE: InterviewProfile = interviewProfileSchema.parse({});
 export const INTERVIEW_FIELDS = Object.keys(EMPTY_INTERVIEW_PROFILE) as (keyof InterviewProfile)[];
 
@@ -264,4 +311,17 @@ export function myShareholding(
     me.percent ??
     (me.shares !== null && total ? Math.round((me.shares / total) * 10000) / 100 : null);
   return { shares: me.shares, percent };
+}
+
+/**
+ * Whether the learner holds shares, by the same name match as `myShareholding`; null when there
+ * is no role name or no shareholder list to match against (spec §7.2).
+ */
+export function isShareholder(
+  business: BusinessProfile | null,
+  holderName: string | null,
+): boolean | null {
+  if (!business || !holderName?.trim() || business.shareholders.length === 0) return null;
+  const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  return business.shareholders.some((s) => norm(s.name) === norm(holderName));
 }
