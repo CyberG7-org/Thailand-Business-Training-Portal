@@ -21,6 +21,11 @@ import {
   enqueueIndexJob,
   type AskResult,
 } from '@/lib/db/dbd-index';
+import {
+  refreshDerivedFacts,
+  remapBusinessCategory,
+  setBusinessCategory,
+} from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
@@ -140,6 +145,14 @@ function errorMessage(e: unknown): string {
   return raw;
 }
 
+/** A save has succeeded; a failure to derive must not undo it (the next save derives again). */
+async function deriveAfterSave(
+  db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  id: string,
+): Promise<void> {
+  await refreshDerivedFacts(db, id).catch((e) => console.error('derived facts', id, e));
+}
+
 export async function saveDbdRecordAction(
   _prev: SaveState,
   formData: FormData,
@@ -176,6 +189,7 @@ export async function saveDbdRecordAction(
         business: business.data,
         interview: formDataToInterview(formData, stored),
       });
+      await deriveAfterSave(db, id);
       revalidatePath(`/${locale}/admin/dbd-records/${id}`);
       return { ok: true, error: null, fieldErrors: {} };
     }
@@ -187,6 +201,7 @@ export async function saveDbdRecordAction(
       teamOf(admin),
     );
     createdId = row.id;
+    await deriveAfterSave(db, row.id);
   } catch (e) {
     return { ok: false, error: errorMessage(e), fieldErrors: {} };
   }
@@ -369,6 +384,7 @@ export async function saveInterviewAnswersAction(
       })
       .eq('id', id);
     if (error) throw error;
+    await deriveAfterSave(db, id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
@@ -402,4 +418,42 @@ export async function askDocumentsAction(_prev: AskState, formData: FormData): P
     question: String(formData.get('question') ?? ''),
     answer: answerFromPassages,
   });
+}
+
+/** A person chooses the category (spec §5.3); it holds until the business text changes. */
+export async function setBusinessCategoryAction(
+  _prev: ToolState,
+  formData: FormData,
+): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  const key = String(formData.get('categoryKey') ?? '');
+  await requireStaff(locale);
+  if (!key) return { ok: false, error: 'choose-category' };
+  const db = await createSupabaseServerClient();
+  try {
+    await setBusinessCategory(db, id, key);
+    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+    return { ok: true, error: null };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
+}
+
+/** "Map again": forget the stored decision and map afresh. */
+export async function remapBusinessCategoryAction(
+  _prev: ToolState,
+  formData: FormData,
+): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  await requireStaff(locale);
+  const db = await createSupabaseServerClient();
+  try {
+    await remapBusinessCategory(db, id);
+    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+    return { ok: true, error: null };
+  } catch (e) {
+    return { ok: false, error: errorMessage(e) };
+  }
 }

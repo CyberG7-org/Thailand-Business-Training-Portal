@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { processIndexJobs } from '@/lib/db/dbd-index';
+import { refreshDerivedFacts } from '@/lib/db/derived-facts';
 import { extractAndApply } from '@/lib/db/extraction';
 import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
@@ -46,6 +47,10 @@ export async function GET(request: NextRequest) {
         if (!extractor) return { status: 'skipped' };
         try {
           await extractAndApply(createSupabaseAdminClient(), recordId, extractor, vector);
+          // The printed address may have just arrived (spec §5.2); a failure here never fails the job.
+          await refreshDerivedFacts(createSupabaseAdminClient(), recordId).catch((e) =>
+            console.error('derived facts', recordId, e),
+          );
           return { status: 'done' };
         } catch (e) {
           if (e instanceof ExtractionError && TERMINAL_EXTRACTION.has(e.code)) {
@@ -56,14 +61,21 @@ export async function GET(request: NextRequest) {
       },
       // Oversized documents fill their record from the transcripts once ready (spec §6, D42):
       // a resumable job of its own, sharing this run's budget.
-      transcript: (input) =>
-        fillRecordFromTranscripts(createSupabaseAdminClient(), input.recordId, {
+      transcript: async (input) => {
+        const run = await fillRecordFromTranscripts(createSupabaseAdminClient(), input.recordId, {
           extractor,
           vector,
           budgetMs: input.budgetMs,
           facts: input.facts,
           sweepPages: sweepPagesFromEnv(),
-        }),
+        });
+        if (run.applied.includes('head_office_address')) {
+          await refreshDerivedFacts(createSupabaseAdminClient(), input.recordId).catch((e) =>
+            console.error('derived facts', input.recordId, e),
+          );
+        }
+        return run;
+      },
     });
     return NextResponse.json(summary);
   } catch (e) {
