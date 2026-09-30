@@ -1,4 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { geoLookup } from '@/lib/db/geo';
+import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
 import {
   adminClient,
   anonClient,
@@ -77,5 +79,21 @@ describe('Thai geography', () => {
       .from('geo_regions')
       .insert({ id: 99, name_th: 'ทดสอบ', name_en: 'Test' });
     expect(error?.code).toBe('42501');
+  });
+});
+
+describe('resolving against the real tables', () => {
+  it('resolves provincial and Bangkok addresses to the dataset postcodes', async () => {
+    const lookup = geoLookup(svc);
+    const roiEt = await resolveRegisteredAddress(
+      'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+      lookup,
+    );
+    expect(roiEt).toMatchObject({ status: 'resolved', postcode: '45110' });
+    const bangkok = await resolveRegisteredAddress(
+      '99 ซอยสุขุมวิท 21 ถนนสุขุมวิท แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพมหานคร',
+      lookup,
+    );
+    expect(bangkok).toMatchObject({ status: 'resolved', postcode: '10110' });
   });
 });
