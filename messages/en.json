@@ -470,6 +470,10 @@
         "appointment_holidays": {
           "label": "Bank holidays",
           "help": "The Bank of Thailand's public holidays, one ISO date (YYYY-MM-DD) per line, substitution days included; add next year's list each December"
+        },
+        "business_category_min_confidence_percent": {
+          "label": "Business category: minimum confidence to accept automatically (%)",
+          "help": "At or above this, the mapped category is used without review; below it the suggestion waits for a manager or the Owner."
         }
       }
     },

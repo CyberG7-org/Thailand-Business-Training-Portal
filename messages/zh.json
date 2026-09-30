@@ -470,6 +470,10 @@
         "appointment_holidays": {
           "label": "银行假日",
           "help": "泰国央行公布的公共假日，每行一个 ISO 日期（YYYY-MM-DD），含补假；每年 12 月补充下一年的列表"
+        },
+        "business_category_min_confidence_percent": {
+          "label": "业务类别：自动采用的最低置信度（%）",
+          "help": "达到此值时直接采用匹配的类别；低于此值时，建议的类别需由经理或所有者审核。"
         }
       }
     },
