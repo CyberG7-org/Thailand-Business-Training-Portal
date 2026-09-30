@@ -281,6 +281,39 @@ export type Database = {
         }
         Relationships: []
       }
+      business_categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          key: string
+          label_en: string
+          label_th: string
+          label_zh: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          key: string
+          label_en: string
+          label_th: string
+          label_zh: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          key?: string
+          label_en?: string
+          label_th?: string
+          label_zh?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dbd_chunks: {
         Row: {
           char_count: number
