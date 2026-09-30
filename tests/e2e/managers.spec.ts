@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createManager, loginAs, switchTo } from './helpers';
+import { auditRowsFor } from './seed';
 
 const MANAGER_PASSWORD = 'Manager-Password-1!';
 
@@ -17,14 +18,20 @@ test('the admin creates a manager, sees the team, and can suspend it', async ({ 
   await row.getByTestId('toggle-status').click();
   await expect(page.getByTestId(`manager-${code.toLowerCase()}`)).toContainText('disabled');
 
-  // Spec §7: creating a manager, and suspending one, are recorded in the audit log.
-  await page.goto('/th/admin/audit');
-  await expect(page.locator('tr').filter({ hasText: 'profiles.create' }).first()).toContainText(
-    code.toLowerCase(),
-  );
-  await expect(page.locator('tr').filter({ hasText: 'profiles.status' }).first()).toContainText(
-    'disabled',
-  );
+  // Spec §7: creating a manager, and suspending one, are recorded in the audit log (read from
+  // the table: there is no audit screen, D81).
+  const created = await auditRowsFor({
+    action: 'profiles.create',
+    actorLoginId: E2E_ADMIN.loginId,
+  });
+  expect(
+    created.some((r) => (r.after as { login_id?: string }).login_id === code.toLowerCase()),
+  ).toBe(true);
+  const [suspended] = await auditRowsFor({
+    action: 'profiles.status',
+    actorLoginId: E2E_ADMIN.loginId,
+  });
+  expect((suspended.after as { status?: string }).status).toBe('disabled');
 });
 
 test('the admin types a manager code after T-, and a taken one is refused', async ({ page }) => {
@@ -45,8 +52,13 @@ test('the admin types a manager code after T-, and a taken one is refused', asyn
   expect(code).toBe(`T-${suffix.toUpperCase()}`);
 
   await page.goto('/th/admin/managers');
-  await form.getByTestId('login-suffix').fill(suffix.toUpperCase());
-  await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'taken');
+  // Typed before the page hydrates, the input never reaches React; type until it answers.
+  await expect(async () => {
+    await form.getByTestId('login-suffix').fill(suffix.toUpperCase());
+    await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'taken', {
+      timeout: 2_000,
+    });
+  }).toPass();
   await form.locator('input[name="displayName"]').fill('ผู้จัดการซ้ำ');
   await form.locator('input[name="password"]').fill(MANAGER_PASSWORD);
   await page.getByTestId('create-manager').click();

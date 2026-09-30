@@ -77,20 +77,18 @@
   "admin": {
     "title": "Administration",
     "nav": {
-      "users": "Users",
-      "dbdRecords": "DBD records",
-      "content": "Study content",
+      "users": "Create learner & DBD",
       "questions": "Question bank",
       "interviews": "Readiness interviews",
       "appointments": "Bank appointments",
       "notifications": "Notifications",
       "settings": "Policy settings",
-      "audit": "Audit log",
-      "managers": "Managers"
+      "managers": "Managers",
+      "learners": "Learners"
     },
     "users": {
-      "title": "Users",
-      "new": "New user",
+      "title": "Create learner & DBD",
+      "new": "Create learner",
       "loginId": "Login ID",
       "password": "Initial password",
       "newPassword": "New password",
@@ -108,14 +106,58 @@
       "unconfirmedCompany": "{name} — not confirmed yet ({status})",
       "companyHint": "The learner's study material, questions and bank date come from this company's DBD record. Only confirmed records can be chosen.",
       "noConfirmedCompany": "No confirmed DBD record yet — confirm the company’s record before creating a learner.",
-      "goToRecords": "Go to DBD records",
+      "goToRecords": "Create one in “Create DBD” below.",
       "untitledCompany": "(company name missing)",
       "createdFor": "Created {loginId} and assigned to {company}",
       "team": "Team",
       "chooseTeam": "Which team?",
       "noManager": "Create a manager first — every learner belongs to a team.",
       "learnerName": "Learner's name",
-      "appointment": "Appointment"
+      "appointment": "Appointment",
+      "newIntro": "Give the learner a login ID, a password, their name and contact details, and the confirmed company they study.",
+      "contact": {
+        "title": "Contact details",
+        "phone": "Phone number",
+        "contactEmail": "Email",
+        "website": "Website",
+        "facebookPage": "Facebook page",
+        "optional": "(optional)",
+        "facebookPlaceholder": "Page name or link",
+        "save": "Save contact details",
+        "saved": "Saved",
+        "errors": {
+          "phone": "Enter a Thai mobile number, e.g. 081-234-5678",
+          "contactEmail": "Enter a valid email address",
+          "website": "Enter a web address, e.g. example.co.th",
+          "facebookPage": "Enter the page name or its facebook.com link"
+        }
+      }
+    },
+    "learners": {
+      "title": "Learners",
+      "intro": "Everyone your team is training. To add a learner, go to",
+      "toCreate": "Create learner & DBD"
+    },
+    "createDbd": {
+      "title": "Create DBD",
+      "intro": "Upload the company’s DBD documents and give the four details below. The documents are read and indexed in the background (1–3 minutes); when every fact is found, the company confirms itself and can be given to a learner.",
+      "introNoReader": "Upload the company’s DBD documents and give the four details below. Automatic reading is not set up here, so open the company afterwards to fill it in and confirm it.",
+      "documents": "DBD documents (PDF)",
+      "submit": "Create and analyse",
+      "byHand": "Enter a company by hand instead",
+      "answersInvalid": "Check these details: {fields}",
+      "created": "Uploaded. The documents are being read — the company is listed below and confirms itself when everything is found.",
+      "createdNoReader": "Uploaded. Open the company below to fill it in and confirm it.",
+      "companies": "Companies (DBD)",
+      "noCompanies": "No companies yet.",
+      "unnamed": "(name not read yet)",
+      "statuses": {
+        "confirmed_auto": "Confirmed automatically",
+        "confirmed": "Confirmed",
+        "reading": "Reading…",
+        "unread": "Could not be read",
+        "attention": "Needs attention"
+      }
     },
     "loginIdField": {
       "label": "Login ID",
@@ -278,7 +320,8 @@
         "bank": "The bank's other questions"
       },
       "answersMissing": "Still to fill in before this record can be confirmed: {fields}",
-      "team": "Team"
+      "team": "Team",
+      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the four details were given."
     },
     "assignment": {
       "title": "Assigned company",
@@ -292,32 +335,6 @@
         "already-assigned": "This learner already has an active assignment",
         "not-confirmed": "Only confirmed records can be assigned"
       }
-    },
-    "content": {
-      "title": "Study content",
-      "new": "New material",
-      "key": "Key",
-      "keyHint": "Stable identifier, e.g. dbd-certificate-basics",
-      "type": "Type",
-      "typeCard": "Card (Markdown)",
-      "typePdf": "PDF",
-      "sortOrder": "Sort order",
-      "active": "Active (visible to learners)",
-      "languages": "Languages",
-      "save": "Save",
-      "saved": "Saved",
-      "missing": "not yet written",
-      "body": "Body (Markdown)",
-      "bodyHint": "Headings, lists, bold and links are supported. No HTML.",
-      "ttsEnabled": "Enable Thai read-aloud (only approved text)",
-      "saveLanguage": "Save this language",
-      "pdfUploaded": "PDF uploaded",
-      "pdfMissing": "No PDF uploaded",
-      "uploadPdf": "Upload PDF",
-      "uploaded": "Uploaded",
-      "materialTitle": "Title",
-      "loadStarterCards": "Load bank-interview starter cards (5)",
-      "starterLoaded": "{count} new card(s) added (existing ones were left unchanged)"
     },
     "questions": {
       "title": "Question bank",
@@ -472,20 +489,6 @@
           "help": "The Bank of Thailand's public holidays, one ISO date (YYYY-MM-DD) per line, substitution days included; add next year's list each December"
         }
       }
-    },
-    "audit": {
-      "title": "Audit log",
-      "entity": "Table",
-      "entityId": "Record id",
-      "actor": "Actor",
-      "filter": "Filter",
-      "all": "All",
-      "empty": "No entries",
-      "when": "When",
-      "action": "Action",
-      "changes": "Changes",
-      "changed": "{count} field(s) changed",
-      "system": "system"
     },
     "generate": {
       "title": "Generate questions with AI",

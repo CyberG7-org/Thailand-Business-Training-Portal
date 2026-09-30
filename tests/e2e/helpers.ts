@@ -54,9 +54,13 @@ export async function selectTeam(page: Page, code: string) {
   const option = page
     .locator('select[name="managerId"] option')
     .filter({ hasText: new RegExp(`^${escaped}( —|$)`) });
-  await page
-    .locator('select[name="managerId"]')
-    .selectOption((await option.getAttribute('value'))!);
+  const value = (await option.getAttribute('value'))!;
+  // A choice made before the page has hydrated never reaches React (the controlled select snaps
+  // back), so choose until the login field shows the team's prefix.
+  await expect(async () => {
+    await page.locator('select[name="managerId"]').selectOption(value);
+    await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`, { timeout: 1_000 });
+  }).toPass();
 }
 
 /**
@@ -94,6 +98,10 @@ export async function createLearner(
     company: string;
     team?: string;
     suffix?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    facebookPage?: string;
   },
 ): Promise<string> {
   await page.goto('/th/admin/users');
@@ -102,6 +110,13 @@ export async function createLearner(
   await page.locator('input[name="password"]').fill(fields.password);
   // The name is required (D66); a spec that does not care gets a placeholder.
   await page.locator('input[name="displayName"]').fill(fields.displayName ?? 'ผู้เรียนทดสอบ');
+  // So are a phone and an email (D80).
+  await page.locator('input[name="phone"]').fill(fields.phone ?? '081-234-5678');
+  await page.locator('input[name="contactEmail"]').fill(fields.email ?? 'learner@example.co.th');
+  if (fields.website) await page.locator('input[name="website"]').fill(fields.website);
+  if (fields.facebookPage) {
+    await page.locator('input[name="facebookPage"]').fill(fields.facebookPage);
+  }
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: fields.company });
   await page
     .locator('select[name="dbdRecordId"]')

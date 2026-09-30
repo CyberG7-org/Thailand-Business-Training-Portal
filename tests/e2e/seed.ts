@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
+import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
+import { loadStarterCards } from '@/lib/db/study';
 import { E2E_PASSWORD } from './fixtures';
 
 config({ path: '.env.local' });
@@ -232,4 +234,76 @@ export async function seedTeamLearner(
   await seedPassedExam(loginId);
   await seedReadyInterview(loginId);
   return loginId;
+}
+
+/**
+ * The audit rows for one entity, newest first, with the actor's login id. There is no audit
+ * screen (D81); every change is still recorded, and this is how the suite reads the record.
+ */
+export async function auditRowsFor(filter: {
+  entityType?: string;
+  entityId?: string;
+  action?: string;
+  actorLoginId?: string;
+}): Promise<{ action: string; actor_login_id: string | null; after: unknown }[]> {
+  let query = svc()
+    .from('audit_logs_with_actor')
+    .select('action, actor_login_id, after, created_at')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (filter.entityType) query = query.eq('entity_type', filter.entityType);
+  if (filter.entityId) query = query.eq('entity_id', filter.entityId);
+  if (filter.action) query = query.eq('action', filter.action);
+  if (filter.actorLoginId) query = query.eq('actor_login_id', filter.actorLoginId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as { action: string; actor_login_id: string | null; after: unknown }[];
+}
+
+async function ownerId(): Promise<string> {
+  const { data, error } = await svc()
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+    .order('created_at')
+    .limit(1)
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+/** The five bank-interview starter cards, as `pnpm content:starter` loads them (D81). */
+export async function ensureStarterCards(): Promise<void> {
+  await loadStarterCards(svc() as never, BANK_INTERVIEW_CARDS, await ownerId());
+}
+
+/** One study card with its localizations; staff no longer write cards in the UI (D81). */
+export async function seedLocalizedStudyCard(
+  contentKey: string,
+  localizations: Record<'th' | 'en' | 'zh', { title: string; body: string; ttsEnabled?: boolean }>,
+): Promise<string> {
+  const admin = svc();
+  const { data: material, error } = await admin
+    .from('study_materials')
+    .insert({
+      content_key: contentKey,
+      type: 'card',
+      sort_order: 999,
+      active: true,
+      created_by: await ownerId(),
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  for (const [language, loc] of Object.entries(localizations)) {
+    const { error: locError } = await admin.from('study_material_localizations').insert({
+      material_id: material.id,
+      language,
+      title: loc.title,
+      body: loc.body,
+      tts_enabled: loc.ttsEnabled ?? false,
+    });
+    if (locError) throw locError;
+  }
+  return material.id;
 }

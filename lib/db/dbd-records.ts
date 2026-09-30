@@ -5,6 +5,7 @@ import { MAX_DOCUMENT_BYTES } from '@/lib/domain/document-upload';
 import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
 import { getVectorStore, resolveVectorProvider, type VectorStore } from '@/lib/integrations/vector';
 import { countPages } from '@/lib/pdf/slice';
+import { inChunks } from './chunks';
 import type { Database, Json } from './database.types';
 import { enqueueIndexJob, listChunkIds } from './dbd-index';
 
@@ -23,6 +24,41 @@ export async function listDbdRecords(db: Db): Promise<DbdRecordRow[]> {
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
+}
+
+/**
+ * Where each record's reading stands, for the staff list (D80): `open` while an extract or
+ * transcript job is queued or running, `failed` when the latest one failed, otherwise nothing.
+ * Read under the caller's RLS, so it covers only records the caller can see.
+ */
+export async function readingStatesOf(
+  db: Db,
+  recordIds: string[],
+): Promise<Map<string, 'open' | 'failed'>> {
+  const states = new Map<string, 'open' | 'failed'>();
+  if (recordIds.length === 0) return states;
+  const jobs = await inChunks(recordIds, async (chunk) => {
+    const { data, error } = await db
+      .from('index_jobs')
+      .select('record_id, status, created_at')
+      .in('record_id', chunk)
+      .in('kind', ['extract', 'transcript'])
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data ?? [];
+  });
+  // Any open job means the record is still being read; otherwise its latest job decides. Each
+  // chunk is newest first and a record sits in one chunk, so "first seen" is still its latest.
+  for (const job of jobs) {
+    if (job.status === 'queued' || job.status === 'running') states.set(job.record_id, 'open');
+  }
+  const latest = new Set<string>();
+  for (const job of jobs) {
+    if (latest.has(job.record_id)) continue;
+    latest.add(job.record_id);
+    if (job.status === 'failed' && !states.has(job.record_id)) states.set(job.record_id, 'failed');
+  }
+  return states;
 }
 
 export async function getDbdRecord(db: Db, id: string): Promise<DbdRecordRow | null> {

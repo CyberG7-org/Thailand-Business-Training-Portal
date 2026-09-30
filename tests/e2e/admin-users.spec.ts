@@ -49,6 +49,8 @@ test('a learner is created inside a team, under a code typed after the team pref
   await expect(page.locator('select[name="preferredLanguage"]')).toHaveCount(0);
   await expect(page.locator('select[name="role"]')).toHaveCount(0);
   await expect(page.locator('input[name="loginId"]')).toHaveCount(0);
+  // Learners are listed on their own page (D80).
+  await page.goto('/th/admin/learners');
   await expect(page.getByTestId(`company-${learner}`)).toHaveText(company);
   await expect(page.getByTestId(`team-${learner}`)).toHaveText(code);
 
@@ -85,6 +87,8 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
   await page.getByTestId('login-suffix').fill('Q7');
   await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
   await page.locator('input[name="displayName"]').fill('ผู้เรียนซ้ำ');
+  await page.locator('input[name="phone"]').fill('0812345678');
+  await page.locator('input[name="contactEmail"]').fill('dup@example.co.th');
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: company });
   await page
     .locator('select[name="dbdRecordId"]')
@@ -93,6 +97,7 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
   await expect(page.getByTestId('create-user-error')).toHaveText(
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
   );
+  await page.goto('/th/admin/learners');
   await expect(page.getByRole('link', { name: `${code}-Q7`, exact: true })).toHaveCount(1);
 });
 
@@ -166,10 +171,13 @@ test('a manager sees only their own learners, no team picker, and no other team 
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   await page.goto('/th/admin/users');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
-  // Only the header row: this team has no learners yet.
-  await expect(page.getByRole('row')).toHaveCount(1);
   // The picker is RLS-narrowed: a record they cannot read is not an option they can pick.
   await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(adminCompany);
+  // Nor is it on their companies list, which is empty.
+  await expect(page.getByTestId('companies')).not.toContainText(adminCompany);
+  // Only the header row on their learners list: this team has no learners yet.
+  await page.goto('/th/admin/learners');
+  await expect(page.getByRole('row')).toHaveCount(1);
 });
 
 test('admin can disable an account and it can no longer sign in', async ({ page }) => {
@@ -186,6 +194,7 @@ test('admin can disable an account and it can no longer sign in', async ({ page 
     company,
     team: code,
   });
+  await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
   await page.getByRole('button', { name: 'ระงับบัญชี' }).click();
   await expect(page.getByTestId('account-status')).toHaveText('disabled');
@@ -221,7 +230,7 @@ test('the admin cannot pair a team with another team company', async ({ page }) 
 
 test('the admin keeps a way to their own account', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/learners');
   await expect(page.getByRole('link', { name: E2E_ADMIN.loginId.toUpperCase() })).toBeVisible();
 });
 

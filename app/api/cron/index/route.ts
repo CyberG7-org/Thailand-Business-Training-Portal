@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
+import { autoConfirmIfClean } from '@/lib/db/auto-confirm';
 import { processIndexJobs } from '@/lib/db/dbd-index';
 import { extractAndApply } from '@/lib/db/extraction';
 import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
@@ -64,6 +65,8 @@ export async function GET(request: NextRequest) {
           facts: input.facts,
           sweepPages: sweepPagesFromEnv(),
         }),
+      // A record whose reading just finished confirms itself when it is clean (D80).
+      afterReading: (recordId) => autoConfirmIfClean(createSupabaseAdminClient(), recordId),
     });
     return NextResponse.json(summary);
   } catch (e) {

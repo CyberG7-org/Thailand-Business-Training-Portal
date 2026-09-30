@@ -24,7 +24,14 @@ import {
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
-import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
+import {
+  INTERVIEW_FIELDS,
+  REQUIRED_INTERVIEW_FIELDS,
+  interviewProfileSchema,
+  missingBusinessAnswers,
+  type InterviewProfile,
+  type RequiredInterviewField,
+} from '@/lib/domain/bank-interview';
 import { checkDocumentFiles, type DocumentFileMeta } from '@/lib/domain/document-upload';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
@@ -223,22 +230,53 @@ export type PrepareUploadsResult =
   { ok: true; id: string; uploads: PreparedUpload[] } | { ok: false; error: string };
 
 /**
+ * The four details a manager gives with a new pack (D80). Checked before the record exists, so
+ * the "Create DBD" form never leaves a record without them: `answers:<fields>` names what is
+ * missing or not valid, in form order.
+ */
+function parseNewRecordAnswers(
+  answers: Partial<Record<RequiredInterviewField, string>>,
+): { ok: true; interview: InterviewProfile } | { ok: false; error: string } {
+  const bad: string[] = [];
+  const raw: Record<string, unknown> = {};
+  for (const field of REQUIRED_INTERVIEW_FIELDS) {
+    raw[field] = answers[field] ?? '';
+    if (!interviewProfileSchema.shape[field].safeParse(raw[field]).success) bad.push(field);
+  }
+  const interview = interviewProfileSchema.safeParse(raw);
+  if (!interview.success || bad.length > 0) {
+    return { ok: false, error: `answers:${bad.join(',')}` };
+  }
+  const missing = missingBusinessAnswers(interview.data);
+  if (missing.length > 0) return { ok: false, error: `answers:${missing.join(',')}` };
+  return { ok: true, interview: interview.data };
+}
+
+/**
  * Step 1 of a browser-direct upload: validates what the admin picked (names, sizes, types only —
  * the bytes never pass through a function, which Vercel caps at 4.5 MB), creates the record when
- * there is none yet, and issues one signed upload URL per file under the record's prefix.
+ * there is none yet, and issues one signed upload URL per file under the record's prefix. A new
+ * record from the "Create DBD" form carries the manager's four details from the start (D80).
  */
 export async function prepareUploadsAction(input: {
   locale: string;
   id: string | null;
   files: DocumentFileMeta[];
+  answers?: Partial<Record<RequiredInterviewField, string>>;
 }): Promise<PrepareUploadsResult> {
   const admin = await requireStaff(input.locale);
   const problem = checkDocumentFiles(input.files);
   if (problem) return { ok: false, error: problem };
+  let structured: { interview: InterviewProfile } | undefined;
+  if (input.id === null && input.answers) {
+    const parsed = parseNewRecordAnswers(input.answers);
+    if (!parsed.ok) return parsed;
+    structured = { interview: parsed.interview };
+  }
   const db = await createSupabaseServerClient();
   try {
     const id =
-      input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, undefined, teamOf(admin))).id;
+      input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, structured, teamOf(admin))).id;
     const uploads: PreparedUpload[] = [];
     for (const file of input.files.filter((f) => f.size > 0)) {
       const path = newDocumentPath(id);

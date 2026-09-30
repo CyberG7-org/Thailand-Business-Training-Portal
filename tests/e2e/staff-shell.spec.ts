@@ -12,14 +12,12 @@ const MANAGER_PASSWORD = 'Manager-Password-1!';
 const LIST_PAGES = [
   '/th/admin',
   '/th/admin/users',
-  '/th/admin/dbd-records',
-  '/th/admin/content',
+  '/th/admin/learners',
   '/th/admin/questions',
   '/th/admin/interviews',
   '/th/admin/appointments',
   '/th/admin/notifications',
   '/th/admin/settings',
-  '/th/admin/audit',
   '/th/admin/managers',
 ];
 
@@ -31,18 +29,24 @@ test('the admin sees every section in the sidebar with the current one marked', 
   const nav = page.getByTestId('staff-nav');
   await expect(nav).toBeVisible();
   for (const label of [
-    'ผู้ใช้งาน',
+    'สร้างผู้เรียนและ DBD',
+    'ผู้เรียน',
     'ผู้จัดการ',
-    'ข้อมูล DBD',
     'คลังคำถาม',
     'นัดหมายธนาคาร',
     'ตั้งค่านโยบาย',
   ]) {
     await expect(nav).toContainText(label);
   }
-  await expect(nav.locator('[aria-current="page"]')).toHaveText(/ผู้ใช้งาน/);
+  // DBD records left the sidebar: their list is on "Create learner & DBD" (D80).
+  await expect(nav).not.toContainText('ข้อมูล DBD');
+  await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
+  // The old address forwards there.
   await page.goto('/th/admin/dbd-records');
-  await expect(nav.locator('[aria-current="page"]')).toHaveText(/ข้อมูล DBD/);
+  await expect(page).toHaveURL(/\/th\/admin\/users/);
+  await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
+  await page.goto('/th/admin/learners');
+  await expect(nav.locator('[aria-current="page"]')).toHaveText(/^ผู้เรียน$/);
 });
 
 test('a manager sees only the sections they may open', async ({ page }) => {
@@ -50,7 +54,8 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   const code = await createManager(page, 'ผู้จัดการแถบข้าง', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   const nav = page.getByTestId('staff-nav');
-  await expect(nav).toContainText('ผู้ใช้งาน');
+  await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
+  await expect(nav).toContainText('ผู้เรียน');
   await expect(nav).toContainText('ผลสัมภาษณ์ความพร้อม');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
   await expect(nav).not.toContainText('ผู้จัดการ');
@@ -105,7 +110,8 @@ test('manager row actions are buttons a thumb can hit', async ({ page }) => {
   await createManager(page, 'ผู้จัดการปุ่มแถว', MANAGER_PASSWORD);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/th/admin/managers');
-  const buttons = page.locator('tbody button');
+  // Every row carries the same controls; one row proves their size without measuring a long list.
+  const buttons = page.locator('tbody tr').first().locator('button');
   expect(await buttons.count()).toBeGreaterThan(0);
   for (const button of await buttons.all()) {
     expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);

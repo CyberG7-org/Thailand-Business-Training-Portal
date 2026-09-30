@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { fillBusinessAnswers, loginAs } from './helpers';
-import { seedLearnerForRecord } from './seed';
+import { ensureStarterCards, seedLearnerForRecord } from './seed';
 
 test('AI questions cite the reference pack and learners see passages from their own documents', async ({
   page,
@@ -24,10 +24,8 @@ test('AI questions cite the reference pack and learners see passages from their 
   await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
 
-  // 2. Starter cards exist (idempotent).
-  await page.goto('/th/admin/content');
-  await page.getByTestId('load-starter-cards').click();
-  await expect(page.getByTestId('starter-loaded')).toBeVisible();
+  // 2. Starter cards exist (idempotent; D81 — no staff screen for them).
+  await ensureStarterCards();
 
   // 3. A batch modelled on that record cites its pages.
   await page.goto('/th/admin/questions/generate');

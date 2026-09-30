@@ -16,14 +16,14 @@ Set the uptime monitor to alert on non-200 from `/api/health` for 3 consecutive 
 ## Routine
 
 - **Daily (pilot weeks):** check the notification and call-session views above; look at Vercel error logs.
-- **Weekly:** `pnpm audit --prod`; review `Admin → Audit log` for unexpected admin activity; confirm Supabase backups are running (Pro plan: daily, 7-day PITR optional).
+- **Weekly:** `pnpm audit --prod`; review the audit log for unexpected admin activity — there is no screen (D81): `select created_at, actor_login_id, action, entity_type, entity_id from audit_logs_with_actor order by created_at desc limit 200;` in the Supabase SQL editor; confirm Supabase backups are running (Pro plan: daily, 7-day PITR optional).
 - **Per policy change:** use `/admin/settings` only — direct SQL bypasses validation (the audit trigger still records it, with no actor).
 
 ## Incidents
 
 | Symptom | First checks | Fix |
 |---|---|---|
-| Learners cannot log in | `/api/health` db status; Supabase Auth logs; account `status` in Admin → Users | disabled account → re-enable; Auth outage → wait/escalate to Supabase status |
+| Learners cannot log in | `/api/health` db status; Supabase Auth logs; account `status` in Admin → Learners | disabled account → re-enable; Auth outage → wait/escalate to Supabase status |
 | Exam results not delivered | Admin → Notifications: `failed` with `last_error` | fix key/chat id (`/admin/settings`), then **Requeue**; cron must be listed under Vercel → Cron Jobs |
 | Interview will not start | `/api/health` → `interview` must be `claude` (staging/production) or `fake` (local); Vercel runtime logs for the `/interview` actions | `off` → `ANTHROPIC_API_KEY` missing in Vercel env; a model error surfaces to the learner as "something went wrong" and the session stays resumable for 30 minutes |
 | Wrong bank date for a learner | `eligibility_snapshots` latest row for the user; DBD record `issued_on` | correct `issued_on` on the record (trigger recomputes) or the policy days in `/admin/settings` (recomputes for everyone) |
