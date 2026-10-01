@@ -1146,3 +1146,10 @@ git commit -m "docs: D91 — only the questions that cannot be removed or avoide
 - **Every Owner decision has a task:** kept questions (1, 7), the quiz at 30 with main customers answered from the kind of customers (1, 2, 6), the interview's two repeats removed (2, 3), status always yes (1, 2, 3, 6), office address (1, 4), fixed answers (1), minimised money (1, 5, 7).
 - **Types agree across tasks:** `ASKED_INTERVIEW_FIELDS`, `STANDARD_ANSWER_FIELDS`, `STANDARD_ANSWER_SOURCES`, `FIXED_ANSWERS`, `firstAmount` and `withStandardAnswers(profile, { address })` are defined in Task 1 and used under those names in 4–8.
 - **Known debt:** stored answers to removed or standard questions stay in `structured_data` unread; the interview profile schema keeps their fields so old versions and old rows still parse. A variant retired by the migration for a "no" wording keeps its condition and cannot be edited again. The upload form is unchanged. Standard answers are Thai only, like every other fact.
+
+## Deviations in the build (2026-10-01)
+
+- **The earlier answers stay on the form** (Task 7 planned to remove them). The bank-interview study card learners read today still prints four of them, so the collapsed *Earlier answers* block is kept, and a blank one follows the new answer (`withStandardAnswers`; `buildTrainingSnapshot` reads the same filled profile). `legacyHint` is reworded instead of removed.
+- **The place of business falls back to the printed address** when no resolved address is passed to `buildFactSheet` (`RecordColumns.head_office_address`, optional), so the snapshot and the live template record agree.
+- `tests/e2e/bank-interview.spec.ts` typed *why the company needs an account*; it now expects the fixed answer on the study card.
+- A variant that names `customer_examples` is refused by the guard ("not an MCQ concept") before the foreign key is checked, so the integration test asserts that message.

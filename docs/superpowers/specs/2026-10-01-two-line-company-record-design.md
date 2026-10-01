@@ -1,6 +1,9 @@
 # A company record that needs two lines from a manager
 
-**Status:** superseded on 2026-10-01 by the plan `docs/superpowers/plans/2026-10-01-fewer-manager-questions.md`. The Owner chose to keep only the questions that cannot be removed or avoided: the manager still answers the five that only the business knows (decision 2), and main suppliers stays because nothing else covers suppliers (decision 1), and the quiz keeps its 30 questions (main customers is answered from the kind of customers), so the counts are 30 and 11. Nothing here is built.
+**Status:** superseded on 2026-10-01 by D91 and the plan
+`docs/superpowers/plans/2026-10-01-fewer-manager-questions.md`, which is built. The Owner kept the
+unavoidable questions with the manager (nine in all), kept main suppliers, and kept the quiz at
+30 questions; the interview has 11. What follows is the proposal as it was written.
 
 ## Why
 
