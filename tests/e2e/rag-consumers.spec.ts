@@ -3,10 +3,7 @@ import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { fillBusinessAnswers, loginAs } from './helpers';
 import { ensureStarterCards, seedLearnerForRecord } from './seed';
 
-test('AI questions cite the reference pack and learners see passages from their own documents', async ({
-  page,
-  request,
-}) => {
+test('learners see passages from their own documents', async ({ page, request }) => {
   // 1. An indexed, confirmed reference record (upload-first → cron → confirm).
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
@@ -26,19 +23,9 @@ test('AI questions cite the reference pack and learners see passages from their 
   // 2. Starter cards exist (idempotent; D81 — no staff screen for them).
   await ensureStarterCards();
 
-  // 3. A batch modelled on that record cites its pages.
-  await page.goto('/th/admin/questions/generate');
-  await page.getByTestId('reference-record').selectOption(recordId);
-  await page.locator('input[name="count"]').fill('2');
-  await page.getByTestId('template-count').fill('1');
-  await page.getByTestId('generate-submit').click();
-  await page.waitForURL(/\/th\/admin\/questions\?batch=[0-9a-f-]{36}$/);
-  const rows = page.locator('tr[data-testid^="question-ai-"]');
-  await expect(rows).toHaveCount(2);
-  await expect(rows.first().getByTestId('question-sources')).toContainText('หน้า');
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
 
-  // 4. A learner assigned to that record sees passages from it on the identity card.
+  // 3. A learner assigned to that record sees passages from it on the identity card.
   const learner = await seedLearnerForRecord(recordId);
   await loginAs(page, learner, E2E_PASSWORD);
   await page.goto('/th/study/bank-interview-1-identity');

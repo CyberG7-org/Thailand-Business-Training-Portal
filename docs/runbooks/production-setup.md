@@ -18,6 +18,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
    **Validation and exceptions (P17c).** Migration `20261003010000` adds the exception queue and the two thresholds. Existing confirmed records keep their status; their exceptions appear on the next save or the next learner visit. A record that already has a version keeps it, and its learners stay on it until the sheet is clean again; a record that never had one needs a complete, clean sheet before its learners can start a quiz, exam or interview (plan decision 9).
 
+   **The MCQ bank (P17d).** Migration `20261004010000_mcq_bank.sql` adds the variant columns and makes the bank Owner-only: from this migration on a manager can no longer write or approve questions. Nothing is migrated; the earlier questions keep feeding the quiz and exam. The starter drafts are not in the migration: the Owner adds them from Admin → Question bank → *Add starter drafts*.
+
    **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
    ```sql
    select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name

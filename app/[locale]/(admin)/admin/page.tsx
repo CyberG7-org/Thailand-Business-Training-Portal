@@ -11,13 +11,14 @@ const STAFF_LINKS = [
   ['/admin/users', 'users'],
   ['/admin/learners', 'learners'],
   ['/admin/exceptions', 'exceptions'],
-  ['/admin/questions', 'questions'],
   ['/admin/interviews', 'interviews'],
   ['/admin/appointments', 'appointments'],
 ] as const;
 
 const ADMIN_LINKS = [
   ['/admin/managers', 'managers'],
+  // Assessment content is the Owner's (D76).
+  ['/admin/questions', 'questions'],
   ['/admin/notifications', 'notifications'],
   ['/admin/business-categories', 'businessCategories'],
   ['/admin/settings', 'settings'],
