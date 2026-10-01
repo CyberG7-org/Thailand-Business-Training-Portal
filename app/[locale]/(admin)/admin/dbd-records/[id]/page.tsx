@@ -8,18 +8,19 @@ import { currentAddress } from '@/lib/db/derived-facts';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { conceptCoverage } from '@/lib/domain/concepts/resolve';
-import { missingFieldsForConfirmation } from '@/lib/domain/dbd-record';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { countAssignmentsBehind, listVersions } from '@/lib/db/training-versions';
+import { listOpenExceptions } from '@/lib/db/validation';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
 import { AddressPanel } from './address-panel';
 import { CategoryPanel } from './category-panel';
 import { CoveragePanel } from './coverage-panel';
+import { ExceptionsPanel } from './exceptions-panel';
 import { TrainingVersionsPanel } from './training-versions-panel';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
@@ -61,6 +62,16 @@ export default async function DbdRecordPage({
   const versions = await listVersions(db, record.id);
   const activeVersion = versions.find((v) => v.status === 'active') ?? null;
   const behind = activeVersion ? await countAssignmentsBehind(db, record.id, activeVersion.id) : 0;
+  // What the validators found (P17c), and who accepted the record.
+  const exceptions = await listOpenExceptions(db, record.id);
+  const blockers = exceptions.filter((e) => e.blocks === 'acceptance').length;
+  const { data: confirmer } = record.confirmed_by
+    ? await db
+        .from('profiles')
+        .select('display_name, login_id')
+        .eq('id', record.confirmed_by)
+        .maybeSingle()
+    : { data: null };
 
   // The reading runs in the background (D46): show the latest extract job, or that oversized
   // documents are still being indexed before their transcripts can fill the record.
@@ -121,10 +132,15 @@ export default async function DbdRecordPage({
           indexedPages: d.indexed_pages,
           indexError: d.index_error,
         }))}
-        missing={missingFieldsForConfirmation(record, structured.interview ?? null)}
+        acceptance={{
+          blockers,
+          confirmedByName: confirmer?.display_name ?? confirmer?.login_id ?? null,
+          automatic: record.confirmed_automatically,
+        }}
         reading={reading}
         extractionAvailable={getDbdExtractor() !== null}
       />
+      <ExceptionsPanel recordId={record.id} exceptions={exceptions} />
       <CoveragePanel coverage={coverage} />
       <TrainingVersionsPanel versions={versions} behind={behind} />
       {error === 'vector_unavailable' && (

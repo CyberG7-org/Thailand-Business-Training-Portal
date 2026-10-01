@@ -240,8 +240,6 @@
       "save": "保存",
       "saved": "已保存",
       "status": "状态",
-      "confirm": "确认记录",
-      "missingForConfirmation": "无法确认 — 缺少：{fields}",
       "dateHint": "按证明上的写法，例如 9 เมษายน 2569 或 09/04/2569",
       "directorsHint": "每行一位董事：泰文名 | 英文名",
       "documentMissing": "尚未上传证书 PDF",
@@ -400,7 +398,6 @@
         "banking": "银行账户",
         "legacy": "以前的答案"
       },
-      "answersMissing": "确认该记录前还需填写：{fields}",
       "team": "团队",
       "legacyHint": "新评估之前填写的答案，按原样保留，评估中不使用。",
       "interviewFieldsAlt": {
@@ -527,7 +524,7 @@
       "versions": {
         "title": "培训版本",
         "intro": "学员学习和评估所依据的是这些信息的冻结副本。改变信息的保存会生成新版本；在人员操作之前，没有学员会被移到新版本。",
-        "none": "尚无版本——记录尚未确认。",
+        "none": "尚无版本——没有阻止项时即生效（见例外）。",
         "active": "版本 {n}——自 {date} 起生效",
         "complete": "公司层面已完整：选择题 29 个概念和银行面谈 12 个概念全部可解析。",
         "incomplete": "尚不完整——仍缺少：",
@@ -537,6 +534,57 @@
           "active": "生效",
           "superseded": "已替代",
           "draft": "草稿"
+        }
+      },
+      "recheck": "重新检查",
+      "acceptance": {
+        "accepted": "由 {name} 接受",
+        "acceptedAuto": "自动接受：读取无问题且四项详情齐全。",
+        "waiting": "{count} 个例外阻止接受",
+        "blocked": "尚未接受——请处理下方的例外。"
+      },
+      "exceptions": {
+        "title": "例外",
+        "intro": "校验发现的问题。没有任何阻止接受的例外时记录即被接受；没有任何阻止版本的例外时培训版本即生效。备注仅供复核。",
+        "none": "无待处理例外：记录无问题。",
+        "groups": {
+          "acceptance": "阻止接受",
+          "version": "阻止培训版本",
+          "none": "待复核"
+        },
+        "kinds": {
+          "missing": "缺少",
+          "low_confidence": "置信度低",
+          "conflict": "不一致",
+          "invalid": "无效",
+          "geo_mismatch": "地址无法解析",
+          "category_review": "类别待复核",
+          "render_failure": "题目无法生成"
+        },
+        "rules": {
+          "check_digit": "校验位不匹配（{value}）。",
+          "in_future": "日期在未来（{value}）。",
+          "before_registration": "签发日（{value}）早于注册日（{registered_on}）。",
+          "shares_over_total": "股东持股合计 {sum}，超过总数 {total}。",
+          "shares_under_total": "股东持股合计 {sum}，总数 {total}；名单可能不完整。",
+          "percent_over_100": "比例合计 {percent}%。",
+          "percent_under_100": "比例合计 {percent}%；名单可能不完整。",
+          "shares_times_par": "股数 × 面值为 {expected}，注册资本为 {actual}。",
+          "count_vs_list": "证明记载 {count} 项经营目的，列出 {listed} 项。",
+          "names_not_directors": "签字权提及的人不在董事名单中。",
+          "confidence": "读取置信度 {confidence}%（第 {page} 页）。",
+          "geo": "{issues}",
+          "missing": "所需概念：{concepts}",
+          "category": "最接近 {candidate}，置信度 {confidence}%；请在类别面板选择或重新匹配。"
+        },
+        "confirmValue": "该值正确",
+        "dismiss": "不适用",
+        "note": "备注（标记不适用时必填）",
+        "errors": {
+          "not-dismissable": "缺少的信息需要补充，不能忽略。",
+          "already-resolved": "已处理。",
+          "note-required": "请先填写备注。",
+          "not-found": "未找到。"
         }
       }
     },
