@@ -5,8 +5,7 @@ import {
   ProvisioningError,
   isLoginIdTaken,
   learnerPrefixOf,
-  suggestLearnerSuffix,
-  suggestLoginSuffix,
+  suggestSuffix,
 } from '@/lib/db/provisioning';
 import { MANAGER_PREFIX, isValidSuffixFor, type LoginIdKind } from '@/lib/domain/login-id';
 
@@ -36,20 +35,15 @@ async function prefixFor({ locale, kind, managerId }: LoginIdQuery): Promise<str
 }
 
 /**
- * A free suffix to prefill (D69) — a learner's is two letters and two digits (D84). Nothing is
- * reserved; the create action checks again.
+ * A free suffix to prefill (D69) — a manager's is one letter and two digits (D85), a learner's
+ * two letters and two digits (D84). Nothing is reserved; the create action checks again.
  */
 export async function suggestLoginIdAction(
   query: LoginIdQuery,
 ): Promise<{ suffix: string | null }> {
   const prefix = await prefixFor(query);
   if (!prefix) return { suffix: null };
-  return {
-    suffix:
-      query.kind === 'learner'
-        ? await suggestLearnerSuffix(prefix)
-        : await suggestLoginSuffix(prefix),
-  };
+  return { suffix: await suggestSuffix(query.kind, prefix) };
 }
 
 /** Whether the code the staff member is typing is free, for the field to say as they type. */
