@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** A company record asks a manager only the questions nothing else can answer — nine instead of twenty-four — and everything else the bank asks is filled automatically.
+**Goal:** A company record asks a manager only the questions nothing else can answer — nine instead of twenty-four — and everything else the bank asks is filled automatically. The quiz keeps its 30 questions.
 
-**Architecture:** One pure function, `withStandardAnswers`, turns the stored Level 4 answers into the answers the learner is taught: it fills what the DBD, the two money amounts or a fixed wording can supply, and sets the four company status facts to yes. `buildFactSheet` is the single place every reader builds the facts, so the function is applied there and nowhere needs its own copy. The two repeated topics leave the concept registry (code and table together), which renumbers the quiz to 29 questions and the interview to 11.
+**Architecture:** One pure function, `withStandardAnswers`, turns the stored Level 4 answers into the answers the learner is taught: it fills what the DBD, another answer, the two money amounts or a fixed wording can supply, and sets the four company status facts to yes. `buildFactSheet` is the single place every reader builds the facts, so the function is applied there and nowhere needs its own copy. The quiz registry keeps all 30 concepts in their order; the interview loses its two repeated customer questions and closes up to 11 slots, in code and table together.
 
 **Tech Stack:** Next.js 16 App Router, React 19, TypeScript, next-intl (th / en / zh), Supabase Postgres (one migration), Vitest, Playwright.
 
@@ -17,18 +17,19 @@
 | # | Decision |
 |---|---|
 | 1 | **Only the questions that cannot be removed or avoided stay.** At upload, unchanged: company email, company phone, what the business does, what it sells. On the record, five: where and how customers are found, what kind of customers, main suppliers, monthly revenue, average amount per transaction. |
-| 2 | **Main customers and examples of real customers are removed** as repeats, with their topics. Main suppliers stays because nothing else covers suppliers. |
-| 3 | **Company status is always yes** and is not asked. The "expected…" wordings are removed. |
-| 4 | **Actual place of business is always the office address.** |
-| 5 | **Why a bank account and why PromptPay / QR are fixed answers** for every company. |
-| 6 | Money is minimised: transactions per month, the basis of the revenue figure and how sales are paid are worked out from the two amounts. Source of funds and the first money into the account are fixed answers. Why the company was established is built from what the business does. |
+| 2 | **Main customers and examples of real customers are no longer asked of the manager**; they repeat other questions. Main suppliers stays because nothing else covers suppliers. |
+| 3 | **The quiz keeps its 30 questions as they are.** Question 14, main customers, stays and is answered from "what kind of customers". |
+| 4 | **Company status is always yes** and is not asked. The "expected…" wordings are removed. |
+| 5 | **Actual place of business is always the office address.** |
+| 6 | **Why a bank account and why PromptPay / QR are fixed answers** for every company. |
+| 7 | Money is minimised: transactions per month, the basis of the revenue figure and how sales are paid are worked out from the two amounts. Source of funds and the first money into the account are fixed answers. Why the company was established is built from what the business does. |
 
 ## Consequences to confirm with the approval
 
 | # | Consequence | Proposed |
 |---|---|---|
-| A | The quiz has 29 questions, the interview 11. The nine critical concepts are unchanged. | — |
-| B | Pass marks keep their proportion (P17e and P17g build them; today they are only in the spec). | Quiz pass 26, retest 22. Interview pass 9 of 11. |
+| A | The quiz is unchanged: 30 questions, the nine critical concepts, pass at 27, retest at 23. | — |
+| B | The interview has 11 questions: main customers and examples of real customers leave it, and "what kind of customers" stays. Its pass mark keeps the proportion (P17g builds it; today it is only in the spec). | Pass 9 of 11 |
 | C | A standard answer is always used. Anything a manager typed earlier for those questions stays stored but is no longer read. | — |
 | D | Fixed wording, in Thai as the facts are: see Task 1. | Confirm or correct |
 | E | The two amounts must contain digits ("300,000 บาท"). An amount written only in words cannot be divided, and the record then lists transactions per month as missing. | — |
@@ -40,11 +41,11 @@
 | File | Responsibility |
 |---|---|
 | `lib/domain/standard-answers.ts` (new) | Which Level 4 questions are asked, which are filled, and the function that fills them |
-| `lib/domain/concepts/registry.ts` | 35 active concepts (29 quiz, 11 interview) and the 2 retired ones |
-| `supabase/migrations/20261005010000_fewer_questions.sql` (new) | The same change in `evaluation_concepts`; variants that can no longer be asked |
+| `lib/domain/concepts/registry.ts` | 36 concepts: the 30 of the quiz unchanged, 11 interview slots, one alternate wording |
+| `supabase/migrations/20261005010000_fewer_questions.sql` (new) | The same change in `evaluation_concepts`; variants worded for a status that is now always yes |
 | `lib/domain/facts/fact-sheet.ts`, `lib/domain/facts/snapshot.ts` | Read the filled answers |
 | `lib/domain/validation/validators.ts` | Never report a filled answer whose source is already reported |
-| `lib/content/mcq-starter.ts`, `lib/domain/mcq/tokens.ts`, `lib/domain/mcq/sample.ts` | No main-customers variants or placeholder |
+| `lib/content/mcq-starter.ts`, `lib/domain/mcq/sample.ts` | One main-customers draft for every company; the sample shows the standard answers |
 | `app/[locale]/(admin)/admin/dbd-records/[id]/interview-form.tsx`, `page.tsx` | Five questions and a read-only list of what is filled |
 | `messages/{th,en,zh}.json` | New wording; the status and "expected…" wording removed |
 | `docs/…` | D91, spec amendment, UAT A17, runbook |
@@ -54,6 +55,7 @@
 ### Task 1: Standard answers
 
 **Files:**
+
 - Create: `lib/domain/standard-answers.ts`
 - Test: `tests/unit/domain/standard-answers.test.ts`
 
@@ -97,7 +99,7 @@ describe('firstAmount', () => {
 });
 
 describe('withStandardAnswers', () => {
-  it('asks five questions and fills nine, and no field is both', () => {
+  it('asks five questions and fills ten, and no field is both', () => {
     expect(ASKED_INTERVIEW_FIELDS).toEqual([
       'client_origin',
       'customer_profile',
@@ -105,8 +107,17 @@ describe('withStandardAnswers', () => {
       'monthly_revenue',
       'average_transaction',
     ]);
-    expect(STANDARD_ANSWER_FIELDS).toHaveLength(9);
+    expect(STANDARD_ANSWER_FIELDS).toHaveLength(10);
     for (const f of STANDARD_ANSWER_FIELDS) expect(ASKED_INTERVIEW_FIELDS).not.toContain(f);
+  });
+
+  it('answers "main customers" with what kind of customers they are (quiz question 14)', () => {
+    const p = withStandardAnswers(
+      { ...typed, customer_profile: 'ร้านค้าปลีกในประเทศ', main_clients: 'คำตอบเดิม' },
+      { address: ADDRESS },
+    );
+    expect(p.main_clients).toBe('ร้านค้าปลีกในประเทศ');
+    expect(withStandardAnswers(typed, { address: ADDRESS }).main_clients).toBeNull();
   });
 
   it('fills the place of business, the fixed answers and the purpose', () => {
@@ -210,6 +221,7 @@ export type AskedInterviewField = (typeof ASKED_INTERVIEW_FIELDS)[number];
 
 /** The Level 4 answers nobody types any more, in the order the record lists them. */
 export const STANDARD_ANSWER_FIELDS = [
+  'main_clients',
   'business_purpose',
   'business_address',
   'monthly_transactions',
@@ -240,6 +252,7 @@ const PAYMENT = 'ลูกค้าชำระด้วยการโอนเ
  * missing too, and only the source is reported (`validators.ts`).
  */
 export const STANDARD_ANSWER_SOURCES: Partial<Record<StandardAnswerField, readonly string[]>> = {
+  main_clients: ['customer_profile'],
   business_purpose: ['nature_of_business'],
   business_address: ['address'],
   monthly_transactions: ['monthly_revenue', 'average_transaction'],
@@ -265,9 +278,10 @@ const show = (n: number) => n.toLocaleString('en-US');
 
 /**
  * The answers the learner is taught: what the manager typed for the questions still asked, and
- * for every other Level 4 question the standard answer — from the DBD, from the two amounts,
- * or the same for every company. A standard answer always wins; what was typed for it earlier
- * stays stored and is not read (D91). The four company status facts are always yes.
+ * for every other Level 4 question the standard answer — from the DBD, from another answer,
+ * from the two amounts, or the same for every company. A standard answer always wins; what was
+ * typed for it earlier stays stored and is not read (D91). The four company status facts are
+ * always yes.
  */
 export function withStandardAnswers(
   profile: InterviewProfile,
@@ -284,6 +298,8 @@ export function withStandardAnswers(
     has_existing_customers: 'yes',
     has_completed_transactions: 'yes',
     has_regular_suppliers: 'yes',
+    // "Who are the main customers?" is the kind of customers the manager described.
+    main_clients: profile.customer_profile?.trim() || null,
     business_purpose: nature ? `จัดตั้งขึ้นเพื่อประกอบธุรกิจ ${nature}` : null,
     business_address: context.address?.trim() || null,
     monthly_transactions: perMonth !== null ? `ประมาณ ${show(perMonth)} รายการต่อเดือน` : null,
@@ -301,7 +317,7 @@ export function withStandardAnswers(
 - [ ] **Step 4: Run the test and see it pass**
 
 Run: `pnpm test:unit tests/unit/domain/standard-answers.test.ts`
-Expected: PASS, 8 tests.
+Expected: PASS, 9 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -312,42 +328,28 @@ git commit -m "feat(facts): the standard answers nobody types (D91)"
 
 ---
 
-### Task 2: The registry without the repeated topics
+### Task 2: The registry — the quiz as it is, the interview without its repeats
 
 **Files:**
+
 - Modify: `lib/domain/concepts/registry.ts`
 - Modify: `lib/domain/concepts/resolve.ts` (comment only)
 - Test: `tests/unit/domain/concept-registry.test.ts`, `tests/unit/domain/concept-resolve.test.ts`
 
 - [ ] **Step 1: Change the registry test to the new shape**
 
-In `tests/unit/domain/concept-registry.test.ts` import `RETIRED_CONCEPTS` beside the others and replace these four tests:
+In `tests/unit/domain/concept-registry.test.ts` the tests "has exactly the 30 MCQ concepts in order 1–30" and "has exactly the nine critical concepts" stay as they are. Replace the other three:
 
 ```ts
-  it('has 35 distinct concepts, and two retired ones in neither evaluation (D91)', () => {
-    expect(EVALUATION_CONCEPTS).toHaveLength(35);
-    expect(new Set(EVALUATION_CONCEPTS.map((c) => c.key)).size).toBe(35);
-    expect(RETIRED_CONCEPTS.map((c) => c.key)).toEqual(['main_clients', 'customer_examples']);
-    for (const c of RETIRED_CONCEPTS) {
-      expect([c.mcqOrder, c.interviewSlot, c.interviewMatch, c.critical]).toEqual([
-        null,
-        null,
-        null,
-        false,
-      ]);
-      expect(EVALUATION_CONCEPTS.map((x) => x.key)).not.toContain(c.key);
-    }
+  it('has 36 distinct concepts (D91 removed the examples of customers)', () => {
+    expect(EVALUATION_CONCEPTS).toHaveLength(36);
+    expect(new Set(EVALUATION_CONCEPTS.map((c) => c.key)).size).toBe(36);
+    expect(EVALUATION_CONCEPTS.map((c) => c.key)).not.toContain('customer_examples');
   });
 
-  it('has exactly the 29 MCQ concepts in order 1–29', () => {
-    expect(MCQ_CONCEPTS.map((c) => c.mcqOrder)).toEqual(
-      Array.from({ length: 29 }, (_, i) => i + 1),
-    );
-    expect(MCQ_CONCEPTS.slice(13, 16).map((c) => c.key)).toEqual([
-      'client_origin',
-      'main_suppliers',
-      'actual_business_location',
-    ]);
+  it('keeps main customers as quiz question 14 only', () => {
+    const main = EVALUATION_CONCEPTS.find((c) => c.key === 'main_clients')!;
+    expect([main.mcqOrder, main.interviewSlot, main.interviewMatch]).toEqual([14, null, null]);
   });
 
   it('has the 11 chatbot slots in the Owner’s order with the Owner’s match types (D78, D91)', () => {
@@ -377,68 +379,28 @@ In `tests/unit/domain/concept-registry.test.ts` import `RETIRED_CONCEPTS` beside
   });
 ```
 
-The nine-critical-concepts test stays as it is.
-
 - [ ] **Step 2: Run it and see it fail**
 
 Run: `pnpm test:unit tests/unit/domain/concept-registry.test.ts`
-Expected: FAIL — `RETIRED_CONCEPTS` is not exported; 37 concepts.
+Expected: FAIL — 37 concepts; 13 slots; twelve alternates.
 
 - [ ] **Step 3: Change the registry**
 
 In `lib/domain/concepts/registry.ts`:
 
-1. Header comment: "the 29 MCQ concepts are fixed product decisions, the 11 chatbot slots are fixed in the Owner's order (D91 removed two repeated topics)"; `/** 1–29: position in the MCQ … */`; `/** 1–11: chatbot slot … */`.
-2. Delete the `main_clients` and `customer_examples` rows from `EVALUATION_CONCEPTS`.
-3. Delete every `alternateWhen: [...]` line except `learner_shareholding`'s.
-4. New `mcqOrder` values: `client_origin` 14, `main_suppliers` 15, `actual_business_location` 16, `monthly_revenue` 17, `revenue_basis` 18, `average_transaction` 19, `monthly_transactions` 20, `startup_source_of_funds` 21, `first_incoming_funds` 22, `bank_account_purpose` 23, `promptpay_qr_purpose` 24, `internet_banking_control` 25, `otp_control` 26, `transaction_explanation` 27, `supporting_documents` 28, `answer_consistency` 29.
+1. Header comment: "the 30 MCQ concepts are fixed product decisions, the 11 chatbot slots are fixed in the Owner's order (D91 removed two repeated customer questions from the interview)"; `/** 1–11: chatbot slot; null = MCQ only. */`.
+2. Delete the `customer_examples` row.
+3. `main_clients`: delete its `interviewSlot`, `interviewMatch` and `alternateWhen` lines (it stays `mcqOrder: 14`).
+4. Delete every other `alternateWhen: [...]` line except `learner_shareholding`'s.
 5. New `interviewSlot` values: `customer_profile` 10, `transaction_details` 11.
-6. After `EVALUATION_CONCEPTS` add:
 
-```ts
-/**
- * Concepts neither evaluation asks any more (D91: the Owner removed them as repeats of
- * `client_origin` and `customer_profile`). Their rows stay in `evaluation_concepts` because
- * retired variants still point at them; nothing resolves, counts or renders them.
- */
-export const RETIRED_CONCEPTS: readonly ConceptDef[] = [
-  row({
-    key: 'main_clients',
-    domain: 'business',
-    source: 'BUSINESS_PROFILE',
-    facts: ['main_clients'],
-    answer: 'open_text',
-    mcqOrder: null,
-    title: { th: 'ลูกค้าหลัก', en: 'Main customers', zh: '主要客户' },
-  }),
-  row({
-    key: 'customer_examples',
-    domain: 'business',
-    source: 'BUSINESS_PROFILE',
-    facts: ['customer_examples'],
-    answer: 'open_text',
-    mcqOrder: null,
-    title: { th: 'ตัวอย่างลูกค้า', en: 'Customer examples', zh: '客户示例' },
-  }),
-];
-```
+No `mcqOrder` changes.
 
-7. `conceptTitle` looks in both lists, so a retired variant's page still shows a title:
-
-```ts
-export function conceptTitle(key: string, locale: string): string {
-  const def = [...EVALUATION_CONCEPTS, ...RETIRED_CONCEPTS].find((c) => c.key === key);
-  if (!def) return key;
-  return locale === 'en' ? def.title.en : locale === 'zh' ? def.title.zh : def.title.th;
-}
-```
-
-In `lib/domain/concepts/resolve.ts` change the `Scope` comment to "company — … 28 MCQ and 10 chatbot company-level concepts. assignment — one learner: all 29 and 11".
+In `lib/domain/concepts/resolve.ts` change the `Scope` comment to "company — … 29 MCQ and 10 chatbot company-level concepts. assignment — one learner: all 30 and 11".
 
 - [ ] **Step 4: Update `tests/unit/domain/concept-resolve.test.ts`**
 
-- Every `total: 30` → `29`, `total: 29` → `28`, `total: 13` → `11`, `total: 12` → `10`, and each `ready` beside it by the same step (30→29, 29→28, 28→27; 13→11, 12→10, 11→9).
-- In "keeps KYC policy concepts ready…" replace `main_clients: '  '` with `client_origin: '  '`.
+- Interview counts only: every `total: 13` → `11`, `total: 12` → `10`, and each `ready` beside it by the same step (13→11, 12→10, 11→9). MCQ counts stay.
 - Replace the two tests "needs the status fact behind an alternate wording" and "treats a stated "no" as present" with:
 
 ```ts
@@ -450,23 +412,23 @@ In `lib/domain/concepts/resolve.ts` change the `Scope` comment to "company — �
     expect(c.missingFacts).toEqual([]);
   });
 
-  it('does not resolve, count or report a retired concept', () => {
-    const c = conceptCoverage({ ...complete(), main_clients: null, customer_examples: null }, 'company');
+  it('no longer asks for examples of customers', () => {
+    const c = conceptCoverage({ ...complete(), customer_examples: null }, 'company');
     expect(c.missingFacts).toEqual([]);
-    expect(c.concepts.map((x) => x.key)).not.toContain('main_clients');
+    expect(c.concepts.map((x) => x.key)).not.toContain('customer_examples');
   });
 ```
 
 - [ ] **Step 5: Run both and see them pass**
 
 Run: `pnpm test:unit tests/unit/domain/concept-registry.test.ts tests/unit/domain/concept-resolve.test.ts`
-Expected: PASS. (`pnpm typecheck` still fails in the MCQ starter and tests that name `main_clients` as a concept — Task 6.)
+Expected: PASS. (`pnpm typecheck` still fails where the starter drafts and MCQ tests word a variant for a company status — Task 6.)
 
 - [ ] **Step 6: Commit**
 
 ```bash
 git add lib/domain/concepts tests/unit/domain/concept-registry.test.ts tests/unit/domain/concept-resolve.test.ts
-git commit -m "feat(concepts): 29 quiz and 11 interview concepts; one alternate wording (D91)"
+git commit -m "feat(concepts): 11 interview slots and one alternate wording; the quiz unchanged (D91)"
 ```
 
 ---
@@ -474,13 +436,15 @@ git commit -m "feat(concepts): 29 quiz and 11 interview concepts; one alternate 
 ### Task 3: The same change in the database
 
 **Files:**
+
 - Create: `supabase/migrations/20261005010000_fewer_questions.sql`
 - Test: `tests/integration/evaluation-concepts.test.ts`, `tests/integration/mcq-bank.db.test.ts`
 
 - [ ] **Step 1: Change the integration tests**
 
 `tests/integration/evaluation-concepts.test.ts`:
-- import `RETIRED_CONCEPTS`; `const fromCode = [...EVALUATION_CONCEPTS, ...RETIRED_CONCEPTS]…` (the table keeps all 37 rows, so `toHaveLength(37)` stays);
+
+- `expect(data).toHaveLength(37)` → `36`;
 - the comment "All 13 slots are taken" becomes "Slots 12 and 13 no longer exist (D91)", and add to "refuses rows that break the registry rules":
 
 ```ts
@@ -494,96 +458,73 @@ git commit -m "feat(concepts): 29 quiz and 11 interview concepts; one alternate 
       interview_match: 'normalized',
     });
     expect(slotTooHigh.error?.code).toBe('23514');
-    const orderTooHigh = await svc.from('evaluation_concepts').insert({
-      ...base,
-      key: 'x_order_30',
-      source: 'DBD_FACT',
-      facts: ['company_name_th'],
-      answer_type: 'name',
-      mcq_order: 30,
-    });
-    expect(orderTooHigh.error?.code).toBe('23514');
 ```
 
 `tests/integration/mcq-bank.db.test.ts` (around lines 120–150): the status wording tests use the one alternate that is left. Replace `applies_when: { fact: 'operations_started' … }` with `concept_key: 'learner_shareholding', applies_when: { fact: 'learner_is_shareholder' … }`, replace the accepted example (`main_clients` / `has_existing_customers: false`) with `learner_shareholding` / `learner_is_shareholder: false`, and add:
 
 ```ts
-  it('refuses a variant of a retired concept, and a company-status wording (D91)', async () => {
-    const retired = await svc.from('questions').insert(variant({ concept_key: 'main_clients' }));
-    expect(retired.error?.message).toContain('not an MCQ concept');
-    const status = await svc
-      .from('questions')
-      .insert(
-        variant({
-          concept_key: 'client_origin',
-          applies_when: { fact: 'has_existing_customers', value: false },
-        }),
-      );
+  it('refuses a wording for a company status, which is always yes (D91)', async () => {
+    const status = await svc.from('questions').insert(
+      variant({
+        concept_key: 'main_clients',
+        applies_when: { fact: 'has_existing_customers', value: false },
+      }),
+    );
     expect(status.error?.message).toContain('no alternate wording');
+    const plain = await svc
+      .from('questions')
+      .insert(variant({ concept_key: 'main_clients' }))
+      .select('id')
+      .single();
+    expect(plain.error).toBeNull();
   });
 ```
 
 - [ ] **Step 2: Run them and see them fail**
 
 Run: `pnpm db:reset && pnpm test:integration tests/integration/evaluation-concepts.test.ts tests/integration/mcq-bank.db.test.ts`
-Expected: FAIL — the table still holds the old orders and slots.
+Expected: FAIL — the table still holds 37 rows, 13 slots and the status alternates.
 
 - [ ] **Step 3: Write the migration**
 
 ```sql
 -- supabase/migrations/20261005010000_fewer_questions.sql
--- D91 (Owner, 2026-10-01): only the questions that cannot be removed or avoided stay.
--- "Main customers" and "examples of real customers" repeat other questions and leave both
--- evaluations; the company status is always yes, so no concept has an "expected…" wording any
--- more. Mirrors lib/domain/concepts/registry.ts (tests/integration/evaluation-concepts.test.ts).
+-- D91 (Owner, 2026-10-01): only the questions that cannot be removed or avoided stay. The quiz
+-- keeps its 30 concepts. The interview loses its two repeated customer questions (main
+-- customers, examples of real customers) and closes up to 11 slots. The company status is
+-- always yes, so no concept has an "expected…" wording any more. Mirrors
+-- lib/domain/concepts/registry.ts (tests/integration/evaluation-concepts.test.ts).
 
 -- 1. Variants first, while the guard would still accept them. It is switched off for these two
 --    statements only: neither is an edit by a person, and the second must not send an approved
 --    variant back to draft for losing a condition that is now always true.
 alter table public.questions disable trigger questions_variant_guard;
 
--- Worded for a status that can no longer be "no", or for the removed concept: never asked again.
+-- Worded for a status that can no longer be "no": never asked again.
 update public.questions
    set approval_status = 'retired'
  where concept_key is not null
-   and (
-     concept_key = 'main_clients'
-     or (
-       applies_when ->> 'fact' in
-         ('operations_started', 'has_existing_customers', 'has_completed_transactions', 'has_regular_suppliers')
-       and (applies_when ->> 'value')::boolean = false
-     )
-   );
+   and applies_when ->> 'fact' in
+     ('operations_started', 'has_existing_customers', 'has_completed_transactions', 'has_regular_suppliers')
+   and (applies_when ->> 'value')::boolean = false;
 
 -- Worded for "yes": now the wording for every company.
 update public.questions
    set applies_when = null
  where concept_key is not null
-   and concept_key <> 'main_clients'
    and applies_when ->> 'fact' in
-     ('operations_started', 'has_existing_customers', 'has_completed_transactions', 'has_regular_suppliers');
+     ('operations_started', 'has_existing_customers', 'has_completed_transactions', 'has_regular_suppliers')
+   and (applies_when ->> 'value')::boolean = true;
 
 alter table public.questions enable trigger questions_variant_guard;
 
--- 2. The two removed concepts are in neither evaluation. Their rows stay: retired variants
---    point at main_clients, and nothing deletes a concept.
-update public.evaluation_concepts
-   set mcq_order = null, interview_slot = null, interview_match = null, alternate_when = '{}'
- where key in ('main_clients', 'customer_examples');
+-- 2. Examples of real customers was an interview question only, so no variant points at it.
+delete from public.evaluation_concepts where key = 'customer_examples';
 
--- 3. The quiz closes up to 1–29. Cleared first: the order is unique, row by row.
-update public.evaluation_concepts set mcq_order = null where mcq_order > 14;
-update public.evaluation_concepts c
-   set mcq_order = v.mcq_order
-  from (values
-    ('client_origin', 14), ('main_suppliers', 15), ('actual_business_location', 16),
-    ('monthly_revenue', 17), ('revenue_basis', 18), ('average_transaction', 19),
-    ('monthly_transactions', 20), ('startup_source_of_funds', 21), ('first_incoming_funds', 22),
-    ('bank_account_purpose', 23), ('promptpay_qr_purpose', 24), ('internet_banking_control', 25),
-    ('otp_control', 26), ('transaction_explanation', 27), ('supporting_documents', 28),
-    ('answer_consistency', 29)
-  ) as v(key, mcq_order)
- where c.key = v.key;
+-- 3. Main customers stays quiz question 14 and leaves the interview.
+update public.evaluation_concepts
+   set interview_slot = null, interview_match = null
+ where key = 'main_clients';
 
 -- 4. The interview closes up to 1–11.
 update public.evaluation_concepts set interview_slot = 10 where key = 'customer_profile';
@@ -593,8 +534,6 @@ update public.evaluation_concepts set interview_slot = 11 where key = 'transacti
 update public.evaluation_concepts set alternate_when = '{}' where key <> 'learner_shareholding';
 
 alter table public.evaluation_concepts
-  drop constraint evaluation_concepts_mcq_order_check,
-  add constraint evaluation_concepts_mcq_order_check check (mcq_order between 1 and 29),
   drop constraint evaluation_concepts_interview_slot_check,
   add constraint evaluation_concepts_interview_slot_check check (interview_slot between 1 and 11);
 ```
@@ -602,13 +541,13 @@ alter table public.evaluation_concepts
 - [ ] **Step 4: Apply it and see the tests pass**
 
 Run: `pnpm db:reset && pnpm test:integration tests/integration/evaluation-concepts.test.ts tests/integration/mcq-bank.db.test.ts`
-Expected: PASS. Then `pnpm db:types && pnpm exec prettier --write lib/db/database.types.ts && git diff --stat lib/db/database.types.ts` — expected: no change (constraints only).
+Expected: PASS. Then `pnpm db:types && pnpm exec prettier --write lib/db/database.types.ts && git diff --stat lib/db/database.types.ts` — expected: no change (rows and one constraint only).
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add supabase/migrations/20261005010000_fewer_questions.sql tests/integration/evaluation-concepts.test.ts tests/integration/mcq-bank.db.test.ts
-git commit -m "feat(db): the registry table follows D91; variants that can no longer be asked are retired"
+git commit -m "feat(db): the registry table follows D91; variants worded for a status are settled"
 ```
 
 ---
@@ -616,6 +555,7 @@ git commit -m "feat(db): the registry table follows D91; variants that can no lo
 ### Task 4: Every reader gets the filled answers
 
 **Files:**
+
 - Modify: `lib/domain/facts/fact-sheet.ts`, `lib/domain/facts/snapshot.ts`
 - Test: `tests/unit/domain/fact-sheet.test.ts`, `tests/unit/domain/training-snapshot.test.ts`
 
@@ -658,6 +598,8 @@ and add:
           ...structured.interview,
           business_address: 'ที่อยู่ที่พิมพ์ไว้เดิม',
           account_purpose: 'คำตอบเดิม',
+          main_clients: 'ลูกค้าที่พิมพ์ไว้เดิม',
+          customer_profile: 'ร้านค้าปลีกในประเทศ',
           monthly_revenue: '300,000 บาท',
           average_transaction: '10,000 บาท',
         },
@@ -667,6 +609,7 @@ and add:
     });
     expect(f.business_address).toBe(address.full);
     expect(f.account_purpose).toBe(FIXED_ANSWERS.account_purpose);
+    expect(f.main_clients).toBe('ร้านค้าปลีกในประเทศ');
     expect(f.monthly_transactions).toBe('ประมาณ 30 รายการต่อเดือน');
     expect(f.business_purpose).toBe('จัดตั้งขึ้นเพื่อประกอบธุรกิจ ค้าส่งและค้าปลีกเสื้อผ้า');
   });
@@ -726,6 +669,7 @@ git commit -m "feat(facts): the fact sheet reads the standard answers (D91)"
 ### Task 5: Validation reports a source once, not what follows from it
 
 **Files:**
+
 - Modify: `lib/domain/validation/validators.ts`
 - Test: `tests/unit/domain/validation/validators.test.ts`
 
@@ -737,14 +681,20 @@ In `tests/unit/domain/validation/validators.test.ts` replace the case that expec
   it('never asks for a company status (D91)', () => {
     const f = run({
       structured: {
-        interview: { ...structured.interview!, has_existing_customers: null, operations_started: null },
+        interview: {
+          ...structured.interview!,
+          has_existing_customers: null,
+          operations_started: null,
+        },
       },
     });
     expect(keys(f).filter((k) => k.includes('has_') || k.includes('operations'))).toEqual([]);
   });
 
   it('reports a missing amount once, not the answers worked out from it', () => {
-    const f = run({ structured: { interview: { ...structured.interview!, monthly_revenue: null } } });
+    const f = run({
+      structured: { interview: { ...structured.interview!, monthly_revenue: null } },
+    });
     expect(keys(f).filter((k) => k.startsWith('missing:'))).toEqual([
       'missing:monthly_revenue:version',
     ]);
@@ -756,6 +706,15 @@ In `tests/unit/domain/validation/validators.test.ts` replace the case that expec
     });
     expect(keys(f).filter((k) => k.startsWith('missing:'))).toEqual([
       'missing:monthly_transactions:version',
+    ]);
+  });
+
+  it('reports the kind of customers once, not the main customers answered from it', () => {
+    const f = run({
+      structured: { interview: { ...structured.interview!, customer_profile: null } },
+    });
+    expect(keys(f).filter((k) => k.startsWith('missing:'))).toEqual([
+      'missing:customer_profile:version',
     ]);
   });
 
@@ -774,7 +733,7 @@ The fixture's `facts` must be built from the changed interview for these to mean
 - [ ] **Step 2: Run and see them fail**
 
 Run: `pnpm test:unit tests/unit/domain/validation/validators.test.ts`
-Expected: FAIL — `missing:monthly_transactions` and `missing:revenue_basis` beside the amount; `missing:business_purpose` beside the nature.
+Expected: FAIL — `missing:monthly_transactions` and `missing:revenue_basis` beside the amount; `missing:main_clients` beside the kind of customers; `missing:business_purpose` beside the nature.
 
 - [ ] **Step 3: Skip what follows from a reported source**
 
@@ -814,31 +773,32 @@ git commit -m "feat(validation): a missing source is reported once, not each ans
 
 ---
 
-### Task 6: The question bank without main customers
+### Task 6: The question bank without company-status wordings
 
 **Files:**
-- Modify: `lib/content/mcq-starter.ts`, `lib/domain/mcq/tokens.ts`, `lib/domain/mcq/sample.ts`
+
+- Modify: `lib/content/mcq-starter.ts`, `lib/domain/mcq/sample.ts`
 - Test: `tests/unit/domain/mcq/starter.test.ts`, `rules.test.ts`, `render.test.ts`, `tests/integration/mcq-bank.test.ts`
 
 - [ ] **Step 1: Change the tests**
 
-- `starter.test.ts`: `toHaveLength(11)` → `9`.
-- `tests/integration/mcq-bank.test.ts`: `expect(loaded).toHaveLength(11)` → `9`.
-- `rules.test.ts`: `expect(checks).toHaveLength(30)` → `29`; the status-wording rule test (line ~150) uses `conceptKey: 'learner_shareholding', appliesWhen: { fact: 'learner_is_shareholder', value: true }` for the accepted case and keeps `{ fact: 'operations_started', value: true }` on a concept as the refused one; the coverage tests (lines ~275–303) use `learner_shareholding` / `learner_is_shareholder` in place of `main_clients` / `has_existing_customers`.
+- `starter.test.ts`: `toHaveLength(11)` → `10`.
+- `tests/integration/mcq-bank.test.ts`: `expect(loaded).toHaveLength(11)` → `10`.
+- `rules.test.ts`: `expect(checks).toHaveLength(30)` stays. The status-wording rule test (line ~150) uses `conceptKey: 'learner_shareholding', appliesWhen: { fact: 'learner_is_shareholder', value: true }` for the accepted case and keeps `{ fact: 'operations_started', value: true }` as the refused one; the coverage tests (lines ~275–303) use `learner_shareholding` / `learner_is_shareholder` in place of `main_clients` / `has_existing_customers`, and add `expect(coverage.concepts.find((c) => c.conceptKey === 'main_clients')!.cases).toHaveLength(1);`.
 - `render.test.ts` line ~190: the variant worded for a status uses `conceptKey: 'learner_shareholding'` and `appliesWhen: { fact: 'learner_is_shareholder', value: false }`, with the sample facts' `learner_is_shareholder` set to match the case the test checks.
 
 - [ ] **Step 2: Run and see them fail**
 
 Run: `pnpm test:unit tests/unit/domain/mcq`
-Expected: FAIL — 11 starters; `main_clients` is not an MCQ concept.
+Expected: FAIL — 11 starters; a starter is worded for `has_existing_customers`.
 
 - [ ] **Step 3: Change the bank content**
 
-- `lib/content/mcq-starter.ts`: delete the two entries `mcq-main-clients-1` and `mcq-main-clients-2`; the header comment says nine starter drafts.
-- `lib/domain/mcq/tokens.ts`: delete the line `main_clients: text('main_clients'),` — a retired fact is not offered as a placeholder.
+- `lib/content/mcq-starter.ts`: delete the entry `mcq-main-clients-2` (worded for a company with no customers yet); in `mcq-main-clients-1` set `appliesWhen: null`; the header comment says ten starter drafts.
 - `lib/domain/mcq/sample.ts`: the sample company's answers follow the standard ones so the preview shows what a learner will see:
 
 ```ts
+    main_clients: 'ร้านค้าปลีกในประเทศ',
     business_purpose: 'จัดตั้งขึ้นเพื่อประกอบธุรกิจ ค้าส่งและค้าปลีกเสื้อผ้าสตรี',
     monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
     revenue_basis: 'ยอดขายประมาณ 30 รายการต่อเดือน เฉลี่ยรายการละ 10,000 บาท',
@@ -850,18 +810,18 @@ Expected: FAIL — 11 starters; `main_clients` is not an MCQ concept.
       'ลูกค้าชำระด้วยการโอนเงินผ่านธนาคารและ PromptPay / QR เฉลี่ยรายการละประมาณ 10,000 บาท',
 ```
 
-  (`main_clients` and `customer_examples` stay in the sample: the fact sheet type still has them.)
+  (`customer_examples` stays in the sample: the fact sheet type still has it. The `{main_clients}` placeholder stays in `tokens.ts`: question 14 still uses it.)
 
 - [ ] **Step 4: Run everything that compiles against the registry**
 
 Run: `pnpm typecheck && pnpm test:unit`
-Expected: PASS, with no remaining use of `main_clients` or `customer_examples` as a concept key (`grep -rn "conceptKey: 'main_clients'" lib tests` prints nothing).
+Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add lib/content/mcq-starter.ts lib/domain/mcq tests/unit/domain/mcq tests/integration/mcq-bank.test.ts
-git commit -m "feat(bank): nine starter drafts; no main-customers placeholder"
+git commit -m "feat(bank): ten starter drafts; no wording for a company status"
 ```
 
 ---
@@ -869,6 +829,7 @@ git commit -m "feat(bank): nine starter drafts; no main-customers placeholder"
 ### Task 7: The Level 4 form asks five questions
 
 **Files:**
+
 - Modify: `app/[locale]/(admin)/admin/dbd-records/[id]/interview-form.tsx`, `page.tsx`
 - Modify: `messages/th.json`, `messages/en.json`, `messages/zh.json`
 
@@ -883,7 +844,7 @@ Under `admin.dbd` in all three files:
 | `interviewHint` (replace) | Only what no document can answer. Everything else the bank asks is filled in below without anyone typing it. | เฉพาะคำถามที่ไม่มีเอกสารใดตอบได้ คำตอบอื่นที่ธนาคารถามจะถูกเติมให้ด้านล่างโดยไม่ต้องพิมพ์ | 仅需填写任何文件都无法回答的问题。银行会问的其他问题已在下方自动填好，无需输入。 |
 | `amountHint` (new) | Write the amount in digits, for example 300,000. Transactions per month are worked out from the two amounts. | พิมพ์จำนวนเงินเป็นตัวเลข เช่น 300,000 ระบบจะคำนวณจำนวนรายการต่อเดือนจากสองจำนวนนี้ | 请用数字填写金额，例如 300,000。每月交易笔数由这两个金额计算得出。 |
 | `standardAnswers.title` (new) | Filled automatically | เติมให้อัตโนมัติ | 自动填写 |
-| `standardAnswers.hint` (new) | The learner is taught these answers. They come from the DBD, from the amounts above, or are the same for every company. | ผู้เรียนจะได้เรียนคำตอบเหล่านี้ ซึ่งมาจากเอกสาร DBD จากจำนวนเงินด้านบน หรือเป็นคำตอบเดียวกันทุกบริษัท | 学员将学习这些答案。它们来自 DBD 文件、上面的金额，或对所有公司都相同。 |
+| `standardAnswers.hint` (new) | The learner is taught these answers. They come from the DBD, from the answers above, or are the same for every company. | ผู้เรียนจะได้เรียนคำตอบเหล่านี้ ซึ่งมาจากเอกสาร DBD จากคำตอบด้านบน หรือเป็นคำตอบเดียวกันทุกบริษัท | 学员将学习这些答案。它们来自 DBD 文件、上面的回答，或对所有公司都相同。 |
 | `standardAnswers.pending` (new) | Fills in once the answer it is worked out from is written | จะเติมให้เมื่อกรอกคำตอบที่ใช้คำนวณแล้ว | 填写其依据的答案后自动生成 |
 
 Remove `admin.dbd.statusFacts`, `admin.dbd.interviewFieldsAlt`, `admin.dbd.legacyHint`, and from `admin.dbd.interviewGroups` the keys `status`, `banking`, `legacy`. Before removing, `grep -rn "statusFacts\|interviewFieldsAlt\|legacyHint\|interviewGroups\." app components lib` must show no reader left after Step 2 (the coverage panel labels its missing facts from another namespace; if it reads `statusFacts.*`, keep those keys).
@@ -1034,7 +995,7 @@ replace the `answered` count:
   ).length;
 ```
 
-the badge: `interview: { text: `${answered}/${ASKED_INTERVIEW_FIELDS.length}` },`
+the badge: `` interview: { text: `${answered}/${ASKED_INTERVIEW_FIELDS.length}` }, ``
 
 and the tab:
 
@@ -1082,11 +1043,12 @@ git commit -m "feat(records): Level 4 asks five questions and shows what is fill
 ### Task 8: End-to-end
 
 **Files:**
+
 - Modify: `tests/e2e/facts-and-concepts.spec.ts`, `tests/e2e/training-versions.spec.ts`, `tests/e2e/mcq-bank.spec.ts`
 
 - [ ] **Step 1: `facts-and-concepts.spec.ts`**
 
-- line 29: `'30'` → `'29'`; lines 59–60: `'29'` → `'28'`, `'12'` → `'10'`.
+- line 60: the interview total `'12'` → `'10'`. The quiz totals (`'30'` on line 29, `'29'` on line 59) stay.
 - From "A status fact relabels its fields at once…" to the end of that test, replace with:
 
 ```ts
@@ -1097,17 +1059,22 @@ git commit -m "feat(records): Level 4 asks five questions and shows what is fill
   await openRecordTab(page, 'interview');
   await expect(page.getByTestId('status-facts')).toHaveCount(0);
   await expect(page.getByTestId('label-customer_examples')).toHaveCount(0);
+  await expect(page.getByTestId('label-main_clients')).toHaveCount(0);
   await expect(page.getByTestId('standard-business_address')).toHaveText(ROI_ET);
   await expect(page.getByTestId('standard-account_purpose')).toContainText('ธุรกรรมทางการเงิน');
-  await expect(page.getByTestId('standard-business_purpose')).toContainText('จัดตั้งขึ้นเพื่อประกอบธุรกิจ');
+  await expect(page.getByTestId('standard-business_purpose')).toContainText(
+    'จัดตั้งขึ้นเพื่อประกอบธุรกิจ',
+  );
 
-  // The two amounts give the transactions per month.
+  // The kind of customers answers "main customers"; the two amounts give the transactions.
+  await page.locator('textarea[name="interview_customer_profile"]').fill('ร้านค้าปลีกในประเทศ');
   await page.locator('textarea[name="interview_monthly_revenue"]').fill('ประมาณ 300,000 บาท');
   await page.locator('textarea[name="interview_average_transaction"]').fill('10,000 บาท');
   await page.getByTestId('save-interview').click();
   await expect(page.getByTestId('interview-saved')).toBeVisible();
   await page.reload();
   await openRecordTab(page, 'interview');
+  await expect(page.getByTestId('standard-main_clients')).toHaveText('ร้านค้าปลีกในประเทศ');
   await expect(page.getByTestId('standard-monthly_transactions')).toHaveText(
     'ประมาณ 30 รายการต่อเดือน',
   );
@@ -1115,11 +1082,11 @@ git commit -m "feat(records): Level 4 asks five questions and shows what is fill
 
 - [ ] **Step 2: `training-versions.spec.ts`**
 
-Lines 26–27: `'29'` → `'28'`, `'12'` → `'10'`; lines 37–38 and 68: `'30'` → `'29'`, `'13'` → `'11'`.
+Interview counts only: line 27 `'12'` → `'10'`; line 38 `'13'` → `'11'`. The quiz counts (`'29'`, `'30'`) stay.
 
 - [ ] **Step 3: `mcq-bank.spec.ts`**
 
-Line 60 names `concept-main_clients`, which the bank no longer lists: use `concept-client_origin` (no starter draft, so `data-covered="false"`), and add `await expect(page.getByTestId('concept-main_clients')).toHaveCount(0);`. Any count of concepts or starter drafts on the page (30 → 29, 11 → 9) follows; run the spec and correct what it names.
+Line 60's comment says "A concept with two cases is not covered by drafts" about `concept-main_clients`, which now has one case: assert it on `concept-learner_shareholding` instead. Any count of starter drafts on the page (11 → 10) follows; run the spec and correct what it names.
 
 - [ ] **Step 4: Run the affected specs, then every spec**
 
@@ -1130,7 +1097,7 @@ Expected: PASS. Any other spec that typed into a removed field, or expected a `m
 
 ```bash
 git add tests/e2e
-git commit -m "test(e2e): five questions, standard answers, 29 and 11"
+git commit -m "test(e2e): five questions, standard answers, 11 interview questions"
 ```
 
 ---
@@ -1138,21 +1105,22 @@ git commit -m "test(e2e): five questions, standard answers, 29 and 11"
 ### Task 9: Docs
 
 **Files:**
+
 - Modify: `docs/decisions-log.md`, `docs/superpowers/specs/2026-09-30-p17-evaluation-architecture-design.md`, `docs/superpowers/specs/2026-10-01-two-line-company-record-design.md`, `docs/uat-script.md`, `docs/runbooks/operations.md`
 
 - [ ] **Step 1: D91** after D90 in the decisions log:
 
-> **Only the questions that cannot be removed or avoided are asked (Owner).** A manager gives the company email and phone, what the business does and what it sells with the pack (D80), and five answers on the record: where and how customers are found, what kind of customers, main suppliers, monthly revenue, the average amount per transaction. Every other Level 4 answer is a standard answer that nobody types and that always wins over anything typed earlier: the actual place of business is the head office address; why the company was established is built from what the business does; transactions per month, the basis of the revenue figure and how sales are paid are worked out from the two amounts (which must be written in digits); the source of funds, the first money into the account, why a bank account and why PromptPay / QR are the same for every company. The four company status facts are always yes and are not asked, so the "expected…" wordings are gone and only the learner's own shareholding still turns a wording. Main customers and examples of real customers are removed as repeats, with their topics: the Business Knowledge Quiz has 29 questions and the Bank Readiness Interview 11; the nine critical concepts are unchanged; pass marks keep their proportion (quiz pass 26, retest 22; interview pass 9). The two concepts' rows stay in `evaluation_concepts`, in neither evaluation, because retired variants point at them. Supersedes D58/D80 for the Level 4 form, D71 and D78 for the counts, D73 for the status facts, and D74's "supplied by a person, never generated" for the standard answers.
+> **Only the questions that cannot be removed or avoided are asked (Owner).** A manager gives the company email and phone, what the business does and what it sells with the pack (D80), and five answers on the record: where and how customers are found, what kind of customers, main suppliers, monthly revenue, the average amount per transaction. Every other Level 4 answer is a standard answer that nobody types and that always wins over anything typed earlier: main customers is the kind of customers; the actual place of business is the head office address; why the company was established is built from what the business does; transactions per month, the basis of the revenue figure and how sales are paid are worked out from the two amounts (which must be written in digits); the source of funds, the first money into the account, why a bank account and why PromptPay / QR are the same for every company. The four company status facts are always yes and are not asked, so the "expected…" wordings are gone and only the learner's own shareholding still turns a wording. **The Business Knowledge Quiz keeps its 30 questions, its nine critical concepts and its pass marks.** The Bank Readiness Interview loses its two repeated customer questions (main customers, examples of real customers) and has 11; its pass mark keeps the proportion, 9 of 11. Supersedes D58/D80 for the Level 4 form, D78 for the interview's count, D73 for the status facts, and D74's "supplied by a person, never generated" for the standard answers.
 
-Where it lives: `lib/domain/standard-answers.ts`, `lib/domain/concepts/registry.ts` (`RETIRED_CONCEPTS`), `supabase/migrations/20261005010000_fewer_questions.sql`, plan `docs/superpowers/plans/2026-10-01-fewer-manager-questions.md`.
+Where it lives: `lib/domain/standard-answers.ts`, `lib/domain/concepts/registry.ts`, `supabase/migrations/20261005010000_fewer_questions.sql`, plan `docs/superpowers/plans/2026-10-01-fewer-manager-questions.md`.
 
-Add "(superseded in part by D91)" to the D71, D73, D74 and D78 rows.
+Add "(superseded in part by D91)" to the D73, D74 and D78 rows.
 
-- [ ] **Step 2: Spec amendment** — a new last section of the P17 spec, "## 15. Amendment 2026-10-01 — fewer questions (D91)", with the kept questions, the standard answers table, the new registry order (29) and slots (11), and the pass marks; §3, §5.4, §7.1, §8 and §9 each get one line pointing at §15 rather than being rewritten.
+- [ ] **Step 2: Spec amendment** — a new last section of the P17 spec, "## 15. Amendment 2026-10-01 — fewer questions (D91)", with the kept questions, the standard answers table, the 11 interview slots and the interview pass mark; §3, §5.4, §7.1 and §9 each get one line pointing at §15 rather than being rewritten. §8 (the quiz) is unchanged.
 
-- [ ] **Step 3: Proposal doc** — status line becomes "Superseded by the plan `2026-10-01-fewer-manager-questions.md`: the Owner kept the unavoidable questions with the manager (decision 2) and kept main suppliers (decision 1)".
+- [ ] **Step 3: Proposal doc** — status line becomes "Superseded by the plan `2026-10-01-fewer-manager-questions.md`: the Owner kept the unavoidable questions with the manager, kept main suppliers, and kept the quiz at 30 questions".
 
-- [ ] **Step 4: UAT A17** — "Level 4 asks five questions": upload a pack with the four details; open Level 4; see five questions and nine filled answers; type the five; the record reaches 28 / 10 and gets its version with nobody confirming; a learner assigned to it shows 29 / 11 once the role is confirmed.
+- [ ] **Step 4: UAT A17** — "Level 4 asks five questions": upload a pack with the four details; open Level 4; see five questions and ten filled answers; type the five; the record reaches 29 / 10 and gets its version with nobody confirming; a learner assigned to it shows 30 / 11 once the role is confirmed.
 
 - [ ] **Step 5: Runbook** — a row "Transactions per month is listed as missing": both amounts are written but one is not in digits; write it as a number (300,000) and save.
 
@@ -1175,6 +1143,6 @@ git commit -m "docs: D91 — only the questions that cannot be removed or avoide
 
 ## Self-review
 
-- **Every Owner decision has a task:** kept questions (1, 7), removed topics (2, 3, 6), status always yes (1, 2, 3), office address (1, 4), fixed answers (1), minimised money (1, 5, 7).
-- **Types agree across tasks:** `ASKED_INTERVIEW_FIELDS`, `STANDARD_ANSWER_FIELDS`, `STANDARD_ANSWER_SOURCES`, `FIXED_ANSWERS`, `firstAmount`, `withStandardAnswers(profile, { address })` and `RETIRED_CONCEPTS` are defined in Tasks 1 and 2 and used under those names in 3–8.
-- **Known debt:** stored answers to removed or standard questions stay in `structured_data` unread; the interview profile schema keeps their fields so old versions and old rows still parse. The upload form is unchanged. Standard answers are Thai only, like every other fact.
+- **Every Owner decision has a task:** kept questions (1, 7), the quiz at 30 with main customers answered from the kind of customers (1, 2, 6), the interview's two repeats removed (2, 3), status always yes (1, 2, 3, 6), office address (1, 4), fixed answers (1), minimised money (1, 5, 7).
+- **Types agree across tasks:** `ASKED_INTERVIEW_FIELDS`, `STANDARD_ANSWER_FIELDS`, `STANDARD_ANSWER_SOURCES`, `FIXED_ANSWERS`, `firstAmount` and `withStandardAnswers(profile, { address })` are defined in Task 1 and used under those names in 4–8.
+- **Known debt:** stored answers to removed or standard questions stay in `structured_data` unread; the interview profile schema keeps their fields so old versions and old rows still parse. A variant retired by the migration for a "no" wording keeps its condition and cannot be edited again. The upload form is unchanged. Standard answers are Thai only, like every other fact.
