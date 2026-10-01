@@ -31,9 +31,9 @@ export async function StaffShell({ user, children }: { user: CurrentUser; childr
             >
               BT
             </span>
-            {/* Names the viewer's role, as the chip does: "· Owner" or "· Manager". */}
+            {/* The app's name alone, as on the learner's header; the chip beside it names the role. */}
             <span className="font-display text-[17px] leading-[1.4] font-semibold text-brand-900">
-              {t('name')} · {ta(`roles.${role}`)}
+              {t('name')}
             </span>
           </Link>
           <span className="mr-auto rounded-full bg-brand-100 px-2.5 py-px text-xs font-semibold text-brand-700">

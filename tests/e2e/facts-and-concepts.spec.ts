@@ -6,6 +6,7 @@ import {
   loginAs,
   openManualRecordForm,
   switchTo,
+  openRecordTab,
 } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
@@ -57,9 +58,10 @@ test('a record reads its address, maps its category, and shows what is still mis
 
   // No business text yet: no category, and the coverage names what is missing.
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'unmapped');
+  // Listed under the status column's folded "What's missing".
   await expect(
     page.locator('[data-testid="coverage-missing"] [data-fact="nature_of_business"]'),
-  ).toBeVisible();
+  ).toBeAttached();
 
   // The Level 1 business answers map the category through the fake mapper.
   await fillBusinessAnswers(page);
@@ -70,7 +72,8 @@ test('a record reads its address, maps its category, and shows what is still mis
   // A status fact relabels its fields at once, and saving it clears it from "missing".
   await expect(
     page.locator('[data-testid="coverage-missing"] [data-fact="has_existing_customers"]'),
-  ).toBeVisible();
+  ).toBeAttached();
+  await openRecordTab(page, 'interview');
   await page.getByTestId('status-has_existing_customers').selectOption('no');
   await expect(page.getByTestId('label-customer_examples')).toHaveText(
     'กลุ่มลูกค้าเป้าหมายที่คาดไว้',

@@ -26,9 +26,13 @@ test('the admin sees every section in the sidebar with the current one marked', 
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users');
-  // The header names the owner as the owner, title and chip alike.
+  // The header carries the app's name alone; the chip beside it names the owner.
   const header = page.getByTestId('shell-header');
-  await expect(header).toContainText('พอร์ทัลฝึกอบรมธุรกิจ · เจ้าของ');
+  await expect(
+    header.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true }),
+  ).toBeVisible();
+  await expect(header).not.toContainText('·');
+  await expect(header).toContainText('เจ้าของ');
   await expect(header).not.toContainText('ผู้ดูแลระบบ');
   const nav = page.getByTestId('staff-nav');
   await expect(nav).toBeVisible();
@@ -64,7 +68,12 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการแถบข้าง', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
-  await expect(page.getByTestId('shell-header')).toContainText('พอร์ทัลฝึกอบรมธุรกิจ · ผู้จัดการ');
+  const header = page.getByTestId('shell-header');
+  await expect(
+    header.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true }),
+  ).toBeVisible();
+  await expect(header).not.toContainText('·');
+  await expect(header).toContainText('ผู้จัดการ');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
   await expect(nav.getByRole('link').first()).toHaveText('สร้างผู้เรียนและ DBD');

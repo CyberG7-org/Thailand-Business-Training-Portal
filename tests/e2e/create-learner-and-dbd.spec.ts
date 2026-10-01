@@ -9,9 +9,9 @@ const LEARNER_PASSWORD = 'Learner-Password-1!';
 const READ_COMPANY = 'บริษัท ตัวอย่างการสกัด จำกัด';
 
 /**
- * D80: one page to create a learner (top) and a company (below); the company's pack and its four
- * details go in one go, the reader fills and indexes the rest, and a clean record confirms
- * itself — so the learner can be created for it straight away.
+ * D80: one page, two tabs — the learner form, and the companies with a way to add one; the
+ * company's pack and its four details go in one go, the reader fills and indexes the rest, and a
+ * clean record confirms itself — so "Use for learner" can send it straight to the form.
  */
 test('a manager creates a DBD in one go; it confirms itself and takes a learner', async ({
   page,
@@ -23,12 +23,14 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
 
   await page.goto('/th/admin/users');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('สร้างผู้เรียนและ DBD');
-  // Create learner sits above Create DBD, and no learners list is on this page.
-  const learnerForm = page.locator('form:has(input[name="displayName"])');
-  const dbdForm = page.getByTestId('create-dbd');
-  const [learnerBox, dbdBox] = [await learnerForm.boundingBox(), await dbdForm.boundingBox()];
-  expect(learnerBox!.y).toBeLessThan(dbdBox!.y);
+  // The learner form is the first tab; the companies are the second, counted; no learners list.
+  await expect(page.getByTestId('tab-learner')).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('input[name="displayName"]')).toBeVisible();
+  await expect(page.getByTestId('tab-companies')).toContainText('0');
   await expect(page.locator('[data-testid^="progression-"]')).toHaveCount(0);
+  // "Not listed?" opens the companies tab at its upload form.
+  await page.getByRole('button', { name: 'เพิ่มในแท็บบริษัท (DBD)' }).click();
+  await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByTestId('companies')).toContainText('ยังไม่มีบริษัท');
 
   await page.getByTestId('create-dbd-files').setInputFiles('tests/fixtures/tiny.pdf');
@@ -45,7 +47,7 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await expect(status).toHaveAttribute('data-status', 'reading');
   const run = await request.get('/api/cron/index', CRON);
   expect((await run.json()).extractions).toBeGreaterThanOrEqual(1);
-  await page.reload();
+  await page.goto('/th/admin/users?tab=companies');
   await expect(status).toHaveAttribute('data-status', 'confirmed_auto');
   await expect(status).toHaveText('ยืนยันอัตโนมัติแล้ว');
 
@@ -89,7 +91,7 @@ test('the four details are checked before anything is uploaded', async ({ page }
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการลืมกรอก', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=companies&add=1');
 
   await page.getByTestId('create-dbd-files').setInputFiles('tests/fixtures/tiny.pdf');
   await page.getByTestId('create-dbd-contact_email').fill('info@forgot.co.th');

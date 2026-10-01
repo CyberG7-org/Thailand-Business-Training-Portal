@@ -437,7 +437,8 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
     unavailable = true;
   }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-  if (unavailable) redirect(`/${locale}/admin/dbd-records/${id}?error=vector_unavailable`);
+  if (unavailable)
+    redirect(`/${locale}/admin/dbd-records/${id}?error=vector_unavailable&tab=documents`);
 }
 
 /** Level 4 answers stay editable after confirmation: they are prepared answers, not DBD facts. */

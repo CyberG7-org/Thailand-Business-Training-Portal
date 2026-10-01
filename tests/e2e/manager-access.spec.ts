@@ -67,7 +67,7 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
 
   // The admin sees both, and can tell which team uploaded which.
   await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=companies');
   const all = page.getByTestId('companies');
   await expect(all.getByRole('columnheader', { name: 'ทีม' })).toBeVisible();
   await expect(all.locator('tr').filter({ hasText: ownCompany })).toContainText(code);

@@ -6,7 +6,13 @@ import { listBusinessCategories } from '@/lib/db/business-categories';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { currentAddress } from '@/lib/db/training-sheet';
 import { parseStoredExtraction } from '@/lib/db/extraction';
-import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { companyStatus } from '@/lib/domain/auto-confirm';
+import {
+  EMPTY_INTERVIEW_PROFILE,
+  INTERVIEW_FIELDS,
+  missingBusinessAnswers,
+} from '@/lib/domain/bank-interview';
+import { displayLoginId } from '@/lib/domain/login-id';
 import { conceptCoverage } from '@/lib/domain/concepts/resolve';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
@@ -24,7 +30,15 @@ import { ExceptionsPanel } from './exceptions-panel';
 import { TrainingVersionsPanel } from './training-versions-panel';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
-import { RecordTools, type DocumentSummary, type ReadingState } from './record-tools';
+import { isRecordTab, type RecordTab } from './record-tab-keys';
+import { RecordTabs } from './record-tabs';
+import {
+  DocumentsCard,
+  StatusCard,
+  type AcceptanceCheck,
+  type DocumentSummary,
+  type ReadingState,
+} from './record-tools';
 
 // Upload + extraction run inside the page's server actions; allow the full serverless window.
 export const maxDuration = 60;
@@ -38,11 +52,12 @@ export default async function DbdRecordPage({
     extraction?: string;
     extractionError?: string;
     error?: string;
+    tab?: string;
   }>;
 }) {
   const { locale, id } = await params;
-  const { extraction, extractionError, error } = await searchParams;
-  await requireStaff(locale);
+  const { extraction, extractionError, error, tab } = await searchParams;
+  const staff = await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) notFound();
@@ -107,81 +122,186 @@ export default async function DbdRecordPage({
     if (parsed) suggestions = extractionToFormValues(parsed);
   }
 
-  const tn = await getTranslations('admin.nav');
+  const tc = await getTranslations('admin.createDbd');
+  const { data: team } =
+    staff.role === 'admin' && record.team_id
+      ? await db.from('profiles').select('login_id').eq('id', record.team_id).maybeSingle()
+      : { data: null };
+
+  // Where acceptance stands (P17c), as the status column's list.
+  const acceptanceExceptions = exceptions.filter((e) => e.blocks === 'acceptance');
+  const confirmed = record.extraction_status === 'confirmed';
+  // Nothing can be called complete or clean before the documents are read: the checks run then.
+  const read = documents.length > 0 && (record.extraction_raw !== null || confirmed);
+  const checks: AcceptanceCheck[] = [
+    { key: 'documents', label: t('checks.documents'), done: read },
+    {
+      key: 'missing',
+      label: t('checks.missing'),
+      done:
+        read &&
+        !acceptanceExceptions.some((e) => e.kind === 'missing') &&
+        missingBusinessAnswers(structured.interview ?? null).length === 0,
+    },
+    {
+      key: 'problems',
+      label: t('checks.problems'),
+      done: read && !acceptanceExceptions.some((e) => e.kind !== 'missing'),
+    },
+    { key: 'accepted', label: t('checks.accepted'), done: confirmed },
+  ];
+  const answered = INTERVIEW_FIELDS.filter(
+    (field) => String(structured.interview?.[field] ?? '').trim() !== '',
+  ).length;
+  const status = companyStatus(
+    record,
+    reading ? (reading.status === 'failed' ? 'failed' : 'open') : null,
+  );
+  const statusTone =
+    status === 'confirmed' || status === 'confirmed_auto'
+      ? 'bg-ok-50 text-ok-600'
+      : status === 'unread'
+        ? 'bg-bad-50 text-bad-600'
+        : 'bg-warn-50 text-warn-700';
+  // Straight after an upload (`?extraction=`) the reading is what to watch.
+  const initialTab: RecordTab = isRecordTab(tab)
+    ? tab
+    : error === 'vector_unavailable' || extraction
+      ? 'documents'
+      : 'details';
+
   return (
-    <section className="grid gap-6">
-      <Link href="/admin/users#create-dbd" className="staff-link text-sm">
-        ← {tn('users')}
-      </Link>
-      <h1 className="staff-title">{record.company_name_th ?? t('untitled')}</h1>
-      {record.confirmed_automatically && record.extraction_status === 'confirmed' && (
-        <p data-testid="confirmed-automatically" className="staff-notice-ok max-w-2xl">
-          {t('confirmedAutomatically')}
-        </p>
-      )}
-      <RecordTools
-        id={record.id}
-        status={record.extraction_status}
-        documents={documents.map((d) => ({
-          id: d.id,
-          name: d.original_name,
-          type: d.document_type,
-          sizeBytes: d.size_bytes,
-          pageCount: d.page_count,
-          indexStatus: d.index_status as DocumentSummary['indexStatus'],
-          indexedPages: d.indexed_pages,
-          indexError: d.index_error,
-        }))}
-        acceptance={{
-          blockers,
-          confirmedByName: confirmer?.display_name ?? confirmer?.login_id ?? null,
-          automatic: record.confirmed_automatically,
+    <section className="grid gap-5">
+      <div className="grid gap-2">
+        <Link href="/admin/users?tab=companies" className="staff-link w-fit text-sm">
+          ← {tc('companies')}
+        </Link>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h1 className="staff-title">{record.company_name_th ?? t('untitled')}</h1>
+          <span
+            className={`staff-tag text-sm ${statusTone}`}
+            data-testid="record-company-status"
+            data-status={status}
+          >
+            {tc(`statuses.${status}`)}
+          </span>
+          {team && (
+            <span className="staff-tag bg-brand-100 text-sm text-brand-700">
+              {t('teamChip', { code: displayLoginId(team.login_id) })}
+            </span>
+          )}
+          {record.juristic_id && (
+            <span className="font-mono text-sm text-ink-500 tabular-nums">
+              {record.juristic_id}
+            </span>
+          )}
+        </div>
+        {record.confirmed_automatically && confirmed && (
+          <p data-testid="confirmed-automatically" className="staff-notice-ok max-w-2xl">
+            {t('confirmedAutomatically')}
+          </p>
+        )}
+      </div>
+      <RecordTabs
+        initialTab={initialTab}
+        labels={{
+          details: t('tabs.details'),
+          interview: t('tabs.interview'),
+          documents: t('tabs.documents'),
+          exceptions: t('tabs.exceptions'),
         }}
-        reading={reading}
-        extractionAvailable={getDbdExtractor() !== null}
+        badges={{
+          interview: { text: `${answered}/${INTERVIEW_FIELDS.length}` },
+          documents: { text: String(documents.length) },
+          ...(exceptions.length > 0
+            ? { exceptions: { text: String(exceptions.length), warn: true } }
+            : {}),
+        }}
+        aside={
+          <>
+            <StatusCard
+              id={record.id}
+              status={record.extraction_status}
+              checks={checks}
+              acceptance={{
+                blockers,
+                confirmedByName: confirmer?.display_name ?? confirmer?.login_id ?? null,
+                automatic: record.confirmed_automatically,
+              }}
+            />
+            <CoveragePanel coverage={coverage} compact />
+            <TrainingVersionsPanel versions={versions} behind={behind} compact />
+          </>
+        }
+        panels={{
+          details: (
+            <>
+              {suggestions && <p className="staff-notice-warn">{t('reviewSuggestions')}</p>}
+              <DbdRecordForm
+                record={record}
+                suggestions={suggestions}
+                business={structured.business ?? null}
+                interview={structured.interview ?? null}
+                provenance={structured.provenance ?? {}}
+                documentNames={documents.map((d) => d.original_name)}
+              />
+              <AddressPanel address={address} stored={Boolean(structured.address)} />
+              <CategoryPanel
+                recordId={record.id}
+                assignment={structured.category ?? null}
+                options={categories.map((c) => ({ key: c.key, label: labelOf(c) }))}
+              />
+            </>
+          ),
+          interview: (
+            <InterviewForm
+              recordId={record.id}
+              answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
+            />
+          ),
+          documents: (
+            <>
+              {error === 'vector_unavailable' && (
+                <p
+                  role="alert"
+                  data-testid="vector-unavailable-banner"
+                  className="staff-notice-warn"
+                >
+                  {t('index.removeUnavailable')}
+                </p>
+              )}
+              {extraction === 'failed' && (
+                <p data-testid="autofill-banner" className="staff-notice-warn">
+                  {t('uploadedButNotRead', { reason: extractionError ?? '' })}
+                </p>
+              )}
+              {extraction === 'skipped' && (
+                <p data-testid="autofill-banner" className="staff-notice-info">
+                  {t('extractionNotConfigured')}
+                </p>
+              )}
+              <DocumentsCard
+                id={record.id}
+                status={record.extraction_status}
+                documents={documents.map((d) => ({
+                  id: d.id,
+                  name: d.original_name,
+                  type: d.document_type,
+                  sizeBytes: d.size_bytes,
+                  pageCount: d.page_count,
+                  indexStatus: d.index_status as DocumentSummary['indexStatus'],
+                  indexedPages: d.indexed_pages,
+                  indexError: d.index_error,
+                }))}
+                reading={reading}
+                extractionAvailable={getDbdExtractor() !== null}
+              />
+              <AskDocuments recordId={record.id} />
+            </>
+          ),
+          exceptions: <ExceptionsPanel recordId={record.id} exceptions={exceptions} />,
+        }}
       />
-      <ExceptionsPanel recordId={record.id} exceptions={exceptions} />
-      <CoveragePanel coverage={coverage} />
-      <TrainingVersionsPanel versions={versions} behind={behind} />
-      {error === 'vector_unavailable' && (
-        <p
-          role="alert"
-          data-testid="vector-unavailable-banner"
-          className="staff-notice-warn max-w-2xl"
-        >
-          {t('index.removeUnavailable')}
-        </p>
-      )}
-      {extraction === 'failed' && (
-        <p data-testid="autofill-banner" className="staff-notice-warn max-w-2xl">
-          {t('uploadedButNotRead', { reason: extractionError ?? '' })}
-        </p>
-      )}
-      {extraction === 'skipped' && (
-        <p data-testid="autofill-banner" className="staff-notice-info max-w-2xl">
-          {t('extractionNotConfigured')}
-        </p>
-      )}
-      {suggestions && <p className="staff-notice-warn max-w-2xl">{t('reviewSuggestions')}</p>}
-      <DbdRecordForm
-        record={record}
-        suggestions={suggestions}
-        business={structured.business ?? null}
-        interview={structured.interview ?? null}
-        provenance={structured.provenance ?? {}}
-        documentNames={documents.map((d) => d.original_name)}
-      />
-      <AddressPanel address={address} stored={Boolean(structured.address)} />
-      <CategoryPanel
-        recordId={record.id}
-        assignment={structured.category ?? null}
-        options={categories.map((c) => ({ key: c.key, label: labelOf(c) }))}
-      />
-      <InterviewForm
-        recordId={record.id}
-        answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
-      />
-      <AskDocuments recordId={record.id} />
     </section>
   );
 }

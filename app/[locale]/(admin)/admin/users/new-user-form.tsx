@@ -1,8 +1,14 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, useRef, useState } from 'react';
+import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
+import {
+  MIN_PASSWORD_LENGTH,
+  generatePassword,
+  newLearnerChecklist,
+  type NewLearnerValues,
+} from '@/lib/domain/new-learner';
 import { suggestLoginIdAction } from '../login-id-actions';
 import { LoginIdField } from '../login-id-field';
 import { createUserAction, type CreateUserState } from './actions';
@@ -33,11 +39,27 @@ export type TeamOption = {
   loginId: string;
 };
 
+const NOTHING_TYPED: NewLearnerValues = {
+  team: '',
+  company: '',
+  password: '',
+  name: '',
+  phone: '',
+  email: '',
+  emailValid: false,
+};
+
+/**
+ * "Create learner": the sign-in, the learner and their name-card details on the left, in
+ * sections; on the right the company they study and a "Before you create" list that wakes the
+ * button once everything required is there. The server checks it all again.
+ */
 export function NewUserForm({
   companies,
   teams = null,
   ownLoginId = null,
   initialSuffix = null,
+  onAddCompany,
 }: {
   companies: CompanyOption[];
   /** Null for a manager: they create inside their own team (spec §7). */
@@ -46,10 +68,15 @@ export function NewUserForm({
   ownLoginId?: string | null;
   /** A free suffix for a manager's own team; the admin's arrives once a team is chosen. */
   initialSuffix?: string | null;
+  /** "Not listed?": open the companies tab at its upload form. */
+  onAddCompany: () => void;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.users');
+  const formRef = useRef<HTMLFormElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
   const [teamId, setTeamId] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [suggestion, setSuggestion] = useState({
     suffix: initialSuffix,
     busy: false,
@@ -78,6 +105,34 @@ export function NewUserForm({
     },
     initial,
   );
+
+  // The list is read from the form itself rather than mirrored in state, so a value typed before
+  // the page woke up still counts, and so does the reset after a learner is created.
+  const [checklist, setChecklist] = useState(() =>
+    newLearnerChecklist(NOTHING_TYPED, { needsTeam: Boolean(teams) }),
+  );
+  const recompute = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return;
+    const field = (name: string) => form.elements.namedItem(name) as HTMLInputElement | null;
+    const email = field('contactEmail');
+    setChecklist(
+      newLearnerChecklist(
+        {
+          team: teamId,
+          company: field('dbdRecordId')?.value ?? '',
+          password: field('password')?.value ?? '',
+          name: field('displayName')?.value ?? '',
+          phone: field('phone')?.value ?? '',
+          email: email?.value ?? '',
+          emailValid: email?.validity.valid ?? false,
+        },
+        { needsTeam: Boolean(teams) },
+      ),
+    );
+  }, [teamId, teams]);
+  useEffect(recompute, [recompute, state]);
+
   // An admin choosing a team sees that team's companies and their own untied ones; a manager
   // (teams === null) sees whatever RLS already gave them.
   const offered = teams
@@ -87,102 +142,207 @@ export function NewUserForm({
   const teamLoginId = teams
     ? (teams.find((team) => team.id === teamId)?.loginId ?? null)
     : ownLoginId;
+  const ready = checklist.every((c) => c.done);
+  const label = 'font-semibold text-ink-900';
+
   return (
-    <form action={formAction} className="staff-card grid max-w-md gap-3">
+    <form
+      ref={formRef}
+      action={formAction}
+      onChange={recompute}
+      className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]"
+    >
       <input type="hidden" name="locale" value={locale} />
-      <h2 className="font-semibold">{t('new')}</h2>
-      <p className="text-sm text-ink-700">{t('newIntro')}</p>
-      {teams && (
-        <label className="text-sm">
-          {t('team')}
-          {teams.length === 0 ? (
-            <p data-testid="no-manager" className="text-sm text-warn-700">
-              {t('noManager')}
-            </p>
-          ) : (
-            <select
-              name="managerId"
+
+      <div className="staff-card divide-y divide-ink-100 p-0 md:p-0">
+        <section className="grid gap-4 p-4 md:px-6 md:py-5">
+          <div>
+            <h3 className="text-base font-semibold text-ink-900">{t('signIn')}</h3>
+            <p className="text-sm text-ink-500">{t('signInIntro')}</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <LoginIdField
+              key={suggestion.version}
+              kind="learner"
+              compact
+              prefix={teamLoginId ? learnerPrefix(teamLoginId) : null}
+              managerId={teams ? teamId || undefined : undefined}
+              initialSuffix={suggestion.suffix}
+              busy={suggestion.busy}
+            />
+            <div className="text-sm">
+              <label htmlFor="new-learner-password" className={label}>
+                {t('password')}
+              </label>
+              <div className="mt-1 flex items-stretch gap-2">
+                <input
+                  ref={passwordRef}
+                  id="new-learner-password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  minLength={MIN_PASSWORD_LENGTH}
+                  autoComplete="new-password"
+                  placeholder={t('passwordPlaceholder')}
+                  className="staff-input min-w-0 flex-1"
+                />
+                <button
+                  type="button"
+                  data-testid="generate-password"
+                  onClick={() => {
+                    if (!passwordRef.current) return;
+                    passwordRef.current.value = generatePassword();
+                    // A generated password is for handing over, so it is shown.
+                    setShowPassword(true);
+                    recompute();
+                  }}
+                  className="staff-btn-ghost shrink-0 px-4 text-brand-600"
+                >
+                  {t('generatePassword')}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-pressed={showPassword}
+                className="mt-1 min-h-6 text-sm text-brand-600 hover:text-brand-700 hover:underline"
+              >
+                {showPassword ? t('hidePassword') : t('showPassword')}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 p-4 md:px-6 md:py-5">
+          <h3 className="text-base font-semibold text-ink-900">{t('learnerSection')}</h3>
+          <label className="text-sm">
+            <span className={label}>{t('name')}</span>
+            <input
+              name="displayName"
               required
-              value={teamId}
-              onChange={(e) => {
-                setTeamId(e.target.value);
-                void refreshSuggestion(e.target.value || undefined);
-              }}
+              maxLength={120}
+              placeholder={t('namePlaceholder')}
               className="staff-input mt-1"
-            >
-              <option value="">{t('chooseTeam')}</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name ? `${team.code} — ${team.name}` : team.code}
+            />
+          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <LearnerContactFields only={['phone', 'contactEmail']} strong />
+          </div>
+        </section>
+
+        <section className="grid gap-4 p-4 md:px-6 md:py-5">
+          <h3 className="text-base font-semibold text-ink-900">{t('nameCardSection')}</h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <LearnerContactFields only={['website', 'facebookPage']} strong />
+          </div>
+        </section>
+      </div>
+
+      <aside className="grid gap-4 lg:sticky lg:top-6">
+        <div className="staff-card grid gap-3">
+          {teams && (
+            <label className="text-sm">
+              <span className={label}>{t('team')}</span>
+              {teams.length === 0 ? (
+                <p data-testid="no-manager" className="mt-1 text-sm text-warn-700">
+                  {t('noManager')}
+                </p>
+              ) : (
+                <select
+                  name="managerId"
+                  required
+                  value={teamId}
+                  onChange={(e) => {
+                    setTeamId(e.target.value);
+                    void refreshSuggestion(e.target.value || undefined);
+                  }}
+                  className="staff-input mt-1"
+                >
+                  <option value="">{t('chooseTeam')}</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={team.id}>
+                      {team.name ? `${team.code} — ${team.name}` : team.code}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </label>
+          )}
+          <label className="text-sm">
+            <span className={label}>{t('companyCard')}</span>
+            <select name="dbdRecordId" required defaultValue="" className="staff-input mt-1">
+              <option value="">{t('chooseConfirmedCompany')}</option>
+              {offered.map((c) => (
+                <option key={c.id} value={c.id} disabled={!c.confirmed}>
+                  {c.confirmed
+                    ? c.name
+                    : t('unconfirmedCompany', { name: c.name, status: c.status })}
                 </option>
               ))}
             </select>
+          </label>
+          {confirmed.length === 0 && (
+            <p className="text-sm text-warn-700">{t('noConfirmedCompany')}</p>
           )}
-        </label>
-      )}
-      <LoginIdField
-        key={suggestion.version}
-        kind="learner"
-        prefix={teamLoginId ? learnerPrefix(teamLoginId) : null}
-        managerId={teams ? teamId || undefined : undefined}
-        initialSuffix={suggestion.suffix}
-        busy={suggestion.busy}
-      />
-      <label className="text-sm">
-        {t('password')}
-        <input
-          name="password"
-          type="text"
-          required
-          minLength={10}
-          autoComplete="off"
-          className="staff-input mt-1"
-        />
-      </label>
-      <label className="text-sm">
-        {t('learnerName')}
-        <input name="displayName" required maxLength={120} className="staff-input mt-1" />
-      </label>
-      <LearnerContactFields />
-      <label className="text-sm">
-        {t('company')}
-        <select name="dbdRecordId" required defaultValue="" className="staff-input mt-1">
-          <option value="">{t('chooseCompany')}</option>
-          {offered.map((c) => (
-            <option key={c.id} value={c.id} disabled={!c.confirmed}>
-              {c.confirmed ? c.name : t('unconfirmedCompany', { name: c.name, status: c.status })}
-            </option>
-          ))}
-        </select>
-        <span className="mt-1 block text-sm text-ink-500">
-          {confirmed.length === 0 ? (
-            <>
-              {t('noConfirmedCompany')}{' '}
-              <a href="#create-dbd" className="staff-link">
-                {t('goToRecords')}
-              </a>
-            </>
-          ) : (
-            t('companyHint')
+          <p className="text-sm text-ink-500">
+            {t('notListed')}{' '}
+            <button type="button" onClick={onAddCompany} className="staff-link">
+              {t('addInCompanies')}
+            </button>
+          </p>
+        </div>
+
+        <div className="staff-card grid gap-3">
+          <p className="text-sm font-semibold text-ink-900">{t('checklist.title')}</p>
+          <ul className="grid gap-2" data-testid="create-checklist">
+            {checklist.map(({ item, done }) => (
+              <li
+                key={item}
+                data-testid={`check-${item}`}
+                data-done={done}
+                className="flex min-h-6 items-center gap-3 text-sm"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`grid size-5 shrink-0 place-items-center rounded-full transition-colors ${
+                    done ? 'bg-ok-600 text-white' : 'bg-ink-100 ring-1 ring-ink-300 ring-inset'
+                  }`}
+                >
+                  {done && (
+                    <svg viewBox="0 0 16 16" className="size-3" fill="none" stroke="currentColor">
+                      <path d="M3.5 8.5l3 3 6-7" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </span>
+                <span className={done ? 'text-ink-900' : 'text-ink-500'}>
+                  {t(`checklist.${item}`)}
+                </span>
+                <span className="sr-only">{done ? t('checklist.done') : t('checklist.todo')}</span>
+              </li>
+            ))}
+          </ul>
+          {state.error && (
+            <p role="alert" data-testid="create-user-error" className="text-sm text-bad-600">
+              {state.error}
+            </p>
           )}
-        </span>
-      </label>
-      {state.error && (
-        <p role="alert" data-testid="create-user-error" className="text-sm text-bad-600">
-          {state.error}
-        </p>
-      )}
-      {state.ok && (
-        <p role="status" data-testid="create-user-status" className="text-sm text-ok-600">
-          {t('createdFor', {
-            loginId: displayLoginId(state.createdLoginId),
-            company: state.company ?? '',
-          })}
-        </p>
-      )}
-      <button type="submit" disabled={pending || confirmed.length === 0} className="staff-btn">
-        {t('create')}
-      </button>
+          {state.ok && (
+            <p role="status" data-testid="create-user-status" className="staff-notice-ok">
+              {t('createdFor', {
+                loginId: displayLoginId(state.createdLoginId),
+                company: state.company ?? '',
+              })}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={pending || !ready || confirmed.length === 0}
+            className="staff-btn w-full disabled:bg-ink-100 disabled:text-ink-500 disabled:opacity-100"
+          >
+            {t('createLearner')}
+          </button>
+        </div>
+      </aside>
     </form>
   );
 }

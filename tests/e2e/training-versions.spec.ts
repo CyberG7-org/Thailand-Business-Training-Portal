@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs, switchTo } from './helpers';
+import { loginAs, openRecordTab, switchTo } from './helpers';
 import { seedInProgressAttempt, seedLearnerWithCompleteCompany, submitAttempt } from './seed';
 
 test('a learner is pinned to version 1, stays there when the facts change, and is moved on purpose', async ({
@@ -43,6 +43,7 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('training-versions')).toHaveAttribute('data-active', '1');
   await expect(page.getByTestId('version-complete')).toBeVisible();
+  await openRecordTab(page, 'interview');
   const answers = page.getByTestId('interview-answers');
   await answers.locator('[name="interview_monthly_revenue"]').fill('350,000 บาท');
   await page.getByTestId('save-interview').click();

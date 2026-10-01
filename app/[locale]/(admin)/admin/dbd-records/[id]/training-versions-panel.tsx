@@ -4,14 +4,17 @@ import { versionCoverage } from '@/lib/db/training-versions';
 
 /**
  * Which frozen copy of the facts learners are on (spec §5.6, D75): the active version, whether
- * it is complete at company scope, how many learners are behind it, and the history.
+ * it is complete at company scope, how many learners are behind it, and the history. `compact`
+ * is the status column's version, without the introduction.
  */
 export function TrainingVersionsPanel({
   versions,
   behind,
+  compact = false,
 }: {
   versions: TrainingVersionRow[];
   behind: number;
+  compact?: boolean;
 }) {
   const t = useTranslations('admin.dbd.versions');
   const tf = useTranslations('admin.dbd.facts');
@@ -22,12 +25,12 @@ export function TrainingVersionsPanel({
     iso ? format.dateTime(new Date(iso), { dateStyle: 'medium', timeStyle: 'short' }) : '—';
   return (
     <section
-      className="staff-card grid max-w-2xl gap-3"
+      className={`staff-card grid gap-3 ${compact ? '' : 'max-w-2xl'}`}
       data-testid="training-versions"
       data-active={active?.version_no ?? ''}
     >
       <h2 className="text-sm font-semibold">{t('title')}</h2>
-      <p className="text-sm text-ink-500">{t('intro')}</p>
+      {!compact && <p className="text-sm text-ink-500">{t('intro')}</p>}
       {!active ? (
         <p className="staff-notice-info" data-testid="version-none">
           {t('none')}
