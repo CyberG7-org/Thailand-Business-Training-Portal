@@ -12,13 +12,13 @@ import {
   type LoginIdKind,
 } from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
-import { inChunks } from './chunks';
+import { allRows } from './chunks';
 import { serverEnv } from './env';
 
 /** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
 export const LOGIN_ID_TAKEN = 'This login ID is already taken — choose another';
 export const LOGIN_SUFFIX_INVALID = 'A login ID takes 2–6 letters or digits';
-export const LEARNER_SUFFIX_INVALID = 'A learner login ID is one letter and two digits, e.g. D42';
+export const LEARNER_SUFFIX_INVALID = 'A learner login ID is two letters and two digits, e.g. DA42';
 
 export const newAccountSchema = z.object({
   loginId: z
@@ -99,7 +99,7 @@ function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
 
 /**
  * Staff type only the part after the prefix; the prefix is always the server's (D69). A
- * learner's part is one letter and two digits (D83), a manager's 2–6 letters or digits.
+ * learner's part is two letters and two digits (D84), a manager's 2–6 letters or digits.
  */
 function parseSuffix(kind: LoginIdKind, suffix: string): string {
   const trimmed = suffix.trim();
@@ -173,14 +173,31 @@ export async function suggestLoginSuffix(
   throw new ProvisioningError('No free login ID to suggest', 'unknown');
 }
 
-/** Learner codes per `.in()` filter in the full check: a code is ~12 characters, not a uuid's 36. */
-const LEARNER_CODE_CHUNK = 300;
+/**
+ * Every code held under a prefix, read a page at a time. `_` and `%` are matched literally,
+ * though no prefix the portal makes contains either.
+ */
+async function heldUnder(prefix: string): Promise<Set<string>> {
+  const db = createSupabaseAdminClient();
+  const pattern = `${prefix.toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  const rows = await allRows((from, to) =>
+    db
+      .from('profiles')
+      .select('login_id')
+      .like('login_id', pattern)
+      .order('login_id')
+      .range(from, to),
+  ).catch((error: { message?: string }) => {
+    throw new ProvisioningError(error.message ?? 'Could not read the codes', 'unknown');
+  });
+  return new Set(rows.map((row) => row.login_id));
+}
 
 /**
- * A free learner suffix to prefill under a team's prefix (D83): one letter and two digits. A
+ * A free learner suffix to prefill under a team's prefix (D84): two letters and two digits. A
  * couple of random batches, each checked in one query, find one on any team with room; a nearly
- * full team can defeat them, so then every one of the 2,400 codes is checked and a free one
- * picked, and "none free" means none. Nothing is reserved; the create checks again.
+ * full team can defeat them, so then the codes the team holds are read and a free one of the
+ * 57,600 picked, and "none free" means none. Nothing is reserved; the create checks again.
  */
 export async function suggestLearnerSuffix(
   prefix: string,
@@ -193,15 +210,8 @@ export async function suggestLearnerSuffix(
     const free = offered.find((suffix) => !taken.has(prefix + suffix));
     if (free) return free;
   }
-  const every = allLearnerSuffixes();
-  const taken = new Set(
-    await inChunks(
-      every.map((suffix) => prefix + suffix),
-      async (chunk) => [...(await takenAmong(chunk))],
-      LEARNER_CODE_CHUNK,
-    ),
-  );
-  const left = every.filter((suffix) => !taken.has(prefix + suffix));
+  const held = await heldUnder(prefix);
+  const left = allLearnerSuffixes().filter((suffix) => !held.has(prefix + suffix));
   if (left.length > 0) return left[Math.floor(random() * left.length)];
   throw new ProvisioningError('No free login ID to suggest', 'unknown');
 }

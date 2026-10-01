@@ -36,7 +36,7 @@ async function prefixFor({ locale, kind, managerId }: LoginIdQuery): Promise<str
 }
 
 /**
- * A free suffix to prefill (D69) — a learner's is one letter and two digits (D83). Nothing is
+ * A free suffix to prefill (D69) — a learner's is two letters and two digits (D84). Nothing is
  * reserved; the create action checks again.
  */
 export async function suggestLoginIdAction(

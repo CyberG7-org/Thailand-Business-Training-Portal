@@ -49,13 +49,13 @@ describe('provisioning takes the typed code', () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
     const learner = await createLearnerAccount({
-      suffix: 'L08',
+      suffix: 'LA08',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(learner.id);
 
-    expect(learner.loginId).toBe(`${manager.loginId}-l08`);
+    expect(learner.loginId).toBe(`${manager.loginId}-la08`);
     const { data } = await svc
       .from('profiles')
       .select('role, manager_id')
@@ -68,8 +68,8 @@ describe('provisioning takes the typed code', () => {
     const a = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     const b = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(a.id, b.id);
-    const inA = await createLearnerAccount({ suffix: 'k02', password: PASSWORD, managerId: a.id });
-    const inB = await createLearnerAccount({ suffix: 'k02', password: PASSWORD, managerId: b.id });
+    const inA = await createLearnerAccount({ suffix: 'ka02', password: PASSWORD, managerId: a.id });
+    const inB = await createLearnerAccount({ suffix: 'ka02', password: PASSWORD, managerId: b.id });
     created.push(inA.id, inB.id);
     expect(inA.loginId).not.toBe(inB.loginId);
   });
@@ -79,7 +79,7 @@ describe('provisioning takes the typed code', () => {
     created.push(manager.id);
     await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
     await expect(
-      createLearnerAccount({ suffix: 'a01', password: PASSWORD, managerId: manager.id }),
+      createLearnerAccount({ suffix: 'aa01', password: PASSWORD, managerId: manager.id }),
     ).rejects.toMatchObject({ code: 'no-manager' });
   });
 
@@ -90,7 +90,7 @@ describe('provisioning takes the typed code', () => {
       .eq('role', 'learner');
     // A parent that does not exist is refused before any account is made.
     await expect(
-      createLearnerAccount({ suffix: 'a01', password: PASSWORD, managerId: randomUUID() }),
+      createLearnerAccount({ suffix: 'aa01', password: PASSWORD, managerId: randomUUID() }),
     ).rejects.toBeInstanceOf(ProvisioningError);
     const after = await svc
       .from('profiles')
@@ -102,13 +102,13 @@ describe('provisioning takes the typed code', () => {
   it('refuses a learner whose parent is not a manager', async () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     const learner = await createLearnerAccount({
-      suffix: 'b02',
+      suffix: 'ba02',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(manager.id, learner.id);
     await expect(
-      createLearnerAccount({ suffix: 'c03', password: PASSWORD, managerId: learner.id }),
+      createLearnerAccount({ suffix: 'ca03', password: PASSWORD, managerId: learner.id }),
     ).rejects.toMatchObject({ code: 'no-manager' });
   });
 });
@@ -132,13 +132,13 @@ describe('a code is checked before it is created', () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
     const one = await createLearnerAccount({
-      suffix: 'd04',
+      suffix: 'da04',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(one.id);
     await expect(
-      createLearnerAccount({ suffix: 'D04', password: PASSWORD, managerId: manager.id }),
+      createLearnerAccount({ suffix: 'DA04', password: PASSWORD, managerId: manager.id }),
     ).rejects.toMatchObject({ code: 'duplicate' });
   });
 
@@ -238,8 +238,8 @@ describe('suggestions', () => {
   });
 });
 
-/** D83: a learner's code is the team's prefix and one letter and two digits. */
-describe('learner codes are one letter and two digits', () => {
+/** D84: a learner's code is the team's prefix and two letters and two digits. */
+describe('learner codes are two letters and two digits', () => {
   const created: string[] = [];
   afterAll(async () => {
     for (const id of created.reverse()) await deleteTestUser(id);
@@ -248,7 +248,7 @@ describe('learner codes are one letter and two digits', () => {
   it('refuses any other shape for a learner, before anything is asked', async () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
-    for (const suffix of ['L8', 'AB12', '142', 'LL1', 'L080']) {
+    for (const suffix of ['D42', 'L8', 'A123', 'ABC1', '1A23', 'AB1', 'AB123', 'AB-1']) {
       await expect(
         createLearnerAccount(
           { suffix, password: PASSWORD, managerId: manager.id },
@@ -262,12 +262,12 @@ describe('learner codes are one letter and two digits', () => {
       ).rejects.toMatchObject({ code: 'invalid-login-id', message: LEARNER_SUFFIX_INVALID });
     }
     const learner = await createLearnerAccount({
-      suffix: 'd42',
+      suffix: 'da42',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(learner.id);
-    expect(learner.loginId).toBe(`${manager.loginId}-d42`);
+    expect(learner.loginId).toBe(`${manager.loginId}-da42`);
   });
 
   it('keeps the manager rule: 2–6 letters or digits', async () => {
@@ -279,25 +279,33 @@ describe('learner codes are one letter and two digits', () => {
     expect(manager.loginId).toMatch(/^t-m[a-z0-9]{3}$/);
   });
 
-  it('suggests one letter and two digits under the team, skipping a taken one', async () => {
+  it('suggests two letters and two digits under the team, skipping a taken one', async () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
     created.push(manager.id);
     const prefix = await learnerPrefixOf(manager.id);
     const held = await createLearnerAccount({
-      suffix: 'a01',
+      suffix: 'aa01',
       password: PASSWORD,
       managerId: manager.id,
     });
     created.push(held.id);
-    expect(await suggestLearnerSuffix(prefix, () => ['a01', 'b02'])).toBe('b02');
-    expect(await suggestLearnerSuffix(prefix)).toMatch(/^[a-z][0-9]{2}$/);
+    expect(await suggestLearnerSuffix(prefix, () => ['aa01', 'ba02'])).toBe('ba02');
+    expect(await suggestLearnerSuffix(prefix)).toMatch(/^[a-z]{2}[0-9]{2}$/);
   });
 
-  it('checks every code once the random batches find nothing free, as on a nearly full team', async () => {
+  it("reads the team's codes once the random batches find nothing free, as on a nearly full team", async () => {
     const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
-    created.push(manager.id);
+    const other = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    created.push(manager.id, other.id);
     const prefix = await learnerPrefixOf(manager.id);
-    for (const suffix of ['a00', 'a01']) {
+    // Another team's aa02 is not this team's.
+    const elsewhere = await createLearnerAccount({
+      suffix: 'aa02',
+      password: PASSWORD,
+      managerId: other.id,
+    });
+    created.push(elsewhere.id);
+    for (const suffix of ['aa00', 'aa01']) {
       const held = await createLearnerAccount({
         suffix,
         password: PASSWORD,
@@ -305,13 +313,13 @@ describe('learner codes are one letter and two digits', () => {
       });
       created.push(held.id);
     }
-    // The batches offer only held codes; the full check skips both and takes the first left.
+    // The batches offer only held codes; the full read skips both and takes the first left.
     expect(
       await suggestLearnerSuffix(
         prefix,
-        () => ['a00', 'a01'],
+        () => ['aa00', 'aa01'],
         () => 0,
       ),
-    ).toBe('a02');
+    ).toBe('aa02');
   });
 });
