@@ -1332,13 +1332,17 @@ export type Database = {
       questions: {
         Row: {
           active: boolean
+          applies_when: Json | null
           approval_status: string
+          concept_key: string | null
+          correct_option_key: string | null
           created_at: string
           created_by: string | null
           dbd_field_dependencies: string[]
           generation_batch_id: string | null
           id: string
           kind: string
+          option_recipes: Json | null
           pools: string[]
           question_key: string
           source: string
@@ -1347,13 +1351,17 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          applies_when?: Json | null
           approval_status?: string
+          concept_key?: string | null
+          correct_option_key?: string | null
           created_at?: string
           created_by?: string | null
           dbd_field_dependencies?: string[]
           generation_batch_id?: string | null
           id?: string
           kind: string
+          option_recipes?: Json | null
           pools?: string[]
           question_key: string
           source?: string
@@ -1362,13 +1370,17 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          applies_when?: Json | null
           approval_status?: string
+          concept_key?: string | null
+          correct_option_key?: string | null
           created_at?: string
           created_by?: string | null
           dbd_field_dependencies?: string[]
           generation_batch_id?: string | null
           id?: string
           kind?: string
+          option_recipes?: Json | null
           pools?: string[]
           question_key?: string
           source?: string
@@ -1376,6 +1388,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_concept_key_fkey"
+            columns: ["concept_key"]
+            isOneToOne: false
+            referencedRelation: "evaluation_concepts"
+            referencedColumns: ["key"]
+          },
           {
             foreignKeyName: "questions_created_by_fkey"
             columns: ["created_by"]
