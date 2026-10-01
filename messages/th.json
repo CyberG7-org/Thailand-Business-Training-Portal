@@ -84,7 +84,7 @@
       "notifications": "การแจ้งเตือน",
       "settings": "ตั้งค่านโยบาย",
       "managers": "ผู้จัดการ",
-      "learners": "ผู้เรียน",
+      "learners": "บันทึกผู้เรียน",
       "businessCategories": "หมวดธุรกิจ"
     },
     "users": {
@@ -159,9 +159,45 @@
       }
     },
     "learners": {
-      "title": "ผู้เรียน",
-      "intro": "ผู้เรียนทั้งหมดที่ทีมของคุณดูแล หากต้องการเพิ่มผู้เรียน ไปที่",
-      "toCreate": "สร้างผู้เรียนและ DBD"
+      "title": "บันทึกผู้เรียน",
+      "intro": "ผู้เรียนทั้งหมดที่ทีมของคุณดูแล พร้อมบริษัท ผล MCQ และแชตบอต และนัดหมาย หากต้องการเพิ่มผู้เรียน ไปที่",
+      "toCreate": "สร้างผู้เรียนและ DBD",
+      "empty": "ยังไม่มีผู้เรียน",
+      "backToRecord": "← บันทึกผู้เรียน",
+      "columns": {
+        "loginId": "รหัสผู้ใช้",
+        "company": "ชื่อบริษัท",
+        "issuedOn": "วันที่ออกหนังสือรับรอง DBD",
+        "mcq": "MCQ",
+        "chatbot": "แชตบอต",
+        "appointment": "นัดหมาย"
+      },
+      "results": {
+        "pass": "ผ่าน",
+        "fail": "ไม่ผ่าน",
+        "in_progress": "กำลังทำ",
+        "abandoned": "ยุติกลางคัน"
+      },
+      "history": {
+        "attempt": "ครั้งที่",
+        "date": "วันที่",
+        "result": "ผล"
+      },
+      "mcq": {
+        "title": "ประวัติ MCQ",
+        "empty": "ยังไม่มีการทำ MCQ",
+        "score": "คะแนน",
+        "review": "ดูคำตอบ",
+        "reviewTitle": "MCQ ครั้งที่ {no}",
+        "reviewHeading": "คำถามและคำตอบ",
+        "backToHistory": "← ประวัติ MCQ"
+      },
+      "chatbot": {
+        "title": "ประวัติแชตบอต",
+        "empty": "ยังไม่มีการสนทนากับแชตบอต",
+        "review": "ดูบทสนทนา",
+        "backToHistory": "← ประวัติแชตบอต"
+      }
     },
     "createDbd": {
       "title": "สร้าง DBD",

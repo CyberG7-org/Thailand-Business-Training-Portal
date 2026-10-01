@@ -55,7 +55,12 @@ export function StaffNav({ role }: { role: Role }) {
       return pathname === href || pathname.startsWith('/admin/dbd-records');
     }
     if (href === '/admin/learners') {
-      return pathname === href || pathname.startsWith('/admin/users/');
+      // The list, a learner's MCQ and Chatbot histories under it (D82), and their account page.
+      return (
+        pathname === href ||
+        pathname.startsWith('/admin/learners/') ||
+        pathname.startsWith('/admin/users/')
+      );
     }
     return pathname === href || pathname.startsWith(href + '/');
   };

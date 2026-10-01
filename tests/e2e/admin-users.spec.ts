@@ -52,7 +52,6 @@ test('a learner is created inside a team, under a code typed after the team pref
   // Learners are listed on their own page (D80).
   await page.goto('/th/admin/learners');
   await expect(page.getByTestId(`company-${learner}`)).toHaveText(company);
-  await expect(page.getByTestId(`team-${learner}`)).toHaveText(code);
 
   await switchTo(page, learner, LEARNER_PASSWORD);
   await expect(page).toHaveURL(/\/th\/dashboard$/);
@@ -180,9 +179,10 @@ test('a manager sees only their own learners, no team picker, and no other team 
   await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(adminCompany);
   // Nor is it on their companies list, which is empty.
   await expect(page.getByTestId('companies')).not.toContainText(adminCompany);
-  // Only the header row on their learners list: this team has no learners yet.
+  // Their Learner Record is empty: this team has no learners yet.
   await page.goto('/th/admin/learners');
-  await expect(page.getByRole('row')).toHaveCount(1);
+  await expect(page.getByTestId('learner-record')).toHaveCount(0);
+  await expect(page.getByText('ยังไม่มีผู้เรียน')).toBeVisible();
 });
 
 test('admin can disable an account and it can no longer sign in', async ({ page }) => {
@@ -233,10 +233,11 @@ test('the admin cannot pair a team with another team company', async ({ page }) 
   await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(company);
 });
 
-test('the admin keeps a way to their own account', async ({ page }) => {
+test('the Learner Record lists learners only, never a staff account', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/learners');
-  await expect(page.getByRole('link', { name: E2E_ADMIN.loginId.toUpperCase() })).toBeVisible();
+  await expect(page.getByTestId('learner-record')).toBeVisible();
+  await expect(page.getByTestId(`learner-${E2E_ADMIN.loginId}`)).toHaveCount(0);
 });
 
 test('the admin can rename the holder of a team', async ({ page }) => {

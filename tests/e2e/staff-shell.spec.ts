@@ -30,7 +30,7 @@ test('the admin sees every section in the sidebar with the current one marked', 
   await expect(nav).toBeVisible();
   for (const label of [
     'สร้างผู้เรียนและ DBD',
-    'ผู้เรียน',
+    'บันทึกผู้เรียน',
     'ผู้จัดการ',
     'คลังคำถาม',
     'นัดหมายธนาคาร',
@@ -46,7 +46,7 @@ test('the admin sees every section in the sidebar with the current one marked', 
   await expect(page).toHaveURL(/\/th\/admin\/users/);
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
   await page.goto('/th/admin/learners');
-  await expect(nav.locator('[aria-current="page"]')).toHaveText(/^ผู้เรียน$/);
+  await expect(nav.locator('[aria-current="page"]')).toHaveText(/^บันทึกผู้เรียน$/);
 });
 
 test('a manager sees only the sections they may open', async ({ page }) => {
@@ -55,7 +55,7 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   const nav = page.getByTestId('staff-nav');
   await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
-  await expect(nav).toContainText('ผู้เรียน');
+  await expect(nav).toContainText('บันทึกผู้เรียน');
   await expect(nav).toContainText('ผลสัมภาษณ์ความพร้อม');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
   await expect(nav).not.toContainText('ผู้จัดการ');

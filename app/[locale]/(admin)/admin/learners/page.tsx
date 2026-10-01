@@ -1,126 +1,97 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import type { AppLocale } from '@/i18n/routing';
 import { requireStaff } from '@/lib/auth/session';
-import { loadProgressionFactsForUsers } from '@/lib/db/progression';
+import { loadLearnerRecords } from '@/lib/db/learner-record';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
-import { deriveProgression } from '@/lib/domain/progression';
-import { formatDate } from '@/lib/domain/thai-date';
+import { dateTimeLabel } from '@/lib/domain/learner-record';
 import { displayLoginId } from '@/lib/domain/login-id';
+import { formatDate, type Locale } from '@/lib/domain/thai-date';
+import { ResultTag } from './result-tag';
 
 /**
- * The learners the caller can see, with their company, team, progress and next booking. Moved
- * here from the Users page when that became "Create learner & DBD" (D80), unchanged, until the
- * owner's own learners page replaces it.
+ * Learner Record (D82): one row per learner the caller can see — who, their company and its DBD
+ * issue date, the MCQ and Chatbot results with their histories a click away, and the next
+ * appointment. RLS narrows it to the caller's team; the admin sees every team.
  */
-export default async function LearnersPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function LearnerRecordPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
   const { locale } = await params;
-  const staff = await requireStaff(locale);
-  const supabase = await createSupabaseServerClient();
-  // Learners only: managers have their own screen, and a manager would otherwise find their own
-  // row sitting in the list of people they manage. RLS narrows it to the caller's team.
-  const { data: users } = await supabase
-    .from('profiles')
-    .select('id, login_id, role, display_name, status, created_at, manager_id')
-    .neq('role', 'manager')
-    .order('created_at', { ascending: false });
-  const { data: managers } =
-    staff.role === 'admin'
-      ? await supabase.from('profiles').select('id, login_id').eq('role', 'manager')
-      : { data: null };
-  const teamCodeOf = new Map((managers ?? []).map((m) => [m.id, displayLoginId(m.login_id)]));
-  const t = await getTranslations('admin.users');
-  const tl = await getTranslations('admin.learners');
-  const tp = await getTranslations('progression');
-
-  const learnerIds = (users ?? []).filter((u) => u.role === 'learner').map((u) => u.id);
-  const facts = await loadProgressionFactsForUsers(supabase, learnerIds);
-  // RLS already narrows both to the learners the caller can see, so neither lists their ids: a
-  // filter naming every learner grows the URL until PostgREST refuses it ("URI too long").
-  const { data: assignments } = await supabase
-    .from('user_dbd_assignments')
-    .select('user_id, dbd_records(company_name_th)')
-    .eq('active', true);
-  // Each learner's next booking (spec §5.3), read under the caller's RLS.
-  const { data: upcoming } = await supabase
-    .from('appointments')
-    .select('user_id, starts_at')
-    .eq('status', 'booked')
-    .gte('starts_at', new Date().toISOString())
-    .order('starts_at');
-  const bookingOf = new Map<string, string>();
-  for (const b of upcoming ?? [])
-    if (!bookingOf.has(b.user_id)) bookingOf.set(b.user_id, b.starts_at);
-  const companyOf = new Map(
-    (assignments ?? []).map((a) => [
-      a.user_id,
-      (a.dbd_records as { company_name_th: string | null } | null)?.company_name_th ?? null,
-    ]),
-  );
-  const rows = (users ?? []).map((u) => {
-    const f = facts.get(u.id);
-    return {
-      ...u,
-      company: companyOf.get(u.id) ?? null,
-      progression: f ? deriveProgression(f) : null,
-      booking: bookingOf.get(u.id) ?? null,
-    };
-  });
+  await requireStaff(locale);
+  const [rows, t] = await Promise.all([
+    loadLearnerRecords(await createSupabaseServerClient()),
+    getTranslations('admin.learners'),
+  ]);
 
   return (
     <section className="grid gap-6">
       <div>
-        <h1 className="staff-title">{tl('title')}</h1>
+        <h1 className="staff-title">{t('title')}</h1>
         <p className="staff-intro mt-1">
-          {tl('intro')}{' '}
+          {t('intro')}{' '}
           <Link href="/admin/users" className="staff-link">
-            {tl('toCreate')}
+            {t('toCreate')}
           </Link>
         </p>
       </div>
-      <div className="staff-table-wrap">
-        <table className="staff-table">
-          <thead>
-            <tr>
-              <th>{t('loginId')}</th>
-              <th>{t('displayName')}</th>
-              <th>{t('company')}</th>
-              <th>{t('team')}</th>
-              <th>{t('role')}</th>
-              <th>{t('status')}</th>
-              <th>{t('progression')}</th>
-              <th>{t('appointment')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((u) => (
-              <tr key={u.id}>
-                <td>
-                  <Link href={`/admin/users/${u.id}`} className="staff-link">
-                    {displayLoginId(u.login_id)}
-                  </Link>
-                </td>
-                <td>{u.display_name ?? '—'}</td>
-                <td data-testid={`company-${u.login_id}`}>{u.company ?? '—'}</td>
-                <td data-testid={`team-${u.login_id}`}>
-                  {u.manager_id ? (teamCodeOf.get(u.manager_id) ?? '—') : '—'}
-                </td>
-                <td>{u.role}</td>
-                <td>{u.status}</td>
-                <td data-testid={`progression-${u.login_id}`}>
-                  {u.progression ? tp(u.progression) : '—'}
-                </td>
-                <td data-testid={`appointment-${u.login_id}`} className="whitespace-nowrap">
-                  {u.booking
-                    ? `${formatDate(bangkokDateOf(u.booking), locale as AppLocale)} ${bangkokTimeLabel(u.booking)}`
-                    : '—'}
-                </td>
+      {rows.length === 0 ? (
+        <p className="text-sm text-ink-700">{t('empty')}</p>
+      ) : (
+        <div className="staff-table-wrap">
+          <table className="staff-table" data-testid="learner-record">
+            <thead>
+              <tr>
+                <th>{t('columns.loginId')}</th>
+                <th>{t('columns.company')}</th>
+                <th>{t('columns.issuedOn')}</th>
+                <th>{t('columns.mcq')}</th>
+                <th>{t('columns.chatbot')}</th>
+                <th>{t('columns.appointment')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} data-testid={`learner-${r.loginId}`}>
+                  <td className="whitespace-nowrap">
+                    <Link href={`/admin/users/${r.id}`} className="staff-link">
+                      {displayLoginId(r.loginId)}
+                    </Link>
+                  </td>
+                  <td data-testid={`company-${r.loginId}`}>
+                    {r.company ? (
+                      <Link href={`/admin/dbd-records/${r.company.id}`} className="staff-link">
+                        {r.company.nameTh ?? '—'}
+                      </Link>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td data-testid={`issued-${r.loginId}`} className="whitespace-nowrap">
+                    {r.company?.issuedOn ? formatDate(r.company.issuedOn, locale as Locale) : '—'}
+                  </td>
+                  <td data-testid={`mcq-${r.loginId}`}>
+                    <ResultTag
+                      result={r.mcq}
+                      href={r.mcqAttempts > 0 ? `/admin/learners/${r.id}/mcq` : null}
+                    />
+                  </td>
+                  <td data-testid={`chatbot-${r.loginId}`}>
+                    <ResultTag
+                      result={r.chatbot}
+                      href={r.chatbotSessions > 0 ? `/admin/learners/${r.id}/chatbot` : null}
+                    />
+                  </td>
+                  <td data-testid={`appointment-${r.loginId}`} className="whitespace-nowrap">
+                    {r.appointmentAt ? dateTimeLabel(r.appointmentAt, locale as Locale) : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
   );
 }

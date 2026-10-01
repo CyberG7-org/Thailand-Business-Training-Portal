@@ -7,12 +7,12 @@ import type { CurrentUser } from '@/lib/auth/session';
 import { initialsOf } from '@/lib/domain/initials';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { StaffNav } from './staff-nav';
-import { StaffPills } from './staff-pills';
 
 /**
  * The staff shell (admin and manager screens): the learner portal's navy band and glass header,
- * slimmer, with a role chip; Back and Home pills below the home; the sidebar and the page on
- * the dot grid. Pages render inside `main.staff`, where the shared patterns apply.
+ * slimmer, with a role chip; the sidebar and the page on the dot grid. The sidebar reaches every
+ * section, so there are no Back and Home buttons (D82); a detail page links to its own list.
+ * Pages render inside `main.staff`, where the shared patterns apply.
  */
 export async function StaffShell({ user, children }: { user: CurrentUser; children: ReactNode }) {
   const [t, ta] = await Promise.all([getTranslations('app'), getTranslations('admin')]);
@@ -52,7 +52,6 @@ export async function StaffShell({ user, children }: { user: CurrentUser; childr
             <SignOutButton />
           </div>
         </header>
-        <StaffPills home="/admin" backLabel={t('back')} homeLabel={t('home')} />
       </div>
       <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-5 px-4 py-5 md:grid-cols-[236px_minmax(0,1fr)] md:gap-6 md:px-6 md:py-6">
         <StaffNav role={role} />

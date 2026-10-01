@@ -84,7 +84,7 @@
       "notifications": "Notifications",
       "settings": "Policy settings",
       "managers": "Managers",
-      "learners": "Learners",
+      "learners": "Learner Record",
       "businessCategories": "Business categories"
     },
     "users": {
@@ -159,9 +159,45 @@
       }
     },
     "learners": {
-      "title": "Learners",
-      "intro": "Everyone your team is training. To add a learner, go to",
-      "toCreate": "Create learner & DBD"
+      "title": "Learner Record",
+      "intro": "Every learner your team is training: their company, MCQ and Chatbot results, and appointment. To add a learner, go to",
+      "toCreate": "Create learner & DBD",
+      "empty": "No learners yet.",
+      "backToRecord": "← Learner Record",
+      "columns": {
+        "loginId": "Login ID",
+        "company": "Company name",
+        "issuedOn": "DBD issued date",
+        "mcq": "MCQ",
+        "chatbot": "Chatbot",
+        "appointment": "Appointment"
+      },
+      "results": {
+        "pass": "Pass",
+        "fail": "Fail",
+        "in_progress": "In progress",
+        "abandoned": "Abandoned"
+      },
+      "history": {
+        "attempt": "Attempt",
+        "date": "Date",
+        "result": "Result"
+      },
+      "mcq": {
+        "title": "MCQ history",
+        "empty": "No MCQ attempts yet.",
+        "score": "Score",
+        "review": "Review",
+        "reviewTitle": "MCQ attempt {no}",
+        "reviewHeading": "Questions and answers",
+        "backToHistory": "← MCQ history"
+      },
+      "chatbot": {
+        "title": "Chatbot history",
+        "empty": "No Chatbot sessions yet.",
+        "review": "Conversation",
+        "backToHistory": "← Chatbot history"
+      }
     },
     "createDbd": {
       "title": "Create DBD",
