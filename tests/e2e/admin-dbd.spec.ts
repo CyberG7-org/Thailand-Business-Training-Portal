@@ -19,7 +19,7 @@ test('admin creates a record with a BE date, sees it as printed, and confirms it
   await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
 });
 
-test('the record lists everything still to fill in, and holds Confirm until it is done', async ({
+test('the record lists what blocks acceptance, and accepts itself the moment it is done', async ({
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
@@ -28,28 +28,33 @@ test('the record lists everything still to fill in, and holds Confirm until it i
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
 
-  // The certificate fact and all four business answers are named, in Thai, before any click.
-  const blocked = page.getByTestId('confirm-blocked');
-  await expect(blocked).toContainText('เลขทะเบียนนิติบุคคล');
-  await expect(blocked).toContainText('อีเมลของบริษัท');
-  await expect(blocked).toContainText('สินค้าหรือบริการที่จะขาย');
-  await expect(page.getByRole('button', { name: 'ยืนยันข้อมูล' })).toBeDisabled();
+  // The certificate fact and the four answers are listed as blocking acceptance, in Thai.
+  const blocking = page.getByTestId('exceptions-acceptance');
+  await expect(blocking).toContainText('เลขทะเบียนนิติบุคคล');
+  await expect(blocking).toContainText('อีเมลของบริษัท');
+  await expect(blocking).toContainText('สินค้าหรือบริการ');
+  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 
-  // Writing the answers is not enough on its own: the juristic id is still missing.
+  // The answers alone are not enough: the registration number is still missing.
   await fillBusinessAnswers(page);
-  await expect(blocked).toContainText('เลขทะเบียนนิติบุคคล');
-  await expect(blocked).not.toContainText('อีเมลของบริษัท');
-  await expect(page.getByRole('button', { name: 'ยืนยันข้อมูล' })).toBeDisabled();
+  await expect(blocking).toContainText('เลขทะเบียนนิติบุคคล');
+  await expect(blocking).not.toContainText('อีเมลของบริษัท');
+
+  // A number with a wrong check digit is an exception of its own, not accepted.
+  await page.locator('input[name="juristic_id"]').fill('0105568233705');
+  const level1 = page.locator('form:has(input[name="juristic_id"])');
+  await level1.getByRole('button', { name: 'บันทึก' }).click();
+  await expect(level1.getByRole('status')).toContainText('บันทึกแล้ว');
+  await expect(page.getByTestId('exception-invalid-juristic_id')).toBeVisible();
+  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 
   await page.locator('input[name="juristic_id"]').fill('0105568233704');
-  // Two forms on this page save: scope to the one holding the certificate facts.
-  await page
-    .locator('form:has(input[name="juristic_id"])')
-    .getByRole('button', { name: 'บันทึก' })
-    .click();
-  await expect(page.getByTestId('confirm-blocked')).toHaveCount(0);
-  await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
+  await level1.getByRole('button', { name: 'บันทึก' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
+  await expect(page.getByTestId('exceptions-acceptance')).toHaveCount(0);
+  // The version waits for the rest of the sheet.
+  await expect(page.getByTestId('exceptions-version')).toBeVisible();
+  await expect(page.getByTestId('training-versions')).toHaveAttribute('data-active', '');
 });
 
 test('a learner studies what their own company sells', async ({ page }) => {

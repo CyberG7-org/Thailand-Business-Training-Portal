@@ -138,7 +138,6 @@ export async function createConfirmedRecord(
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   await fillBusinessAnswers(page);
-  await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
   return page.url().split('/').pop()!;
 }

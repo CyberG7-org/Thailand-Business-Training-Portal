@@ -32,7 +32,7 @@ test('uploading a certificate creates the record and fills its fields in the bac
   await expect(page.getByTestId('record-status')).toHaveText('extracted');
 
   // Level 2 arrived in the business profile, Level 3 classified the document and kept provenance.
-  await expect(page.locator('input[name="province"]')).toHaveValue('ตัวอย่าง');
+  await expect(page.locator('input[name="province"]')).toHaveValue('ร้อยเอ็ด');
   const business = page.getByTestId('business-profile');
   await expect(business.locator('textarea[name="objectives_text"]')).toHaveValue(
     /^1\. ประกอบกิจการค้าปลีก/,
@@ -57,8 +57,7 @@ test('uploading a certificate creates the record and fills its fields in the bac
 
   // The certificate cannot say how to reach the company or what it sells: the manager does.
   await fillBusinessAnswers(page);
-  // Confirm works straight away — no separate Save needed.
-  await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
+  // The answers save validates the record, and a clean one is accepted at once (P17c).
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
   await expect(page.locator('input[name="juristic_id"]')).toHaveAttribute('readonly', '');
 });

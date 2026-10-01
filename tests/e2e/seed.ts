@@ -502,3 +502,53 @@ export async function seedInterviewWithTurns(
   ]);
   if (turnsError) throw turnsError;
 }
+
+/**
+ * Marks fields of the learner's company as read with the given confidences and unconfirms the
+ * record, so validation has a low-confidence exception to raise. Returns the record id.
+ */
+export async function setProvenance(
+  loginId: string,
+  confidences: Record<string, number>,
+): Promise<string> {
+  const admin = svc();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  const { data: assignment } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile!.id)
+    .eq('active', true)
+    .single();
+  const recordId = assignment!.dbd_record_id;
+  const { data: record } = await admin
+    .from('dbd_records')
+    .select('structured_data')
+    .eq('id', recordId)
+    .single();
+  const structured = (record!.structured_data as Record<string, unknown>) ?? {};
+  const provenance = Object.fromEntries(
+    Object.entries(confidences).map(([field, confidence]) => [
+      field,
+      { confidence, source_page: 1, source_document: 1 },
+    ]),
+  );
+  const { error } = await admin
+    .from('dbd_records')
+    .update({
+      structured_data: {
+        ...structured,
+        provenance: { ...((structured.provenance as object) ?? {}), ...provenance },
+      },
+      extraction_status: 'extracted',
+      confirmed_by: null,
+      confirmed_at: null,
+      confirmed_automatically: false,
+    })
+    .eq('id', recordId);
+  if (error) throw error;
+  return recordId;
+}
