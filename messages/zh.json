@@ -75,7 +75,7 @@
     }
   },
   "admin": {
-    "title": "管理",
+    "title": "栏目",
     "nav": {
       "users": "创建学员与DBD",
       "questions": "题库",
@@ -659,7 +659,7 @@
     },
     "settings": {
       "title": "策略设置",
-      "intro": "这些值决定系统的业务规则（policy_config）。每次修改都会记录操作的管理员。",
+      "intro": "这些值决定系统的业务规则（policy_config）。每次修改都会记录操作的所有者。",
       "save": "保存",
       "saved": "已保存",
       "yes": "是",
@@ -724,11 +724,11 @@
           "help": "开启后，学员必须先通过考试才能开始准备度面谈。"
         },
         "telegram_admin_chat_ids": {
-          "label": "管理员 Telegram 聊天 ID",
+          "label": "所有者 Telegram 聊天 ID",
           "help": "每行一个"
         },
         "email_admin_recipients": {
-          "label": "管理员通知邮箱",
+          "label": "所有者通知邮箱",
           "help": "每行一个"
         },
         "study_completion_tracking": {
@@ -890,7 +890,7 @@
       "toHour": "至（小时）",
       "reason": "原因",
       "teamFilter": "团队",
-      "adminCalendar": "管理员日历",
+      "adminCalendar": "所有者日历",
       "allTeams": "所有团队",
       "show": "显示"
     },
@@ -901,7 +901,7 @@
       "system": "系统"
     },
     "roles": {
-      "admin": "管理员",
+      "admin": "所有者",
       "manager": "经理"
     },
     "home": {

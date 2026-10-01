@@ -26,8 +26,16 @@ test('the admin sees every section in the sidebar with the current one marked', 
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users');
+  // The header names the owner as the owner, title and chip alike.
+  const header = page.getByTestId('shell-header');
+  await expect(header).toContainText('พอร์ทัลฝึกอบรมธุรกิจ · เจ้าของ');
+  await expect(header).not.toContainText('ผู้ดูแลระบบ');
   const nav = page.getByTestId('staff-nav');
   await expect(nav).toBeVisible();
+  // The team's sections lead with Managers: a team is started before anything goes in it.
+  await expect(nav.getByRole('link').first()).toHaveText('ผู้จัดการ');
+  await expect(nav.getByRole('link').nth(1)).toHaveText('สร้างผู้เรียนและ DBD');
+  await expect(nav.getByRole('link').nth(2)).toHaveText('บันทึกผู้เรียน');
   for (const label of [
     'สร้างผู้เรียนและ DBD',
     'บันทึกผู้เรียน',
@@ -47,13 +55,19 @@ test('the admin sees every section in the sidebar with the current one marked', 
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
   await page.goto('/th/admin/learners');
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/^บันทึกผู้เรียน$/);
+  // The home page is headed with the owner's role, not "Administration".
+  await page.goto('/th/admin');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('เจ้าของ');
 });
 
 test('a manager sees only the sections they may open', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการแถบข้าง', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
+  await expect(page.getByTestId('shell-header')).toContainText('พอร์ทัลฝึกอบรมธุรกิจ · ผู้จัดการ');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
+  await expect(nav.getByRole('link').first()).toHaveText('สร้างผู้เรียนและ DBD');
   await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
   await expect(nav).toContainText('บันทึกผู้เรียน');
   await expect(nav).toContainText('ผลสัมภาษณ์ความพร้อม');

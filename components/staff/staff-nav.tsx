@@ -11,10 +11,12 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
   {
     key: 'team',
     items: [
+      // The owner starts a team before anything goes in it, so Managers leads; a manager does
+      // not see it and starts at "Create learner & DBD".
+      { href: '/admin/managers', key: 'managers', adminOnly: true },
       // "Create learner & DBD" (D80): a company's record pages sit under it too.
       { href: '/admin/users', key: 'users' },
       { href: '/admin/learners', key: 'learners' },
-      { href: '/admin/managers', key: 'managers', adminOnly: true },
     ],
   },
   {

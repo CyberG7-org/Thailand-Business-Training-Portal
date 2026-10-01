@@ -75,7 +75,7 @@
     }
   },
   "admin": {
-    "title": "ผู้ดูแลระบบ",
+    "title": "เมนู",
     "nav": {
       "users": "สร้างผู้เรียนและ DBD",
       "questions": "คลังคำถาม",
@@ -724,11 +724,11 @@
           "help": "เมื่อเปิด ผู้เรียนต้องสอบผ่านก่อนจึงจะเริ่มสัมภาษณ์ความพร้อมกับธนาคารได้"
         },
         "telegram_admin_chat_ids": {
-          "label": "Telegram chat ID ของผู้ดูแล",
+          "label": "Telegram chat ID ของเจ้าของ",
           "help": "หนึ่งรายการต่อบรรทัด"
         },
         "email_admin_recipients": {
-          "label": "อีเมลผู้ดูแลที่รับการแจ้งเตือน",
+          "label": "อีเมลเจ้าของที่รับการแจ้งเตือน",
           "help": "หนึ่งรายการต่อบรรทัด"
         },
         "study_completion_tracking": {
@@ -890,7 +890,7 @@
       "toHour": "ถึง (ชั่วโมง)",
       "reason": "เหตุผล",
       "teamFilter": "ทีม",
-      "adminCalendar": "ปฏิทินผู้ดูแลระบบ",
+      "adminCalendar": "ปฏิทินเจ้าของ",
       "allTeams": "ทุกทีม",
       "show": "แสดง"
     },
@@ -901,7 +901,7 @@
       "system": "ระบบ"
     },
     "roles": {
-      "admin": "ผู้ดูแลระบบ",
+      "admin": "เจ้าของ",
       "manager": "ผู้จัดการ"
     },
     "home": {

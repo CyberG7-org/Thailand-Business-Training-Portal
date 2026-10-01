@@ -35,7 +35,8 @@ export default async function AdminHome({ params }: { params: Promise<{ locale: 
   return (
     <section className="grid gap-5">
       <div>
-        <h1>{t('title')}</h1>
+        {/* The viewer's role, as the header names it: "Owner" or "Manager". */}
+        <h1>{t(user.role === 'admin' ? 'roles.admin' : 'roles.manager')}</h1>
         <p className="staff-intro mt-1">{t('home.intro')}</p>
       </div>
       <ul data-testid="admin-nav" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
