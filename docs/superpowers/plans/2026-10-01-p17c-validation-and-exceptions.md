@@ -545,7 +545,11 @@ import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { EMPTY_BUSINESS_PROFILE, type StructuredData } from '@/lib/domain/dbd-profile';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
-import { validateFacts, type Finding } from '@/lib/domain/validation/validators';
+import {
+  validateFacts,
+  type Finding,
+  type ValidationRecord,
+} from '@/lib/domain/validation/validators';
 
 const resolved: RegisteredAddress = {
   full: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
@@ -564,7 +568,7 @@ const resolved: RegisteredAddress = {
   issues: [],
 };
 
-const record = {
+const record: ValidationRecord = {
   company_name_th: 'บริษัท ตรวจสอบ จำกัด',
   company_name_en: null,
   juristic_id: '0105568233704',
