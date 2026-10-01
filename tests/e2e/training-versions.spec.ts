@@ -22,9 +22,9 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   const userUrl = page.url();
   await expect(page.getByTestId('version-panel')).toHaveAttribute('data-pinned', '1');
   await expect(page.getByTestId('version-newest')).toContainText('ปัจจุบัน');
-  // Complete company, but the role is not confirmed: 29/30 and 12/13 (plan decision 4).
+  // Complete company, but the role is not confirmed: 29/30 and 10/11 (plan decision 4, D91).
   await expect(page.getByTestId('coverage-mcq')).toHaveAttribute('data-ready', '29');
-  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '12');
+  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '10');
 
   // Confirm the role of a shareholder: everything resolves.
   await page.getByTestId('role-holder').fill('นางสาวกุลธิดา พลเยี่ยม');
@@ -35,7 +35,7 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await expect(page.getByTestId('version-message')).toContainText('ยืนยันบทบาทแล้ว');
   await page.reload();
   await expect(page.getByTestId('coverage-mcq')).toHaveAttribute('data-ready', '30');
-  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '13');
+  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '11');
 
   // A fact changes on the record: version 2, and the learner stays on 1.
   await page.goto('/th/admin/dbd-records');
