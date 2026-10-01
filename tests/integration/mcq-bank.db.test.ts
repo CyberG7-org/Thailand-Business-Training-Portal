@@ -145,11 +145,27 @@ describe('the MCQ bank tables (P17d)', () => {
     expect(wrongStatus.error?.code).toBe('23514');
     const right = await svc.from('questions').insert(
       variant({
+        concept_key: 'learner_shareholding',
+        applies_when: { fact: 'learner_is_shareholder', value: false },
+      }),
+    );
+    expect(right.error).toBeNull();
+  });
+
+  it('refuses a wording for a company status, which is always yes (D91)', async () => {
+    const status = await svc.from('questions').insert(
+      variant({
         concept_key: 'main_clients',
         applies_when: { fact: 'has_existing_customers', value: false },
       }),
     );
-    expect(right.error).toBeNull();
+    expect(status.error?.code).toBe('23514');
+    expect(status.error?.message).toContain('no alternate wording');
+    const plain = await svc.from('questions').insert(variant({ concept_key: 'main_clients' }));
+    expect(plain.error).toBeNull();
+    // Examples of customers is no longer a concept at all.
+    const gone = await svc.from('questions').insert(variant({ concept_key: 'customer_examples' }));
+    expect(gone.error?.message).toContain('not an MCQ concept');
   });
 
   it('approves a variant on its Thai text alone, and an earlier question only with three languages', async () => {

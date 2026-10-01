@@ -47,13 +47,17 @@ test('a record reads its address, maps its category, and shows what is still mis
   // The address resolved against the geography tables, postcode taken from the subdistrict.
   await expect(page.getByTestId('address-panel')).toHaveAttribute('data-status', 'resolved');
   await expect(page.getByTestId('address-district')).toHaveText('โพนทอง');
-  await expect(page.getByTestId('address-postcode')).toHaveText('45110');
+  await expect(page.getByTestId('address-subdistrict')).toHaveText('หนองใหญ่');
+  // Moo, road and postcode are read but not listed (D89).
+  for (const part of ['moo', 'road', 'postcode']) {
+    await expect(page.getByTestId(`address-${part}`)).toHaveCount(0);
+  }
 
-  // A record counts its company-level concepts only (D74): 29 and 12, the learner's own named
+  // A record counts its company-level concepts only (D74, D91): 29 and 10, the learner's own named
   // as checked per learner.
   await expect(page.getByTestId('coverage-panel')).toHaveAttribute('data-scope', 'company');
   await expect(page.getByTestId('coverage-mcq')).toHaveAttribute('data-total', '29');
-  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-total', '12');
+  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-total', '10');
   await expect(page.getByTestId('coverage-per-learner')).toContainText('หุ้นที่ผู้เรียนถือ');
 
   // No business text yet: no category, and the coverage names what is missing.
@@ -69,21 +73,34 @@ test('a record reads its address, maps its category, and shows what is still mis
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'mapped');
   await expect(page.getByTestId('category-current')).toContainText('เสื้อผ้า');
 
-  // A status fact relabels its fields at once, and saving it clears it from "missing".
-  await expect(
-    page.locator('[data-testid="coverage-missing"] [data-fact="has_existing_customers"]'),
-  ).toBeAttached();
-  await openRecordTab(page, 'interview');
-  await page.getByTestId('status-has_existing_customers').selectOption('no');
-  await expect(page.getByTestId('label-customer_examples')).toHaveText(
-    'กลุ่มลูกค้าเป้าหมายที่คาดไว้',
-  );
-  await page.getByTestId('save-interview').click();
-  await expect(page.getByTestId('interview-saved')).toBeVisible();
-  await page.reload();
+  // Nobody is asked for a company status any more (D91), and the standard answers are there
+  // before anything is typed on Level 4.
   await expect(
     page.locator('[data-testid="coverage-missing"] [data-fact="has_existing_customers"]'),
   ).toHaveCount(0);
+  await openRecordTab(page, 'interview');
+  await expect(page.getByTestId('status-facts')).toHaveCount(0);
+  await expect(page.getByTestId('label-customer_examples')).toHaveCount(0);
+  await expect(page.getByTestId('label-main_clients')).toHaveCount(0);
+  await expect(page.getByTestId('standard-business_address')).toHaveText(ROI_ET);
+  await expect(page.getByTestId('standard-account_purpose')).toContainText('ธุรกรรมทางการเงิน');
+  await expect(page.getByTestId('standard-business_purpose')).toContainText(
+    'จัดตั้งขึ้นเพื่อประกอบธุรกิจ',
+  );
+
+  // The kind of customers answers "main customers"; the two amounts give the transactions.
+  await page.locator('textarea[name="interview_customer_profile"]').fill('ร้านค้าปลีกในประเทศ');
+  await page.locator('textarea[name="interview_monthly_revenue"]').fill('ประมาณ 300,000 บาท');
+  await page.locator('textarea[name="interview_average_transaction"]').fill('10,000 บาท');
+  await page.getByTestId('save-interview').click();
+  await expect(page.getByTestId('interview-saved')).toBeVisible();
+  await page.reload();
+  await openRecordTab(page, 'interview');
+  await expect(page.getByTestId('standard-main_clients')).toHaveText('ร้านค้าปลีกในประเทศ');
+  await expect(page.getByTestId('standard-monthly_transactions')).toHaveText(
+    'ประมาณ 30 รายการต่อเดือน',
+  );
+  await openRecordTab(page, 'details');
   // The category survived the answers save.
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'mapped');
 });

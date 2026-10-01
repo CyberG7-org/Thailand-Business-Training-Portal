@@ -283,7 +283,7 @@ describe('the starter drafts in the bank', () => {
     expect(first.created).toEqual(keys);
     expect(first.skipped).toEqual([]);
     const loaded = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
-    expect(loaded).toHaveLength(11);
+    expect(loaded).toHaveLength(10);
     expect(loaded.every((v) => v.status === 'draft')).toBe(true);
     expect(loaded.every((v) => Object.keys(v.texts).length === 3)).toBe(true);
 

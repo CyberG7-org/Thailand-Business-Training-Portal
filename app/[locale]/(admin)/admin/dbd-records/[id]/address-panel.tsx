@@ -1,15 +1,8 @@
 import { useTranslations } from 'next-intl';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
 
-const PARTS = [
-  'house_no',
-  'moo',
-  'road',
-  'subdistrict',
-  'district',
-  'province',
-  'postcode',
-] as const;
+/** Moo, road and postcode are read too, but the Owner does not need them listed (D89). */
+const PARTS = ['house_no', 'subdistrict', 'district', 'province'] as const;
 
 /** The registered address as the geography tables read it (spec §5.2): its parts, or why not. */
 export function AddressPanel({ address, stored }: { address: RegisteredAddress; stored: boolean }) {
@@ -45,9 +38,6 @@ export function AddressPanel({ address, stored }: { address: RegisteredAddress; 
           </div>
         ))}
       </dl>
-      {address.postcode_source === 'geography' && (
-        <p className="text-sm text-ink-500">{t('postcodeFromGeography')}</p>
-      )}
       {!stored && <p className="text-sm text-ink-500">{t('notStoredYet')}</p>}
     </section>
   );

@@ -187,7 +187,7 @@ describe('renderVariant', () => {
     expect(
       failure(
         of(text('?', ['a', 'b', 'c', 'd']), {
-          appliesWhen: { fact: 'has_existing_customers', value: false },
+          appliesWhen: { fact: 'learner_is_shareholder', value: false },
         }),
       ),
     ).toBe('not_applicable');

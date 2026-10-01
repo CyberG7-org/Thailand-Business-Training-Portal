@@ -239,7 +239,8 @@ export function validateFacts(input: ValidationInput): Finding[] {
     );
   }
 
-  // 8. Every company-level concept resolvable (§7.3), tiered (plan decision 1).
+  // 8. Every company-level concept resolvable (§7.3), tiered (plan decision 1). The list names
+  //    what a person can fix: a standard answer whose source is missing is not in it (D91).
   const coverage = conceptCoverage(facts, 'company');
   for (const fact of coverage.missingFacts) {
     if (fact === 'address' && addressUnresolved) continue; // already a geo_mismatch
@@ -275,13 +276,10 @@ export function validateFacts(input: ValidationInput): Finding[] {
     );
   }
 
-  // 10. A category that needs a person: never blocking (D73).
+  // 10. No category although the business is written down (the mapper failed or found none):
+  //     a person picks one; never blocking (D73). A weak match is no longer held back (D90).
   const category = structured.category ?? null;
-  if (
-    category &&
-    (category.status === 'needs_review' ||
-      (category.status === 'unmapped' && interview.nature_of_business))
-  ) {
+  if (category && category.status === 'unmapped' && interview.nature_of_business) {
     push(
       'category_review',
       'business_category',

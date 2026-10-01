@@ -113,6 +113,9 @@ Product term *Owner* is the existing `admin` role; it is not renamed.
 
 ### 5.4 Business profile and status facts
 
+> Amended by §15 (D91): a manager is asked five of these; the rest are standard answers, and the
+> four company status facts are always yes.
+
 The Level 4 profile (manager-written, `structured_data.interview`) gains the fields the 37
 registry concepts need: `business_purpose`, `main_clients`, `client_origin`, `main_suppliers`,
 `monthly_revenue`, `revenue_basis`, `average_transaction`, `monthly_transactions`,
@@ -183,6 +186,9 @@ Retired at cutover: `quiz_question_count`, `exam_question_count`, `exam_*`,
 ## 7. The concept registry
 
 ### 7.1 Rows
+
+> Amended by §15 (D91): `customer_examples` is removed, `main_clients` is MCQ-only, the chatbot
+> has 11 slots, and the only `alt` left is `learner_is_shareholder`.
 
 `mcq` is the MCQ order (1–30), `slot` the chatbot slot (1–13), `crit` a critical MCQ concept,
 `match` the fixed chatbot grading tier. `alt` lists the status facts that select alternate
@@ -284,6 +290,8 @@ and a missing or low-confidence one is a non-blocking exception of its own.
   critical keys snapshotted on the attempt.
 
 ## 9. Chatbot evaluation (P17f–P17h)
+
+> Amended by §15 (D91): 11 slots; pass when `score × 100 ≥ 80 × 11`, that is 9 of 11.
 
 - **Script.** 13 slots, one approved default question per slot plus approved alternates keyed by
   status fact; each with Thai, English and Chinese prompt and clarification prompt. Officer
@@ -402,3 +410,45 @@ content, any learner-facing change.
 Settled by the Owner's corrections of 2026-09-30: the `alt` conditions (§7.1), the appointment
 requiring a created name card (§4), the two readiness scopes (§7.3), category mapping as
 non-blocking metadata (§5.3), and Owner-only assessment content superseding D54 (D76).
+
+## 15. Amendment 2026-10-01 — fewer questions (D91)
+
+The Owner: a manager handling many DBD packs cannot write twenty answers for each, so only the
+questions that cannot be removed or avoided are asked.
+
+**Asked of the manager.** With the pack (D80, unchanged): company email, company phone, what the
+business does, what it sells. On the record: `client_origin`, `customer_profile`,
+`main_suppliers`, `monthly_revenue`, `average_transaction`.
+
+**Standard answers** (`lib/domain/standard-answers.ts`, applied in `buildFactSheet`; they always
+win over anything typed earlier for the same field):
+
+| Fact | Standard answer |
+| --- | --- |
+| `main_clients` | `customer_profile` |
+| `business_purpose` | built from `nature_of_business` |
+| `business_address` | the head office address |
+| `monthly_transactions` | `monthly_revenue` ÷ `average_transaction`, at least 1 |
+| `revenue_basis` | built from the two amounts |
+| `transaction_details` | bank transfer and PromptPay / QR, with the average amount |
+| `source_of_funds`, `first_incoming_funds`, `account_purpose`, `promptpay_qr_purpose` | the same Thai answer for every company |
+| `operations_started`, `has_existing_customers`, `has_completed_transactions`, `has_regular_suppliers` | always yes |
+
+An amount must be written in digits; one scaled by a word ("3 แสน", "300k") is not divided, and
+the record lists transactions per month as missing. A missing source is reported once, not each
+answer worked out from it.
+
+**Registry.** The MCQ keeps its 30 concepts in their order; `main_clients` stays concept 14 and
+leaves the chatbot. `customer_examples` is removed. Chatbot slots: 1 company_name,
+2 registration_number, 3 registered_address, 4 actual_business, 5 products_services,
+6 authorized_representative, 7 attendee_identity, 8 registration_date, 9 account_purpose,
+10 customer_profile, 11 transaction_details. The only alternate wording left is
+`learner_shareholding` on `learner_is_shareholder`. Readiness: a company record counts 29 MCQ and
+10 chatbot concepts, an assignment 30 and 11.
+
+**Pass marks.** MCQ unchanged (D71). Chatbot: 9 of 11 (80%).
+
+**Earlier answers.** `monthly_volume`, `clients_location`, `suppliers_location` and
+`operations_status` are still printed on the bank-interview study card; they are kept as
+written and, left blank, follow `monthly_revenue`, `customer_profile`, `main_suppliers` and
+"operations have started".

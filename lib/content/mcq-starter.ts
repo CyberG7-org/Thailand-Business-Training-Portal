@@ -2,7 +2,8 @@ import type { Recipe } from '@/lib/domain/mcq/tokens';
 import type { StarterVariant, VariantText } from '@/lib/domain/mcq/variant';
 
 /**
- * Eleven worked examples for the Owner's bank (P17d plan decision 12): one for every recipe of
+ * Ten worked examples for the Owner's bank (P17d plan decision 12; D91 removed the one worded
+ * for a company with no customers yet, a status that is now always yes): one for every recipe of
  * D77, loaded as drafts and never approved by code. They show the grammar at work; the wording
  * is the Owner's to change, approve or retire, and the other concepts are the Owner's to write.
  */
@@ -310,7 +311,7 @@ export const MCQ_STARTER: readonly StarterVariant[] = [
     conceptKey: 'main_clients',
     correctKey: 'A',
     optionRecipes: recipes('DIRECT_FACT', 'STATIC', 'STATIC', 'STATIC'),
-    appliesWhen: { fact: 'has_existing_customers', value: true },
+    appliesWhen: null,
     texts: {
       th: text(
         'ลูกค้าหลักของบริษัทคือใคร',
@@ -336,40 +337,6 @@ export const MCQ_STARTER: readonly StarterVariant[] = [
         '公司的主要客户是谁？',
         ['{main_clients}', '仅政府机构', '全部为海外客户', '尚无客户，也不清楚卖给谁'],
         '公司的主要客户：{main_clients}',
-      ),
-    },
-  },
-  {
-    key: 'mcq-main-clients-2',
-    conceptKey: 'main_clients',
-    correctKey: 'A',
-    optionRecipes: recipes('DIRECT_FACT', 'STATIC', 'STATIC', 'STATIC'),
-    appliesWhen: { fact: 'has_existing_customers', value: false },
-    texts: {
-      th: text(
-        'บริษัทคาดว่าลูกค้าหลักจะเป็นใคร',
-        [
-          '{main_clients}',
-          'หน่วยงานราชการเท่านั้น',
-          'ลูกค้าต่างประเทศทั้งหมด',
-          'ไม่ได้วางแผนเรื่องลูกค้าไว้',
-        ],
-        'กลุ่มลูกค้าที่บริษัทคาดหวัง: {main_clients}',
-      ),
-      en: text(
-        'Who does the company expect its main clients to be?',
-        [
-          '{main_clients}',
-          'Government agencies only',
-          'Overseas customers only',
-          'No plan for customers at all',
-        ],
-        'The clients the company expects: {main_clients}',
-      ),
-      zh: text(
-        '公司预计主要客户会是谁？',
-        ['{main_clients}', '仅政府机构', '全部为海外客户', '完全没有客户计划'],
-        '公司预期的客户群：{main_clients}',
       ),
     },
   },

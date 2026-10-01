@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { EMPTY_BUSINESS_PROFILE } from '@/lib/domain/dbd-profile';
 import { STATUS_FACTS, buildFactSheet } from '@/lib/domain/facts/fact-sheet';
+import { FIXED_ANSWERS } from '@/lib/domain/standard-answers';
 
 const record = {
   company_name_th: 'บริษัท ซินเนอร์จี แล็บ จำกัด',
@@ -63,13 +64,56 @@ describe('buildFactSheet (spec §7.2)', () => {
       juristic_id: '0455569000808',
       director_count: 1,
       shareholder_count: 2,
+      // Always yes, whatever was stated before (D91).
       operations_started: true,
-      has_existing_customers: false,
-      has_completed_transactions: null,
+      has_existing_customers: true,
+      has_completed_transactions: true,
+      has_regular_suppliers: true,
       business_category: 'clothing_fashion',
       learner_is_shareholder: null,
       holder_name: null,
     });
+  });
+
+  it('reads the standard answers, never what was typed for them (D91)', () => {
+    const address = {
+      full: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+      house_no: '87',
+      moo: '9',
+      road: null,
+      subdistrict: 'หนองใหญ่',
+      district: 'โพนทอง',
+      province: 'ร้อยเอ็ด',
+      postcode: '45110',
+      province_id: 1,
+      district_id: 1,
+      subdistrict_id: 1,
+      postcode_source: 'geography' as const,
+      status: 'resolved' as const,
+      issues: [],
+    };
+    const f = buildFactSheet({
+      record,
+      structured: {
+        ...structured,
+        interview: {
+          ...structured.interview,
+          business_address: 'ที่อยู่ที่พิมพ์ไว้เดิม',
+          account_purpose: 'คำตอบเดิม',
+          main_clients: 'ลูกค้าที่พิมพ์ไว้เดิม',
+          customer_profile: 'ร้านค้าปลีกในประเทศ',
+          monthly_revenue: '300,000 บาท',
+          average_transaction: '10,000 บาท',
+        },
+      },
+      address,
+      role: null,
+    });
+    expect(f.business_address).toBe(address.full);
+    expect(f.account_purpose).toBe(FIXED_ANSWERS.account_purpose);
+    expect(f.main_clients).toBe('ร้านค้าปลีกในประเทศ');
+    expect(f.monthly_transactions).toBe('ประมาณ 30 รายการต่อเดือน');
+    expect(f.business_purpose).toBe('จัดตั้งขึ้นเพื่อประกอบธุรกิจ ค้าส่งและค้าปลีกเสื้อผ้า');
   });
 
   it('adds the learner: shareholder or not, and their shares', () => {

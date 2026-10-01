@@ -11,8 +11,8 @@ const initial: ToolState = { ok: false, error: null };
 const KNOWN_ERRORS = ['no_text', 'not_configured', 'no_categories'] as const;
 
 /**
- * The record's business category (spec §5.3): what was chosen and how, or the suggestion that
- * needs a person. Choosing holds until the business text changes; "map again" starts over.
+ * The record's business category (spec §5.3, D90): the mapper's best match, or a person's own
+ * choice, which holds until the business text changes; "map again" starts over.
  */
 export function CategoryPanel({
   recordId,
@@ -48,11 +48,6 @@ export function CategoryPanel({
           {assignment.source === 'manual' ? t('manual') : t('auto', { confidence: pct })}
         </p>
       )}
-      {status === 'needs_review' && assignment && (
-        <p className="staff-notice-warn" data-testid="category-review">
-          {t('needsReview', { candidate: label(assignment.candidate_key), confidence: pct })}
-        </p>
-      )}
       {status === 'unmapped' && (
         <p className="staff-notice-info" data-testid="category-unmapped">
           {reason ? t(reasonKey) : t('unmapped')}
@@ -66,7 +61,7 @@ export function CategoryPanel({
           <select
             name="categoryKey"
             required
-            defaultValue={assignment?.key ?? assignment?.candidate_key ?? ''}
+            defaultValue={assignment?.key ?? ''}
             className="staff-input"
           >
             <option value="">{t('none')}</option>

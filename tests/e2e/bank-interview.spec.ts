@@ -48,7 +48,6 @@ test('starter cards, interview answers and the learner role combine into a perso
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   await openRecordTab(page, 'interview');
   const answers = page.getByTestId('interview-answers');
-  await answers.locator('[name="interview_account_purpose"]').fill('รับชำระค่าสินค้าจากลูกค้า');
   // The earlier answers sit behind a closed disclosure (P17a, spec §5.4); open it to fill them.
   await answers.getByTestId('legacy-answers').locator('summary').click();
   await answers.locator('input[name="interview_monthly_volume"]').fill('ประมาณ 300,000 บาท');
@@ -77,7 +76,10 @@ test('starter cards, interview answers and the learner role combine into a perso
   await expect(body).toContainText('9,998 หุ้น (99.98%)');
   await expect(body).toContainText('2 คน');
   await page.goto('/th/study/bank-interview-3-business');
-  await expect(page.getByTestId('study-body')).toContainText('รับชำระค่าสินค้าจากลูกค้า');
+  // Why the company needs the account is the same answer for every company (D91).
+  await expect(page.getByTestId('study-body')).toContainText(
+    'เพื่อใช้ทำธุรกรรมทางการเงินของบริษัท',
+  );
   await expect(page.getByTestId('study-body')).toContainText('ค้าปลีก');
   await page.goto('/th/study/bank-interview-4-role');
   await expect(page.getByTestId('study-body')).toContainText('กรรมการผู้จัดการ');

@@ -13,6 +13,7 @@ import {
 } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
+import { withStandardAnswers } from '@/lib/domain/standard-answers';
 
 /** The status facts that select alternate wording (D73); the last is derived per assignment. */
 export const STATUS_FACTS = [...COMPANY_STATUS_FACTS, 'learner_is_shareholder'] as const;
@@ -27,6 +28,8 @@ export type RecordColumns = {
   registered_capital: number | null;
   directors: unknown;
   signing_authority: string | null;
+  /** The printed address, for the place of business when no resolved address is passed. */
+  head_office_address?: string | null;
 };
 
 /**
@@ -86,7 +89,11 @@ export function buildFactSheet(input: {
   role: LearnerRole | null;
 }): FactSheet {
   const business = input.structured.business ?? EMPTY_BUSINESS_PROFILE;
-  const p = input.structured.interview ?? EMPTY_INTERVIEW_PROFILE;
+  // What the learner is taught: the manager's answers to the questions still asked, and the
+  // standard answer to every other Level 4 question (D91).
+  const p = withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+    address: input.address?.full || input.record.head_office_address || null,
+  });
   const directors = Array.isArray(input.record.directors)
     ? (input.record.directors as Director[])
     : [];

@@ -57,7 +57,10 @@ test('the Owner loads the starter drafts, previews a variant in three languages 
     'true',
   );
   // A concept with two cases is not covered by drafts.
-  await expect(page.getByTestId('concept-main_clients')).toHaveAttribute('data-covered', 'false');
+  await expect(page.getByTestId('concept-learner_shareholding')).toHaveAttribute(
+    'data-covered',
+    'false',
+  );
 });
 
 test('drawn places are different from each other and the same in every language', async ({

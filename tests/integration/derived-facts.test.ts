@@ -11,7 +11,7 @@ import { FakeCategoryMapper } from '@/lib/integrations/category-map/fake';
 import { adminClient, createTestUser, deleteTestUser, type TestUser } from './helpers';
 
 const svc = adminClient();
-const deps = { mapper: new FakeCategoryMapper(), minConfidencePercent: 85 };
+const deps = { mapper: new FakeCategoryMapper() };
 const ROI_ET = 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด';
 
 async function stored(id: string) {
@@ -93,10 +93,12 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     });
     await setInterview(recordId, { nature_of_business: 'ขายบ้าน' });
     await refreshDerivedFacts(svc, recordId, deps);
+    // The words changed, so the mapper decides again; its best match is the category (D90).
     expect((await stored(recordId)).category).toMatchObject({
-      status: 'needs_review',
-      candidate_key: 'furniture_home',
-      key: null,
+      status: 'mapped',
+      source: 'auto',
+      key: 'furniture_home',
+      candidate_key: null,
     });
   });
 
@@ -108,7 +110,7 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
 
   it('records why nothing was mapped when no mapper is configured, and maps again on request', async () => {
     await setInterview(recordId, { nature_of_business: 'ขายเสื้อผ้าออนไลน์' });
-    await refreshDerivedFacts(svc, recordId, { mapper: null, minConfidencePercent: 85 });
+    await refreshDerivedFacts(svc, recordId, { mapper: null });
     expect((await stored(recordId)).category).toMatchObject({
       status: 'unmapped',
       error: 'not_configured',
@@ -137,9 +139,7 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
       .single();
     if (error) throw error;
     try {
-      await expect(
-        refreshDerivedFacts(svc, data.id, { mapper: broken, minConfidencePercent: 85 }),
-      ).resolves.toBe('updated');
+      await expect(refreshDerivedFacts(svc, data.id, { mapper: broken })).resolves.toBe('updated');
       const s = await stored(data.id);
       expect(s.address).toMatchObject({ status: 'resolved', postcode: '45110' });
       expect(s.category).toMatchObject({ status: 'unmapped', error: 'mapper down' });

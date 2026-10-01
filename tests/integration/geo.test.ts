@@ -96,4 +96,29 @@ describe('resolving against the real tables', () => {
     );
     expect(bangkok).toMatchObject({ status: 'resolved', postcode: '10110' });
   });
+
+  it('resolves an address copied from a PDF, whatever characters spell it', async () => {
+    const lookup = geoLookup(svc);
+    const typed = 'เลขที่ 194/3 หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา';
+    const resolved = {
+      status: 'resolved',
+      issues: [],
+      house_no: '194/3',
+      subdistrict: 'วังใหญ่',
+      district: 'เทพา',
+      province: 'สงขลา',
+      full: typed,
+    };
+    expect(await resolveRegisteredAddress(typed, lookup)).toMatchObject(resolved);
+    // ำ as two characters, low tone marks as the positional glyphs of a Windows font, and the
+    // slash a certificate closes the line with: the reading the Owner's record got stuck on.
+    const fromPdf =
+      typed
+        .replaceAll('\u0E33', '\u0E4D\u0E32')
+        .replace('หมู\u0E48', 'หมู\uF70A')
+        .replace('ใหญ\u0E48', 'ใหญ\uF70A') + '/';
+    const read = await resolveRegisteredAddress(fromPdf, lookup);
+    expect(read).toMatchObject({ ...resolved, full: `${typed}/` });
+    expect(read.postcode_source).toBe('geography');
+  });
 });

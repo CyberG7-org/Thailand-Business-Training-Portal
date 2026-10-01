@@ -275,13 +275,13 @@ describe('preflight', () => {
 describe('bankCoverage', () => {
   it('counts a concept as covered only when every status it turns on has an approved variant', () => {
     const yes = variant({
-      conceptKey: 'main_clients',
-      appliesWhen: { fact: 'has_existing_customers', value: true },
+      conceptKey: 'learner_shareholding',
+      appliesWhen: { fact: 'learner_is_shareholder', value: true },
     });
     const noDraft = variant({
-      conceptKey: 'main_clients',
+      conceptKey: 'learner_shareholding',
       status: 'draft',
-      appliesWhen: { fact: 'has_existing_customers', value: false },
+      appliesWhen: { fact: 'learner_is_shareholder', value: false },
     });
     const coverage = bankCoverage([variant(), variant({ status: 'retired' }), yes, noDraft]);
     expect(coverage.total).toBe(30);
@@ -292,14 +292,23 @@ describe('bankCoverage', () => {
       counts: { approved: 1, draft: 0, retired: 1 },
       cases: [{ when: null, approved: 1 }],
     });
-    const clients = coverage.concepts.find((c) => c.conceptKey === 'main_clients')!;
-    expect(clients.covered).toBe(false);
-    expect(clients.cases).toEqual([
-      { when: { fact: 'has_existing_customers', value: true }, approved: 1 },
-      { when: { fact: 'has_existing_customers', value: false }, approved: 0 },
+    const holding = coverage.concepts.find((c) => c.conceptKey === 'learner_shareholding')!;
+    expect(holding.covered).toBe(false);
+    expect(holding.cases).toEqual([
+      { when: { fact: 'learner_is_shareholder', value: true }, approved: 1 },
+      { when: { fact: 'learner_is_shareholder', value: false }, approved: 0 },
     ]);
     // A variant for every company covers both cases.
-    const both = bankCoverage([variant({ conceptKey: 'main_clients', texts: {} })]);
-    expect(both.concepts.find((c) => c.conceptKey === 'main_clients')!.covered).toBe(true);
+    const both = bankCoverage([variant({ conceptKey: 'learner_shareholding', texts: {} })]);
+    expect(both.concepts.find((c) => c.conceptKey === 'learner_shareholding')!.covered).toBe(true);
+  });
+
+  it('gives a concept one case when no company status turns its wording (D91)', () => {
+    const coverage = bankCoverage([]);
+    const cases = (key: string) => coverage.concepts.find((c) => c.conceptKey === key)!.cases;
+    expect(cases('main_clients')).toEqual([{ when: null, approved: 0 }]);
+    expect(cases('monthly_revenue')).toEqual([{ when: null, approved: 0 }]);
+    // 29 concepts with one case, and the learner's shareholding with two.
+    expect(coverage.concepts.flatMap((c) => c.cases)).toHaveLength(31);
   });
 });

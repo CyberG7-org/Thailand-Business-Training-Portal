@@ -70,6 +70,40 @@ describe('parseThaiAddress', () => {
   });
 });
 
+describe('parseThaiAddress on text copied from a PDF', () => {
+  const typed = 'เลขที่ 194/3 หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา';
+  const parts = {
+    house_no: '194/3',
+    moo: '2',
+    road: null,
+    subdistrict: 'วังใหญ่',
+    district: 'เทพา',
+    province: 'สงขลา',
+    postcode: null,
+  };
+
+  it('reads the same parts whichever characters spell ตำบล, อำเภอ and หมู่', () => {
+    expect(parseThaiAddress(typed)).toEqual(parts);
+    // ำ as two characters.
+    expect(parseThaiAddress(typed.replaceAll('\u0E33', '\u0E4D\u0E32'))).toEqual(parts);
+    // The tone mark of หมู่ before its vowel.
+    expect(parseThaiAddress(typed.replace('หมู\u0E48', 'หม\u0E48\u0E39'))).toEqual(parts);
+    // The positional glyphs of a Windows font: a low mai ek on หมู่ and วังใหญ่.
+    expect(
+      parseThaiAddress(typed.replace('หมู\u0E48', 'หมู\uF70A').replace('ใหญ\u0E48', 'ใหญ\uF70A')),
+    ).toEqual(parts);
+  });
+
+  it('reads a whole certificate line: its label in front, a slash at the end', () => {
+    expect(
+      parseThaiAddress(
+        'สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 194/3  หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา/',
+      ),
+    ).toEqual(parts);
+    expect(normalizePlaceName('สงขลา/')).toBe('สงขลา');
+  });
+});
+
 describe('normalizePlaceName', () => {
   it('drops spaces and a stray prefix, and spells Bangkok one way', () => {
     expect(normalizePlaceName('เมือง ร้อยเอ็ด')).toBe('เมืองร้อยเอ็ด');

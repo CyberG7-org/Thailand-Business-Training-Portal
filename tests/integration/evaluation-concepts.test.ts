@@ -52,7 +52,7 @@ describe('evaluation_concepts', () => {
   it('is read by staff, by no learner, and written by nobody', async () => {
     const asManager = await clientFor(manager);
     const { data } = await asManager.from('evaluation_concepts').select('key');
-    expect(data).toHaveLength(37);
+    expect(data).toHaveLength(36);
     const { data: forLearner } = await (
       await clientFor(learner)
     )
@@ -71,7 +71,7 @@ describe('evaluation_concepts', () => {
     expect(error?.code).toBe('42501');
   });
 
-  // All 13 slots are taken, so these rows test the checks without a slot: a grading tier
+  // All 11 slots are taken, and slots 12 and 13 no longer exist (D91): a grading tier
   // needs a slot, a KYC answer reads no fact, a critical concept is an MCQ concept.
   it('refuses rows that break the registry rules', async () => {
     const base = { domain: 'identity', title_th: 'x', title_en: 'x', title_zh: 'x' };
@@ -101,5 +101,15 @@ describe('evaluation_concepts', () => {
       critical: true,
     });
     expect(criticalOffMcq.error?.code).toBe('23514');
+    const slotTooHigh = await svc.from('evaluation_concepts').insert({
+      ...base,
+      key: 'x_slot_12',
+      source: 'DBD_FACT',
+      facts: ['company_name_th'],
+      answer_type: 'name',
+      interview_slot: 12,
+      interview_match: 'normalized',
+    });
+    expect(slotTooHigh.error?.code).toBe('23514');
   });
 });

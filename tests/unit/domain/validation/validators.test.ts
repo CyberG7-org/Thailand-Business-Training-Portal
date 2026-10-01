@@ -227,13 +227,13 @@ describe('validateFacts (spec §5.5)', () => {
           contact_phone: null,
           products_services: null,
           monthly_revenue: null,
+          // A company status is never asked for (D91).
           has_existing_customers: null,
         },
       },
     });
     expect(keys(f)).toEqual([
       'missing:contact_phone:acceptance',
-      'missing:has_existing_customers:version',
       'missing:issued_on:version',
       'missing:juristic_id:acceptance',
       'missing:monthly_revenue:version',
@@ -242,6 +242,29 @@ describe('validateFacts (spec §5.5)', () => {
     expect(f.find((x) => x.field === 'monthly_revenue')!.detail).toMatchObject({
       concepts: ['monthly_revenue'],
     });
+  });
+
+  it('reports a missing source once, not the standard answers worked out from it (D91)', () => {
+    const missing = (interview: Partial<NonNullable<StructuredData['interview']>>) =>
+      keys(run({ structured: { interview: { ...structured.interview!, ...interview } } })).filter(
+        (k) => k.startsWith('missing:'),
+      );
+    // An amount: not transactions per month or the basis of the revenue figure as well.
+    expect(missing({ monthly_revenue: null })).toEqual(['missing:monthly_revenue:version']);
+    // The kind of customers: not the main customers answered from it.
+    expect(missing({ customer_profile: null })).toEqual(['missing:customer_profile:version']);
+    // What the business does: not the purpose built from it.
+    expect(missing({ nature_of_business: null })).toEqual([
+      'missing:nature_of_business:acceptance',
+    ]);
+  });
+
+  it('reports transactions per month when the amounts are there but not in digits', () => {
+    const f = run({
+      structured: { interview: { ...structured.interview!, monthly_revenue: 'สามแสนบาท' } },
+    });
+    expect(keys(f)).toEqual(['missing:monthly_transactions:version']);
+    expect(f[0].detail).toMatchObject({ concepts: ['monthly_transactions'] });
   });
 
   it('weighs extraction confidence on the fields the sheet reads: silent, review, or a person', () => {
@@ -265,15 +288,16 @@ describe('validateFacts (spec §5.5)', () => {
     });
   });
 
-  it('flags a category that needs a person, never blocking', () => {
+  it('flags a business with no category for a person, never blocking', () => {
     const f = run({
       structured: {
         category: {
           ...structured.category!,
-          status: 'needs_review',
+          status: 'unmapped',
           key: null,
-          candidate_key: 'furniture_home',
-          confidence: 0.6,
+          candidate_key: null,
+          confidence: null,
+          error: 'provider',
         },
       },
     });

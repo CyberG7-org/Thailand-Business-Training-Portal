@@ -14,6 +14,7 @@ import {
 } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
+import { withStandardAnswers } from '@/lib/domain/standard-answers';
 import { buildFactSheet, type FactSheet, type RecordColumns } from './fact-sheet';
 
 /** The record columns a snapshot reads beyond the fact sheet's. */
@@ -63,7 +64,10 @@ export function buildTrainingSnapshot(input: {
   address: RegisteredAddress | null;
 }): TrainingSnapshot {
   const business = input.structured.business ?? EMPTY_BUSINESS_PROFILE;
-  const interview = input.structured.interview ?? EMPTY_INTERVIEW_PROFILE;
+  // The earlier answers follow the new ones when blank (D91), as the fact sheet's do.
+  const interview = withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+    address: input.address?.full || input.record.head_office_address,
+  });
   return {
     facts: buildFactSheet({
       record: input.record,
@@ -187,7 +191,10 @@ export function templateRecordFromRecord(
 ): TemplateRecord {
   const structured = readStructuredData(record.structured_data);
   const business = structured.business ?? EMPTY_BUSINESS_PROFILE;
-  const interview = structured.interview ?? EMPTY_INTERVIEW_PROFILE;
+  // The same standard answers the fact sheet reads (D91).
+  const interview = withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+    address: structured.address?.full || record.head_office_address,
+  });
   const directors = (record.directors as Director[] | null) ?? null;
   const mine = myShareholding(business, role?.holder_name ?? null);
   return {

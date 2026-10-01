@@ -86,10 +86,6 @@ export const POLICY_FIELDS = {
     schema: intRange(0, 168),
   },
   appointment_holidays: { control: { kind: 'list' }, schema: isoDateList },
-  business_category_min_confidence_percent: {
-    control: { kind: 'number', min: 50, max: 100, nullable: false },
-    schema: intRange(50, 100),
-  },
   training_auto_accept_confidence_percent: {
     control: { kind: 'number', min: 50, max: 100, nullable: false },
     schema: intRange(50, 100),

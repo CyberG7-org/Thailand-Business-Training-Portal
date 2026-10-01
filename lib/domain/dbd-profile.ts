@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { interviewProfileSchema, type InterviewProfile } from './bank-interview';
-import { categoryAssignmentSchema, type CategoryAssignment } from './business-category';
+import {
+  type CategoryAssignment,
+  categoryAssignmentSchema,
+  settleCategory,
+} from './business-category';
 import { registeredAddressSchema, type RegisteredAddress } from './geo/resolve';
 
 /**
@@ -117,7 +121,7 @@ export function readStructuredData(raw: unknown): StructuredData {
     provenance:
       data.provenance && typeof data.provenance === 'object' ? (data.provenance as Provenance) : {},
     address: address.success ? address.data : null,
-    category: category.success ? category.data : null,
+    category: category.success ? settleCategory(category.data) : null,
   };
 }
 

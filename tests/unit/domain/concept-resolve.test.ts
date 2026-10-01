@@ -71,22 +71,22 @@ function complete(): FactSheet {
 const concept = (key: string) => EVALUATION_CONCEPTS.find((c) => c.key === key)!;
 
 describe('conceptCoverage (spec §7.3, D74)', () => {
-  it('counts a record on its company-level concepts only: 29/29 and 12/12, never 30 or 13', () => {
+  it('counts a record on its company-level concepts only: 29/29 and 10/10, never 30 or 11', () => {
     const c = conceptCoverage(complete(), 'company');
     expect(c.mcq).toEqual({ ready: 29, total: 29 });
-    expect(c.interview).toEqual({ ready: 12, total: 12 });
+    expect(c.interview).toEqual({ ready: 10, total: 10 });
     expect(c.perLearner).toEqual(['learner_shareholding', 'attendee_identity']);
     expect(c.missingFacts).toEqual([]);
   });
 
-  it('counts an assignment 30/30 and 13/13 once the role facts resolve', () => {
+  it('counts an assignment 30/30 and 11/11 once the role facts resolve', () => {
     const c = conceptCoverage(complete(), 'assignment');
     expect(c.mcq).toEqual({ ready: 30, total: 30 });
-    expect(c.interview).toEqual({ ready: 13, total: 13 });
+    expect(c.interview).toEqual({ ready: 11, total: 11 });
     expect(c.perLearner).toEqual([]);
   });
 
-  it('keeps an assignment below 30/30 and 13/13 while a role fact is missing', () => {
+  it('keeps an assignment below 30/30 and 11/11 while a role fact is missing', () => {
     const c = conceptCoverage(
       {
         ...complete(),
@@ -98,7 +98,7 @@ describe('conceptCoverage (spec §7.3, D74)', () => {
       'assignment',
     );
     expect(c.mcq).toEqual({ ready: 29, total: 30 });
-    expect(c.interview).toEqual({ ready: 12, total: 13 });
+    expect(c.interview).toEqual({ ready: 10, total: 11 });
     expect(c.missingFacts).toEqual(['holder_name', 'learner_is_shareholder']);
   });
 
@@ -122,7 +122,7 @@ describe('conceptCoverage (spec §7.3, D74)', () => {
       'products_services',
     ]);
     expect(c.mcq).toEqual({ ready: 28, total: 29 });
-    expect(c.interview).toEqual({ ready: 11, total: 12 });
+    expect(c.interview).toEqual({ ready: 9, total: 10 });
   });
 
   it('needs the address resolved to the subdistrict', () => {
@@ -134,20 +134,38 @@ describe('conceptCoverage (spec §7.3, D74)', () => {
     });
   });
 
-  it('needs the status fact behind an alternate wording', () => {
-    const c = conceptCoverage({ ...complete(), has_existing_customers: null }, 'company');
-    expect(c.missingFacts).toEqual(['has_existing_customers']);
-    expect(c.concepts.filter((x) => x.status === 'missing').map((x) => x.key)).toEqual([
-      'main_clients',
-      'client_origin',
-      'customer_examples',
-      'customer_profile',
-    ]);
+  it('needs no company status fact any more (D91)', () => {
+    const c = conceptCoverage(
+      { ...complete(), has_existing_customers: null, operations_started: null },
+      'company',
+    );
+    expect(c.missingFacts).toEqual([]);
   });
 
-  it('treats a stated "no" as present', () => {
-    const facts = { ...complete(), has_existing_customers: false };
-    expect(resolveConcept(concept('customer_examples'), facts, 'company').status).toBe('resolved');
+  it('lists a missing source once, not the standard answers worked out from it (D91)', () => {
+    // As the fact sheet builds it: no kind of customers, so no main customers either.
+    const c = conceptCoverage(
+      { ...complete(), customer_profile: null, main_clients: null },
+      'company',
+    );
+    expect(c.missingFacts).toEqual(['customer_profile']);
+    // Both concepts still wait.
+    expect(c.concepts.filter((x) => x.status === 'missing').map((x) => x.key)).toEqual([
+      'main_clients',
+      'customer_profile',
+    ]);
+    // Amounts written, but not in digits: the answer worked out from them is what is named.
+    const words = conceptCoverage(
+      { ...complete(), monthly_transactions: null, revenue_basis: null },
+      'company',
+    );
+    expect(words.missingFacts).toEqual(['monthly_transactions']);
+  });
+
+  it('no longer asks for examples of customers', () => {
+    const c = conceptCoverage({ ...complete(), customer_examples: null }, 'company');
+    expect(c.missingFacts).toEqual([]);
+    expect(c.concepts.map((x) => x.key)).not.toContain('customer_examples');
   });
 
   it('needs an amount when the learner holds shares, and none when they do not', () => {

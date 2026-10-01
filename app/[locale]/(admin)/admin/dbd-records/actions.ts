@@ -236,6 +236,9 @@ export async function recheckRecordAction(
   const record = await getDbdRecord(db, id);
   if (!record) return { ok: false, error: 'not-found' };
   try {
+    // "Check again" reads the address and the category again first: an address that did not
+    // resolve is re-read every time, so a better reading reaches the record without a re-save.
+    await refreshDerivedFacts(db, id).catch((e) => console.error('derived facts', id, e));
     const result = await validateRecord(createSupabaseAdminClient(), id, admin.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     if (!result) return { ok: false, error: 'not-found' };

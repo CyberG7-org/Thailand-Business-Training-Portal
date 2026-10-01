@@ -20,9 +20,9 @@ function contextFor(when: AppliesWhen | null): RenderContext {
 }
 
 describe('the starter drafts', () => {
-  it('holds eleven drafts under unique keys, with every recipe of D77 among them', () => {
-    expect(MCQ_STARTER).toHaveLength(11);
-    expect(new Set(MCQ_STARTER.map((s) => s.key)).size).toBe(11);
+  it('holds ten drafts under unique keys, with every recipe of D77 among them', () => {
+    expect(MCQ_STARTER).toHaveLength(10);
+    expect(new Set(MCQ_STARTER.map((s) => s.key)).size).toBe(10);
     const used = new Set(MCQ_STARTER.flatMap((s) => OPTION_KEYS.map((k) => s.optionRecipes[k])));
     expect([...used].sort()).toEqual([...RECIPES].sort());
   });

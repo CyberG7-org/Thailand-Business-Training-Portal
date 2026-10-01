@@ -7,16 +7,18 @@ import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
 import { currentAddress } from '@/lib/db/training-sheet';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { companyStatus } from '@/lib/domain/auto-confirm';
-import {
-  EMPTY_INTERVIEW_PROFILE,
-  INTERVIEW_FIELDS,
-  missingBusinessAnswers,
-} from '@/lib/domain/bank-interview';
+import { EMPTY_INTERVIEW_PROFILE, missingBusinessAnswers } from '@/lib/domain/bank-interview';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { conceptCoverage } from '@/lib/domain/concepts/resolve';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
+import {
+  ASKED_INTERVIEW_FIELDS,
+  STANDARD_ANSWER_FIELDS,
+  withStandardAnswers,
+  type StandardAnswerField,
+} from '@/lib/domain/standard-answers';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { countAssignmentsBehind, listVersions } from '@/lib/db/training-versions';
 import { listOpenExceptions } from '@/lib/db/validation';
@@ -150,9 +152,17 @@ export default async function DbdRecordPage({
     },
     { key: 'accepted', label: t('checks.accepted'), done: confirmed },
   ];
-  const answered = INTERVIEW_FIELDS.filter(
+  // Level 4 asks five questions (D91); the rest are standard answers, shown as the sheet reads
+  // them.
+  const answered = ASKED_INTERVIEW_FIELDS.filter(
     (field) => String(structured.interview?.[field] ?? '').trim() !== '',
   ).length;
+  const filled = withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+    address: address.full || record.head_office_address,
+  });
+  const standardAnswers = Object.fromEntries(
+    STANDARD_ANSWER_FIELDS.map((field) => [field, filled[field]]),
+  ) as Record<StandardAnswerField, string | null>;
   const status = companyStatus(
     record,
     reading ? (reading.status === 'failed' ? 'failed' : 'open') : null,
@@ -211,7 +221,7 @@ export default async function DbdRecordPage({
           exceptions: t('tabs.exceptions'),
         }}
         badges={{
-          interview: { text: `${answered}/${INTERVIEW_FIELDS.length}` },
+          interview: { text: `${answered}/${ASKED_INTERVIEW_FIELDS.length}` },
           documents: { text: String(documents.length) },
           ...(exceptions.length > 0
             ? { exceptions: { text: String(exceptions.length), warn: true } }
@@ -257,6 +267,7 @@ export default async function DbdRecordPage({
             <InterviewForm
               recordId={record.id}
               answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
+              standard={standardAnswers}
             />
           ),
           documents: (

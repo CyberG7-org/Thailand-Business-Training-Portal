@@ -366,7 +366,13 @@
       "sourceDocument": "from {name}",
       "sourcePage": "page {page}",
       "fileHint": "PDF, up to 30 MB per file",
-      "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, quiz, exam and the readiness interview.",
+      "interviewHint": "Only what no document can answer. Everything else the bank asks is filled in below without anyone typing it.",
+      "amountHint": "Write the amount in digits, for example 300,000. Transactions per month are worked out from the two amounts.",
+      "standardAnswers": {
+        "title": "Filled automatically",
+        "hint": "The learner is taught these answers. They come from the DBD, from the answers above, or are the same for every company.",
+        "pending": "Fills in once the answer it is worked out from is written"
+      },
       "interviewFields": {
         "contact_email": "Company email",
         "contact_phone": "Company phone number",
@@ -432,37 +438,12 @@
         "contact": "Company contact",
         "business": "What the business does",
         "bank": "The bank's other questions",
-        "status": "Company status",
         "customers": "Customers and suppliers",
         "money": "Money and transactions",
-        "banking": "The account",
         "legacy": "Earlier answers"
       },
       "team": "Team",
-      "legacyHint": "Written before the new evaluations; kept exactly as written and not used by them.",
-      "interviewFieldsAlt": {
-        "main_clients": "Expected main customers",
-        "client_origin": "Where and how customers will be found",
-        "customer_examples": "Expected target customers",
-        "customer_profile": "What kind of customers are expected",
-        "main_suppliers": "How products will be sourced (no regular suppliers yet)",
-        "business_address": "Planned place of business",
-        "monthly_revenue": "Expected monthly revenue",
-        "revenue_basis": "What the expected revenue is based on",
-        "average_transaction": "Expected amount per transaction",
-        "monthly_transactions": "Expected transactions per month",
-        "transaction_details": "Expected purchase and payment behaviour"
-      },
-      "statusFacts": {
-        "hint": "These decide how some questions are asked (for example about expected rather than existing customers). They are never guessed.",
-        "operations_started": "Has the company started operating?",
-        "has_existing_customers": "Does it already have customers?",
-        "has_completed_transactions": "Has it completed any sales?",
-        "has_regular_suppliers": "Does it have regular suppliers?",
-        "unset": "Not stated yet",
-        "yes": "Yes",
-        "no": "No"
-      },
+      "legacyHint": "Written before the new evaluations and still printed on the bank-interview study card. Left blank, they follow the answers above.",
       "address": {
         "title": "Registered address (as read against Thai geography)",
         "status": {
@@ -479,21 +460,16 @@
         },
         "parts": {
           "house_no": "House no.",
-          "moo": "Moo",
-          "road": "Road",
           "subdistrict": "Subdistrict",
           "district": "District",
-          "province": "Province",
-          "postcode": "Postcode"
+          "province": "Province"
         },
-        "postcodeFromGeography": "The postcode was not printed; it is the subdistrict's.",
         "notStoredYet": "Shown from the printed address; it is stored with the next save."
       },
       "category": {
         "title": "Business category",
         "auto": "chosen automatically ({confidence}% confidence)",
         "manual": "chosen by a person",
-        "needsReview": "Needs a person: the best match is {candidate} ({confidence}% confidence)",
         "unmapped": "No category yet",
         "errors": {
           "no_text": "Write what the business does first",
@@ -812,10 +788,6 @@
         "appointment_holidays": {
           "label": "Bank holidays",
           "help": "The Bank of Thailand's public holidays, one ISO date (YYYY-MM-DD) per line, substitution days included; add next year's list each December"
-        },
-        "business_category_min_confidence_percent": {
-          "label": "Business category: minimum confidence to accept automatically (%)",
-          "help": "At or above this, the mapped category is used without review; below it the suggestion waits for a manager or the Owner."
         },
         "training_auto_accept_confidence_percent": {
           "label": "Training facts: confidence read as certain (%)",
