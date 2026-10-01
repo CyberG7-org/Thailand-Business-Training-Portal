@@ -21,9 +21,9 @@ test('a manager can open one of their learners and suspend them', async ({ page 
   await page.goto('/th/admin/users');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
   await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
-  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]$/);
+  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]{2}$/);
   const learner = await createLearner(page, { password: LEARNER_PASSWORD, company });
-  expect(learner).toMatch(new RegExp(`^${code.toLowerCase()}-[a-z][0-9]$`));
+  expect(learner).toMatch(new RegExp(`^${code.toLowerCase()}-[a-z][0-9]{2}$`));
 
   await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
