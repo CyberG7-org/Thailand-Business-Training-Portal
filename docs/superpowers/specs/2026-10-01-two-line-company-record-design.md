@@ -33,9 +33,9 @@ sells). Everything else is filled without the manager.
 | Why the company needs PromptPay / QR | Owner's wording | Fixed answer |
 | Transactions per month | Monthly revenue ÷ average transaction | Computed |
 | What the revenue figure is based on | Built from the two figures | Computed |
-| Main customers | Removed from the form | Decision 1 |
-| Examples of real customers | Removed from the form | Decision 1 |
-| Main suppliers | Removed from the form | Decision 1 |
+| Main customers | Removed, with its topic | Settled |
+| Examples of real customers | Removed, with its topic | Settled |
+| Main suppliers | Removed, with its topic | Settled |
 | Where and how customers are found | Not typed by the manager | Decision 2 |
 | What kind of customers | Not typed by the manager | Decision 2 |
 | How sales are paid | Not typed by the manager | Decision 2 |
@@ -52,17 +52,25 @@ sells). Everything else is filled without the manager.
 | Why PromptPay / QR | ลูกค้านิยมชำระเงินแบบไม่ใช้เงินสด บริษัทจึงต้องมี PromptPay / QR ไว้รับชำระเงิน | Customers prefer cashless payment, so the company needs PromptPay / QR to receive it | 客户更喜欢无现金支付，因此公司需要 PromptPay / 二维码收款 |
 | First money into the account | เงินค่าหุ้นที่ผู้ถือหุ้นชำระ เพื่อใช้เป็นเงินทุนเริ่มต้นและเงินหมุนเวียนของกิจการ | The share capital paid by the shareholders, as start-up and working capital | 股东缴纳的股本，用作启动资金和流动资金 |
 
-## Decision 1 — the three removed questions
+## Decision 1 — the three removed questions (settled 2026-10-01)
 
-Main customers, examples of real customers and main suppliers are each a topic of the Business
-Knowledge Quiz or the Bank Readiness Interview (quiz questions 14 and 16, interview questions 10
-and 11). Removing the answer leaves the topic with nothing to ask about.
+The Owner removed main customers, examples of real customers and main suppliers because they
+repeat other questions. The topics leave both evaluations with them:
 
-- **A. Drop the topics.** The quiz becomes 28 questions and the interview 11. Pass marks keep
-  their proportion: quiz pass at 25, retest at 22; interview pass at 9. Nothing is invented.
-- **B. Keep the topics**, answered as in decision 2.
+| Evaluation | Removed | What still covers it |
+|---|---|---|
+| Business Knowledge Quiz | Question 14, main customers | Question 15, where and how customers are found |
+| Business Knowledge Quiz | Question 16, main suppliers | Nothing — see below |
+| Bank Readiness Interview | Question 10, main customers | Question 12, what kind of customers |
+| Bank Readiness Interview | Question 11, examples of customers | Question 12, what kind of customers |
 
-Recommended: **A**, because it is what the Owner asked for and no answer has to be made up.
+- The quiz becomes **28 questions**, the interview **11**. None of the three was a critical
+  concept, so the nine critical concepts are unchanged.
+- Pass marks keep their proportion, for the Owner to confirm: quiz pass at 25, retest at 22;
+  interview pass at 9.
+- **Suppliers are no longer covered anywhere.** Customers stay covered in both evaluations, but
+  main suppliers was the only supplier question, and the bank's own list asks where the main
+  clients and suppliers are. A learner would meet that question unprepared.
 
 ## Decision 2 — the five answers only the business knows
 
