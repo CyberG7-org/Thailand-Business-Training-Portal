@@ -6,6 +6,8 @@ import { getPolicy } from '@/lib/config/policy';
 import { myUpcomingAppointment } from '@/lib/db/appointments';
 import { createMyDocumentSignedUrl, getMyCompany, latestSubmittedExam } from '@/lib/db/learner';
 import { loadProgressionFacts } from '@/lib/db/progression';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
+import { pinnedFactsFor } from '@/lib/db/pinning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
@@ -115,11 +117,38 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
   const record = mine?.dbd_records ?? null;
   const documentUrl = record ? await createMyDocumentSignedUrl(user.id, record.id) : null;
-  const directors = (record?.directors as unknown as Director[] | null) ?? [];
-  // What the company does and sells is the manager's answer, not a certificate fact (Level 4).
-  const interview = record
+  // The company as the learner is trained on it: the pinned version (D75), or the live row
+  // while the record has no version yet. What it does and sells is the manager's answer, not a
+  // certificate fact (Level 4).
+  const pinned = mine ? await pinnedFactsFor(createSupabaseAdminClient(), mine) : null;
+  const liveInterview = record
     ? (readStructuredData(record.structured_data).interview ?? EMPTY_INTERVIEW_PROFILE)
     : EMPTY_INTERVIEW_PROFILE;
+  const company = pinned
+    ? {
+        name_th: pinned.snapshot.facts.company_name_th,
+        name_en: pinned.snapshot.facts.company_name_en,
+        juristic_id: pinned.snapshot.facts.juristic_id,
+        registered_capital: pinned.snapshot.facts.registered_capital,
+        head_office_address: pinned.snapshot.extras.head_office_address,
+        directors: pinned.snapshot.facts.directors,
+        issued_on: pinned.snapshot.extras.issued_on,
+        nature_of_business: pinned.snapshot.facts.nature_of_business,
+        products_services: pinned.snapshot.facts.products_services,
+      }
+    : record
+      ? {
+          name_th: record.company_name_th,
+          name_en: record.company_name_en,
+          juristic_id: record.juristic_id,
+          registered_capital: record.registered_capital,
+          head_office_address: record.head_office_address,
+          directors: (record.directors as unknown as Director[] | null) ?? [],
+          issued_on: record.issued_on,
+          nature_of_business: liveInterview.nature_of_business,
+          products_services: liveInterview.products_services,
+        }
+      : null;
 
   return (
     <LearnerShell
@@ -127,7 +156,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       hero={
         <Hero
           kicker={t('hero.kicker')}
-          company={record?.company_name_th ?? null}
+          company={company?.name_th ?? null}
           welcome={welcome}
           line={line}
           lineTestId={mine ? undefined : 'no-company'}
@@ -146,7 +175,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           hint={t('steps.hint')}
           openLabel={ts('open')}
         />
-        {record && (
+        {company && (
           <CompanyCard
             labels={{
               title: t('company.title'),
@@ -160,32 +189,34 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
               productsServices: t('company.productsServices'),
               openCertificate: t('company.openCertificate'),
             }}
-            nameTh={record.company_name_th ?? '—'}
-            nameEn={record.company_name_en}
-            juristicId={record.juristic_id ?? '—'}
+            nameTh={company.name_th ?? '—'}
+            nameEn={company.name_en}
+            juristicId={company.juristic_id ?? '—'}
             registeredCapital={
-              record.registered_capital == null
+              company.registered_capital == null
                 ? '—'
-                : `${Number(record.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`
+                : `${Number(company.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`
             }
             details={[
-              { label: t('company.address'), value: record.head_office_address ?? '—' },
+              { label: t('company.address'), value: company.head_office_address ?? '—' },
               {
                 label: t('company.directors'),
-                value: directors.length ? directors.map((d) => d.name_th).join(', ') : '—',
+                value: company.directors.length
+                  ? company.directors.map((d) => d.name_th).join(', ')
+                  : '—',
               },
               {
                 label: t('company.issuedOn'),
-                value: record.issued_on ? formatDate(record.issued_on, loc) : '—',
+                value: company.issued_on ? formatDate(company.issued_on, loc) : '—',
               },
               {
                 label: t('company.natureOfBusiness'),
-                value: interview.nature_of_business ?? '—',
+                value: company.nature_of_business ?? '—',
                 testId: 'company-nature',
               },
               {
                 label: t('company.productsServices'),
-                value: interview.products_services ?? '—',
+                value: company.products_services ?? '—',
                 testId: 'company-products',
               },
             ]}

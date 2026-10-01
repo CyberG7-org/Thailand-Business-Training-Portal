@@ -9,7 +9,11 @@ import {
   getLatestEligibility,
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { currentAddress } from '@/lib/db/derived-facts';
+import { pinnedFactsFor } from '@/lib/db/pinning';
+import { getActiveVersion } from '@/lib/db/training-versions';
+import { assignmentFacts } from '@/lib/domain/facts/snapshot';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
@@ -21,6 +25,7 @@ import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
 import { AssignmentPanel } from './assignment-panel';
 import { ContactForm } from './contact-form';
 import { RoleForm } from './role-form';
+import { VersionPanel } from './version-panel';
 
 export default async function UserDetailPage({
   params,
@@ -65,26 +70,38 @@ export default async function UserDetailPage({
       ].filter((name, i, all) => name && all.indexOf(name) === i)
     : [];
 
-  // Assignment scope (spec §7.3): the ROLE concepts are checked for this learner. A record saved
-  // before P17a has no stored address yet; as on the record page, its printed address is
-  // resolved on the fly and never written on a read.
+  // Assignment scope (spec §7.3) on the pinned version (D75): the company sheet as frozen, the
+  // learner's role only once confirmed (plan decision 4). A record without a version yet is
+  // read live, as before P17b.
   let coverage: Coverage | null = null;
+  let pinned: Awaited<ReturnType<typeof pinnedFactsFor>> = null;
+  let newest: { id: string; n: number } | null = null;
   if (active) {
-    const structured = readStructuredData(active.dbd_records.structured_data);
-    coverage = conceptCoverage(
-      buildFactSheet({
-        record: active.dbd_records,
-        structured,
-        address: await currentAddress(db, active.dbd_records, structured),
-        role: {
-          holder_name: active.holder_name,
-          position: active.position,
-          responsibilities: active.responsibilities,
-          relationship_to_shareholders: active.relationship_to_shareholders,
-        },
-      }),
-      'assignment',
-    );
+    pinned = await pinnedFactsFor(createSupabaseAdminClient(), active);
+    const activeVersion = await getActiveVersion(db, active.dbd_record_id);
+    newest = activeVersion ? { id: activeVersion.id, n: activeVersion.version_no } : null;
+    if (pinned) {
+      coverage = conceptCoverage(
+        assignmentFacts(pinned.snapshot, pinned.roleConfirmed ? pinned.role : null),
+        'assignment',
+      );
+    } else {
+      const structured = readStructuredData(active.dbd_records.structured_data);
+      coverage = conceptCoverage(
+        buildFactSheet({
+          record: active.dbd_records,
+          structured,
+          address: await currentAddress(db, active.dbd_records, structured),
+          role: {
+            holder_name: active.holder_name,
+            position: active.position,
+            responsibilities: active.responsibilities,
+            relationship_to_shareholders: active.relationship_to_shareholders,
+          },
+        }),
+        'assignment',
+      );
+    }
   }
 
   const t = await getTranslations('admin.users');
@@ -126,6 +143,15 @@ export default async function UserDetailPage({
             relationship_to_shareholders: active.relationship_to_shareholders,
           }}
           people={people}
+        />
+      )}
+      {active && (
+        <VersionPanel
+          userId={user.id}
+          assignmentId={active.id}
+          pinned={pinned ? { n: pinned.version.version_no } : null}
+          newest={newest}
+          roleConfirmedAt={active.role_confirmed_at}
         />
       )}
       {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}

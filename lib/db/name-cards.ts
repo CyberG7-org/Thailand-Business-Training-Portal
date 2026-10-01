@@ -12,6 +12,7 @@ import { normalizeThaiMobile } from '@/lib/domain/phone';
 import type { PdfRenderer } from '@/lib/integrations/pdf/name-card';
 import { createSupabaseAdminClient } from './admin';
 import { getActiveAssignmentForUser } from './assignments';
+import { pinnedFactsFor } from './pinning';
 import type { Database } from './database.types';
 import { examPassedFor } from './exam';
 
@@ -45,6 +46,7 @@ async function sourceFor(
   const admin = createSupabaseAdminClient();
   const assignment = await getActiveAssignmentForUser(admin, userId);
   if (!assignment) throw new NameCardError('No active assignment', 'no_assignment');
+  const pinned = await pinnedFactsFor(admin, assignment);
   const { data: profile } = await admin
     .from('profiles')
     .select('display_name')
@@ -60,15 +62,26 @@ async function sourceFor(
       profile?.display_name?.trim() ||
       directors[0]?.name_th?.trim() ||
       '',
-    source: {
-      company_name_th: r.company_name_th,
-      company_name_en: r.company_name_en,
-      head_office_address: r.head_office_address,
-      juristic_id: r.juristic_id,
-      contact_email: interview?.contact_email ?? null,
-      nature_of_business: interview?.nature_of_business ?? null,
-      products_services: interview?.products_services ?? null,
-    },
+    // The pinned version (D75); the live row only while the record has no version yet.
+    source: pinned
+      ? {
+          company_name_th: pinned.snapshot.facts.company_name_th,
+          company_name_en: pinned.snapshot.facts.company_name_en,
+          head_office_address: pinned.snapshot.extras.head_office_address,
+          juristic_id: pinned.snapshot.facts.juristic_id,
+          contact_email: pinned.snapshot.extras.contact_email,
+          nature_of_business: pinned.snapshot.facts.nature_of_business,
+          products_services: pinned.snapshot.facts.products_services,
+        }
+      : {
+          company_name_th: r.company_name_th,
+          company_name_en: r.company_name_en,
+          head_office_address: r.head_office_address,
+          juristic_id: r.juristic_id,
+          contact_email: interview?.contact_email ?? null,
+          nature_of_business: interview?.nature_of_business ?? null,
+          products_services: interview?.products_services ?? null,
+        },
   };
 }
 

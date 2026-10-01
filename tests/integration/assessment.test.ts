@@ -81,6 +81,9 @@ describe('assessment attempts', () => {
       count: 4,
     });
     expect(attempt.status).toBe('in_progress');
+    // Rendered from a pinned version with the role of that moment (P17b, D75).
+    expect(attempt.training_version_id).not.toBeNull();
+    expect(attempt.role_snapshot).not.toBeNull();
     expect(attempt.question_ids.length).toBeGreaterThan(0);
     expect(attempt.question_ids.length).toBeLessThanOrEqual(4);
 

@@ -16,17 +16,12 @@ import {
   renderTemplateLenient,
   type TemplateRecord,
 } from '@/lib/domain/assessment/template';
-import {
-  EMPTY_INTERVIEW_PROFILE,
-  myShareholding,
-  type LearnerRole,
-} from '@/lib/domain/bank-interview';
-import { EMPTY_BUSINESS_PROFILE, readStructuredData } from '@/lib/domain/dbd-profile';
-import type { Director } from '@/lib/domain/dbd-record';
 import { createSupabaseAdminClient } from './admin';
+import { templateRecordFromSnapshot, type RoleSnapshot } from '@/lib/domain/facts/snapshot';
 import { getActiveAssignmentForUser } from './assignments';
+import { pinnedFactsFor } from './pinning';
+import { getVersion, readSnapshot } from './training-versions';
 import type { Database, Json } from './database.types';
-import type { DbdRecordRow } from './dbd-records';
 
 type Db = SupabaseClient<Database>;
 export type AttemptKind = 'quiz' | 'exam';
@@ -39,6 +34,7 @@ export class AssessmentError extends Error {
     message: string,
     public readonly code:
       | 'no_assignment'
+      | 'no_version'
       | 'no_questions'
       | 'not_found'
       | 'not_in_progress'
@@ -53,53 +49,9 @@ export class AssessmentError extends Error {
 
 type BankQuestion = SelectableQuestion & { text: QuestionText };
 
-export function toTemplateRecord(
-  record: DbdRecordRow,
-  role: LearnerRole | null = null,
-): TemplateRecord {
-  const structured = readStructuredData(record.structured_data);
-  const business = structured.business ?? EMPTY_BUSINESS_PROFILE;
-  const interview = structured.interview ?? EMPTY_INTERVIEW_PROFILE;
-  const directors = (record.directors as unknown as Director[] | null) ?? null;
-  const mine = myShareholding(business, role?.holder_name ?? null);
-  return {
-    company_name_th: record.company_name_th,
-    company_name_en: record.company_name_en,
-    juristic_id: record.juristic_id,
-    certificate_no: record.certificate_no,
-    registered_capital: record.registered_capital,
-    head_office_address: record.head_office_address,
-    registered_on: record.registered_on,
-    issued_on: record.issued_on,
-    directors: (record.directors as unknown as Director[] | null) ?? null,
-    objectives_count: record.objectives_count,
-    signing_authority: record.signing_authority,
-    province: record.province,
-    objectives: business.objectives.length ? business.objectives : null,
-    business_categories: business.business_categories.length ? business.business_categories : null,
-    shareholders: business.shareholders.length ? business.shareholders : null,
-    promoters: business.promoters.length ? business.promoters : null,
-    total_shares: business.share_structure.total_shares,
-    par_value: business.share_structure.par_value,
-    directors_count: directors && directors.length > 0 ? directors.length : null,
-    shareholders_count: business.shareholders.length > 0 ? business.shareholders.length : null,
-    nature_of_business: interview.nature_of_business,
-    products_services: interview.products_services,
-    account_purpose: interview.account_purpose,
-    monthly_volume: interview.monthly_volume,
-    clients_location: interview.clients_location,
-    suppliers_location: interview.suppliers_location,
-    source_of_funds: interview.source_of_funds,
-    business_address: interview.business_address,
-    operations_status: interview.operations_status,
-    my_name: role?.holder_name ?? null,
-    my_position: role?.position ?? null,
-    my_responsibilities: role?.responsibilities ?? null,
-    my_relationship: role?.relationship_to_shareholders ?? null,
-    my_shares: mine.shares,
-    my_share_percent: mine.percent,
-  };
-}
+/** The old templates' record from the live row (moved to the domain in P17b, §11). */
+import { templateRecordFromRecord as toTemplateRecord } from '@/lib/domain/facts/snapshot';
+export { toTemplateRecord };
 
 /** Approved questions with the localization for `language` (service role: correct keys included). */
 export async function loadQuestionBank(
@@ -170,7 +122,10 @@ export async function getOrStartAttempt(args: {
 
   const assignment = await getActiveAssignmentForUser(admin, args.userId);
   if (!assignment) throw new AssessmentError('No active assignment', 'no_assignment');
-  const record = toTemplateRecord(assignment.dbd_records, assignment);
+  // Rendered from the pinned version (D75), never from the live row.
+  const pinned = await pinnedFactsFor(admin, assignment);
+  if (!pinned) throw new AssessmentError('No training version yet', 'no_version');
+  const record = templateRecordFromSnapshot(pinned.snapshot, pinned.role);
 
   const seed = `${args.userId}:${args.kind}:${Date.now()}`;
   const bank = await loadQuestionBank(admin, args.kind, args.language);
@@ -213,6 +168,8 @@ export async function getOrStartAttempt(args: {
       question_ids: rendered.map((r) => r.questionId),
       shuffle_seed: seed,
       passing_mark_snapshot: args.passingMarkPercent ?? null,
+      training_version_id: pinned.version.id,
+      role_snapshot: pinned.role as unknown as Json,
     })
     .select()
     .single();
@@ -244,22 +201,33 @@ export type DisplayedQuestion = {
   explanation: string | null;
 };
 
-/** The learner's company as the templates see it, for an attempt (role from the current assignment). */
+/** The learner's company as the templates see it, for an attempt: its version, or the live row for an attempt from before P17b. */
 async function templateRecordForAttempt(
   admin: Db,
   attempt: AttemptRow,
 ): Promise<TemplateRecord | null> {
-  const [{ data: recordRow }, assignment] = await Promise.all([
-    attempt.dbd_record_id
-      ? admin.from('dbd_records').select('*').eq('id', attempt.dbd_record_id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    getActiveAssignmentForUser(admin, attempt.user_id),
-  ]);
+  const assignment = await getActiveAssignmentForUser(admin, attempt.user_id);
+  const sameRecord =
+    assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null;
+  if (attempt.training_version_id) {
+    const version = await getVersion(admin, attempt.training_version_id);
+    if (version) {
+      // The role as it was when the attempt was rendered (review on #6): a later move re-derives
+      // the assignment's role against another sheet, and this attempt must not follow it.
+      return templateRecordFromSnapshot(
+        readSnapshot(version),
+        (attempt.role_snapshot as RoleSnapshot | null) ?? null,
+      );
+    }
+  }
+  if (!attempt.dbd_record_id) return null;
+  const { data: recordRow } = await admin
+    .from('dbd_records')
+    .select('*')
+    .eq('id', attempt.dbd_record_id)
+    .maybeSingle();
   if (!recordRow) return null;
-  return toTemplateRecord(
-    recordRow,
-    assignment && assignment.dbd_record_id === attempt.dbd_record_id ? assignment : null,
-  );
+  return toTemplateRecord(recordRow, sameRecord);
 }
 
 /**

@@ -14,6 +14,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
    **Thai geography (P17a).** Migration `20261001010000_thai_geography.sql` is about 0.7 MB — the whole country (6 regions, 77 provinces, 930 districts, 7,436 subdistricts) from the pinned `kongvut/thai-province-data` dataset. It runs once and takes a few seconds longer than the others; regenerate it only with `pnpm geo:migration` when the pin changes.
 
+   **Training versions (P17b).** Migration `20261002010000_training_versions.sql` adds `company_training_versions` and the pin columns. Existing assignments get their version on the learner's next visit or the record's next save — no data step.
+
    **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
    ```sql
    select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name

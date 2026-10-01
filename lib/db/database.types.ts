@@ -190,11 +190,13 @@ export type Database = {
           passing_mark_snapshot: number | null
           question_ids: string[]
           result: string | null
+          role_snapshot: Json | null
           score: number | null
           shuffle_seed: string
           started_at: string
           status: string
           submitted_at: string | null
+          training_version_id: string | null
           user_id: string
         }
         Insert: {
@@ -207,11 +209,13 @@ export type Database = {
           passing_mark_snapshot?: number | null
           question_ids: string[]
           result?: string | null
+          role_snapshot?: Json | null
           score?: number | null
           shuffle_seed: string
           started_at?: string
           status?: string
           submitted_at?: string | null
+          training_version_id?: string | null
           user_id: string
         }
         Update: {
@@ -224,11 +228,13 @@ export type Database = {
           passing_mark_snapshot?: number | null
           question_ids?: string[]
           result?: string | null
+          role_snapshot?: Json | null
           score?: number | null
           shuffle_seed?: string
           started_at?: string
           status?: string
           submitted_at?: string | null
+          training_version_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -237,6 +243,13 @@ export type Database = {
             columns: ["dbd_record_id"]
             isOneToOne: false
             referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_attempts_training_version_id_fkey"
+            columns: ["training_version_id"]
+            isOneToOne: false
+            referencedRelation: "company_training_versions"
             referencedColumns: ["id"]
           },
           {
@@ -313,6 +326,78 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      company_training_versions: {
+        Row: {
+          activated_at: string | null
+          company_complete: boolean
+          coverage: Json
+          created_at: string
+          created_by: string | null
+          dbd_record_id: string
+          extras: Json
+          facts: Json
+          facts_hash: string
+          id: string
+          provenance: Json
+          source_updated_at: string
+          status: string
+          superseded_at: string | null
+          updated_at: string
+          version_no: number
+        }
+        Insert: {
+          activated_at?: string | null
+          company_complete?: boolean
+          coverage: Json
+          created_at?: string
+          created_by?: string | null
+          dbd_record_id: string
+          extras?: Json
+          facts: Json
+          facts_hash: string
+          id?: string
+          provenance?: Json
+          source_updated_at: string
+          status?: string
+          superseded_at?: string | null
+          updated_at?: string
+          version_no: number
+        }
+        Update: {
+          activated_at?: string | null
+          company_complete?: boolean
+          coverage?: Json
+          created_at?: string
+          created_by?: string | null
+          dbd_record_id?: string
+          extras?: Json
+          facts?: Json
+          facts_hash?: string
+          id?: string
+          provenance?: Json
+          source_updated_at?: string
+          status?: string
+          superseded_at?: string | null
+          updated_at?: string
+          version_no?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_training_versions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_training_versions_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dbd_chunks: {
         Row: {
@@ -1446,6 +1531,10 @@ export type Database = {
           position: string | null
           relationship_to_shareholders: string | null
           responsibilities: string | null
+          role_confirmed_at: string | null
+          role_confirmed_by: string | null
+          role_snapshot: Json | null
+          training_version_id: string | null
           user_id: string
         }
         Insert: {
@@ -1459,6 +1548,10 @@ export type Database = {
           position?: string | null
           relationship_to_shareholders?: string | null
           responsibilities?: string | null
+          role_confirmed_at?: string | null
+          role_confirmed_by?: string | null
+          role_snapshot?: Json | null
+          training_version_id?: string | null
           user_id: string
         }
         Update: {
@@ -1472,6 +1565,10 @@ export type Database = {
           position?: string | null
           relationship_to_shareholders?: string | null
           responsibilities?: string | null
+          role_confirmed_at?: string | null
+          role_confirmed_by?: string | null
+          role_snapshot?: Json | null
+          training_version_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1487,6 +1584,20 @@ export type Database = {
             columns: ["dbd_record_id"]
             isOneToOne: false
             referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_dbd_assignments_role_confirmed_by_fkey"
+            columns: ["role_confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_dbd_assignments_training_version_id_fkey"
+            columns: ["training_version_id"]
+            isOneToOne: false
+            referencedRelation: "company_training_versions"
             referencedColumns: ["id"]
           },
           {
@@ -1516,6 +1627,21 @@ export type Database = {
       }
     }
     Functions: {
+      activate_training_version: {
+        Args: {
+          p_actor?: string
+          p_at?: string
+          p_complete: boolean
+          p_coverage: Json
+          p_extras: Json
+          p_facts: Json
+          p_hash: string
+          p_provenance: Json
+          p_record_id: string
+          p_source_updated_at: string
+        }
+        Returns: string
+      }
       claim_index_jobs: {
         Args: { p_limit?: number }
         Returns: {
@@ -1584,11 +1710,13 @@ export type Database = {
           passing_mark_snapshot: number | null
           question_ids: string[]
           result: string | null
+          role_snapshot: Json | null
           score: number | null
           shuffle_seed: string
           started_at: string
           status: string
           submitted_at: string | null
+          training_version_id: string | null
           user_id: string
         }
         SetofOptions: {

@@ -17,6 +17,8 @@ import { loadCardEvidence, type Evidence } from '@/lib/db/passages';
 import { getMyStudyProgress, listStudyMaterials, pickLocalization } from '@/lib/db/study';
 import { getActiveAssignmentForUser } from '@/lib/db/assignments';
 import { toTemplateRecord } from '@/lib/db/assessment';
+import { pinnedFactsFor } from '@/lib/db/pinning';
+import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { getTtsProvider } from '@/lib/integrations/tts';
 import { getVectorStore } from '@/lib/integrations/vector';
@@ -103,7 +105,13 @@ export default async function StudyMaterialPage({
     getActiveAssignmentForUser(db, user.id),
   ]);
   // Cards may carry {placeholders}: each learner reads their own company facts (decision D39).
-  const templateRecord = assignment ? toTemplateRecord(assignment.dbd_records, assignment) : null;
+  // The pinned version (D75); the live row only while the record has no version yet.
+  const pinned = assignment ? await pinnedFactsFor(createSupabaseAdminClient(), assignment) : null;
+  const templateRecord = pinned
+    ? templateRecordFromSnapshot(pinned.snapshot, pinned.role)
+    : assignment
+      ? toTemplateRecord(assignment.dbd_records, assignment)
+      : null;
   const body = renderTemplateLenient(localization.body ?? '', templateRecord, loc);
 
   // "From your documents" (spec §8, D44): passages of the learner's OWN record for this card's

@@ -18,7 +18,10 @@ import { stageStatuses, type StageInfo } from '@/lib/domain/progression';
 import { formatDate } from '@/lib/domain/thai-date';
 import { getInterviewProvider, type InterviewProvider } from '@/lib/integrations/interview';
 import { createSupabaseAdminClient } from './admin';
+import type { TemplateRecord } from '@/lib/domain/assessment/template';
+import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { toTemplateRecord } from './assessment';
+import { pinnedFactsFor } from './pinning';
 import { getActiveAssignmentForUser } from './assignments';
 import type { Database, Json } from './database.types';
 import type { DbdRecordRow } from './dbd-records';
@@ -53,6 +56,7 @@ export type InterviewErrorCode =
   | 'not_configured'
   | 'not_found'
   | 'no_assignment'
+  | 'no_version'
   | 'no_facts'
   | 'closed'
   | 'expired'
@@ -71,7 +75,11 @@ export class InterviewError extends Error {
 
 /** Every fact the officer may verify (D39), as Thai display strings; the set the call used. */
 export function interviewFacts(record: DbdRecordRow, role: LearnerRole | null): FactSheet {
-  const t = toTemplateRecord(record, role);
+  return factsFromTemplate(toTemplateRecord(record, role));
+}
+
+/** The same display strings from any template record — a version's or the live row's. */
+export function factsFromTemplate(t: TemplateRecord): FactSheet {
   const text = (v: unknown): string | null =>
     v === null || v === undefined || v === ''
       ? null
@@ -175,7 +183,12 @@ async function factsFor(userId: string) {
   const admin = createSupabaseAdminClient();
   const assignment = await getActiveAssignmentForUser(admin, userId);
   if (!assignment) throw new InterviewError('No active assignment', 'no_assignment');
-  return { assignment, facts: interviewFacts(assignment.dbd_records, assignment) };
+  const pinned = await pinnedFactsFor(admin, assignment);
+  if (!pinned) throw new InterviewError('No training version yet', 'no_version');
+  return {
+    assignment,
+    facts: factsFromTemplate(templateRecordFromSnapshot(pinned.snapshot, pinned.role)),
+  };
 }
 
 function isIdle(session: InterviewSessionRow): boolean {
@@ -416,9 +429,11 @@ export async function endInterview(userId: string, sessionId: string): Promise<v
   const session = await ownSession(userId, sessionId);
   if (session.status !== 'in_progress') return;
   await assertFresh(session);
-  const admin = createSupabaseAdminClient();
-  const assignment = await getActiveAssignmentForUser(admin, userId);
-  const facts = assignment ? interviewFacts(assignment.dbd_records, assignment) : {};
+  // The pinned facts the session was built on (review on #6), or none when nothing is pinned
+  // any more — the narrative then has no facts to lean on, as before.
+  const facts = await factsFor(userId)
+    .then((f) => f.facts)
+    .catch(() => ({}) as FactSheet);
   await close(
     session,
     session.plan as unknown as InterviewPlan,
