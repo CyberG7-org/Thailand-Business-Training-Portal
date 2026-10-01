@@ -41,7 +41,8 @@ test('the admin types a manager code after T-, and a taken one is refused', asyn
   await expect(form.getByTestId('login-id-prefix')).toHaveText('T-');
   // A free code is filled in (D69); ↻ offers another.
   const first = await form.getByTestId('login-suffix').inputValue();
-  expect(first).toMatch(/^[A-Z][0-9]$/);
+  // One letter and one digit while those last; a longer code once all 240 are taken (D69).
+  expect(first).toMatch(/^[A-Z][A-Z0-9]{1,5}$/);
   await form.getByTestId('suggest-login-id').click();
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
 

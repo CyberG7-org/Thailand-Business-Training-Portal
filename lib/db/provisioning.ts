@@ -4,16 +4,21 @@ import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
 import type { LearnerContact } from '@/lib/domain/learner-contact';
 import {
   MANAGER_PREFIX,
-  isValidLoginSuffix,
+  allLearnerSuffixes,
+  isValidSuffixFor,
   learnerPrefix,
+  learnerSuggestionCandidates,
   suggestionCandidates,
+  type LoginIdKind,
 } from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
+import { inChunks } from './chunks';
 import { serverEnv } from './env';
 
 /** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
 export const LOGIN_ID_TAKEN = 'This login ID is already taken — choose another';
 export const LOGIN_SUFFIX_INVALID = 'A login ID takes 2–6 letters or digits';
+export const LEARNER_SUFFIX_INVALID = 'A learner login ID is one letter and two digits, e.g. D42';
 
 export const newAccountSchema = z.object({
   loginId: z
@@ -92,11 +97,17 @@ function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
   return parsed.data;
 }
 
-/** Staff type only the part after the prefix; the prefix is always the server's (D69). */
-function parseSuffix(suffix: string): string {
+/**
+ * Staff type only the part after the prefix; the prefix is always the server's (D69). A
+ * learner's part is one letter and two digits (D83), a manager's 2–6 letters or digits.
+ */
+function parseSuffix(kind: LoginIdKind, suffix: string): string {
   const trimmed = suffix.trim();
-  if (!isValidLoginSuffix(trimmed)) {
-    throw new ProvisioningError(LOGIN_SUFFIX_INVALID, 'invalid-login-id');
+  if (!isValidSuffixFor(kind, trimmed)) {
+    throw new ProvisioningError(
+      kind === 'learner' ? LEARNER_SUFFIX_INVALID : LOGIN_SUFFIX_INVALID,
+      'invalid-login-id',
+    );
   }
   return trimmed.toLowerCase();
 }
@@ -162,6 +173,39 @@ export async function suggestLoginSuffix(
   throw new ProvisioningError('No free login ID to suggest', 'unknown');
 }
 
+/** Learner codes per `.in()` filter in the full check: a code is ~12 characters, not a uuid's 36. */
+const LEARNER_CODE_CHUNK = 300;
+
+/**
+ * A free learner suffix to prefill under a team's prefix (D83): one letter and two digits. A
+ * couple of random batches, each checked in one query, find one on any team with room; a nearly
+ * full team can defeat them, so then every one of the 2,400 codes is checked and a free one
+ * picked, and "none free" means none. Nothing is reserved; the create checks again.
+ */
+export async function suggestLearnerSuffix(
+  prefix: string,
+  candidates: (count: number) => string[] = learnerSuggestionCandidates,
+  random: () => number = Math.random,
+): Promise<string> {
+  for (let batch = 0; batch < 2; batch++) {
+    const offered = candidates(40);
+    const taken = await takenAmong(offered.map((suffix) => prefix + suffix));
+    const free = offered.find((suffix) => !taken.has(prefix + suffix));
+    if (free) return free;
+  }
+  const every = allLearnerSuffixes();
+  const taken = new Set(
+    await inChunks(
+      every.map((suffix) => prefix + suffix),
+      async (chunk) => [...(await takenAmong(chunk))],
+      LEARNER_CODE_CHUNK,
+    ),
+  );
+  const left = every.filter((suffix) => !taken.has(prefix + suffix));
+  if (left.length > 0) return left[Math.floor(random() * left.length)];
+  throw new ProvisioningError('No free login ID to suggest', 'unknown');
+}
+
 /**
  * Refuses a taken code before the auth service is asked, so the reason reads the same way. Two
  * creations racing for one code both pass that check; the loser's refusal comes back from the
@@ -191,7 +235,7 @@ export async function createManagerAccount(
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
   const person = parsePerson(input);
-  const suffix = parseSuffix(input.suffix);
+  const suffix = parseSuffix('manager', input.suffix);
   return createUnderCode(MANAGER_PREFIX + suffix, { ...person, role: 'manager' }, deps);
 }
 
@@ -216,7 +260,7 @@ export async function createLearnerAccount(
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
   const person = parsePerson(input);
-  const suffix = parseSuffix(input.suffix);
+  const suffix = parseSuffix('learner', input.suffix);
   const prefix = await learnerPrefixOf(input.managerId);
   const created = await createUnderCode(prefix + suffix, { ...person, role: 'learner' }, deps);
   // `.select().single()` so a zero-row update is an error rather than a silent success: without

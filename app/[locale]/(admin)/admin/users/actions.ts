@@ -79,7 +79,7 @@ export async function createUserAction(
       contact: contact.data,
     });
   } catch (e) {
-    return fail(await loginIdErrorMessage(locale, e));
+    return fail(await loginIdErrorMessage(locale, e, 'learner'));
   }
   await recordAccountAction(staff.id, 'create', created.id, {
     role: 'learner',

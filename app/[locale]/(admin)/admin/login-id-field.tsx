@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useRef, useState } from 'react';
-import { displayLoginId, isValidLoginSuffix } from '@/lib/domain/login-id';
+import { displayLoginId, isValidSuffixFor } from '@/lib/domain/login-id';
 import {
   checkLoginIdAction,
   suggestLoginIdAction,
@@ -52,7 +52,7 @@ export function LoginIdField({
     if (timer.current) clearTimeout(timer.current);
     const request = ++latest.current;
     if (!value) return setState('idle');
-    if (!isValidLoginSuffix(value)) return setState('invalid');
+    if (!isValidSuffixFor(kind, value)) return setState('invalid');
     setState('checking');
     timer.current = setTimeout(async () => {
       const { state: answer } = await checkLoginIdAction({
@@ -82,7 +82,8 @@ export function LoginIdField({
     checking: t('checking'),
     available: t('available'),
     taken: t('taken'),
-    invalid: t('invalid'),
+    // A learner's code is one letter and two digits (D83); a manager's 2–6 letters or digits.
+    invalid: t(kind === 'learner' ? 'invalidLearner' : 'invalid'),
     'no-team': t('noTeam'),
   };
   const tone =
@@ -108,7 +109,7 @@ export function LoginIdField({
             }}
             required
             disabled={!prefix || busy}
-            maxLength={6}
+            maxLength={kind === 'learner' ? 3 : 6}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
@@ -141,7 +142,7 @@ export function LoginIdField({
       </p>
       {/* 14px, not the 12px of older hints: Thai is never set below 14 (design brief). */}
       <span id={`${id}-hint`} className="block text-sm text-ink-500">
-        {t('hint')}
+        {t(kind === 'learner' ? 'hintLearner' : 'hint')}
       </span>
     </div>
   );
