@@ -1094,6 +1094,19 @@
         "usable": "can be asked",
         "blocked": "cannot be asked",
         "noApproved": "no approved variant"
+      },
+      "where": {
+        "th": "Thai",
+        "en": "English",
+        "zh": "Chinese",
+        "explanation": "Explanation"
+      },
+      "grammar": {
+        "unbalanced": "a brace is opened or closed without its pair",
+        "unknown_token": "unknown placeholder {raw}",
+        "unknown_recipe": "unknown recipe in {raw}",
+        "recipe_not_for_token": "that recipe does not fit this fact: {raw}",
+        "bad_argument": "the recipe’s argument is not valid: {raw}"
       }
     }
   },

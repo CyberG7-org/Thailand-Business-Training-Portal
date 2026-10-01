@@ -93,7 +93,7 @@ export default async function ConceptPage({
         <p className="text-sm text-ink-700">{t('concept.none')}</p>
       ) : (
         <div className="staff-table-wrap">
-          <table className="staff-table">
+          <table className="staff-table min-w-[46rem]">
             <thead>
               <tr>
                 <th>{t('concept.columns.key')}</th>

@@ -1094,6 +1094,19 @@
         "usable": "可以提问",
         "blocked": "不能提问",
         "noApproved": "尚无已批准的版本"
+      },
+      "where": {
+        "th": "泰文",
+        "en": "英文",
+        "zh": "中文",
+        "explanation": "解释"
+      },
+      "grammar": {
+        "unbalanced": "花括号没有成对出现",
+        "unknown_token": "未知的占位符 {raw}",
+        "unknown_recipe": "{raw} 中的配方未知",
+        "recipe_not_for_token": "该配方不适用于此事实：{raw}",
+        "bad_argument": "配方的参数无效：{raw}"
       }
     }
   },

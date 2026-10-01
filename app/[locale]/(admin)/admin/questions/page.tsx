@@ -60,7 +60,7 @@ export default async function QuestionBankPage({
       {startersMissing > 0 && <StarterForm count={startersMissing} />}
 
       <div className="staff-table-wrap">
-        <table className="staff-table">
+        <table className="staff-table min-w-[46rem]">
           <thead>
             <tr>
               <th>{t('columns.order')}</th>
