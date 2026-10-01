@@ -11,10 +11,12 @@ test('a learner sees their company and the interview locked behind the exam, the
   await expect(page.getByTestId('company-name')).toHaveText('บริษัท แดชบอร์ด จำกัด');
   // Default policy: exam pass required before the interview (decision D9, renamed in P16).
   await expect(page.getByTestId('stage-interview-status')).toHaveText('ล็อก');
-  await expect(page.getByTestId('stage-interview')).toContainText('ต้องสอบผ่านก่อน');
+  await expect(page.getByTestId('stage-interview')).toContainText(
+    'ต้องผ่านแบบทดสอบความรู้ธุรกิจก่อน',
+  );
   await expect(page.getByTestId('stage-appointment-status')).toHaveText('ล็อก');
   await expect(page.getByTestId('stage-appointment')).toContainText(
-    'ต้องผ่านการสัมภาษณ์ความพร้อมก่อน',
+    'ต้องผ่านการสัมภาษณ์ความพร้อมกับธนาคารก่อน',
   );
   await expect(page.getByTestId('stage-quiz-status')).toHaveText('พร้อมใช้งาน');
   await expect(page.getByTestId('stage-study-status')).toHaveText('พร้อมใช้งาน');

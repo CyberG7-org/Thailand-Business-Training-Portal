@@ -32,7 +32,7 @@ test('typing an admin-only URL does not get a manager in', async ({ page }) => {
   // Spec §4: a manager reads their own team's interviews, so this door opens.
   await page.goto('/th/admin/interviews');
   await expect(page).toHaveURL(/\/th\/admin\/interviews$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผลสัมภาษณ์ความพร้อม');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('สัมภาษณ์ความพร้อมกับธนาคาร');
   await page.goto('/th/admin/appointments');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('นัดหมายธนาคาร');
 });

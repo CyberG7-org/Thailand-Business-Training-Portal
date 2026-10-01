@@ -8,7 +8,7 @@
   },
   "home": {
     "title": "Thailand Business Training & Bank Verification Portal",
-    "description": "Prepare for your company's bank account verification. Study your own DBD certificate, practise with quizzes, pass the exam, and rehearse the interview with a simulated bank officer."
+    "description": "Prepare for your company's bank account verification. Study your own DBD certificate, pass the Business Knowledge Quiz, and take the Bank Readiness Interview with a simulated bank officer."
   },
   "auth": {
     "title": "Sign in",
@@ -50,11 +50,11 @@
       "kicker": "Bank verification preparation"
     },
     "next": {
-      "study": "Your next step is the study material. Read the cards about your company before the quiz.",
-      "quiz": "Your next step is the evaluation quiz. It shows what to review before the exam.",
-      "exam": "Your next step is the exam. Passing it unlocks the readiness interview.",
-      "nameCard": "Your next step is the name card. Create it before the readiness interview.",
-      "interview": "Your next step is the readiness interview. The officer asks about your company, in Thai.",
+      "study": "Your next step is the study material. Read the cards about your company before the practice quiz.",
+      "quiz": "Your next step is the practice quiz. It shows what to review before the Business Knowledge Quiz.",
+      "exam": "Your next step is the Business Knowledge Quiz. Passing it unlocks the Bank Readiness Interview.",
+      "nameCard": "Your next step is the name card. Create it before the Bank Readiness Interview.",
+      "interview": "Your next step is the Bank Readiness Interview. The officer asks about your company, in Thai.",
       "appointment": "You are ready. Your next step is the bank appointment.",
       "done": "You have completed every step. Well done."
     },
@@ -65,9 +65,9 @@
     "progress": {
       "ring": "{done} of {total} steps done",
       "stepsDone": "steps done",
-      "lastScore": "Last exam score",
+      "lastScore": "Last Business Knowledge Quiz score",
       "passMark": "Needed to pass",
-      "noExam": "No exam yet"
+      "noExam": "Not taken yet"
     },
     "steps": {
       "title": "Your steps",
@@ -79,7 +79,7 @@
     "nav": {
       "users": "Create learner & DBD",
       "questions": "Question bank",
-      "interviews": "Readiness interviews",
+      "interviews": "Bank Readiness Interviews",
       "appointments": "Bank appointments",
       "notifications": "Notifications",
       "settings": "Policy settings",
@@ -137,7 +137,7 @@
         "newer": "Version {n} is newer.",
         "current": "This is the company's current version.",
         "move": "Move to version {n}",
-        "moveHint": "From now on the learner studies and is evaluated on this version. Refused while a quiz, exam or interview is in progress.",
+        "moveHint": "From now on the learner studies and is evaluated on this version. Refused while a practice quiz, a Business Knowledge Quiz or a Bank Readiness Interview is in progress.",
         "roleConfirmed": "Role confirmed on {date}",
         "roleUnconfirmed": "The role is not confirmed: the learner's own concepts do not count until it is.",
         "confirmRole": "Confirm role",
@@ -146,7 +146,7 @@
           "role-confirmed": "Role confirmed."
         },
         "errors": {
-          "evaluation-in-progress": "A quiz, exam or interview is in progress; try again when it is finished.",
+          "evaluation-in-progress": "A practice quiz, a Business Knowledge Quiz or a Bank Readiness Interview is in progress; try again when it is finished.",
           "not-active": "That is not the company's current version.",
           "other-record": "That version belongs to another company.",
           "not-found": "Not found.",
@@ -184,7 +184,7 @@
     },
     "learners": {
       "title": "Learner Record",
-      "intro": "Every learner your team is training: their company, MCQ and Chatbot results, and appointment. To add a learner, go to",
+      "intro": "Every learner your team is training: their company, Business Knowledge Quiz and Bank Readiness Interview results, and appointment. To add a learner, go to",
       "toCreate": "Create learner & DBD",
       "empty": "No learners yet.",
       "backToRecord": "← Learner Record",
@@ -192,8 +192,8 @@
         "loginId": "Login ID",
         "company": "Company name",
         "issuedOn": "DBD issued date",
-        "mcq": "MCQ",
-        "chatbot": "Chatbot",
+        "mcq": "Business Knowledge Quiz",
+        "chatbot": "Bank Readiness Interview",
         "appointment": "Appointment"
       },
       "results": {
@@ -208,19 +208,19 @@
         "result": "Result"
       },
       "mcq": {
-        "title": "MCQ history",
-        "empty": "No MCQ attempts yet.",
+        "title": "Business Knowledge Quiz history",
+        "empty": "No Business Knowledge Quiz attempts yet.",
         "score": "Score",
         "review": "Review",
-        "reviewTitle": "MCQ attempt {no}",
+        "reviewTitle": "Business Knowledge Quiz attempt {no}",
         "reviewHeading": "Questions and answers",
-        "backToHistory": "← MCQ history"
+        "backToHistory": "← Business Knowledge Quiz history"
       },
       "chatbot": {
-        "title": "Chatbot history",
-        "empty": "No Chatbot sessions yet.",
+        "title": "Bank Readiness Interview history",
+        "empty": "No Bank Readiness Interviews yet.",
         "review": "Conversation",
-        "backToHistory": "← Chatbot history"
+        "backToHistory": "← Bank Readiness Interview history"
       }
     },
     "createDbd": {
@@ -366,7 +366,7 @@
       "sourceDocument": "from {name}",
       "sourcePage": "page {page}",
       "fileHint": "PDF, up to 30 MB per file",
-      "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, quiz, exam and the readiness interview.",
+      "interviewHint": "The bank asks these too, but no DBD document answers them. Enter the answers the company prepared; they feed the study cards, the Business Knowledge Quiz and the Bank Readiness Interview.",
       "interviewFields": {
         "contact_email": "Company email",
         "contact_phone": "Company phone number",
@@ -508,10 +508,10 @@
       },
       "coverage": {
         "title": "Evaluation readiness",
-        "introCompany": "Company-level concepts that can already be asked about this company: 29 of the MCQ and 12 of the bank interview. Each learner's own concepts are checked on their page.",
-        "introAssignment": "Everything this learner will be asked: all 30 MCQ concepts and all 13 bank-interview concepts, their own included.",
-        "mcq": "MCQ",
-        "interview": "Bank interview",
+        "introCompany": "Company-level concepts that can already be asked about this company: 29 of the Business Knowledge Quiz and 12 of the Bank Readiness Interview. Each learner's own concepts are checked on their page.",
+        "introAssignment": "Everything this learner will be asked: all 30 Business Knowledge Quiz concepts and all 13 Bank Readiness Interview concepts, their own included.",
+        "mcq": "Business Knowledge Quiz",
+        "interview": "Bank Readiness Interview",
         "count": "{ready} of {total} ready",
         "perLearner": "Checked for each learner: {list}",
         "allReady": "Every concept has what it needs.",
@@ -567,7 +567,7 @@
         "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
         "none": "No version yet — it activates when nothing blocks it (see Exceptions).",
         "active": "Version {n} — active since {date}",
-        "complete": "Complete at company scope: every one of the 29 MCQ and 12 bank-interview concepts resolves.",
+        "complete": "Complete at company scope: every one of the 29 Business Knowledge Quiz and 12 Bank Readiness Interview concepts resolves.",
         "incomplete": "Not complete yet — still missing:",
         "behind": "{count, plural, =0 {Every learner is on this version.} one {# learner is on an older version.} other {# learners are on older versions.}}",
         "history": "History",
@@ -667,8 +667,8 @@
       "key": "Key",
       "kind": "Kind",
       "pools": "Pools",
-      "poolQuiz": "Quiz",
-      "poolExam": "Exam",
+      "poolQuiz": "Practice quiz",
+      "poolExam": "Business Knowledge Quiz",
       "active": "Active",
       "dependencies": "Uses record fields",
       "status": "Status",
@@ -750,36 +750,36 @@
           "help": "Counted from the opening date; blank = never expires"
         },
         "exam_passing_mark_percent": {
-          "label": "Exam passing mark (%)",
+          "label": "Business Knowledge Quiz passing mark (%)",
           "help": "Minimum score as a percentage"
         },
         "quiz_question_count": {
-          "label": "Questions per quiz",
+          "label": "Questions per practice quiz",
           "help": "Per attempt"
         },
         "exam_question_count": {
-          "label": "Questions per exam",
+          "label": "Questions per Business Knowledge Quiz",
           "help": "Per attempt"
         },
         "exam_max_attempts": {
-          "label": "Maximum exam attempts",
+          "label": "Maximum Business Knowledge Quiz attempts",
           "help": "Blank = unlimited"
         },
         "exam_retry_wait_hours": {
-          "label": "Hours to wait before retaking the exam",
+          "label": "Hours to wait before retaking the Business Knowledge Quiz",
           "help": "0 = retake immediately"
         },
         "exam_pass_rule": {
-          "label": "Exam pass rule",
+          "label": "Business Knowledge Quiz pass rule",
           "help": "Which result decides the passed status"
         },
         "require_exam_pass_for_name_card": {
-          "label": "Require exam pass for the name card",
-          "help": "When on, learners must pass the exam before creating a card"
+          "label": "Require a Business Knowledge Quiz pass for the name card",
+          "help": "When on, learners must pass the Business Knowledge Quiz before creating a card"
         },
         "require_exam_pass_for_interview": {
-          "label": "Exam pass required before the readiness interview",
-          "help": "When on, a learner must pass the exam before starting the readiness interview."
+          "label": "Business Knowledge Quiz pass required before the Bank Readiness Interview",
+          "help": "When on, a learner must pass the Business Knowledge Quiz before starting the Bank Readiness Interview."
         },
         "telegram_admin_chat_ids": {
           "label": "Owner Telegram chat ids",
@@ -846,8 +846,8 @@
       "difficultyMedium": "Medium",
       "difficultyHard": "Hard",
       "pools": "Use in",
-      "poolQuiz": "Quiz",
-      "poolExam": "Exam",
+      "poolQuiz": "Practice quiz",
+      "poolExam": "Business Knowledge Quiz",
       "focus": "Focus (optional)",
       "focusHint": "e.g. emphasise what bank officers ask",
       "generate": "Generate questions",
@@ -897,8 +897,8 @@
       "rename": "Rename"
     },
     "interviews": {
-      "title": "Readiness interviews",
-      "intro": "Every interview held by a learner of your team, with its verdict and the officer’s assessment of each answer.",
+      "title": "Bank Readiness Interviews",
+      "intro": "Every Bank Readiness Interview held by a learner of your team, with its verdict and the officer’s assessment of each answer.",
       "empty": "No interviews yet",
       "learner": "Learner",
       "company": "Company",
@@ -967,7 +967,7 @@
     },
     "businessCategories": {
       "title": "Business categories",
-      "intro": "The controlled list the automatic mapping chooses from and the MCQ draws business distractors from. Retire a category by switching it off; keys never change.",
+      "intro": "The controlled list the automatic mapping chooses from and the Business Knowledge Quiz draws business distractors from. Retire a category by switching it off; keys never change.",
       "key": "Key",
       "keyHint": "Lower-case letters, digits and _; permanent once created.",
       "labelTh": "Thai label",
@@ -1175,10 +1175,10 @@
   "stages": {
     "titles": {
       "study": "Study material",
-      "quiz": "Evaluation quiz",
-      "exam": "Exam",
+      "quiz": "Practice quiz",
+      "exam": "Business Knowledge Quiz",
       "nameCard": "Name card",
-      "interview": "Readiness interview",
+      "interview": "Bank Readiness Interview",
       "appointment": "Bank appointment"
     },
     "status": {
@@ -1190,18 +1190,18 @@
     },
     "reasons": {
       "no_assignment": "No company assigned yet",
-      "exam_required": "Pass the exam first",
+      "exam_required": "Pass the Business Knowledge Quiz first",
       "before_available_from": "Not yet available",
       "expired": "Access period has ended",
       "missing_issue_date": "Certificate issue date missing",
-      "interview_required": "Pass the readiness interview first"
+      "interview_required": "Pass the Bank Readiness Interview first"
     },
     "open": "Open",
     "stepOf": "Step {n} of {total}",
     "short": {
       "study": "Study",
-      "quiz": "Quiz",
-      "exam": "Exam",
+      "quiz": "Practice",
+      "exam": "Quiz",
       "nameCard": "Card",
       "interview": "Interview",
       "appointment": "Booking"
@@ -1211,11 +1211,11 @@
     "UNASSIGNED": "Unassigned",
     "PROVISIONED": "Provisioned",
     "LEARNING": "Learning",
-    "EXAM_PENDING": "Exam pending",
-    "EXAM_PASSED": "Exam passed",
+    "EXAM_PENDING": "Business Knowledge Quiz pending",
+    "EXAM_PASSED": "Business Knowledge Quiz passed",
     "WAITING_BANK_ELIGIBILITY": "Waiting for bank eligibility",
     "BANK_ELIGIBLE": "Bank eligible",
-    "INTERVIEW_STARTED": "Interview started",
+    "INTERVIEW_STARTED": "Bank Readiness Interview started",
     "INTERVIEW_READY": "Ready for the bank",
     "APPOINTMENT_BOOKED": "Appointment booked"
   },
@@ -1255,18 +1255,18 @@
     "nextCard": "Card {n}: {title}"
   },
   "quiz": {
-    "title": "Evaluation quiz",
+    "title": "Practice quiz",
     "intro": "Practice questions about your company and the process. You see whether each answer is right immediately, with an explanation, and a full review at the end.",
-    "start": "Start quiz",
-    "resume": "Resume quiz",
+    "start": "Start the practice quiz",
+    "resume": "Resume the practice quiz",
     "history": "Previous attempts",
     "attemptLine": "Attempt {no}: {score} / {max}",
     "progress": "Question {position} of {total}",
     "correct": "Correct!",
     "incorrect": "Incorrect — the correct answer is {key}",
     "saved": "Answer saved",
-    "submit": "Submit quiz",
-    "reviewTitle": "Quiz review",
+    "submit": "Submit the practice quiz",
+    "reviewTitle": "Practice quiz review",
     "scoreLine": "Score: {score} / {max}",
     "errors": {
       "no_assignment": "No company is assigned to you yet.",
@@ -1285,24 +1285,24 @@
     "reviewIncorrect": "Incorrect"
   },
   "exam": {
-    "title": "Exam",
+    "title": "Business Knowledge Quiz",
     "intro": "{count} questions. You will not see whether an answer is right until you submit. Passing mark: {passingMark}%.",
-    "start": "Start exam",
-    "resume": "Resume exam",
+    "start": "Start the Business Knowledge Quiz",
+    "resume": "Resume the Business Knowledge Quiz",
     "history": "Previous attempts",
     "attemptLine": "Attempt {no}: {score} / {max} — {result}",
     "noFeedbackNote": "Answers are saved as you go; results are shown only after you submit.",
-    "submit": "Submit exam",
-    "resultTitle": "Exam result",
+    "submit": "Submit the Business Knowledge Quiz",
+    "resultTitle": "Business Knowledge Quiz result",
     "pass": "Passed",
     "fail": "Not passed",
     "scoreLine": "Score: {score} / {max} (passing mark {passingMark}%)",
     "resultNote": "Questions marked ✗ were answered incorrectly; the green option is the correct answer and the struck-through one is what you chose.",
     "errors": {
       "max_attempts": "You have used all allowed attempts.",
-      "retry_wait": "Please wait before retrying the exam.",
+      "retry_wait": "Please wait before retaking the Business Knowledge Quiz.",
       "no_assignment": "No company is assigned to you yet.",
-      "no_questions": "No exam questions are available for your company yet.",
+      "no_questions": "No Business Knowledge Quiz questions are available for your company yet.",
       "not_found": "This attempt was not found.",
       "not_in_progress": "This attempt is already closed.",
       "already_answered": "This question is already answered.",
@@ -1316,13 +1316,13 @@
       "attempt": "Attempt"
     },
     "reviewHeading": "Your answers",
-    "passedNext": "You passed. The readiness interview is now open.",
+    "passedNext": "You passed. The Bank Readiness Interview is now open.",
     "notPassedNext": "Not passed this time. Review the answers below and try again when you are ready.",
-    "toInterview": "Go to the readiness interview",
-    "retake": "Retake exam"
+    "toInterview": "Go to the Bank Readiness Interview",
+    "retake": "Retake the Business Knowledge Quiz"
   },
   "interview": {
-    "title": "Readiness interview",
+    "title": "Bank Readiness Interview",
     "intro": "An AI bank officer interviews you in Thai, as on the day: questions about your company, checked against the certificate, and a verdict on whether you are ready. Repeat as often as you like.",
     "thaiOnly": "The interview is entirely in Thai.",
     "start": "Start the interview",
@@ -1436,7 +1436,7 @@
     "meta": "Template {version} · {phone}",
     "errors": {
       "no_assignment": "No company is assigned to you yet.",
-      "exam_required": "Pass the exam first to create your name card.",
+      "exam_required": "Pass the Business Knowledge Quiz first to create your name card.",
       "invalid_phone": "Enter a valid Thai mobile number.",
       "missing_fields": "Your company record is missing: {fields}. Ask your administrator to complete it.",
       "not_found": "Name card not found.",

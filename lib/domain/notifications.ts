@@ -25,14 +25,14 @@ export function examResultMessage(p: ExamResultPayload): { subject: string; text
   const resultTh = p.result === 'pass' ? 'ผ่าน' : 'ไม่ผ่าน';
   const resultEn = p.result === 'pass' ? 'PASS' : 'FAIL';
   return {
-    subject: `[Exam ${resultEn}] ${who} — ${p.score}/${p.max_score} (${pct}%)`,
+    subject: `[Business Knowledge Quiz ${resultEn}] ${who} — ${p.score}/${p.max_score} (${pct}%)`,
     text: [
-      `ผลสอบ: ${resultTh} — ${who}`,
+      `ผลแบบทดสอบความรู้ธุรกิจ: ${resultTh} — ${who}`,
       `บริษัท: ${p.company_name_th ?? '-'}`,
       `คะแนน: ${p.score}/${p.max_score} (${pct}%) เกณฑ์ผ่าน ${p.passing_mark_percent}% ครั้งที่ ${p.attempt_no}`,
       `วันที่ส่ง: ${formatDate(p.submitted_on, 'th')}`,
       '',
-      `Exam result: ${resultEn} — ${who}`,
+      `Business Knowledge Quiz result: ${resultEn} — ${who}`,
       `Company: ${p.company_name_th ?? '-'}`,
       `Score: ${p.score}/${p.max_score} (${pct}%), passing mark ${p.passing_mark_percent}%, attempt ${p.attempt_no}`,
       `Submitted: ${formatDate(p.submitted_on, 'en')}`,
