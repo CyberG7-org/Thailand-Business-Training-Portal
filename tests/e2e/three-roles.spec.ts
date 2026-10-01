@@ -23,7 +23,7 @@ test('owner creates a manager, the manager creates a learner, the learner studie
     issuedOn: '13/07/2569',
   });
 
-  // 3. The manager creates a learner: the code follows their own (T-G4 → T-G4-L08), and no team
+  // 3. The manager creates a learner: the code follows their own (T-G4 → T-G4-LA08), and no team
   //    is asked for.
   await page.goto('/th/admin/users');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
@@ -31,9 +31,9 @@ test('owner creates a manager, the manager creates a learner, the learner studie
     password: LEARNER_PASSWORD,
     displayName: 'ผู้เรียนสามระดับ',
     company,
-    suffix: 'L08',
+    suffix: 'LA08',
   });
-  expect(learner).toBe(`${code.toLowerCase()}-l08`);
+  expect(learner).toBe(`${code.toLowerCase()}-la08`);
 
   // 4. The learner signs in and sees their own company.
   await switchTo(page, learner, LEARNER_PASSWORD);

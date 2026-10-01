@@ -41,7 +41,7 @@ describe('learner contact details', () => {
       facebookPage: 'tharavanich',
     });
     const learner = await createLearnerAccount({
-      suffix: 'c01',
+      suffix: 'ca01',
       password: PASSWORD,
       managerId: manager.id,
       contact,

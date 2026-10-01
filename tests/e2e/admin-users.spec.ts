@@ -31,8 +31,8 @@ test('a learner is created inside a team, under a code typed after the team pref
   await expect(page.getByTestId('login-suffix')).toBeDisabled();
   await selectTeam(page, code);
   await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
-  // A free code is filled in: one letter and one digit, like G4.
-  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]{2}$/);
+  // A free code is filled in: two letters and two digits, like DA42 (D84).
+  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z]{2}[0-9]{2}$/);
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
   await expect(page.locator('input[name="displayName"]')).toHaveAttribute('required', '');
 
@@ -41,9 +41,9 @@ test('a learner is created inside a team, under a code typed after the team pref
     displayName: 'E2E Learner',
     company,
     team: code,
-    suffix: 'A12',
+    suffix: 'AB12',
   });
-  expect(learner).toBe(`${code.toLowerCase()}-a12`);
+  expect(learner).toBe(`${code.toLowerCase()}-ab12`);
 
   // The form has no language or role choice, and the prefix is not typed.
   await expect(page.locator('select[name="preferredLanguage"]')).toHaveCount(0);
@@ -68,27 +68,27 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
     juristicId: '0105568233704',
     issuedOn: '13/07/2569',
   });
-  await createLearner(page, { password: LEARNER_PASSWORD, company, team: code, suffix: 'Q07' });
+  await createLearner(page, { password: LEARNER_PASSWORD, company, team: code, suffix: 'QA07' });
 
   await page.goto('/th/admin/users');
   await selectTeam(page, code);
   await fillLoginSuffix(page);
-  // Not case-sensitive: q07 is the Q07 already held.
-  await page.getByTestId('login-suffix').fill('q07');
+  // Not case-sensitive: qa07 is the QA07 already held.
+  await page.getByTestId('login-suffix').fill('qa07');
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'taken');
   await expect(page.getByTestId('login-id-status')).toHaveText(
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
   );
-  await page.getByTestId('login-suffix').fill('Q-7');
+  await page.getByTestId('login-suffix').fill('QA-7');
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
-  // A learner's code is one letter and two digits (D83): the old two-character shape is refused.
-  await page.getByTestId('login-suffix').fill('Q7');
+  // A learner's code is two letters and two digits (D84): D83's one-letter shape is refused.
+  await page.getByTestId('login-suffix').fill('Q07');
   await expect(page.getByTestId('login-id-status')).toHaveText(
-    'ใช้ตัวอักษรภาษาอังกฤษ 1 ตัวตามด้วยตัวเลข 2 ตัว เช่น D42',
+    'ใช้ตัวอักษรภาษาอังกฤษ 2 ตัวตามด้วยตัวเลข 2 ตัว เช่น DA42',
   );
 
   // Sent anyway, the server refuses it in the same words and creates nobody.
-  await page.getByTestId('login-suffix').fill('Q07');
+  await page.getByTestId('login-suffix').fill('QA07');
   await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
   await page.locator('input[name="displayName"]').fill('ผู้เรียนซ้ำ');
   await page.locator('input[name="phone"]').fill('0812345678');
@@ -102,7 +102,7 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
   );
   await page.goto('/th/admin/learners');
-  await expect(page.getByRole('link', { name: `${code}-Q07`, exact: true })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: `${code}-QA07`, exact: true })).toHaveCount(1);
 });
 
 test('the admin must say which team', async ({ page }) => {

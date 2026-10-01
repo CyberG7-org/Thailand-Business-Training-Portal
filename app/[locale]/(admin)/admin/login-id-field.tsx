@@ -82,7 +82,7 @@ export function LoginIdField({
     checking: t('checking'),
     available: t('available'),
     taken: t('taken'),
-    // A learner's code is one letter and two digits (D83); a manager's 2–6 letters or digits.
+    // A learner's code is two letters and two digits (D84); a manager's 2–6 letters or digits.
     invalid: t(kind === 'learner' ? 'invalidLearner' : 'invalid'),
     'no-team': t('noTeam'),
   };
@@ -109,7 +109,7 @@ export function LoginIdField({
             }}
             required
             disabled={!prefix || busy}
-            maxLength={kind === 'learner' ? 3 : 6}
+            maxLength={kind === 'learner' ? 4 : 6}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
