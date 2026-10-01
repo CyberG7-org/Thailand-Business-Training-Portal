@@ -1,6 +1,6 @@
 # A company record that needs two lines from a manager
 
-**Status:** proposal for the Owner, 2026-10-01. Nothing here is built.
+**Status:** superseded on 2026-10-01 by the plan `docs/superpowers/plans/2026-10-01-fewer-manager-questions.md`. The Owner chose to keep only the questions that cannot be removed or avoided: the manager still answers the five that only the business knows (decision 2), and main suppliers stays because nothing else covers suppliers (decision 1), so the counts are 29 and 11, not 28 and 11. Nothing here is built.
 
 ## Why
 
