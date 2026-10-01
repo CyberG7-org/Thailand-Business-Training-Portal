@@ -1,4 +1,5 @@
 import type { FactKey, FactSheet } from '@/lib/domain/facts/fact-sheet';
+import { STANDARD_ANSWER_SOURCES, type StandardAnswerField } from '@/lib/domain/standard-answers';
 import { EVALUATION_CONCEPTS, type ConceptDef } from './registry';
 
 /**
@@ -21,7 +22,11 @@ export type Coverage = {
   /** Company scope: the ROLE concepts left to each learner's assignment (not counted). */
   perLearner: string[];
   concepts: ConceptResolution[];
-  /** Every fact some concept is missing, in registry order, once each. */
+  /**
+   * Every fact some concept is missing, in registry order, once each — as a person can fix it:
+   * a standard answer (D91) whose source is missing too is left out, because the source is
+   * already in the list and nobody types the answer itself.
+   */
   missingFacts: FactKey[];
 };
 
@@ -73,10 +78,14 @@ export function conceptCoverage(
 ): Coverage {
   const resolutions = concepts.map((def) => resolveConcept(def, facts, scope));
   const of = (pick: (d: ConceptDef) => boolean) => resolutions.filter((_, i) => pick(concepts[i]));
-  const missingFacts: FactKey[] = [];
+  const everyMissing: FactKey[] = [];
   for (const r of resolutions) {
-    for (const f of r.missing) if (!missingFacts.includes(f)) missingFacts.push(f);
+    for (const f of r.missing) if (!everyMissing.includes(f)) everyMissing.push(f);
   }
+  const missingFacts = everyMissing.filter((fact) => {
+    const sources = STANDARD_ANSWER_SOURCES[fact as StandardAnswerField];
+    return !sources?.some((s) => everyMissing.includes(s as FactKey));
+  });
   return {
     scope,
     mcq: count(of((d) => d.mcqOrder !== null)),

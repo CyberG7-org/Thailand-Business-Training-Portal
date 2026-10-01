@@ -4,7 +4,6 @@ import { EMPTY_BUSINESS_PROFILE, type StructuredData } from '@/lib/domain/dbd-pr
 import type { Director } from '@/lib/domain/dbd-record';
 import type { FactKey, FactSheet } from '@/lib/domain/facts/fact-sheet';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
-import { STANDARD_ANSWER_SOURCES, type StandardAnswerField } from '@/lib/domain/standard-answers';
 import { isValidJuristicId } from './juristic-id';
 
 export const EXCEPTION_KINDS = [
@@ -240,14 +239,11 @@ export function validateFacts(input: ValidationInput): Finding[] {
     );
   }
 
-  // 8. Every company-level concept resolvable (§7.3), tiered (plan decision 1).
+  // 8. Every company-level concept resolvable (§7.3), tiered (plan decision 1). The list names
+  //    what a person can fix: a standard answer whose source is missing is not in it (D91).
   const coverage = conceptCoverage(facts, 'company');
   for (const fact of coverage.missingFacts) {
     if (fact === 'address' && addressUnresolved) continue; // already a geo_mismatch
-    // A standard answer is worked out from other facts; when one of those is missing, that is
-    // what a person can fix, and it is already in this list (D91).
-    const sources = STANDARD_ANSWER_SOURCES[fact as StandardAnswerField];
-    if (sources?.some((s) => coverage.missingFacts.includes(s as FactKey))) continue;
     const concepts = coverage.concepts.filter((c) => c.missing.includes(fact)).map((c) => c.key);
     push(
       'missing',

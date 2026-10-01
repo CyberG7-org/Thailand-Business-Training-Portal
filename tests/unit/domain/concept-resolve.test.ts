@@ -142,6 +142,26 @@ describe('conceptCoverage (spec §7.3, D74)', () => {
     expect(c.missingFacts).toEqual([]);
   });
 
+  it('lists a missing source once, not the standard answers worked out from it (D91)', () => {
+    // As the fact sheet builds it: no kind of customers, so no main customers either.
+    const c = conceptCoverage(
+      { ...complete(), customer_profile: null, main_clients: null },
+      'company',
+    );
+    expect(c.missingFacts).toEqual(['customer_profile']);
+    // Both concepts still wait.
+    expect(c.concepts.filter((x) => x.status === 'missing').map((x) => x.key)).toEqual([
+      'main_clients',
+      'customer_profile',
+    ]);
+    // Amounts written, but not in digits: the answer worked out from them is what is named.
+    const words = conceptCoverage(
+      { ...complete(), monthly_transactions: null, revenue_basis: null },
+      'company',
+    );
+    expect(words.missingFacts).toEqual(['monthly_transactions']);
+  });
+
   it('no longer asks for examples of customers', () => {
     const c = conceptCoverage({ ...complete(), customer_examples: null }, 'company');
     expect(c.missingFacts).toEqual([]);
