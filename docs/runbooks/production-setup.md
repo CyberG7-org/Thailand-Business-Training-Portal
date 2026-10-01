@@ -16,6 +16,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
    **Training versions (P17b).** Migration `20261002010000_training_versions.sql` adds `company_training_versions` and the pin columns. Existing assignments get their version on the learner's next visit or the record's next save — no data step.
 
+   **T-01 becomes T-A01 (D85).** Migration `20261003000000_manager_code_shape.sql` renames the team created before manager codes became one letter and two digits: `T-01` → `T-A01` and each of its learners `T-01-xxxx` → `T-A01-xxxx` (sign-in email included; passwords stay). The old codes stop working at that moment, so tell those people their new login IDs. It refuses to run if `T-A01` is already held, and does nothing where there is no `T-01`.
+
    **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
    ```sql
    select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name

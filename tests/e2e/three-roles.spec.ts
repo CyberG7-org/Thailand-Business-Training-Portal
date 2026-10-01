@@ -11,7 +11,7 @@ test('owner creates a manager, the manager creates a learner, the learner studie
   // 1. The owner creates a manager.
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'คุณผู้จัดการ', MANAGER_PASSWORD);
-  expect(code).toMatch(/^T-[A-Z0-9]{2,6}$/);
+  expect(code).toMatch(/^T-[A-Z][0-9]{2}$/);
 
   // 2. The manager signs in, and the company they upload is their own.
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
@@ -23,7 +23,7 @@ test('owner creates a manager, the manager creates a learner, the learner studie
     issuedOn: '13/07/2569',
   });
 
-  // 3. The manager creates a learner: the code follows their own (T-G4 → T-G4-LA08), and no team
+  // 3. The manager creates a learner: the code follows their own (T-A12 → T-A12-LA08), and no team
   //    is asked for.
   await page.goto('/th/admin/users');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);

@@ -4,10 +4,10 @@ import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
 import type { LearnerContact } from '@/lib/domain/learner-contact';
 import {
   MANAGER_PREFIX,
-  allLearnerSuffixes,
+  allSuffixes,
   isValidSuffixFor,
   learnerPrefix,
-  learnerSuggestionCandidates,
+  suffixLength,
   suggestionCandidates,
   type LoginIdKind,
 } from '@/lib/domain/login-id';
@@ -17,7 +17,7 @@ import { serverEnv } from './env';
 
 /** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
 export const LOGIN_ID_TAKEN = 'This login ID is already taken — choose another';
-export const LOGIN_SUFFIX_INVALID = 'A login ID takes 2–6 letters or digits';
+export const MANAGER_SUFFIX_INVALID = 'A manager login ID is one letter and two digits, e.g. A12';
 export const LEARNER_SUFFIX_INVALID = 'A learner login ID is two letters and two digits, e.g. DA42';
 
 export const newAccountSchema = z.object({
@@ -99,13 +99,13 @@ function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
 
 /**
  * Staff type only the part after the prefix; the prefix is always the server's (D69). A
- * learner's part is two letters and two digits (D84), a manager's 2–6 letters or digits.
+ * learner's part is two letters and two digits (D84), a manager's one letter and two (D85).
  */
 function parseSuffix(kind: LoginIdKind, suffix: string): string {
   const trimmed = suffix.trim();
   if (!isValidSuffixFor(kind, trimmed)) {
     throw new ProvisioningError(
-      kind === 'learner' ? LEARNER_SUFFIX_INVALID : LOGIN_SUFFIX_INVALID,
+      kind === 'learner' ? LEARNER_SUFFIX_INVALID : MANAGER_SUFFIX_INVALID,
       'invalid-login-id',
     );
   }
@@ -156,30 +156,14 @@ export async function learnerPrefixOf(managerId: string): Promise<string> {
 }
 
 /**
- * A free suffix to prefill under a prefix: a batch of candidates checked in one query, one more
- * character whenever a length has nothing free left in the batch. Nothing is reserved — the
- * check at create is what counts.
+ * Every code held under a prefix with a suffix of this many characters, read a page at a time:
+ * under `t-` that is the managers' codes and none of their learners'. The prefix's own `_` and
+ * `%` are matched literally, though no prefix the portal makes contains either.
  */
-export async function suggestLoginSuffix(
-  prefix: string,
-  candidates: (count: number, length: number) => string[] = suggestionCandidates,
-): Promise<string> {
-  for (let length = 2; length <= 6; length++) {
-    const offered = candidates(30, length);
-    const taken = await takenAmong(offered.map((suffix) => prefix + suffix));
-    const free = offered.find((suffix) => !taken.has(prefix + suffix));
-    if (free) return free;
-  }
-  throw new ProvisioningError('No free login ID to suggest', 'unknown');
-}
-
-/**
- * Every code held under a prefix, read a page at a time. `_` and `%` are matched literally,
- * though no prefix the portal makes contains either.
- */
-async function heldUnder(prefix: string): Promise<Set<string>> {
+async function heldUnder(prefix: string, length: number): Promise<Set<string>> {
   const db = createSupabaseAdminClient();
-  const pattern = `${prefix.toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+  const literal = prefix.toLowerCase().replace(/[\\%_]/g, (c) => `\\${c}`);
+  const pattern = literal + '_'.repeat(length);
   const rows = await allRows((from, to) =>
     db
       .from('profiles')
@@ -194,14 +178,16 @@ async function heldUnder(prefix: string): Promise<Set<string>> {
 }
 
 /**
- * A free learner suffix to prefill under a team's prefix (D84): two letters and two digits. A
- * couple of random batches, each checked in one query, find one on any team with room; a nearly
- * full team can defeat them, so then the codes the team holds are read and a free one of the
- * 57,600 picked, and "none free" means none. Nothing is reserved; the create checks again.
+ * A free suffix to prefill under a prefix: a manager's (one letter and two digits, D85) or a
+ * learner's under their team (two letters and two digits, D84). A couple of random batches, each
+ * checked in one query, find one wherever there is room; a nearly full space can defeat them, so
+ * then the codes held under the prefix are read and a free one picked, and "none free" means
+ * none. Nothing is reserved; the create checks again.
  */
-export async function suggestLearnerSuffix(
+export async function suggestSuffix(
+  kind: LoginIdKind,
   prefix: string,
-  candidates: (count: number) => string[] = learnerSuggestionCandidates,
+  candidates: (count: number) => string[] = (count) => suggestionCandidates(kind, count),
   random: () => number = Math.random,
 ): Promise<string> {
   for (let batch = 0; batch < 2; batch++) {
@@ -210,8 +196,8 @@ export async function suggestLearnerSuffix(
     const free = offered.find((suffix) => !taken.has(prefix + suffix));
     if (free) return free;
   }
-  const held = await heldUnder(prefix);
-  const left = allLearnerSuffixes().filter((suffix) => !held.has(prefix + suffix));
+  const held = await heldUnder(prefix, suffixLength(kind));
+  const left = allSuffixes(kind).filter((suffix) => !held.has(prefix + suffix));
   if (left.length > 0) return left[Math.floor(random() * left.length)];
   throw new ProvisioningError('No free login ID to suggest', 'unknown');
 }

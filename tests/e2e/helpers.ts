@@ -64,7 +64,7 @@ export async function selectTeam(page: Page, code: string) {
 }
 
 /**
- * Creates a manager on the Managers page and returns their code as displayed, e.g. "T-G4": the
+ * Creates a manager on the Managers page and returns their code as displayed, e.g. "T-A12": the
  * suggestion unless `suffix` is given.
  */
 export async function createManager(
@@ -86,7 +86,7 @@ export async function createManager(
 }
 
 /**
- * Creates a learner on the Users page and returns their stored code, e.g. "t-g4-l8": the team's
+ * Creates a learner on the Users page and returns their stored code, e.g. "t-a12-da42": the team's
  * code, a hyphen and the suggestion unless `suffix` is given (D69). `team` is required when the
  * caller is the admin.
  */

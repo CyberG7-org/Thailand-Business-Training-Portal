@@ -16,7 +16,7 @@ export async function loginIdErrorMessage(
   if (e.code === 'duplicate' || e.code === 'invalid-login-id') {
     const t = await getTranslations({ locale, namespace: 'admin.loginIdField' });
     if (e.code === 'duplicate') return t('taken');
-    // A learner's code has its own shape (D84), so its refusal says which.
+    // Each kind of code has its own shape (D84, D85), so the refusal says which.
     return t(kind === 'learner' ? 'invalidLearner' : 'invalid');
   }
   return e.message;

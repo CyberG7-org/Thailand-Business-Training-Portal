@@ -1,6 +1,11 @@
-import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
-import { contactColumns, createLearnerAccount, createManagerAccount } from '@/lib/db/provisioning';
+import {
+  contactColumns,
+  createLearnerAccount,
+  createManagerAccount,
+  suggestSuffix,
+} from '@/lib/db/provisioning';
+import { MANAGER_PREFIX } from '@/lib/domain/login-id';
 import { learnerContactSchema } from '@/lib/domain/learner-contact';
 import {
   adminClient,
@@ -12,7 +17,8 @@ import {
 
 const svc = adminClient();
 const PASSWORD = 'Test-Password-123!';
-const fresh = () => randomUUID().replaceAll('-', '').slice(0, 6);
+/** A free manager suffix: only 2,400 exist (D85), so one is asked for rather than invented. */
+const fresh = () => suggestSuffix('manager', MANAGER_PREFIX);
 
 async function contactOf(id: string) {
   const { data, error } = await svc
@@ -32,7 +38,7 @@ describe('learner contact details', () => {
   });
 
   it('are saved with the learner when they are created', async () => {
-    const manager = await createManagerAccount({ suffix: fresh(), password: PASSWORD });
+    const manager = await createManagerAccount({ suffix: await fresh(), password: PASSWORD });
     created.push(manager.id);
     const contact = learnerContactSchema.parse({
       phone: '081-234-5678',

@@ -1,5 +1,7 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
+import { suggestSuffix } from '@/lib/db/provisioning';
+import { MANAGER_PREFIX } from '@/lib/domain/login-id';
 import {
   INTERNAL_DOMAIN,
   adminClient,
@@ -84,6 +86,80 @@ describe('rename_legacy_login_ids', () => {
     created.push(manager.id);
     const { error } = await (await clientFor(manager)).rpc('rename_legacy_login_ids');
     expect(error).not.toBeNull();
+  });
+});
+
+/**
+ * D85: a team created before the manager shape is renamed whole — T-01 → T-A01 in production —
+ * the manager and every learner under their code, in the profile, the sign-in email and the
+ * metadata together, so each person signs in with the new code at once and not with the old one.
+ */
+describe('rename_team_code', () => {
+  const created: string[] = [];
+  afterAll(async () => {
+    for (const id of created.reverse()) await deleteTestUser(id);
+  });
+
+  /** A team in a shape D85 no longer gives out, and a free code in the new one. */
+  async function oldTeam() {
+    const from = `t-${randomInt(1_000_000, 9_999_999)}`;
+    const manager = await createTestManager({ loginId: from });
+    const learner = await createTestLearnerIn(manager, { loginId: `${from}-af91` });
+    created.push(learner.id, manager.id);
+    const to = MANAGER_PREFIX + (await suggestSuffix('manager', MANAGER_PREFIX));
+    return { from, to, manager, learner };
+  }
+
+  it('renames a team and its learners, and they sign in with the new codes', async () => {
+    const { from, to, manager, learner } = await oldTeam();
+
+    const { data: renamed, error } = await svc.rpc('rename_team_code', { p_from: from, p_to: to });
+    expect(error).toBeNull();
+    expect(renamed).toBe(2);
+
+    expect(await loginIdOf(manager.id)).toBe(to);
+    expect(await loginIdOf(learner.id)).toBe(`${to}-af91`);
+    expect(await signsIn(to, manager.password)).toBe(true);
+    expect(await signsIn(`${to}-af91`, learner.password)).toBe(true);
+    expect(await signsIn(from, manager.password)).toBe(false);
+    expect(await signsIn(`${from}-af91`, learner.password)).toBe(false);
+
+    const { data: auth } = await svc.auth.admin.getUserById(learner.id);
+    expect(auth.user?.email).toBe(`${to}-af91@${INTERNAL_DOMAIN}`);
+    expect(auth.user?.user_metadata.login_id).toBe(`${to}-af91`);
+
+    // Once gone, the old code is not renamed again.
+    const { data: again } = await svc.rpc('rename_team_code', { p_from: from, p_to: to });
+    expect(again).toBe(0);
+  });
+
+  it('refuses a new code that is not one letter and two digits, or that is taken', async () => {
+    const { from, manager } = await oldTeam();
+    const { error: shape } = await svc.rpc('rename_team_code', { p_from: from, p_to: 't-ab12' });
+    expect(shape?.message).toMatch(/one letter and two digits/);
+
+    const holder = await createTestManager({
+      loginId: MANAGER_PREFIX + (await suggestSuffix('manager', MANAGER_PREFIX)),
+    });
+    created.push(holder.id);
+    const { error: taken } = await svc.rpc('rename_team_code', {
+      p_from: from,
+      p_to: holder.loginId,
+    });
+    expect(taken?.message).toMatch(/is taken/);
+    expect(await loginIdOf(manager.id)).toBe(from);
+  });
+
+  it('is the service role’s alone', async () => {
+    const { from, to, manager } = await oldTeam();
+    const { error } = await (
+      await clientFor(manager)
+    ).rpc('rename_team_code', {
+      p_from: from,
+      p_to: to,
+    });
+    expect(error).not.toBeNull();
+    expect(await loginIdOf(manager.id)).toBe(from);
   });
 });
 
