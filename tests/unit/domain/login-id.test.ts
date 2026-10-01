@@ -1,90 +1,47 @@
 import { describe, expect, it } from 'vitest';
 import {
   MANAGER_PREFIX,
-  allLearnerSuffixes,
+  allSuffixes,
   displayLoginId,
-  isValidLoginSuffix,
   isValidSuffixFor,
-  learnerSuggestionCandidates,
   learnerLoginId,
   learnerPrefix,
   managerLoginId,
+  suffixLength,
   suggestionCandidates,
 } from '@/lib/domain/login-id';
 
-/** D69: staff type the part after the prefix; 2–6 letters or digits, any case. */
-describe('isValidLoginSuffix', () => {
-  it('takes 2–6 letters or digits in either case', () => {
-    for (const ok of ['g4', 'G4', 'L8', 'AB12', 'SALES1', '01', 'zz']) {
-      expect(isValidLoginSuffix(ok), ok).toBe(true);
-    }
-  });
-
-  it('refuses anything shorter, longer, or with other characters', () => {
-    for (const bad of ['', 'g', 'abcdefg', 'g-4', 'g 4', 'g.4', 'ก4', 'g4!']) {
-      expect(isValidLoginSuffix(bad), bad).toBe(false);
-    }
-  });
-});
+/** mulberry32: a fixed sequence in 32-bit integer steps, so a failing case can be replayed. */
+function seeded(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
+  };
+}
 
 describe('composing a code', () => {
   it('prefixes a manager with T- and stores it lower-case', () => {
     expect(MANAGER_PREFIX).toBe('t-');
-    expect(managerLoginId('G4')).toBe('t-g4');
-    expect(managerLoginId(' g4 ')).toBe('t-g4');
+    expect(managerLoginId('A12')).toBe('t-a12');
+    expect(managerLoginId(' a12 ')).toBe('t-a12');
   });
 
   it("puts a learner under their manager's whole code", () => {
-    expect(learnerPrefix('t-g4')).toBe('t-g4-');
-    expect(learnerLoginId('t-g4', 'L8')).toBe('t-g4-l8');
-    expect(learnerLoginId('T-G4', ' l8 ')).toBe('t-g4-l8');
-    // A team renamed from the old numbering keeps working the same way.
-    expect(learnerLoginId('t-01', '02')).toBe('t-01-02');
-  });
-});
-
-describe('suggestionCandidates', () => {
-  /** A fixed sequence, so a failing case can be replayed. */
-  function seeded(seed: number): () => number {
-    let s = seed;
-    return () => {
-      s = (s * 1103515245 + 12345) % 2 ** 31;
-      return s / 2 ** 31;
-    };
-  }
-
-  it('offers one letter then one digit, like G4, all distinct and valid', () => {
-    const codes = suggestionCandidates(20, 2, seeded(7));
-    expect(codes).toHaveLength(20);
-    expect(new Set(codes).size).toBe(20);
-    for (const code of codes) {
-      expect(code).toMatch(/^[a-z][0-9]$/);
-      expect(isValidLoginSuffix(code)).toBe(true);
-    }
-  });
-
-  it('never suggests i or o, which read as 1 and 0 when a code is handed over', () => {
-    const codes = suggestionCandidates(200, 3, seeded(11));
-    for (const code of codes) expect(code).not.toMatch(/[io]/);
-  });
-
-  it('grows the length when asked, keeping a letter first', () => {
-    for (const code of suggestionCandidates(30, 3, seeded(3))) {
-      expect(code).toMatch(/^[a-z][a-z0-9]{2}$/);
-    }
-  });
-
-  it('stops at the size of the space rather than looping for ever', () => {
-    // 24 letters × 10 digits is every two-character suggestion there is.
-    expect(suggestionCandidates(500, 2, seeded(5)).length).toBeLessThanOrEqual(240);
+    expect(learnerPrefix('t-a12')).toBe('t-a12-');
+    expect(learnerLoginId('t-a12', 'DA42')).toBe('t-a12-da42');
+    expect(learnerLoginId('T-A12', ' da42 ')).toBe('t-a12-da42');
+    // A team from before D85 keeps working the same way until it is renamed.
+    expect(learnerLoginId('t-01', 'da42')).toBe('t-01-da42');
   });
 });
 
 describe('displayLoginId', () => {
   it('shows a stored code upper-case', () => {
-    expect(displayLoginId('t-g4')).toBe('T-G4');
-    expect(displayLoginId('t-g4-l8')).toBe('T-G4-L8');
-    expect(displayLoginId('t-01-100')).toBe('T-01-100');
+    expect(displayLoginId('t-a12')).toBe('T-A12');
+    expect(displayLoginId('t-a12-da42')).toBe('T-A12-DA42');
   });
 
   it('leaves the admin account readable and survives nothing', () => {
@@ -94,15 +51,42 @@ describe('displayLoginId', () => {
   });
 });
 
-/** D84: a learner's typed part is exactly two letters and two digits; managers keep 2–6. */
-describe('isValidSuffixFor', () => {
-  it('takes two letters then two digits for a learner, in either case', () => {
+/** D85: a manager's typed part is exactly one letter and two digits. */
+describe('isValidSuffixFor a manager', () => {
+  it('takes one letter then two digits, in either case', () => {
+    for (const ok of ['A12', 'a12', 'Z99', 'g04', 'I00']) {
+      expect(isValidSuffixFor('manager', ok), ok).toBe(true);
+    }
+  });
+
+  it("refuses any other shape, D69's 2–6 letters or digits included", () => {
+    for (const bad of [
+      '',
+      'G4',
+      '01',
+      'AB12',
+      'SALES1',
+      'A1',
+      'A123',
+      '123',
+      'AB1',
+      'A-1',
+      'ก12',
+    ]) {
+      expect(isValidSuffixFor('manager', bad), bad).toBe(false);
+    }
+  });
+});
+
+/** D84: a learner's typed part is exactly two letters and two digits. */
+describe('isValidSuffixFor a learner', () => {
+  it('takes two letters then two digits, in either case', () => {
     for (const ok of ['DA42', 'da42', 'Da42', 'AA01', 'zz99', 'IO00']) {
       expect(isValidSuffixFor('learner', ok), ok).toBe(true);
     }
   });
 
-  it('refuses any other shape for a learner', () => {
+  it('refuses any other shape', () => {
     for (const bad of [
       '',
       'D42',
@@ -119,30 +103,28 @@ describe('isValidSuffixFor', () => {
       expect(isValidSuffixFor('learner', bad), bad).toBe(false);
     }
   });
+});
 
-  it('leaves the manager rule as it was', () => {
-    for (const ok of ['G4', 'AB12', 'SALES1', '01']) {
-      expect(isValidSuffixFor('manager', ok), ok).toBe(true);
-    }
-    expect(isValidSuffixFor('manager', 'g')).toBe(false);
+describe('suffixLength', () => {
+  it('is 3 for a manager and 4 for a learner, the field lengths', () => {
+    expect(suffixLength('manager')).toBe(3);
+    expect(suffixLength('learner')).toBe(4);
   });
 });
 
-describe('learnerSuggestionCandidates', () => {
-  // mulberry32: 32-bit integer steps, so it never loses precision the way a float LCG does
-  // (that one falls into a short cycle and could not fill 200 four-character codes).
-  function seeded(seed: number): () => number {
-    let s = seed >>> 0;
-    return () => {
-      s = (s + 0x6d2b79f5) >>> 0;
-      let t = Math.imul(s ^ (s >>> 15), 1 | s);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 2 ** 32;
-    };
-  }
+describe('suggestionCandidates', () => {
+  it('offers a manager one letter and two digits, never I or O, all distinct and valid', () => {
+    const codes = suggestionCandidates('manager', 200, seeded(7));
+    expect(codes).toHaveLength(200);
+    expect(new Set(codes).size).toBe(200);
+    for (const code of codes) {
+      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(isValidSuffixFor('manager', code)).toBe(true);
+    }
+  });
 
-  it('offers two letters and two digits, never I or O, all distinct and valid', () => {
-    const codes = learnerSuggestionCandidates(200, seeded(9));
+  it('offers a learner two letters and two digits, never I or O, all distinct and valid', () => {
+    const codes = suggestionCandidates('learner', 200, seeded(9));
     expect(codes).toHaveLength(200);
     expect(new Set(codes).size).toBe(200);
     for (const code of codes) {
@@ -151,14 +133,29 @@ describe('learnerSuggestionCandidates', () => {
     }
   });
 
-  it('stops at the size of the space: 24 × 24 letters × 100', () => {
-    expect(learnerSuggestionCandidates(60_000, seeded(2)).length).toBeLessThanOrEqual(57_600);
+  it('stops at the size of the space rather than looping for ever', () => {
+    // 24 letters × 100 for managers; 24 × 24 letters × 100 for learners.
+    expect(suggestionCandidates('manager', 5_000, seeded(5)).length).toBeLessThanOrEqual(2_400);
+    expect(suggestionCandidates('learner', 60_000, seeded(2)).length).toBeLessThanOrEqual(57_600);
   });
 });
 
-describe('allLearnerSuffixes', () => {
-  it('lists all 57,600 codes the suggestion can offer, in order, each valid and never I or O', () => {
-    const codes = allLearnerSuffixes();
+describe('allSuffixes', () => {
+  it('lists all 2,400 manager codes the suggestion can offer, in order, never I or O', () => {
+    const codes = allSuffixes('manager');
+    expect(codes).toHaveLength(2_400);
+    expect(new Set(codes).size).toBe(2_400);
+    expect(codes.slice(0, 3)).toEqual(['a00', 'a01', 'a02']);
+    expect(codes[100]).toBe('b00');
+    expect(codes.at(-1)).toBe('z99');
+    for (const code of codes) {
+      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(isValidSuffixFor('manager', code)).toBe(true);
+    }
+  });
+
+  it('lists all 57,600 learner codes the suggestion can offer, in order, never I or O', () => {
+    const codes = allSuffixes('learner');
     expect(codes).toHaveLength(57_600);
     expect(new Set(codes).size).toBe(57_600);
     expect(codes.slice(0, 3)).toEqual(['aa00', 'aa01', 'aa02']);

@@ -19,7 +19,7 @@ test('a learner is created inside a team, under a code typed after the team pref
   const company = `บริษัท ผู้เรียนใหม่ ${Date.now()} จำกัด`;
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'หัวหน้าทีม', MANAGER_PASSWORD);
-  expect(code).toMatch(/^T-[A-Z0-9]{2,6}$/);
+  expect(code).toMatch(/^T-[A-Z][0-9]{2}$/);
   await createConfirmedRecord(page, {
     companyNameTh: company,
     juristicId: '0105568233704',

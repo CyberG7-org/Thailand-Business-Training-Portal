@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useId, useRef, useState } from 'react';
-import { displayLoginId, isValidSuffixFor } from '@/lib/domain/login-id';
+import { displayLoginId, isValidSuffixFor, suffixLength } from '@/lib/domain/login-id';
 import {
   checkLoginIdAction,
   suggestLoginIdAction,
@@ -82,7 +82,7 @@ export function LoginIdField({
     checking: t('checking'),
     available: t('available'),
     taken: t('taken'),
-    // A learner's code is two letters and two digits (D84); a manager's 2–6 letters or digits.
+    // A learner's code is two letters and two digits (D84); a manager's one letter and two (D85).
     invalid: t(kind === 'learner' ? 'invalidLearner' : 'invalid'),
     'no-team': t('noTeam'),
   };
@@ -109,7 +109,7 @@ export function LoginIdField({
             }}
             required
             disabled={!prefix || busy}
-            maxLength={kind === 'learner' ? 4 : 6}
+            maxLength={suffixLength(kind)}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}

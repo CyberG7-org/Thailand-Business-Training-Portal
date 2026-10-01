@@ -39,18 +39,25 @@ test('the admin types a manager code after T-, and a taken one is refused', asyn
   await page.goto('/th/admin/managers');
   const form = page.locator('form:has([data-testid="create-manager"])');
   await expect(form.getByTestId('login-id-prefix')).toHaveText('T-');
-  // A free code is filled in (D69); ↻ offers another.
+  // A free code is filled in (D69): one letter and two digits (D85); ↻ offers another.
   const first = await form.getByTestId('login-suffix').inputValue();
-  // One letter and one digit while those last; a longer code once all 240 are taken (D69).
-  expect(first).toMatch(/^[A-Z][A-Z0-9]{1,5}$/);
+  expect(first).toMatch(/^[A-Z][0-9]{2}$/);
   await form.getByTestId('suggest-login-id').click();
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
+  const offered = await form.getByTestId('login-suffix').inputValue();
+  expect(offered).toMatch(/^[A-Z][0-9]{2}$/);
 
-  // A code of up to six letters or digits, typed in any case, is stored as typed and shown
-  // upper-case.
-  const suffix = `m${Date.now().toString(36).slice(-5)}`;
+  // D69's two-character shape is refused as it is typed, in the manager's words (D85).
+  await form.getByTestId('login-suffix').fill('G4');
+  await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
+  await expect(form.getByTestId('login-id-status')).toHaveText(
+    'ใช้ตัวอักษรภาษาอังกฤษ 1 ตัวตามด้วยตัวเลข 2 ตัว เช่น A12',
+  );
+
+  // A code typed in any case is stored as typed and shown upper-case.
+  const suffix = offered.toLowerCase();
   const code = await createManager(page, 'ผู้จัดการพิมพ์รหัส', MANAGER_PASSWORD, suffix);
-  expect(code).toBe(`T-${suffix.toUpperCase()}`);
+  expect(code).toBe(`T-${offered}`);
 
   await page.goto('/th/admin/managers');
   // Typed before the page hydrates, the input never reaches React; type until it answers.
