@@ -26,6 +26,7 @@ export function RoleForm({
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.role');
+  const tv = useTranslations('admin.users.version');
   const [state, formAction, pending] = useActionState(updateAssignmentRoleAction, initial);
   const inputClass = 'staff-input mt-1';
   return (
@@ -75,7 +76,9 @@ export function RoleForm({
       </label>
       {state.error && (
         <p role="alert" className="text-sm text-bad-600">
-          {state.error}
+          {state.error === 'evaluation-in-progress'
+            ? tv('errors.evaluation-in-progress')
+            : state.error}
         </p>
       )}
       {state.message === 'role-saved' && (

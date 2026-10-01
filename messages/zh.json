@@ -132,6 +132,30 @@
           "website": "请输入网址，例如 example.co.th",
           "facebookPage": "请输入主页名称或 facebook.com 链接"
         }
+      },
+      "version": {
+        "title": "培训版本",
+        "pinned": "当前在版本 {n}",
+        "none": "尚未固定版本——公司信息尚未有版本。",
+        "newer": "版本 {n} 更新。",
+        "current": "这已是公司的当前版本。",
+        "move": "移到版本 {n}",
+        "moveHint": "从现在起，学员将按此版本学习和评估。测验、考试或面谈进行中时无法移动。",
+        "roleConfirmed": "角色已于 {date} 确认",
+        "roleUnconfirmed": "角色尚未确认：确认之前，学员本人的概念不计入。",
+        "confirmRole": "确认角色",
+        "messages": {
+          "moved": "已移到版本 {n}。",
+          "role-confirmed": "角色已确认。"
+        },
+        "errors": {
+          "evaluation-in-progress": "测验、考试或面谈正在进行中，请在结束后重试。",
+          "not-active": "这不是公司的当前版本。",
+          "other-record": "该版本属于另一家公司。",
+          "not-found": "未找到。",
+          "no-version": "公司尚无版本。",
+          "role-missing": "请先填写学员在 DBD 文件中的姓名。"
+        }
       }
     },
     "learners": {
@@ -461,7 +485,22 @@
         "my_shares": "学员持股数",
         "my_share_percent": "学员持股比例"
       },
-      "confirmedAutomatically": "已自动确认：所有信息均已从文件中读取，且四项信息齐全。"
+      "confirmedAutomatically": "已自动确认：所有信息均已从文件中读取，且四项信息齐全。",
+      "versions": {
+        "title": "培训版本",
+        "intro": "学员学习和评估所依据的是这些信息的冻结副本。改变信息的保存会生成新版本；在人员操作之前，没有学员会被移到新版本。",
+        "none": "尚无版本——记录尚未确认。",
+        "active": "版本 {n}——自 {date} 起生效",
+        "complete": "公司层面已完整：选择题 29 个概念和银行面谈 12 个概念全部可解析。",
+        "incomplete": "尚不完整——仍缺少：",
+        "behind": "{count, plural, =0 {所有学员都在此版本。} other {# 名学员仍在旧版本。}}",
+        "history": "历史",
+        "status": {
+          "active": "生效",
+          "superseded": "已替代",
+          "draft": "草稿"
+        }
+      }
     },
     "assignment": {
       "title": "已分配公司",
@@ -895,7 +934,8 @@
       "not_in_progress": "该测验已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
-      "invalid_key": "选项无效。"
+      "invalid_key": "选项无效。",
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
     "answeredOf": "已回答 {answered} / {total} 题",
     "percentDone": "完成 {percent}%",
@@ -926,7 +966,8 @@
       "not_in_progress": "该考试已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
-      "invalid_key": "选项无效。"
+      "invalid_key": "选项无效。",
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
     "meta": {
       "questions": "题数",
@@ -990,7 +1031,8 @@
       "not_found": "找不到面谈。",
       "unknown": "出错了，请重试。",
       "expired": "面谈闲置过久，请重新开始。",
-      "no_facts": "公司记录尚无可核对的信息，请联系你的经理。"
+      "no_facts": "公司记录尚无可核对的信息，请联系你的经理。",
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
     "closeReason": {
       "plan_complete": "所有问题均已问完。",

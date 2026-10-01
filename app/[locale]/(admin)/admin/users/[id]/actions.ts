@@ -8,6 +8,12 @@ import { recordAccountAction } from '@/lib/db/account-audit';
 import { assignDbdRecord, deactivateAssignment, updateAssignmentRole } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
 import {
+  PinError,
+  confirmAssignmentRole,
+  evaluationInProgress,
+  moveAssignmentToVersion,
+} from '@/lib/db/pinning';
+import {
   contactFromForm,
   firstContactProblem,
   learnerContactSchema,
@@ -176,11 +182,73 @@ export async function updateAssignmentRoleAction(
   if (!parsed.success) {
     return { message: null, error: parsed.error.issues[0]?.message ?? 'Invalid' };
   }
+  // A confirmed role is what an evaluation reads (plan decision 4): no edits mid-evaluation.
+  const db = await createSupabaseServerClient();
+  const { data: current } = await db
+    .from('user_dbd_assignments')
+    .select('role_confirmed_at')
+    .eq('id', assignmentId)
+    .maybeSingle();
+  if (current?.role_confirmed_at && (await evaluationInProgress(db, userId))) {
+    return { message: null, error: 'evaluation-in-progress' };
+  }
   try {
-    await updateAssignmentRole(await createSupabaseServerClient(), assignmentId, parsed.data);
+    await updateAssignmentRole(db, assignmentId, parsed.data);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'role-saved', error: null };
   } catch (e) {
     return { message: null, error: errorMessage(e) };
+  }
+}
+
+export type VersionActionState = {
+  message: 'moved' | 'role-confirmed' | null;
+  n: number | null;
+  error: string | null;
+};
+
+function pinErrorKey(e: unknown): string {
+  return e instanceof PinError ? e.code.replace(/_/g, '-') : errorMessage(e);
+}
+
+/** "Move to version n" (D75): under the caller's own client, so the audit names them. */
+export async function moveAssignmentAction(
+  _prev: VersionActionState,
+  formData: FormData,
+): Promise<VersionActionState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const userId = String(formData.get('userId') ?? '');
+  const assignmentId = String(formData.get('assignmentId') ?? '');
+  const versionId = String(formData.get('versionId') ?? '');
+  await requireManageable(locale, userId);
+  try {
+    const moved = await moveAssignmentToVersion(await createSupabaseServerClient(), {
+      assignmentId,
+      versionId,
+    });
+    revalidatePath(`/${locale}/admin/users/${userId}`);
+    return { message: 'moved', n: moved.to, error: null };
+  } catch (e) {
+    return { message: null, n: null, error: pinErrorKey(e) };
+  }
+}
+
+export async function confirmRoleAction(
+  _prev: VersionActionState,
+  formData: FormData,
+): Promise<VersionActionState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const userId = String(formData.get('userId') ?? '');
+  const assignmentId = String(formData.get('assignmentId') ?? '');
+  const staff = await requireManageable(locale, userId);
+  try {
+    await confirmAssignmentRole(await createSupabaseServerClient(), {
+      assignmentId,
+      actorId: staff.id,
+    });
+    revalidatePath(`/${locale}/admin/users/${userId}`);
+    return { message: 'role-confirmed', n: null, error: null };
+  } catch (e) {
+    return { message: null, n: null, error: pinErrorKey(e) };
   }
 }

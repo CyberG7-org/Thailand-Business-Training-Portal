@@ -5,6 +5,7 @@ import { processIndexJobs } from '@/lib/db/dbd-index';
 import { refreshDerivedFacts } from '@/lib/db/derived-facts';
 import { extractAndApply } from '@/lib/db/extraction';
 import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
+import { syncAfterChange } from '@/lib/db/training-versions';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { ExtractionError } from '@/lib/integrations/extraction/types';
 import { sweepPagesFromEnv } from '@/lib/integrations/extraction/transcript-schema';
@@ -52,6 +53,7 @@ export async function GET(request: NextRequest) {
           await refreshDerivedFacts(createSupabaseAdminClient(), recordId).catch((e) =>
             console.error('derived facts', recordId, e),
           );
+          await syncAfterChange(recordId, null);
           return { status: 'done' };
         } catch (e) {
           if (e instanceof ExtractionError && TERMINAL_EXTRACTION.has(e.code)) {
@@ -70,10 +72,14 @@ export async function GET(request: NextRequest) {
           facts: input.facts,
           sweepPages: sweepPagesFromEnv(),
         });
-        if (run.applied.includes('head_office_address')) {
-          await refreshDerivedFacts(createSupabaseAdminClient(), input.recordId).catch((e) =>
-            console.error('derived facts', input.recordId, e),
-          );
+        if (run.applied.length > 0) {
+          if (run.applied.includes('head_office_address')) {
+            await refreshDerivedFacts(createSupabaseAdminClient(), input.recordId).catch((e) =>
+              console.error('derived facts', input.recordId, e),
+            );
+          }
+          // Any filled fact may have changed the sheet (spec §5.6).
+          await syncAfterChange(input.recordId, null);
         }
         return run;
       },

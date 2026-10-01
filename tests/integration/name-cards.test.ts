@@ -1,9 +1,12 @@
+import { getActiveVersion, syncTrainingVersion } from '@/lib/db/training-versions';
+import { moveAssignmentToVersion } from '@/lib/db/pinning';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createMyNameCardUrl,
   generateNameCard,
   getMyLatestNameCard,
   queueNameCardToTelegram,
+  nameCardReadiness,
 } from '@/lib/db/name-cards';
 import { processDueNotifications } from '@/lib/db/notifications';
 import { FakeNotifier } from '@/lib/integrations/notify/fake';
@@ -122,8 +125,24 @@ describe('name cards', () => {
     expect(await createMyNameCardUrl(other.id, card.id)).toBeNull();
   });
 
-  it('refuses when the record lacks a required field', async () => {
+  it('refuses when the pinned sheet lacks a required field — a record change reaches the learner only by a move (D75)', async () => {
+    const moveToNewest = async () => {
+      await syncTrainingVersion(svc, recordId, null);
+      const [{ data: assignment }, active] = await Promise.all([
+        svc
+          .from('user_dbd_assignments')
+          .select('id')
+          .eq('user_id', learner.id)
+          .eq('active', true)
+          .single(),
+        getActiveVersion(svc, recordId),
+      ]);
+      await moveAssignmentToVersion(svc, { assignmentId: assignment!.id, versionId: active!.id });
+    };
     await svc.from('dbd_records').update({ head_office_address: null }).eq('id', recordId);
+    // The live row changed; the learner is still on the version that has the address.
+    expect((await nameCardReadiness(learner.id)).missingFields).toEqual([]);
+    await moveToNewest();
     await expect(
       generateNameCard(learner.id, { phone: '0812345678', ...HOLDER }, fakeRenderer),
     ).rejects.toMatchObject({
@@ -134,6 +153,7 @@ describe('name cards', () => {
       .from('dbd_records')
       .update({ head_office_address: '1 ถนนตัวอย่าง' })
       .eq('id', recordId);
+    await moveToNewest();
   });
 
   it('queues the PDF for Telegram once per destination and the processor sends it as a document', async () => {

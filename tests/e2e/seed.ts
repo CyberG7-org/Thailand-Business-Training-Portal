@@ -307,3 +307,94 @@ export async function seedLocalizedStudyCard(
   }
   return material.id;
 }
+
+/** A learner on a confirmed, complete company (every company-level concept resolvable). */
+export async function seedLearnerWithCompleteCompany(companyNameTh: string): Promise<string> {
+  // Issued after registration (dbd_issue_not_before_registration).
+  return seedLearnerWithCompany(companyNameTh, '2026-08-05', {
+    company_name_en: 'COMPLETE CO., LTD.',
+    registered_on: '2026-04-16',
+    registered_capital: 2_000_000,
+    directors: [{ name_th: 'นางสาวกุลธิดา พลเยี่ยม', name_en: null }],
+    signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',
+    head_office_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+    structured_data: {
+      business: {
+        shareholders: [
+          { name: 'นางสาวกุลธิดา พลเยี่ยม', nationality: 'ไทย', shares: 18000, percent: null },
+          { name: 'นายสมชาย ใจดี', nationality: 'ไทย', shares: 2000, percent: null },
+        ],
+        share_structure: {
+          total_shares: 20000,
+          par_value: 100,
+          paid_up_capital: null,
+          share_type: null,
+        },
+      },
+      interview: {
+        nature_of_business: 'ค้าส่งและค้าปลีกเสื้อผ้า',
+        products_services: 'ชุดเดรส เสื้อ กระโปรงสตรี',
+        business_purpose: 'จำหน่ายเสื้อผ้าสตรีในภาคอีสาน',
+        main_clients: 'ร้านค้าปลีกเสื้อผ้า',
+        client_origin: 'หน้าร้านและออนไลน์',
+        main_suppliers: 'โรงงานตัดเย็บในกรุงเทพฯ',
+        business_address: 'ร้อยเอ็ด',
+        monthly_revenue: '300,000 บาท',
+        revenue_basis: 'ลูกค้า 30 ราย เฉลี่ย 10,000 บาท',
+        average_transaction: '10,000 บาท',
+        monthly_transactions: '30',
+        source_of_funds: 'เงินออมของกรรมการ',
+        first_incoming_funds: 'ทุนจดทะเบียนจากผู้ถือหุ้น',
+        account_purpose: 'รับชำระค่าสินค้า',
+        promptpay_qr_purpose: 'ให้ลูกค้าชำระเงินสะดวก',
+        customer_examples: 'ร้านบุษบา ร้อยเอ็ด',
+        customer_profile: 'ร้านค้าปลีกในประเทศ',
+        transaction_details: 'โอนผ่านบัญชีบริษัท',
+        operations_started: 'yes',
+        has_existing_customers: 'yes',
+        has_completed_transactions: 'yes',
+        has_regular_suppliers: 'yes',
+      },
+    },
+  });
+}
+
+/** An unfinished quiz for the learner, which blocks a version move; returns its id. */
+export async function seedInProgressAttempt(loginId: string): Promise<string> {
+  const admin = svc();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  const { data: assignment } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile!.id)
+    .eq('active', true)
+    .single();
+  const { data, error } = await admin
+    .from('assessment_attempts')
+    .insert({
+      user_id: profile!.id,
+      dbd_record_id: assignment!.dbd_record_id,
+      kind: 'quiz',
+      language: 'th',
+      attempt_no: 1,
+      question_ids: [],
+      shuffle_seed: 'e2e',
+      status: 'in_progress',
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+export async function submitAttempt(attemptId: string): Promise<void> {
+  const { error } = await svc()
+    .from('assessment_attempts')
+    .update({ status: 'submitted', submitted_at: new Date().toISOString() })
+    .eq('id', attemptId);
+  if (error) throw error;
+}

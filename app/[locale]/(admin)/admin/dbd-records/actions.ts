@@ -27,6 +27,7 @@ import {
   setBusinessCategory,
 } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { syncAfterChange } from '@/lib/db/training-versions';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
 import {
@@ -152,12 +153,18 @@ function errorMessage(e: unknown): string {
   return raw;
 }
 
-/** A save has succeeded; a failure to derive must not undo it (the next save derives again). */
+/**
+ * A save has succeeded; a failure to derive must not undo it (the next save derives again). A
+ * confirmed record's sheet may have changed with it (spec §5.6): a new version, never a moved
+ * learner.
+ */
 async function deriveAfterSave(
   db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   id: string,
+  actorId: string,
 ): Promise<void> {
   await refreshDerivedFacts(db, id).catch((e) => console.error('derived facts', id, e));
+  await syncAfterChange(id, actorId);
 }
 
 export async function saveDbdRecordAction(
@@ -196,7 +203,7 @@ export async function saveDbdRecordAction(
         business: business.data,
         interview: formDataToInterview(formData, stored),
       });
-      await deriveAfterSave(db, id);
+      await deriveAfterSave(db, id, admin.id);
       revalidatePath(`/${locale}/admin/dbd-records/${id}`);
       return { ok: true, error: null, fieldErrors: {} };
     }
@@ -208,7 +215,7 @@ export async function saveDbdRecordAction(
       teamOf(admin),
     );
     createdId = row.id;
-    await deriveAfterSave(db, row.id);
+    await deriveAfterSave(db, row.id, admin.id);
   } catch (e) {
     return { ok: false, error: errorMessage(e), fieldErrors: {} };
   }
@@ -233,6 +240,7 @@ export async function confirmDbdRecordAction(
   if (missing.length > 0) return { ok: false, error: `missing:${missing.join(',')}` };
   try {
     await confirmDbdRecord(db, id, admin.id);
+    await syncAfterChange(id, admin.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
@@ -409,7 +417,7 @@ export async function saveInterviewAnswersAction(
 ): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  await requireStaff(locale);
+  const staff = await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) return { ok: false, error: 'not-found' };
@@ -422,7 +430,7 @@ export async function saveInterviewAnswersAction(
       })
       .eq('id', id);
     if (error) throw error;
-    await deriveAfterSave(db, id);
+    await deriveAfterSave(db, id, staff.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
@@ -466,11 +474,12 @@ export async function setBusinessCategoryAction(
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
   const key = String(formData.get('categoryKey') ?? '');
-  await requireStaff(locale);
+  const staff = await requireStaff(locale);
   if (!key) return { ok: false, error: 'choose-category' };
   const db = await createSupabaseServerClient();
   try {
     await setBusinessCategory(db, id, key);
+    await syncAfterChange(id, staff.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
@@ -485,10 +494,11 @@ export async function remapBusinessCategoryAction(
 ): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  await requireStaff(locale);
+  const staff = await requireStaff(locale);
   const db = await createSupabaseServerClient();
   try {
     await remapBusinessCategory(db, id);
+    await syncAfterChange(id, staff.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
