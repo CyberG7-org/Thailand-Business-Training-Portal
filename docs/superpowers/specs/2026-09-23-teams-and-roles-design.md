@@ -69,8 +69,8 @@ join rather than carrying their own copy of it.
 
 | | Format | Examples |
 |---|---|---|
-| Manager | `T-` + one letter and two digits, typed by the owner (D85) | `T-A12`, `T-A01` |
-| Learner | the manager's whole code + `-` + two letters and two digits, typed by staff (D84) | `T-A12-LA08`, `T-A01-DA42` |
+| Manager | `T-` + one letter and two digits, typed by the owner (D85) | `T-A12`, `T-K07` |
+| Learner | the manager's whole code + `-` + two letters and two digits, typed by staff (D84) | `T-A12-LA08`, `T-K07-DA42` |
 | Admin | unchanged | `owner` |
 
 Rules:
