@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { listBusinessCategories } from '@/lib/db/business-categories';
 import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
-import { currentAddress } from '@/lib/db/derived-facts';
+import { currentAddress } from '@/lib/db/training-sheet';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { conceptCoverage } from '@/lib/domain/concepts/resolve';

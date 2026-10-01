@@ -1,19 +1,17 @@
 import 'server-only';
-import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
-import { readStructuredData } from '@/lib/domain/dbd-profile';
+import type { Coverage } from '@/lib/domain/concepts/resolve';
 import type { FactSheet } from '@/lib/domain/facts/fact-sheet';
-import {
-  buildTrainingSnapshot,
-  canonicalJson,
-  type TrainingExtras,
-  type TrainingSnapshot,
-} from '@/lib/domain/facts/snapshot';
+import type { TrainingExtras, TrainingSnapshot } from '@/lib/domain/facts/snapshot';
 import { createSupabaseAdminClient } from './admin';
-import type { Database, Json } from './database.types';
+import type { Database } from './database.types';
 import { getDbdRecord } from './dbd-records';
-import { currentAddress } from './derived-facts';
+import {
+  activationArgs,
+  readTrainingSheet,
+  versionColumns,
+  type VersionColumns,
+} from './training-sheet';
 
 type Db = SupabaseClient<Database>;
 export type TrainingVersionRow = Database['public']['Tables']['company_training_versions']['Row'];
@@ -22,11 +20,6 @@ export type TrainingVersionRow = Database['public']['Tables']['company_training_
 export type VersionCoverage = Pick<Coverage, 'mcq' | 'interview' | 'missingFacts'>;
 
 export type SyncResult = 'not_found' | 'unconfirmed' | 'unchanged' | 'activated' | 'draft';
-
-/** Content identity of a sheet: the facts and the extras, never the provenance. */
-export function snapshotHash(snapshot: TrainingSnapshot): string {
-  return createHash('sha256').update(canonicalJson(snapshot)).digest('hex').slice(0, 32);
-}
 
 /** A stored version's content. Written only by `syncTrainingVersion`, so the shape is trusted. */
 export function readSnapshot(row: Pick<TrainingVersionRow, 'facts' | 'extras'>): TrainingSnapshot {
@@ -112,9 +105,6 @@ export async function countOpenBlockers(
   };
 }
 
-const isComplete = (c: Coverage) =>
-  c.mcq.ready === c.mcq.total && c.interview.ready === c.interview.total;
-
 /**
  * Freezes a confirmed record's current sheet as its active version when the sheet changed
  * (spec §5.6): the previous active version is superseded, an assignment without a version is
@@ -132,51 +122,22 @@ export async function syncTrainingVersion(
   if (!record) return 'not_found';
   if (record.extraction_status !== 'confirmed') return 'unconfirmed';
 
-  const structured = readStructuredData(record.structured_data);
-  const address = await currentAddress(admin, record, structured);
-  const snapshot = buildTrainingSnapshot({ record, structured, address });
-  const hash = snapshotHash(snapshot);
+  const sheet = await readTrainingSheet(admin, record);
   const active = await getActiveVersion(admin, recordId);
-  if (active && active.facts_hash === hash) return 'unchanged';
+  if (active && active.facts_hash === sheet.hash) return 'unchanged';
 
   // A sheet with an open blocking exception waits as the record's draft (spec §5.6); the
   // learners stay on the active version until the last one is resolved.
   const blockers = await countOpenBlockers(admin, recordId);
-  const coverage = conceptCoverage(snapshot.facts, 'company');
   if (blockers.acceptance + blockers.version > 0) {
-    await upsertDraft(admin, recordId, {
-      facts: snapshot.facts as unknown as Json,
-      extras: snapshot.extras as unknown as Json,
-      provenance: (structured.provenance ?? {}) as unknown as Json,
-      coverage: {
-        mcq: coverage.mcq,
-        interview: coverage.interview,
-        missingFacts: coverage.missingFacts,
-      } as unknown as Json,
-      company_complete: isComplete(coverage),
-      facts_hash: hash,
-      source_updated_at: record.updated_at,
-      created_by: actorId,
-    });
+    await upsertDraft(admin, recordId, versionColumns(sheet, record, actorId));
     return 'draft';
   }
   // One serialized step in the database (review on #6): supersede, insert, pin — or nothing.
-  const { data: activeId, error } = await admin.rpc('activate_training_version', {
-    p_record_id: recordId,
-    p_facts: snapshot.facts as unknown as Json,
-    p_extras: snapshot.extras as unknown as Json,
-    p_provenance: (structured.provenance ?? {}) as unknown as Json,
-    p_coverage: {
-      mcq: coverage.mcq,
-      interview: coverage.interview,
-      missingFacts: coverage.missingFacts,
-    } as unknown as Json,
-    p_complete: isComplete(coverage),
-    p_hash: hash,
-    p_source_updated_at: record.updated_at,
-    p_actor: actorId ?? undefined,
-    p_at: now.toISOString(),
-  });
+  const { data: activeId, error } = await admin.rpc(
+    'activate_training_version',
+    activationArgs(sheet, record, actorId, now),
+  );
   if (error) throw error;
   return activeId ? 'activated' : 'unchanged';
 }
@@ -190,20 +151,8 @@ export async function syncAfterChange(recordId: string, actorId: string | null):
   }
 }
 
-type DraftColumns = Pick<
-  Database['public']['Tables']['company_training_versions']['Insert'],
-  | 'facts'
-  | 'extras'
-  | 'provenance'
-  | 'coverage'
-  | 'company_complete'
-  | 'facts_hash'
-  | 'source_updated_at'
-  | 'created_by'
->;
-
 /** The record's one draft: the sheet as it would be activated, kept current for the panels. */
-async function upsertDraft(admin: Db, recordId: string, columns: DraftColumns): Promise<void> {
+async function upsertDraft(admin: Db, recordId: string, columns: VersionColumns): Promise<void> {
   const { data: draft } = await admin
     .from('company_training_versions')
     .select('id')

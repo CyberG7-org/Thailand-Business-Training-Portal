@@ -11,7 +11,7 @@ import {
   type CategoryAssignment,
 } from '@/lib/domain/business-category';
 import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
-import { resolveRegisteredAddress, type RegisteredAddress } from '@/lib/domain/geo/resolve';
+import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
 import { getCategoryMapper } from '@/lib/integrations/category-map';
 import type { CategoryMapper } from '@/lib/integrations/category-map/types';
 import { listBusinessCategories } from './business-categories';
@@ -65,18 +65,6 @@ export async function updateStructuredData(
     if (data && data.length > 0) return 'updated';
   }
   return 'raced';
-}
-
-/**
- * The stored address, or — for a record saved before P17a — the printed address resolved on the
- * fly. Never written on a read: the next save stores it.
- */
-export async function currentAddress(
-  db: Db,
-  record: Pick<DbdRecordRow, 'head_office_address'>,
-  stored: StructuredData,
-): Promise<RegisteredAddress> {
-  return stored.address ?? resolveRegisteredAddress(record.head_office_address, geoLookup(db));
 }
 
 /**

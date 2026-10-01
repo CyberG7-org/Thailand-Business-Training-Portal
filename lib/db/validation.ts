@@ -9,7 +9,7 @@ import { validateFacts } from '@/lib/domain/validation/validators';
 import { createSupabaseAdminClient } from './admin';
 import type { Database, Json } from './database.types';
 import { getDbdRecord, listDbdDocuments } from './dbd-records';
-import { currentAddress } from './derived-facts';
+import { currentAddress } from './training-sheet';
 import { syncTrainingVersion, type SyncResult } from './training-versions';
 
 type Db = SupabaseClient<Database>;

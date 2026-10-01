@@ -8,7 +8,12 @@ import {
 } from '@/lib/domain/facts/snapshot';
 import type { ActiveAssignment, AssignmentRow } from './assignments';
 import type { Database, Json } from './database.types';
-import { getVersion, readSnapshot, type TrainingVersionRow } from './training-versions';
+import {
+  getActiveVersion,
+  getVersion,
+  readSnapshot,
+  type TrainingVersionRow,
+} from './training-versions';
 import { validateRecord } from './validation';
 
 type Db = SupabaseClient<Database>;
@@ -151,12 +156,29 @@ export async function pinnedFactsFor(
   let row: AssignmentRow = assignment;
   if (!row.training_version_id) {
     await validateRecord(admin, assignment.dbd_record_id, null);
-    const { data, error } = await admin
+    const fetched = await admin
       .from('user_dbd_assignments')
       .select('*')
       .eq('id', assignment.id)
       .maybeSingle();
-    if (error) throw error;
+    if (fetched.error) throw fetched.error;
+    let data = fetched.data;
+    if (data && !data.training_version_id) {
+      // The record already has an active version (made before this assignment, or before P17c)
+      // while a newer sheet waits on exceptions: the first pin is still automatic (decision 2).
+      const active = await getActiveVersion(admin, assignment.dbd_record_id);
+      if (active) {
+        const pinned = await admin
+          .from('user_dbd_assignments')
+          .update({ training_version_id: active.id })
+          .eq('id', assignment.id)
+          .is('training_version_id', null)
+          .select('*')
+          .maybeSingle();
+        if (pinned.error) throw pinned.error;
+        data = pinned.data ?? data;
+      }
+    }
     if (!data?.training_version_id) return null;
     row = data;
   }

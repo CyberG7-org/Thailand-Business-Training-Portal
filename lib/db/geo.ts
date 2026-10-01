@@ -1,4 +1,5 @@
-import 'server-only';
+// Not `server-only`: public reference tables read with the caller's own client, and the e2e seed
+// (plain Node) resolves a seeded address through it.
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { GeoLookup } from '@/lib/domain/geo/types';
 import type { Database } from './database.types';

@@ -10,7 +10,7 @@ import {
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
-import { currentAddress } from '@/lib/db/derived-facts';
+import { currentAddress } from '@/lib/db/training-sheet';
 import { pinnedFactsFor } from '@/lib/db/pinning';
 import { getActiveVersion } from '@/lib/db/training-versions';
 import { assignmentFacts } from '@/lib/domain/facts/snapshot';
