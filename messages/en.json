@@ -901,7 +901,7 @@
       "system": "System"
     },
     "roles": {
-      "admin": "Administrator",
+      "admin": "Owner",
       "manager": "Manager"
     },
     "home": {

@@ -31,8 +31,9 @@ export async function StaffShell({ user, children }: { user: CurrentUser; childr
             >
               BT
             </span>
+            {/* Names the viewer's role, as the chip does: "· Owner" or "· Manager". */}
             <span className="font-display text-[17px] leading-[1.4] font-semibold text-brand-900">
-              {t('name')} · Admin
+              {t('name')} · {ta(`roles.${role}`)}
             </span>
           </Link>
           <span className="mr-auto rounded-full bg-brand-100 px-2.5 py-px text-xs font-semibold text-brand-700">

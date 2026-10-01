@@ -901,7 +901,7 @@
       "system": "系统"
     },
     "roles": {
-      "admin": "管理员",
+      "admin": "所有者",
       "manager": "经理"
     },
     "home": {
