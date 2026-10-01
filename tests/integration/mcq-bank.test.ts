@@ -1,5 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { getVariant, listVariants, saveVariant, setVariantStatus } from '@/lib/db/mcq-bank';
+import { MCQ_STARTER } from '@/lib/content/mcq-starter';
+import {
+  getVariant,
+  listVariants,
+  loadStarterVariants,
+  saveVariant,
+  setVariantStatus,
+} from '@/lib/db/mcq-bank';
 import { contextForRecord, listRecordLearners, listVersionedCompanies } from '@/lib/db/mcq-context';
 import { validateRecord } from '@/lib/db/validation';
 import { manualCategory } from '@/lib/domain/business-category';
@@ -251,5 +258,45 @@ describe('the MCQ bank (P17d)', () => {
     } finally {
       await deleteTeam(bare);
     }
+  });
+});
+
+describe('the starter drafts in the bank', () => {
+  let owner: TestUser;
+  let asOwner: Client;
+  const keys = MCQ_STARTER.map((s) => s.key);
+  const clear = () => svc.from('questions').delete().in('question_key', keys);
+
+  beforeAll(async () => {
+    owner = await createTestUser('admin');
+    asOwner = await clientFor(owner);
+    await clear();
+  });
+
+  afterAll(async () => {
+    await clear();
+    await deleteTestUser(owner.id);
+  });
+
+  it('loads every draft once, as drafts, and leaves them alone the second time', async () => {
+    const first = await loadStarterVariants(asOwner, MCQ_STARTER, owner.id);
+    expect(first.created).toEqual(keys);
+    expect(first.skipped).toEqual([]);
+    const loaded = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
+    expect(loaded).toHaveLength(11);
+    expect(loaded.every((v) => v.status === 'draft')).toBe(true);
+    expect(loaded.every((v) => Object.keys(v.texts).length === 3)).toBe(true);
+
+    // The Owner edits one; loading again does not put the starter text back.
+    const capital = loaded.find((v) => v.key === 'mcq-registered-capital-1')!;
+    const prompt = 'ทุนจดทะเบียนตามหนังสือรับรองของ {company_name_th} คือเท่าใด';
+    await saveVariant(
+      asOwner,
+      { ...capital, texts: { th: { ...capital.texts.th!, prompt } } },
+      owner.id,
+    );
+    const second = await loadStarterVariants(asOwner, MCQ_STARTER, owner.id);
+    expect(second).toEqual({ created: [], skipped: keys });
+    expect((await getVariant(asOwner, capital.id))!.texts.th!.prompt).toBe(prompt);
   });
 });
