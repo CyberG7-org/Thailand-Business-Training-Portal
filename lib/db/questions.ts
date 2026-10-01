@@ -11,11 +11,14 @@ export type QuestionWithLocalizations = QuestionRow & {
   question_localizations: QuestionLocalizationRow[];
 };
 
-export async function listQuestions(db: Db): Promise<QuestionWithLocalizations[]> {
-  const { data, error } = await db
-    .from('questions')
-    .select('*, question_localizations(*)')
-    .order('question_key');
+/** `legacyOnly` leaves out the concept variants (P17d): they have their own screens. */
+export async function listQuestions(
+  db: Db,
+  options: { legacyOnly?: boolean } = {},
+): Promise<QuestionWithLocalizations[]> {
+  let query = db.from('questions').select('*, question_localizations(*)');
+  if (options.legacyOnly) query = query.is('concept_key', null);
+  const { data, error } = await query.order('question_key');
   if (error) throw error;
   return data as QuestionWithLocalizations[];
 }
