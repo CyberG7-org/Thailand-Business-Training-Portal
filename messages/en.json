@@ -85,7 +85,8 @@
       "settings": "Policy settings",
       "managers": "Managers",
       "learners": "Learner Record",
-      "businessCategories": "Business categories"
+      "businessCategories": "Business categories",
+      "exceptions": "Exceptions"
     },
     "users": {
       "title": "Create learner & DBD",
@@ -923,6 +924,25 @@
         "invalid": "Check the key and fill every label",
         "failed": "Could not save"
       }
+    },
+    "exceptions": {
+      "title": "Exceptions",
+      "intro": "Every open exception on the companies you look after, the ones blocking acceptance first. Open a company to settle them.",
+      "empty": "Nothing open.",
+      "columns": {
+        "company": "Company",
+        "team": "Team",
+        "kind": "Kind",
+        "field": "Field",
+        "blocks": "Holds back",
+        "since": "Since"
+      },
+      "blocks": {
+        "acceptance": "acceptance",
+        "version": "version",
+        "none": "—"
+      },
+      "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
     }
   },
   "stages": {

@@ -85,7 +85,8 @@
       "settings": "策略设置",
       "managers": "经理",
       "learners": "学员记录",
-      "businessCategories": "业务类别"
+      "businessCategories": "业务类别",
+      "exceptions": "例外"
     },
     "users": {
       "title": "创建学员与DBD",
@@ -923,6 +924,25 @@
         "invalid": "请检查代码并填写所有名称",
         "failed": "无法保存"
       }
+    },
+    "exceptions": {
+      "title": "例外",
+      "intro": "您负责的公司的所有待处理例外，阻止接受的排在前面。打开公司以处理。",
+      "empty": "无待处理项。",
+      "columns": {
+        "company": "公司",
+        "team": "团队",
+        "kind": "类型",
+        "field": "项目",
+        "blocks": "阻止",
+        "since": "自"
+      },
+      "blocks": {
+        "acceptance": "接受",
+        "version": "版本",
+        "none": "—"
+      },
+      "count": "{count, plural, =0 {无待处理例外} other {# 个待处理例外}}"
     }
   },
   "stages": {

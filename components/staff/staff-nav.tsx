@@ -21,7 +21,10 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
     // Study cards are the company's own content, read by its learners; staff no longer edit
     // a shared library of them (D81).
     key: 'content',
-    items: [{ href: '/admin/questions', key: 'questions' }],
+    items: [
+      { href: '/admin/exceptions', key: 'exceptions' },
+      { href: '/admin/questions', key: 'questions' },
+    ],
   },
   {
     key: 'learners',

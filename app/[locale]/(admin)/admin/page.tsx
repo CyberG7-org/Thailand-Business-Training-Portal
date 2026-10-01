@@ -2,12 +2,15 @@ import { getTranslations } from 'next-intl/server';
 import { ChevronIcon } from '@/components/icons';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
+import { createSupabaseServerClient } from '@/lib/db/server';
+import { listExceptionQueue } from '@/lib/db/validation';
 
 /** The doors a manager may open, in order; the admin gets these plus the admin-only ones. */
 const STAFF_LINKS = [
   // "Create learner & DBD" holds the companies list too (D80).
   ['/admin/users', 'users'],
   ['/admin/learners', 'learners'],
+  ['/admin/exceptions', 'exceptions'],
   ['/admin/questions', 'questions'],
   ['/admin/interviews', 'interviews'],
   ['/admin/appointments', 'appointments'],
@@ -26,6 +29,8 @@ export default async function AdminHome({ params }: { params: Promise<{ locale: 
   const user = await requireStaff(locale);
   const t = await getTranslations('admin');
   const links = user.role === 'admin' ? [...ADMIN_LINKS, ...STAFF_LINKS] : STAFF_LINKS;
+  // What waits for this person (P17c): the queue is RLS-scoped, so the count is theirs.
+  const openExceptions = (await listExceptionQueue(await createSupabaseServerClient())).length;
   return (
     <section className="grid gap-5">
       <div>
@@ -39,8 +44,13 @@ export default async function AdminHome({ params }: { params: Promise<{ locale: 
               href={href}
               className="staff-card flex min-h-[84px] items-center justify-between gap-3 transition-colors hover:bg-brand-50"
             >
-              <span className="text-base font-semibold text-brand-900">
+              <span className="flex items-center gap-2 text-base font-semibold text-brand-900">
                 {t(`nav.${key}` as 'nav.users')}
+                {key === 'exceptions' && openExceptions > 0 && (
+                  <span className="staff-tag" data-testid="exceptions-badge">
+                    {openExceptions}
+                  </span>
+                )}
               </span>
               <ChevronIcon className="shrink-0 text-ink-500" />
             </Link>
