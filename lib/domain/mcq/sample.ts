@@ -1,3 +1,4 @@
+import { FIXED_ANSWERS } from '@/lib/domain/standard-answers';
 import { withCheckDigit } from '@/lib/domain/validation/juristic-id';
 import type { RenderContext } from './context';
 
@@ -41,22 +42,23 @@ export const SAMPLE_CONTEXT: RenderContext = {
     total_shares: 20_000,
     nature_of_business: 'ค้าส่งและค้าปลีกเสื้อผ้าสตรี',
     products_services: 'ชุดเดรส เสื้อ และกระโปรงสตรี',
-    business_purpose: 'จำหน่ายเสื้อผ้าสตรีในภาคอีสาน',
-    main_clients: 'ร้านค้าปลีกเสื้อผ้าในจังหวัดร้อยเอ็ดและใกล้เคียง',
+    business_purpose: 'จัดตั้งขึ้นเพื่อประกอบธุรกิจ ค้าส่งและค้าปลีกเสื้อผ้าสตรี',
+    main_clients: 'ร้านค้าปลีกในประเทศ',
     client_origin: 'หน้าร้านและช่องทางออนไลน์',
     main_suppliers: 'โรงงานตัดเย็บในกรุงเทพมหานคร',
     business_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
     monthly_revenue: 'ประมาณ 300,000 บาท',
-    revenue_basis: 'ลูกค้าประมาณ 30 ราย เฉลี่ยรายละ 10,000 บาท',
+    revenue_basis: 'ยอดขายประมาณ 30 รายการต่อเดือน เฉลี่ยรายการละ 10,000 บาท',
     average_transaction: 'ประมาณ 10,000 บาท',
-    monthly_transactions: 'ประมาณ 30 รายการ',
-    source_of_funds: 'เงินออมของกรรมการ',
-    first_incoming_funds: 'ทุนจดทะเบียนจากผู้ถือหุ้น',
-    account_purpose: 'รับชำระค่าสินค้าและจ่ายค่าวัตถุดิบ',
-    promptpay_qr_purpose: 'ให้ลูกค้าชำระเงินได้สะดวก',
+    monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
+    source_of_funds: FIXED_ANSWERS.source_of_funds,
+    first_incoming_funds: FIXED_ANSWERS.first_incoming_funds,
+    account_purpose: FIXED_ANSWERS.account_purpose,
+    promptpay_qr_purpose: FIXED_ANSWERS.promptpay_qr_purpose,
     customer_examples: 'ร้านบุษบา ร้อยเอ็ด',
     customer_profile: 'ร้านค้าปลีกในประเทศ',
-    transaction_details: 'โอนเข้าบัญชีบริษัทหลังส่งสินค้า',
+    transaction_details:
+      'ลูกค้าชำระด้วยการโอนเงินผ่านธนาคารและ PromptPay / QR เฉลี่ยรายการละประมาณ 10,000 บาท',
     operations_started: true,
     has_existing_customers: true,
     has_completed_transactions: true,
