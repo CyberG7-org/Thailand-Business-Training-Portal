@@ -5832,3 +5832,13 @@ Report: commits, the migration, tests added and their counts, deviations from th
 **Placeholder scan.** No "TBD" or "similar to"; every step that changes code shows the code. Two steps describe small edits to existing files in prose with the exact replacement (Task 2 guards, Task 8 moved list): the lines to change are named and the new lines are given.
 
 **Type consistency.** `Variant`, `VariantDraft`, `VariantText`, `AppliesWhen`, `StarterVariant` are defined once in `lib/domain/mcq/variant.ts` (Task 4) and used unchanged in Tasks 5–10. `RenderContext` (Task 4) is what `geoNeighbours`, `loadRenderContext` and `contextForRecord` return (Task 6). `VariantIssue` and `ISSUE_CODES` (Task 5) are the codes the messages carry (Task 8). `PreflightCode` (Task 5) is the set under `admin.bank.failures` (Task 8). `saveVariant(db, input, actorId)` and `setVariantStatus(db, id, status)` (Task 6) are called with those shapes in Task 9.
+
+## Execution notes (2026-10-01)
+
+Executed as written, with three additions made after looking at the screens:
+
+- **Issues in words.** The editor's issue list printed `th.C: unknown_token: {x}`. It now reads "Thai · Option C: unknown placeholder {x}": `admin.bank.where` (the three languages, the explanation) and `admin.bank.grammar` (the five grammar errors) were added to the message files, and `IssueList` builds the place and the cause from them. A recipe mismatch names the recipe by its label.
+- **Tables on a phone.** The bank, concept and check tables carry `min-w-[46rem]`, so they scroll sideways inside their card instead of squeezing every column to one word per line (design brief: staff tables scroll horizontally).
+- **The earlier editor** no longer needs its own translator after the way back moved to the earlier list; the unused `t` was removed.
+
+The 21st.dev component server was not signed in during this session, so no component was sourced from it; the screens are built from the existing staff shell classes (`staff-card`, `staff-table`, `staff-input`, `staff-btn`) and add no new component.
