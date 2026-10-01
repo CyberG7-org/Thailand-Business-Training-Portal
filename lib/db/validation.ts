@@ -151,13 +151,17 @@ export async function validateRecord(
     closed += 1;
   }
 
-  // Acceptance (plan decision 8): nothing blocking, the reading done, someone to confirm on behalf of.
-  const blocking = findings.filter((f) => f.blocks === 'acceptance');
-  const stillOpen = [...openByKey.entries()].filter(
-    ([k, r]) => kept.has(k) && r.blocks === 'acceptance',
-  );
+  // Acceptance (plan decision 8): nothing blocking still open — a settled finding does not
+  // count — the reading done, and someone to confirm on behalf of.
+  const { count: openBlocking, error: countError } = await admin
+    .from('training_fact_exceptions')
+    .select('id', { count: 'exact', head: true })
+    .eq('dbd_record_id', recordId)
+    .eq('status', 'open')
+    .eq('blocks', 'acceptance');
+  if (countError) throw countError;
   let accepted = false;
-  if (record.extraction_status !== 'confirmed' && blocking.length === 0 && stillOpen.length === 0) {
+  if (record.extraction_status !== 'confirmed' && (openBlocking ?? 0) === 0) {
     const confirmedBy = actorId ?? record.created_by;
     if (confirmedBy && (await readingFinished(admin, recordId))) {
       const { data: updated, error: acceptError } = await admin

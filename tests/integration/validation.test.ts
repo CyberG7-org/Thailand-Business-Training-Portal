@@ -170,4 +170,43 @@ describe('validateRecord (spec §5.5–5.6, D74)', () => {
     const structured = readStructuredData((await record(team.recordId)).structured_data);
     expect(structured.interview?.monthly_revenue).toBeNull();
   });
+
+  it('accepts an unconfirmed record once a person confirms its low-confidence value', async () => {
+    const { data: row } = await svc
+      .from('dbd_records')
+      .select('structured_data')
+      .eq('id', team.recordId)
+      .single();
+    const structured = (row!.structured_data as Record<string, unknown>) ?? {};
+    await svc
+      .from('dbd_records')
+      .update({
+        structured_data: {
+          ...COMPLETE_STRUCTURED,
+          provenance: {
+            ...((structured.provenance as object) ?? {}),
+            registered_capital: { confidence: 0.6, source_page: 1, source_document: 1 },
+          },
+        } as never,
+        extraction_status: 'extracted',
+        confirmed_by: null,
+        confirmed_at: null,
+        confirmed_automatically: false,
+      })
+      .eq('id', team.recordId);
+    const first = (await validateRecord(svc, team.recordId, null))!;
+    expect(first.accepted).toBe(false);
+    expect(await open(team.recordId)).toEqual(['low_confidence:registered_capital:acceptance']);
+    const [low] = await listOpenExceptions(svc, team.recordId);
+    await resolveException(team.asManager, {
+      exceptionId: low!.id,
+      resolution: 'confirmed',
+      note: 'ตรงกับหนังสือรับรอง',
+      actorId: team.manager.id,
+    });
+    const second = (await validateRecord(svc, team.recordId, null))!;
+    expect(second.accepted).toBe(true);
+    expect((await record(team.recordId)).confirmed_automatically).toBe(true);
+    expect(await open(team.recordId)).toEqual([]);
+  });
 });
