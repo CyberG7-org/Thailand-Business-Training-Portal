@@ -32,7 +32,7 @@ test('a learner is created inside a team, under a code typed after the team pref
   await selectTeam(page, code);
   await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
   // A free code is filled in: one letter and one digit, like G4.
-  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]$/);
+  await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z][0-9]{2}$/);
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
   await expect(page.locator('input[name="displayName"]')).toHaveAttribute('required', '');
 
@@ -41,9 +41,9 @@ test('a learner is created inside a team, under a code typed after the team pref
     displayName: 'E2E Learner',
     company,
     team: code,
-    suffix: 'ab12',
+    suffix: 'A12',
   });
-  expect(learner).toBe(`${code.toLowerCase()}-ab12`);
+  expect(learner).toBe(`${code.toLowerCase()}-a12`);
 
   // The form has no language or role choice, and the prefix is not typed.
   await expect(page.locator('select[name="preferredLanguage"]')).toHaveCount(0);
@@ -52,7 +52,6 @@ test('a learner is created inside a team, under a code typed after the team pref
   // Learners are listed on their own page (D80).
   await page.goto('/th/admin/learners');
   await expect(page.getByTestId(`company-${learner}`)).toHaveText(company);
-  await expect(page.getByTestId(`team-${learner}`)).toHaveText(code);
 
   await switchTo(page, learner, LEARNER_PASSWORD);
   await expect(page).toHaveURL(/\/th\/dashboard$/);
@@ -69,22 +68,27 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
     juristicId: '0105568233704',
     issuedOn: '13/07/2569',
   });
-  await createLearner(page, { password: LEARNER_PASSWORD, company, team: code, suffix: 'Q7' });
+  await createLearner(page, { password: LEARNER_PASSWORD, company, team: code, suffix: 'Q07' });
 
   await page.goto('/th/admin/users');
   await selectTeam(page, code);
   await fillLoginSuffix(page);
-  // Not case-sensitive: q7 is the Q7 already held.
-  await page.getByTestId('login-suffix').fill('q7');
+  // Not case-sensitive: q07 is the Q07 already held.
+  await page.getByTestId('login-suffix').fill('q07');
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'taken');
   await expect(page.getByTestId('login-id-status')).toHaveText(
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
   );
   await page.getByTestId('login-suffix').fill('Q-7');
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
+  // A learner's code is one letter and two digits (D83): the old two-character shape is refused.
+  await page.getByTestId('login-suffix').fill('Q7');
+  await expect(page.getByTestId('login-id-status')).toHaveText(
+    'ใช้ตัวอักษรภาษาอังกฤษ 1 ตัวตามด้วยตัวเลข 2 ตัว เช่น D42',
+  );
 
   // Sent anyway, the server refuses it in the same words and creates nobody.
-  await page.getByTestId('login-suffix').fill('Q7');
+  await page.getByTestId('login-suffix').fill('Q07');
   await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
   await page.locator('input[name="displayName"]').fill('ผู้เรียนซ้ำ');
   await page.locator('input[name="phone"]').fill('0812345678');
@@ -98,7 +102,7 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
   );
   await page.goto('/th/admin/learners');
-  await expect(page.getByRole('link', { name: `${code}-Q7`, exact: true })).toHaveCount(1);
+  await expect(page.getByRole('link', { name: `${code}-Q07`, exact: true })).toHaveCount(1);
 });
 
 test('the admin must say which team', async ({ page }) => {
@@ -175,9 +179,10 @@ test('a manager sees only their own learners, no team picker, and no other team 
   await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(adminCompany);
   // Nor is it on their companies list, which is empty.
   await expect(page.getByTestId('companies')).not.toContainText(adminCompany);
-  // Only the header row on their learners list: this team has no learners yet.
+  // Their Learner Record is empty: this team has no learners yet.
   await page.goto('/th/admin/learners');
-  await expect(page.getByRole('row')).toHaveCount(1);
+  await expect(page.getByTestId('learner-record')).toHaveCount(0);
+  await expect(page.getByText('ยังไม่มีผู้เรียน')).toBeVisible();
 });
 
 test('admin can disable an account and it can no longer sign in', async ({ page }) => {
@@ -228,10 +233,11 @@ test('the admin cannot pair a team with another team company', async ({ page }) 
   await expect(page.locator('select[name="dbdRecordId"]')).not.toContainText(company);
 });
 
-test('the admin keeps a way to their own account', async ({ page }) => {
+test('the Learner Record lists learners only, never a staff account', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/learners');
-  await expect(page.getByRole('link', { name: E2E_ADMIN.loginId.toUpperCase() })).toBeVisible();
+  await expect(page.getByTestId('learner-record')).toBeVisible();
+  await expect(page.getByTestId(`learner-${E2E_ADMIN.loginId}`)).toHaveCount(0);
 });
 
 test('the admin can rename the holder of a team', async ({ page }) => {

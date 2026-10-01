@@ -70,7 +70,7 @@ join rather than carrying their own copy of it.
 | | Format | Examples |
 |---|---|---|
 | Manager | `T-` + 2–6 letters or digits, typed by the owner | `T-G4`, `T-01`, `T-SALES1` |
-| Learner | the manager's whole code + `-` + 2–6 letters or digits, typed by staff | `T-G4-L8`, `T-01-02` |
+| Learner | the manager's whole code + `-` + one letter and two digits, typed by staff (D83) | `T-G4-L08`, `T-01-D42` |
 | Admin | unchanged | `owner` |
 
 Rules:

@@ -9,7 +9,7 @@ Spec: `docs/superpowers/specs/`.
 | Doc                                 | Purpose                                                  |
 | ----------------------------------- | -------------------------------------------------------- |
 | `docs/superpowers/specs/`           | Foundation spec (P0–P2) and slice specs P3–P16           |
-| `docs/decisions-log.md`             | Every product/technical decision (D1–D81)                |
+| `docs/decisions-log.md`             | Every product/technical decision (D1–D83)                |
 | `docs/adr/`                         | Architecture decision records                            |
 | `docs/security-checklist.md`        | Security review verdicts and what verifies each item     |
 | `docs/runbooks/production-setup.md` | Supabase + Vercel + provider setup, env vars, smoke test |

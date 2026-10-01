@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   MANAGER_PREFIX,
+  allLearnerSuffixes,
   displayLoginId,
   isValidLoginSuffix,
+  isValidSuffixFor,
+  learnerSuggestionCandidates,
   learnerLoginId,
   learnerPrefix,
   managerLoginId,
@@ -88,5 +91,65 @@ describe('displayLoginId', () => {
     expect(displayLoginId('owner')).toBe('OWNER');
     expect(displayLoginId(null)).toBe('—');
     expect(displayLoginId('')).toBe('—');
+  });
+});
+
+/** D83: a learner's typed part is exactly one letter and two digits; managers keep 2–6. */
+describe('isValidSuffixFor', () => {
+  it('takes one letter then two digits for a learner, in either case', () => {
+    for (const ok of ['D42', 'd42', 'A01', 'z99']) {
+      expect(isValidSuffixFor('learner', ok), ok).toBe(true);
+    }
+  });
+
+  it('refuses any other shape for a learner', () => {
+    for (const bad of ['', 'D4', 'L8', 'D420', 'AB1', '142', 'DD4', 'D-4', 'ก42', 'AB12']) {
+      expect(isValidSuffixFor('learner', bad), bad).toBe(false);
+    }
+  });
+
+  it('leaves the manager rule as it was', () => {
+    for (const ok of ['G4', 'AB12', 'SALES1', '01']) {
+      expect(isValidSuffixFor('manager', ok), ok).toBe(true);
+    }
+    expect(isValidSuffixFor('manager', 'g')).toBe(false);
+  });
+});
+
+describe('learnerSuggestionCandidates', () => {
+  function seeded(seed: number): () => number {
+    let s = seed;
+    return () => {
+      s = (s * 1103515245 + 12345) % 2 ** 31;
+      return s / 2 ** 31;
+    };
+  }
+
+  it('offers one letter and two digits, never I or O, all distinct and valid', () => {
+    const codes = learnerSuggestionCandidates(200, seeded(9));
+    expect(codes).toHaveLength(200);
+    expect(new Set(codes).size).toBe(200);
+    for (const code of codes) {
+      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(isValidSuffixFor('learner', code)).toBe(true);
+    }
+  });
+
+  it('stops at the size of the space: 24 letters × 100', () => {
+    expect(learnerSuggestionCandidates(5000, seeded(2)).length).toBeLessThanOrEqual(2400);
+  });
+});
+
+describe('allLearnerSuffixes', () => {
+  it('lists all 2,400 codes the suggestion can offer, in order, each valid and never I or O', () => {
+    const codes = allLearnerSuffixes();
+    expect(codes).toHaveLength(2400);
+    expect(new Set(codes).size).toBe(2400);
+    expect(codes.slice(0, 3)).toEqual(['a00', 'a01', 'a02']);
+    expect(codes.at(-1)).toBe('z99');
+    for (const code of codes) {
+      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(isValidSuffixFor('learner', code)).toBe(true);
+    }
   });
 });

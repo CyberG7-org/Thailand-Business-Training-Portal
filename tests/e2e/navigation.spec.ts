@@ -2,23 +2,25 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 
-test('every page below the home offers Back and Home; the home page does not', async ({ page }) => {
+/**
+ * D82: staff pages carry no Back or Home buttons — the sidebar reaches every section, the app
+ * name leads home, and a detail page links to its own list.
+ */
+test('staff pages have no Back or Home buttons; the sidebar and the app name lead around', async ({
+  page,
+}) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto('/th/admin');
-  await expect(page.getByTestId('nav-back')).toHaveCount(0);
-  await expect(page.getByTestId('nav-home')).toHaveCount(0);
+  for (const path of ['/th/admin', '/th/admin/users', '/th/admin/learners', '/th/admin/settings']) {
+    await page.goto(path);
+    await expect(page.getByTestId('staff-nav'), path).toBeVisible();
+    await expect(page.getByTestId('nav-back'), path).toHaveCount(0);
+    await expect(page.getByTestId('nav-home'), path).toHaveCount(0);
+  }
 
-  await page.getByRole('link', { name: 'สร้างผู้เรียนและ DBD' }).first().click();
-  await expect(page).toHaveURL(/\/th\/admin\/users$/);
-  await page.getByTestId('nav-back').click();
-  await expect(page).toHaveURL(/\/th\/admin$/);
+  await page.getByTestId('staff-nav').getByRole('link', { name: 'บันทึกผู้เรียน' }).click();
+  await expect(page).toHaveURL(/\/th\/admin\/learners$/);
 
-  await page.goto('/th/admin/dbd-records');
-  await page.getByTestId('nav-home').click();
-  await expect(page).toHaveURL(/\/th\/admin$/);
-
-  // The app name in the header leads home as well.
-  await page.goto('/th/admin/settings');
+  // The app name in the header leads home.
   await page.getByRole('link', { name: /Admin$/ }).click();
   await expect(page).toHaveURL(/\/th\/admin$/);
 });

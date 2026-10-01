@@ -398,3 +398,107 @@ export async function submitAttempt(attemptId: string): Promise<void> {
     .eq('id', attemptId);
   if (error) throw error;
 }
+
+async function learnerAndRecord(loginId: string): Promise<{ userId: string; recordId: string }> {
+  const admin = svc();
+  const { data: profile, error } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  if (error) throw error;
+  const { data: assignment, error: assignmentError } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile.id)
+    .eq('active', true)
+    .single();
+  if (assignmentError) throw assignmentError;
+  return { userId: profile.id, recordId: assignment.dbd_record_id };
+}
+
+/**
+ * A submitted exam attempt with one answered question, as the assessment writes it, so the
+ * staff MCQ review (D82) has a question to show. Returns the question's Thai prompt.
+ */
+export async function seedExamWithAnswer(
+  loginId: string,
+  attemptNo: number,
+  result: 'pass' | 'fail',
+): Promise<string> {
+  const admin = svc();
+  const { userId, recordId } = await learnerAndRecord(loginId);
+  const { data: loc, error: locError } = await admin
+    .from('question_localizations')
+    .select('question_id, prompt, options, correct_key')
+    .eq('language', 'th')
+    .not('prompt', 'like', '%{%')
+    .limit(1)
+    .single();
+  if (locError) throw locError;
+  const options = loc.options as { key: string; text: string }[];
+  const { data: attempt, error } = await admin
+    .from('assessment_attempts')
+    .insert({
+      user_id: userId,
+      dbd_record_id: recordId,
+      kind: 'exam',
+      language: 'th',
+      attempt_no: attemptNo,
+      status: 'submitted',
+      question_ids: [loc.question_id],
+      shuffle_seed: `seed-${attemptNo}`,
+      passing_mark_snapshot: 80,
+      score: result === 'pass' ? 1 : 0,
+      max_score: 1,
+      result,
+      submitted_at: new Date(Date.now() - (10 - attemptNo) * 60_000).toISOString(),
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  const wrong = options.find((o) => o.key !== loc.correct_key)!.key;
+  const { error: answerError } = await admin.from('assessment_answers').insert({
+    attempt_id: attempt.id,
+    question_id: loc.question_id,
+    position: 1,
+    rendered_prompt: loc.prompt,
+    rendered_options: options,
+    presented_option_order: options.map((o) => o.key),
+    selected_key: result === 'pass' ? loc.correct_key : wrong,
+    is_correct: result === 'pass',
+    answered_at: new Date().toISOString(),
+  });
+  if (answerError) throw answerError;
+  return loc.prompt;
+}
+
+/** A closed readiness interview with a short conversation, as the officer writes it (D82). */
+export async function seedInterviewWithTurns(
+  loginId: string,
+  verdict: 'ready' | 'not_ready',
+  learnerAnswer: string,
+): Promise<void> {
+  const admin = svc();
+  const { userId, recordId } = await learnerAndRecord(loginId);
+  const { data: session, error } = await admin
+    .from('interview_sessions')
+    .insert({
+      user_id: userId,
+      dbd_record_id: recordId,
+      status: 'completed',
+      verdict,
+      plan: { items: [], cursor: 0 },
+      provider: 'fake',
+      summary: { narrative: verdict === 'ready' ? 'ตอบได้ครบถ้วน' : 'ยังตอบไม่ครบ' },
+      ended_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  const { error: turnsError } = await admin.from('interview_turns').insert([
+    { session_id: session.id, seq: 1, role: 'officer', content: 'ชื่อบริษัทของคุณคืออะไรคะ' },
+    { session_id: session.id, seq: 2, role: 'learner', content: learnerAnswer },
+  ]);
+  if (turnsError) throw turnsError;
+}

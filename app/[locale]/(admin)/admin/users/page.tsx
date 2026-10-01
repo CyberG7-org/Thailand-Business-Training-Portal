@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { requireStaff } from '@/lib/auth/session';
 import { listDbdRecords, readingStatesOf } from '@/lib/db/dbd-records';
-import { suggestLoginSuffix } from '@/lib/db/provisioning';
+import { suggestLearnerSuffix } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
@@ -34,7 +34,7 @@ export default async function CreateLearnerAndDbdPage({
       : { data: null };
   // The code field comes prefilled with a free suffix (D69): straight away for a manager, whose
   // team is implied; for the admin once a team is chosen, as the prefix depends on it.
-  const initialSuffix = managers ? null : await suggestLoginSuffix(learnerPrefix(staff.loginId));
+  const initialSuffix = managers ? null : await suggestLearnerSuffix(learnerPrefix(staff.loginId));
   const teams: TeamOption[] | null = managers
     ? managers
         .filter((m) => m.status === 'active')

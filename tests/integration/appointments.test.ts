@@ -119,6 +119,8 @@ describe('booking the bank appointment', () => {
     const loser = results[0].status === 'fulfilled' ? second.id : team.learner.id;
     const { days } = await learnerCalendar(loser, day);
     expect(days[0].slots.find((s) => s.startsAt === slot)?.state).toBe('booked');
+    // Trying again after the race reads the slot as booked, and gets the same answer.
+    await expect(bookAppointment(loser, slot)).rejects.toMatchObject({ code: 'slot_taken' });
   });
 
   it('lets the learner cancel outside the notice window, which frees the slot', async () => {

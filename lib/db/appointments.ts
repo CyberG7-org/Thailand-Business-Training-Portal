@@ -176,7 +176,8 @@ export async function myUpcomingAppointment(
 
 /**
  * Spec §5.2: server-side, re-validating readiness, the window, the slot and the team. The
- * unique index settles a tie; its violation is reported as slot_taken.
+ * unique index settles a tie; its violation, like a slot already booked, is reported as
+ * slot_taken.
  */
 export async function bookAppointment(
   userId: string,
@@ -197,6 +198,9 @@ export async function bookAppointment(
   const teamId = await teamOf(userId);
   const [day] = await calendarFor({ teamId, from: bangkokDateOf(iso), days: 1, window, now });
   const slot = day.slots.find((s) => s.startsAt === iso);
+  // Another learner holds it: the same answer as losing the tie at the insert below, whichever
+  // side of their commit this request read the calendar on.
+  if (slot?.state === 'booked') throw new AppointmentError('The slot is taken', 'slot_taken');
   if (!slot || slot.state !== 'free') {
     throw new AppointmentError('The slot is not free', 'slot_unavailable');
   }
