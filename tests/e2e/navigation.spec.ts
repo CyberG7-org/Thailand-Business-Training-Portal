@@ -20,7 +20,7 @@ test('staff pages have no Back or Home buttons; the sidebar and the app name lea
   await page.getByTestId('staff-nav').getByRole('link', { name: 'บันทึกผู้เรียน' }).click();
   await expect(page).toHaveURL(/\/th\/admin\/learners$/);
 
-  // The app name in the header leads home.
-  await page.getByRole('link', { name: /Admin$/ }).click();
+  // The app name in the header, followed by the viewer's role, leads home.
+  await page.getByRole('link', { name: /· เจ้าของ$/ }).click();
   await expect(page).toHaveURL(/\/th\/admin$/);
 });
