@@ -141,4 +141,22 @@ describe('pinning (spec §5.6, D75)', () => {
     expect(await getActiveVersion(svc, team.recordId)).toMatchObject({ id: v2!.id });
     expect(new PinError('not_found').code).toBe('not_found');
   });
+
+  it('pins a late assignment to the active version even while a newer sheet waits on exceptions', async () => {
+    const { validateRecord } = await import('@/lib/db/validation');
+    const { getActiveVersion: activeOf } = await import('@/lib/db/training-versions');
+    await svc.from('user_dbd_assignments').delete().eq('dbd_record_id', team.recordId);
+    await svc.from('dbd_records').update({ registered_capital: 1_500_000 }).eq('id', team.recordId);
+    await validateRecord(svc, team.recordId, null); // conflict: the new sheet is a draft
+    const { data: inserted } = await svc
+      .from('user_dbd_assignments')
+      .insert({ user_id: team.learner.id, dbd_record_id: team.recordId })
+      .select('training_version_id')
+      .single();
+    expect(inserted!.training_version_id).toBeNull();
+    const active = (await getActiveAssignmentForUser(svc, team.learner.id))!;
+    const pinned = await pinnedFactsFor(svc, active);
+    expect(pinned?.version.id).toBe((await activeOf(svc, team.recordId))!.id);
+    await svc.from('dbd_records').update({ registered_capital: 5_000_000 }).eq('id', team.recordId);
+  });
 });

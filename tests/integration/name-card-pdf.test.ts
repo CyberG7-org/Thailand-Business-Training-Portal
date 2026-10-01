@@ -12,7 +12,7 @@ describe('name card PDF (spike S3)', () => {
         company_name_th: 'บริษัท ตัวอย่างนามบัตร จำกัด',
         company_name_en: 'SAMPLE CARD CO., LTD.',
         head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง 10110',
-        juristic_id: '0105569000123',
+        juristic_id: '0105569000134',
         contact_email: 'contact@example.co.th',
         nature_of_business: 'ค้าปลีกอุปกรณ์ไฟฟ้าสำหรับงานติดตั้ง',
         products_services: 'สายไฟ ท่อร้อยสาย และอุปกรณ์ติดตั้ง',
@@ -36,7 +36,7 @@ describe('name card PDF (spike S3)', () => {
     const squashed = items.join('').replace(/\s/g, '');
     for (const expected of [
       '081-234-5678',
-      '0105569000123',
+      '0105569000134',
       'SAMPLETESTER',
       NAME_CARD_COPY.tagline.replace(/\s/g, ''),
       'นางสาวตัวอย่างทดสอบ',

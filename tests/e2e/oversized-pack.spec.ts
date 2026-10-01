@@ -29,7 +29,7 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
     'หนังสือรับรอง',
   );
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
-  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
+  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
   // One 25-page document is one type (a certificate here): its sweep yields the objectives.
   await expect(
     page.getByTestId('business-profile').locator('textarea[name="objectives_text"]'),
@@ -46,6 +46,6 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
   expect((await again.json()).extractions).toBe(1);
   expect((await again.json()).transcripts).toBe(1);
   await page.reload();
-  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
+  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
   await expect(page.getByTestId('record-status')).toHaveText('extracted');
 });

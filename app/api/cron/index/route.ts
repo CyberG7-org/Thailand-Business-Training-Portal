@@ -1,11 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
-import { autoConfirmIfClean } from '@/lib/db/auto-confirm';
 import { processIndexJobs } from '@/lib/db/dbd-index';
 import { refreshDerivedFacts } from '@/lib/db/derived-facts';
 import { extractAndApply } from '@/lib/db/extraction';
 import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
-import { syncAfterChange } from '@/lib/db/training-versions';
+import { validateAfterChange } from '@/lib/db/validation';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { ExtractionError } from '@/lib/integrations/extraction/types';
 import { sweepPagesFromEnv } from '@/lib/integrations/extraction/transcript-schema';
@@ -53,7 +52,7 @@ export async function GET(request: NextRequest) {
           await refreshDerivedFacts(createSupabaseAdminClient(), recordId).catch((e) =>
             console.error('derived facts', recordId, e),
           );
-          await syncAfterChange(recordId, null);
+          await validateAfterChange(recordId, null);
           return { status: 'done' };
         } catch (e) {
           if (e instanceof ExtractionError && TERMINAL_EXTRACTION.has(e.code)) {
@@ -79,12 +78,12 @@ export async function GET(request: NextRequest) {
             );
           }
           // Any filled fact may have changed the sheet (spec §5.6).
-          await syncAfterChange(input.recordId, null);
+          await validateAfterChange(input.recordId, null);
         }
         return run;
       },
-      // A record whose reading just finished confirms itself when it is clean (D80).
-      afterReading: (recordId) => autoConfirmIfClean(createSupabaseAdminClient(), recordId),
+      // A record whose reading just finished is validated and, when clean, accepted (P17c).
+      afterReading: (recordId) => validateAfterChange(recordId, null),
     });
     return NextResponse.json(summary);
   } catch (e) {

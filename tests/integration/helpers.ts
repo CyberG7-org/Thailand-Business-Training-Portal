@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { withCheckDigit } from '@/lib/domain/validation/juristic-id';
+import { syncTrainingVersion } from '@/lib/db/training-versions';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db/database.types';
 
@@ -151,7 +153,7 @@ export async function confirmRecord(recordId: string, confirmedBy: string): Prom
     .update({
       extraction_status: 'confirmed',
       structured_data: CONFIRMED_ANSWERS as never,
-      juristic_id: String(Date.now()).padStart(13, '0').slice(-13),
+      juristic_id: withCheckDigit(String(Date.now()).padStart(12, '0').slice(-12)),
       confirmed_by: confirmedBy,
       confirmed_at: new Date().toISOString(),
     })
@@ -173,6 +175,7 @@ export const COMPLETE_RECORD = {
   company_name_th: 'บริษัท ครบถ้วน จำกัด',
   company_name_en: 'COMPLETE CO., LTD.',
   registered_on: '2026-04-16',
+  issued_on: '2026-08-05',
   registered_capital: 2_000_000,
   directors: [{ name_th: 'นางสาวกุลธิดา พลเยี่ยม', name_en: null }],
   signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',
@@ -226,4 +229,16 @@ export async function completeRecord(recordId: string): Promise<void> {
     .update({ ...COMPLETE_RECORD, structured_data: COMPLETE_STRUCTURED } as never)
     .eq('id', recordId);
   if (error) throw error;
+}
+
+/**
+ * Gives a confirmed record an active version from its sheet as it stands — what every confirmed
+ * record held before P17c. A fixture whose sheet is deliberately thin calls this before any learner
+ * visit: the learner's first pin takes this version, and the sheet's exceptions, once raised, hold
+ * only the next version back (plan decision 9).
+ */
+export async function versionRecord(recordId: string): Promise<void> {
+  const result = await syncTrainingVersion(adminClient(), recordId, null);
+  if (result !== 'activated')
+    throw new Error(`fixture record ${recordId} got no version: ${result}`);
 }

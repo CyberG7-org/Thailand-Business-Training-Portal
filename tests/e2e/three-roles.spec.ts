@@ -19,7 +19,7 @@ test('owner creates a manager, the manager creates a learner, the learner studie
   const company = `บริษัท สามระดับ ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: company,
-    juristicId: '0105568233707',
+    juristicId: '0105568233810',
     issuedOn: '13/07/2569',
   });
 

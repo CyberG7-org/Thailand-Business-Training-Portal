@@ -106,7 +106,7 @@ describe('reference record safety', () => {
   const record = {
     company_name_th: 'บริษัท ตัวอย่างจริง จำกัด',
     company_name_en: 'Real Example Co., Ltd.',
-    juristic_id: '0105569000123',
+    juristic_id: '0105569000134',
     certificate_no: 'E5300192000',
     registered_on: '2026-04-10',
     issued_on: '2026-07-13',
@@ -125,7 +125,7 @@ describe('reference record safety', () => {
       expect.arrayContaining([
         'บริษัท ตัวอย่างจริง จำกัด',
         'Real Example Co., Ltd.',
-        '0105569000123',
+        '0105569000134',
         '194/3 หมู่ 2 ตำบลวังใหญ่',
         'นางสาวภมรรัตน์ ตัวอย่าง',
         '2000000',
@@ -137,12 +137,12 @@ describe('reference record safety', () => {
 
   it('rejects generated questions that embed a reference value instead of a placeholder', () => {
     const leaking = question();
-    leaking.localizations.en.options[2].text = 'c 0105569000123';
+    leaking.localizations.en.options[2].text = 'c 0105569000134';
     const result = validateGenerated([leaking, question()], {
       bannedLiterals: bannedLiterals(record),
     });
     expect(result.accepted).toHaveLength(1);
-    expect(result.rejected[0].reason).toBe('en: contains reference value "0105569000123"');
+    expect(result.rejected[0].reason).toBe('en: contains reference value "0105569000134"');
   });
 
   it('the fake generator cycles through the certificate particulars', async () => {

@@ -19,6 +19,7 @@ import {
   deleteTestUser,
   type Client,
   type TestUser,
+  versionRecord,
 } from './helpers';
 
 const HOLDER = { holderNameTh: 'สมชาย ทดสอบ', holderNameEn: 'SOMCHAI TESTER' };
@@ -51,7 +52,7 @@ describe('name cards', () => {
       .from('dbd_records')
       .insert({
         company_name_th: 'บริษัท นามบัตร จำกัด',
-        juristic_id: '0105569000123',
+        juristic_id: '0105569000134',
         head_office_address: '1 ถนนตัวอย่าง',
         issued_on: '2026-07-13',
         structured_data: CONFIRMED_ANSWERS as never,
@@ -65,6 +66,7 @@ describe('name cards', () => {
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: learner.id, dbd_record_id: recordId, assigned_by: admin.id });
+    await versionRecord(recordId);
     await svc.from('policy_config').upsert({ key: 'telegram_admin_chat_ids', value: ['777'] });
   });
 

@@ -1,7 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
+import type { DbdRecordRow } from '@/lib/db/dbd-records';
 import { loadStarterCards } from '@/lib/db/study';
+import { activationArgs, readTrainingSheet } from '@/lib/db/training-sheet';
 import { E2E_PASSWORD } from './fixtures';
 
 config({ path: '.env.local' });
@@ -16,11 +18,30 @@ function svc() {
   );
 }
 
-/** Creates a learner with a confirmed, assigned company. Returns the login id. */
+/**
+ * Gives a confirmed record an active version from its sheet as it stands — what every confirmed
+ * record held before P17c — and pins its assignments to it. A seeded learner can then be evaluated
+ * on a deliberately thin sheet; the sheet's exceptions, once raised, hold only the next version
+ * back (P17c plan decision 9).
+ */
+async function versionRecord(admin: ReturnType<typeof svc>, record: DbdRecordRow): Promise<void> {
+  const { error } = await admin.rpc(
+    'activate_training_version',
+    activationArgs(await readTrainingSheet(admin, record), record, null, new Date()),
+  );
+  if (error) throw error;
+}
+
+/**
+ * Creates a learner with a confirmed, assigned company. Returns the login id. The company holds a
+ * version from the start, as every confirmed record did before P17c; `version: false` leaves the
+ * learner on the live row until a clean sheet makes one.
+ */
 export async function seedLearnerWithCompany(
   companyNameTh: string,
   issuedOn: string | null,
   extra: Record<string, unknown> = {},
+  options: { version?: boolean } = {},
 ): Promise<string> {
   const admin = svc();
   const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
@@ -64,6 +85,7 @@ export async function seedLearnerWithCompany(
     .from('user_dbd_assignments')
     .insert({ user_id: user.user.id, dbd_record_id: record.id });
   if (assignError) throw assignError;
+  if (options.version !== false) await versionRecord(admin, record);
   return loginId;
 }
 
@@ -501,4 +523,54 @@ export async function seedInterviewWithTurns(
     { session_id: session.id, seq: 2, role: 'learner', content: learnerAnswer },
   ]);
   if (turnsError) throw turnsError;
+}
+
+/**
+ * Marks fields of the learner's company as read with the given confidences and unconfirms the
+ * record, so validation has a low-confidence exception to raise. Returns the record id.
+ */
+export async function setProvenance(
+  loginId: string,
+  confidences: Record<string, number>,
+): Promise<string> {
+  const admin = svc();
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  const { data: assignment } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile!.id)
+    .eq('active', true)
+    .single();
+  const recordId = assignment!.dbd_record_id;
+  const { data: record } = await admin
+    .from('dbd_records')
+    .select('structured_data')
+    .eq('id', recordId)
+    .single();
+  const structured = (record!.structured_data as Record<string, unknown>) ?? {};
+  const provenance = Object.fromEntries(
+    Object.entries(confidences).map(([field, confidence]) => [
+      field,
+      { confidence, source_page: 1, source_document: 1 },
+    ]),
+  );
+  const { error } = await admin
+    .from('dbd_records')
+    .update({
+      structured_data: {
+        ...structured,
+        provenance: { ...((structured.provenance as object) ?? {}), ...provenance },
+      },
+      extraction_status: 'extracted',
+      confirmed_by: null,
+      confirmed_at: null,
+      confirmed_automatically: false,
+    })
+    .eq('id', recordId);
+  if (error) throw error;
+  return recordId;
 }

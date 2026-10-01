@@ -32,7 +32,7 @@ const source: NameCardSource = {
   company_name_th: 'บริษัท ธาราวาณิช จำกัด',
   company_name_en: 'THARA VANICH CO., LTD.',
   head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง',
-  juristic_id: '0105569000123',
+  juristic_id: '0105569000134',
   contact_email: 'contact@example.co.th',
   nature_of_business: 'ค้าปลีกอุปกรณ์ไฟฟ้า',
   products_services: 'สายไฟและอุปกรณ์ติดตั้ง',

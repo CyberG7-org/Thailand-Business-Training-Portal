@@ -12,7 +12,7 @@ const read = (field: DbdExtractionApi['provenance'][number]['field']) => ({
 export const SAMPLE_API_EXTRACTION: DbdExtractionApi = {
   company_name_th: 'บริษัท ทดสอบ จำกัด',
   company_name_en: '',
-  juristic_id: '0105569000123',
+  juristic_id: '0105569000134',
   registered_on: '10/04/2569',
   registered_capital: 2000000,
   directors: [{ name_th: 'นางสาวตัวอย่าง ทดสอบ', name_en: '' }],

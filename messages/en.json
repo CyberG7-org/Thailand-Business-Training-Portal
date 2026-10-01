@@ -85,7 +85,8 @@
       "settings": "Policy settings",
       "managers": "Managers",
       "learners": "Learner Record",
-      "businessCategories": "Business categories"
+      "businessCategories": "Business categories",
+      "exceptions": "Exceptions"
     },
     "users": {
       "title": "Create learner & DBD",
@@ -240,8 +241,6 @@
       "save": "Save",
       "saved": "Saved",
       "status": "Status",
-      "confirm": "Confirm record",
-      "missingForConfirmation": "Cannot confirm — missing: {fields}",
       "dateHint": "As printed on the certificate, e.g. 9 เมษายน 2569, 09/04/2569 or 9 April 2026",
       "directorsHint": "One director per line: Thai name | English name",
       "documentMissing": "No certificate PDF uploaded",
@@ -400,7 +399,6 @@
         "banking": "The account",
         "legacy": "Earlier answers"
       },
-      "answersMissing": "Still to fill in before this record can be confirmed: {fields}",
       "team": "Team",
       "legacyHint": "Written before the new evaluations; kept exactly as written and not used by them.",
       "interviewFieldsAlt": {
@@ -527,7 +525,7 @@
       "versions": {
         "title": "Training versions",
         "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
-        "none": "No version yet — the record has not been confirmed.",
+        "none": "No version yet — it activates when nothing blocks it (see Exceptions).",
         "active": "Version {n} — active since {date}",
         "complete": "Complete at company scope: every one of the 29 MCQ and 12 bank-interview concepts resolves.",
         "incomplete": "Not complete yet — still missing:",
@@ -538,7 +536,59 @@
           "superseded": "superseded",
           "draft": "draft"
         }
-      }
+      },
+      "recheck": "Check again",
+      "acceptance": {
+        "accepted": "Accepted by {name}",
+        "acceptedAuto": "Accepted automatically: the reading was clean and the four details were there.",
+        "waiting": "{count, plural, one {# exception} other {# exceptions}} blocking acceptance",
+        "blocked": "Not accepted yet — settle the exceptions below."
+      },
+      "exceptions": {
+        "title": "Exceptions",
+        "intro": "What the validators found. A record is accepted when nothing blocks acceptance; its training version activates when nothing blocks the version. Notes are for review only.",
+        "none": "Nothing open: the record is clean.",
+        "groups": {
+          "acceptance": "Blocking acceptance",
+          "version": "Blocking the training version",
+          "none": "For review"
+        },
+        "kinds": {
+          "missing": "Missing",
+          "low_confidence": "Low confidence",
+          "conflict": "Does not reconcile",
+          "invalid": "Invalid",
+          "geo_mismatch": "Address not resolved",
+          "category_review": "Category to review",
+          "render_failure": "Question could not be rendered"
+        },
+        "rules": {
+          "check_digit": "The check digit does not match ({value}).",
+          "in_future": "The date is in the future ({value}).",
+          "before_registration": "Issued ({value}) before the registration date ({registered_on}).",
+          "shares_over_total": "The holders' shares add up to {sum}, more than the total of {total}.",
+          "shares_under_total": "The holders' shares add up to {sum} of {total}; the list may be partial.",
+          "percent_over_100": "The percentages add up to {percent}%.",
+          "percent_under_100": "The percentages add up to {percent}%; the list may be partial.",
+          "shares_times_par": "Shares × par value gives {expected}, the capital says {actual}.",
+          "count_vs_list": "The certificate says {count} objectives; {listed} are listed.",
+          "names_not_directors": "The signing authority names someone who is not a listed director.",
+          "confidence": "Read with {confidence}% confidence (page {page}).",
+          "geo": "{issues}",
+          "missing": "Needed by: {concepts}",
+          "category": "Best match {candidate} at {confidence}%; choose or map again on the category panel."
+        },
+        "confirmValue": "The value is right",
+        "dismiss": "Does not apply",
+        "note": "Note (required to dismiss)",
+        "errors": {
+          "not-dismissable": "A missing fact is supplied, not dismissed.",
+          "already-resolved": "Already settled.",
+          "note-required": "Write a note first.",
+          "not-found": "Not found."
+        }
+      },
+      "answersMissing": "Still to fill in before this record is accepted: {fields}"
     },
     "assignment": {
       "title": "Assigned company",
@@ -708,6 +758,14 @@
         "business_category_min_confidence_percent": {
           "label": "Business category: minimum confidence to accept automatically (%)",
           "help": "At or above this, the mapped category is used without review; below it the suggestion waits for a manager or the Owner."
+        },
+        "training_auto_accept_confidence_percent": {
+          "label": "Training facts: confidence read as certain (%)",
+          "help": "An extracted fact at or above this raises nothing. Below it, a low-confidence exception is listed for review."
+        },
+        "training_review_confidence_percent": {
+          "label": "Training facts: confidence below which a person must confirm (%)",
+          "help": "Below this, the exception blocks acceptance of the record until a person confirms the value."
         }
       }
     },
@@ -867,6 +925,25 @@
         "invalid": "Check the key and fill every label",
         "failed": "Could not save"
       }
+    },
+    "exceptions": {
+      "title": "Exceptions",
+      "intro": "Every open exception on the companies you look after, the ones blocking acceptance first. Open a company to settle them.",
+      "empty": "Nothing open.",
+      "columns": {
+        "company": "Company",
+        "team": "Team",
+        "kind": "Kind",
+        "field": "Field",
+        "blocks": "Holds back",
+        "since": "Since"
+      },
+      "blocks": {
+        "acceptance": "acceptance",
+        "version": "version",
+        "none": "—"
+      },
+      "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
     }
   },
   "stages": {

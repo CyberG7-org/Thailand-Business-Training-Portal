@@ -9,7 +9,7 @@ test('admin generates DBD-grounded draft questions with AI (fake), reviews the l
   // The reference certificate the batch is modelled on (its values never reach the questions).
   const recordId = await createConfirmedRecord(page, {
     companyNameTh: 'บริษัท ต้นแบบเจน จำกัด',
-    juristicId: '0105569000888',
+    juristicId: '0105569000886',
     issuedOn: '13/07/2569',
   });
   await page.goto('/th/admin/questions');
@@ -17,7 +17,7 @@ test('admin generates DBD-grounded draft questions with AI (fake), reviews the l
   await expect(page).toHaveURL(/\/th\/admin\/questions\/generate$/);
   await page.getByTestId('reference-record').selectOption(recordId);
   await expect(page.getByTestId('reference-record').locator('option:checked')).toContainText(
-    '0105569000888',
+    '0105569000886',
   );
 
   // Extra material + the seeded study cards; 4 questions, 3 personalised + 1 about the document.
@@ -40,7 +40,7 @@ test('admin generates DBD-grounded draft questions with AI (fake), reviews the l
   await expect(page.getByTestId('batch-summary')).toBeVisible();
   // No literal reference value leaked into any preview.
   await expect(page.locator('tbody')).not.toContainText('ต้นแบบเจน');
-  await expect(page.locator('tbody')).not.toContainText('0105569000888');
+  await expect(page.locator('tbody')).not.toContainText('0105569000886');
 
   // Inline approve keeps the batch filter and flips the status.
   await rows.first().getByTestId('approve-row').click();

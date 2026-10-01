@@ -14,7 +14,7 @@ test('a manager can open one of their learners and suspend them', async ({ page 
   const company = `บริษัท ดูแลทีม ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: company,
-    juristicId: '0105568233711',
+    juristicId: '0105568233780',
     issuedOn: '13/07/2569',
   });
   // A manager's own team is implied, so their prefix and a free code show straight away (D69).
@@ -65,7 +65,7 @@ test('a manager can open the AI generation screen and use it', async ({ page }) 
   const adminCompany = `บริษัท ต้นแบบของแอดมิน ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: adminCompany,
-    juristicId: '0105568233716',
+    juristicId: '0105568233798',
     issuedOn: '13/07/2569',
   });
 
@@ -73,7 +73,7 @@ test('a manager can open the AI generation screen and use it', async ({ page }) 
   const company = `บริษัท ออกข้อสอบ ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: company,
-    juristicId: '0105568233713',
+    juristicId: '0105568233801',
     issuedOn: '13/07/2569',
   });
 

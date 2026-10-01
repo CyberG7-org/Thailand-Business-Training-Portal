@@ -21,7 +21,6 @@ test('AI questions cite the reference pack and learners see passages from their 
   await page.reload();
   await expect(page.getByTestId('index-status').first()).toHaveAttribute('data-status', 'ready');
   await fillBusinessAnswers(page);
-  await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
 
   // 2. Starter cards exist (idempotent; D81 — no staff screen for them).

@@ -2,10 +2,9 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { INTERVIEW_FIELDS } from '@/lib/domain/bank-interview';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
-  confirmDbdRecordAction,
+  recheckRecordAction,
   extractDocumentAction,
   removeDocumentAction,
   retryIndexAction,
@@ -14,13 +13,6 @@ import {
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
 
 const initial: ToolState = { ok: false, error: null };
-
-/** The two certificate facts confirmation needs; the form labels them in camelCase. */
-const CORE_FIELD_LABELS: Record<string, 'fields.juristicId' | 'fields.companyNameTh' | undefined> =
-  {
-    juristic_id: 'fields.juristicId',
-    company_name_th: 'fields.companyNameTh',
-  };
 
 const EXTRACT_ERROR_KEYS = [
   'not_configured',
@@ -85,37 +77,26 @@ export function RecordTools({
   documents,
   reading,
   extractionAvailable,
-  missing,
+  acceptance,
 }: {
   id: string;
   status: string;
   documents: DocumentSummary[];
   reading: ReadingState | null;
   extractionAvailable: boolean;
-  /** Everything still to fill in; the record cannot be confirmed while any of it remains. */
-  missing: string[];
+  /** Where acceptance stands (P17c): what blocks it, or who accepted. */
+  acceptance: { blockers: number; confirmedByName: string | null; automatic: boolean };
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const readingErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === reading?.error);
-  const [confirmState, confirmAction, confirming] = useActionState(confirmDbdRecordAction, initial);
+  const [recheckState, recheckAction, rechecking] = useActionState(recheckRecordAction, initial);
   const {
     state: uploadState,
     pending: uploading,
     submit: submitUpload,
   } = useDirectUpload({ locale, id, redirect: false });
   const [extractState, extractAction, extracting] = useActionState(extractDocumentAction, initial);
-  const fieldLabel = (f: string) => {
-    if ((INTERVIEW_FIELDS as readonly string[]).includes(f)) {
-      return t(`interviewFields.${f}` as 'interviewFields.account_purpose');
-    }
-    const core = CORE_FIELD_LABELS[f];
-    return core ? t(core) : f;
-  };
-  // The action refuses too, in case the record changed in another tab while this one was open.
-  const refused = confirmState.error?.startsWith('missing:')
-    ? confirmState.error.slice('missing:'.length).split(',')
-    : null;
   const uploadErrorKey = UPLOAD_ERROR_KEYS.find((k) => k === uploadState.error);
   const extractErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === extractState.error);
   const locked = status === 'confirmed';
@@ -268,34 +249,42 @@ export function RecordTools({
         </div>
       </div>
 
-      <form action={confirmAction} className="staff-card grid gap-2">
+      <form action={recheckAction} className="staff-card grid gap-2">
         <input type="hidden" name="locale" value={locale} />
         <input type="hidden" name="id" value={id} />
         <p className="text-sm">
           {t('status')}: <span data-testid="record-status">{status}</span>
         </p>
-        {refused && (
-          <p role="alert" data-testid="confirm-error" className="text-sm text-bad-600">
-            {t('missingForConfirmation', { fields: refused.map(fieldLabel).join(', ') })}
+        {locked ? (
+          <p className="staff-notice-ok text-sm" data-testid="acceptance-state">
+            {acceptance.automatic
+              ? t('acceptance.acceptedAuto')
+              : t('acceptance.accepted', { name: acceptance.confirmedByName ?? '—' })}
+          </p>
+        ) : (
+          <p
+            className="staff-notice-warn text-sm"
+            data-testid="acceptance-state"
+            data-blockers={acceptance.blockers}
+          >
+            {acceptance.blockers > 0
+              ? t('acceptance.waiting', { count: acceptance.blockers })
+              : t('acceptance.blocked')}
           </p>
         )}
-        {confirmState.error && !refused && (
-          <p role="alert" data-testid="confirm-error" className="text-sm text-bad-600">
-            {confirmState.error}
-          </p>
-        )}
-        {!locked && missing.length > 0 && (
-          <p data-testid="confirm-blocked" className="text-sm text-warn-700">
-            {t('answersMissing', { fields: missing.map(fieldLabel).join(', ') })}
+        {recheckState.error && recheckState.error !== 'blocked' && (
+          <p role="alert" data-testid="recheck-error" className="text-sm text-bad-600">
+            {recheckState.error}
           </p>
         )}
         {!locked && (
           <button
             type="submit"
-            disabled={confirming || missing.length > 0}
-            className="staff-btn-ok"
+            disabled={rechecking}
+            data-testid="recheck-button"
+            className="staff-btn-ghost justify-self-start"
           >
-            {t('confirm')}
+            {t('recheck')}
           </button>
         )}
       </form>

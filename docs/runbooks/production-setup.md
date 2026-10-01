@@ -16,6 +16,8 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
    **Training versions (P17b).** Migration `20261002010000_training_versions.sql` adds `company_training_versions` and the pin columns. Existing assignments get their version on the learner's next visit or the record's next save — no data step.
 
+   **Validation and exceptions (P17c).** Migration `20261003010000` adds the exception queue and the two thresholds. Existing confirmed records keep their status; their exceptions appear on the next save or the next learner visit. A record that already has a version keeps it, and its learners stay on it until the sheet is clean again; a record that never had one needs a complete, clean sheet before its learners can start a quiz, exam or interview (plan decision 9).
+
    **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
    ```sql
    select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name

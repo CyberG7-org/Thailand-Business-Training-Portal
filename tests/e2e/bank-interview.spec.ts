@@ -6,29 +6,36 @@ import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 test('starter cards, interview answers and the learner role combine into a personalised study card', async ({
   page,
 }) => {
-  const learner = await seedLearnerWithCompany('บริษัท สัมภาษณ์ธนาคาร จำกัด', '2025-01-01', {
-    head_office_address: '12/34 ถนนทดสอบ',
-    province: 'กรุงเทพมหานคร',
-    registered_capital: 1000000,
-    directors: [{ name_th: 'นางสาวผู้เรียน ทดสอบ', name_en: null }],
-    structured_data: {
-      business: {
-        objectives: [{ no: 1, text: 'ประกอบกิจการค้าปลีก' }],
-        business_categories: ['ค้าปลีก'],
-        share_structure: {
-          total_shares: 10000,
-          par_value: 100,
-          paid_up_capital: null,
-          share_type: null,
+  // No version yet: the manager fills the answers in before the learner's first visit, and the
+  // study cards read the live row until the sheet is clean enough for a version (P17c).
+  const learner = await seedLearnerWithCompany(
+    'บริษัท สัมภาษณ์ธนาคาร จำกัด',
+    '2025-01-01',
+    {
+      head_office_address: '12/34 ถนนทดสอบ',
+      province: 'กรุงเทพมหานคร',
+      registered_capital: 1000000,
+      directors: [{ name_th: 'นางสาวผู้เรียน ทดสอบ', name_en: null }],
+      structured_data: {
+        business: {
+          objectives: [{ no: 1, text: 'ประกอบกิจการค้าปลีก' }],
+          business_categories: ['ค้าปลีก'],
+          share_structure: {
+            total_shares: 10000,
+            par_value: 100,
+            paid_up_capital: null,
+            share_type: null,
+          },
+          shareholders: [
+            { name: 'นางสาวผู้เรียน ทดสอบ', nationality: 'ไทย', shares: 9998, percent: null },
+            { name: 'นายอื่น ทดสอบ', nationality: 'ไทย', shares: 2, percent: null },
+          ],
+          promoters: [],
         },
-        shareholders: [
-          { name: 'นางสาวผู้เรียน ทดสอบ', nationality: 'ไทย', shares: 9998, percent: null },
-          { name: 'นายอื่น ทดสอบ', nationality: 'ไทย', shares: 2, percent: null },
-        ],
-        promoters: [],
       },
     },
-  });
+    { version: false },
+  );
 
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
 

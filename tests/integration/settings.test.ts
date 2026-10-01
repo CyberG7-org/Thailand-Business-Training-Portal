@@ -25,7 +25,7 @@ describe('policy settings and audit', () => {
       .from('dbd_records')
       .insert({
         company_name_th: 'บริษัท นโยบาย จำกัด',
-        juristic_id: '0105569000999',
+        juristic_id: '0105569000991',
         issued_on: '2026-01-01',
         structured_data: CONFIRMED_ANSWERS as never,
         extraction_status: 'confirmed',

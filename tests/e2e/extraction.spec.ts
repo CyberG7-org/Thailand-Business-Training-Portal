@@ -25,14 +25,14 @@ test('uploading a certificate creates the record and fills its fields in the bac
 
   // The record now carries the values read from the document, with their provenance.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
-  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
+  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
   await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
   await expect(page.getByTestId('suggestion-issued_on')).toContainText('90%');
   await expect(page.getByTestId('suggestion-head_office_address')).toContainText('ความมั่นใจต่ำ');
   await expect(page.getByTestId('record-status')).toHaveText('extracted');
 
   // Level 2 arrived in the business profile, Level 3 classified the document and kept provenance.
-  await expect(page.locator('input[name="province"]')).toHaveValue('ตัวอย่าง');
+  await expect(page.locator('input[name="province"]')).toHaveValue('ร้อยเอ็ด');
   const business = page.getByTestId('business-profile');
   await expect(business.locator('textarea[name="objectives_text"]')).toHaveValue(
     /^1\. ประกอบกิจการค้าปลีก/,
@@ -57,8 +57,7 @@ test('uploading a certificate creates the record and fills its fields in the bac
 
   // The certificate cannot say how to reach the company or what it sells: the manager does.
   await fillBusinessAnswers(page);
-  // Confirm works straight away — no separate Save needed.
-  await page.getByRole('button', { name: 'ยืนยันข้อมูล' }).click();
+  // The answers save validates the record, and a clean one is accepted at once (P17c).
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
   await expect(page.locator('input[name="juristic_id"]')).toHaveAttribute('readonly', '');
 });
@@ -79,6 +78,6 @@ test('uploading on an existing record fills only the empty fields', async ({ pag
   await expect(page.locator('input[name="company_name_th"]')).toHaveValue(
     'บริษัท ชื่อที่พิมพ์เอง จำกัด',
   );
-  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000123');
+  await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
   await expect(page.getByTestId('extract-button')).toBeEnabled();
 });

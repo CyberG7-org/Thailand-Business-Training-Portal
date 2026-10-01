@@ -11,6 +11,7 @@ import {
   deleteTestUser,
   type Client,
   type TestUser,
+  versionRecord,
 } from './helpers';
 
 describe('exam + notifications', () => {
@@ -29,7 +30,7 @@ describe('exam + notifications', () => {
       .from('dbd_records')
       .insert({
         company_name_th: 'บริษัท สอบจริง จำกัด',
-        juristic_id: '0105569000123',
+        juristic_id: '0105569000134',
         registered_capital: 1000000,
         issued_on: '2026-07-13',
         structured_data: CONFIRMED_ANSWERS as never,
@@ -43,6 +44,7 @@ describe('exam + notifications', () => {
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: learner.id, dbd_record_id: recordId, assigned_by: admin.id });
+    await versionRecord(recordId);
     await svc.from('policy_config').upsert([
       { key: 'telegram_admin_chat_ids', value: ['123456'] },
       { key: 'email_admin_recipients', value: ['ops@example.com'] },

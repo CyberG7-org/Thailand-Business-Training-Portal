@@ -38,7 +38,7 @@ test('a record reads its address, maps its category, and shows what is still mis
   await page
     .locator('input[name="company_name_th"]')
     .fill(`บริษัท ข้อเท็จจริง ${Date.now()} จำกัด`);
-  await page.locator('input[name="juristic_id"]').fill('0105568233720');
+  await page.locator('input[name="juristic_id"]').fill('0105568233763');
   await page.locator('input[name="head_office_address"]').fill(ROI_ET);
   await page.getByRole('button', { name: 'บันทึก' }).first().click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
