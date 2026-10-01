@@ -41,6 +41,8 @@ export const FIXED_ANSWERS = {
 } as const satisfies Partial<Record<StandardAnswerField, string>>;
 
 const PAYMENT = 'ลูกค้าชำระด้วยการโอนเงินผ่านธนาคารและ PromptPay / QR';
+/** The company status is always yes (D91); the earlier free-text answer says the same. */
+const OPERATING = 'เริ่มดำเนินธุรกิจแล้ว';
 
 /**
  * What a filled answer is worked out from. When one of these is missing the filled answer is
@@ -77,6 +79,10 @@ const show = (n: number) => n.toLocaleString('en-US');
  * from the two amounts, or the same for every company. A standard answer always wins; what was
  * typed for it earlier stays stored and is not read (D91). The four company status facts are
  * always yes.
+ *
+ * The four earlier answers the bank-interview study card still prints (monthly volume, where the
+ * clients and the suppliers are, whether operations have started) are kept as written; left
+ * blank, they follow the answers above, so no row of the card is empty.
  */
 export function withStandardAnswers(
   profile: InterviewProfile,
@@ -105,5 +111,9 @@ export function withStandardAnswers(
     transaction_details:
       average !== null ? `${PAYMENT} เฉลี่ยรายการละประมาณ ${show(average)} บาท` : PAYMENT,
     ...FIXED_ANSWERS,
+    monthly_volume: profile.monthly_volume ?? profile.monthly_revenue,
+    clients_location: profile.clients_location ?? profile.customer_profile,
+    suppliers_location: profile.suppliers_location ?? profile.main_suppliers,
+    operations_status: profile.operations_status ?? OPERATING,
   };
 }

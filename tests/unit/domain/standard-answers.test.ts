@@ -117,6 +117,22 @@ describe('withStandardAnswers', () => {
     expect(p.business_address).toBe(ADDRESS);
   });
 
+  it('lets a blank earlier answer follow the new one, and keeps one that was written', () => {
+    const p = withStandardAnswers(
+      {
+        ...typed,
+        customer_profile: 'ร้านค้าปลีกในประเทศ',
+        main_suppliers: 'โรงงานในกรุงเทพมหานคร',
+        suppliers_location: 'กรุงเทพมหานครและสมุทรปราการ',
+      },
+      { address: ADDRESS },
+    );
+    expect(p.monthly_volume).toBe('ประมาณ 300,000 บาท');
+    expect(p.clients_location).toBe('ร้านค้าปลีกในประเทศ');
+    expect(p.suppliers_location).toBe('กรุงเทพมหานครและสมุทรปราการ');
+    expect(p.operations_status).toBe('เริ่มดำเนินธุรกิจแล้ว');
+  });
+
   it('keeps what the manager is still asked exactly as typed', () => {
     const asked = {
       ...typed,

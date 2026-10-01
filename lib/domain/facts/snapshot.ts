@@ -64,7 +64,10 @@ export function buildTrainingSnapshot(input: {
   address: RegisteredAddress | null;
 }): TrainingSnapshot {
   const business = input.structured.business ?? EMPTY_BUSINESS_PROFILE;
-  const interview = input.structured.interview ?? EMPTY_INTERVIEW_PROFILE;
+  // The earlier answers follow the new ones when blank (D91), as the fact sheet's do.
+  const interview = withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+    address: input.address?.full || input.record.head_office_address,
+  });
   return {
     facts: buildFactSheet({
       record: input.record,
