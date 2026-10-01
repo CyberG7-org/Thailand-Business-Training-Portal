@@ -1,7 +1,7 @@
 /**
  * Account codes (D69). Staff type the part after a fixed prefix: the owner gives a manager
- * `T-` + a suffix (T-G4), a manager gives a learner their own code + `-` + a suffix (T-G4-L08:
- * a learner's suffix is one letter and two digits, D83).
+ * `T-` + a suffix (T-G4), a manager gives a learner their own code + `-` + a suffix (T-G4-DA42:
+ * a learner's suffix is two letters and two digits, D84).
  * Codes are case-insensitive — stored lower-case, as every login id in this project is, and
  * shown upper-case — so `t-g4` can never reach a screen.
  */
@@ -13,8 +13,8 @@ export type LoginIdKind = 'manager' | 'learner';
 /** A manager's typed part: 2–6 letters or digits. No hyphen, so it can never reach another team. */
 export const LOGIN_SUFFIX_PATTERN = /^[a-z0-9]{2,6}$/i;
 
-/** A learner's typed part (D83): exactly one letter then two digits, e.g. D42. */
-export const LEARNER_SUFFIX_PATTERN = /^[a-z][0-9]{2}$/i;
+/** A learner's typed part (D84): exactly two letters then two digits, e.g. DA42. */
+export const LEARNER_SUFFIX_PATTERN = /^[a-z]{2}[0-9]{2}$/i;
 
 export function isValidLoginSuffix(suffix: string): boolean {
   return LOGIN_SUFFIX_PATTERN.test(suffix);
@@ -70,27 +70,31 @@ export function suggestionCandidates(
 }
 
 /**
- * Learner suffixes to offer (D83): one letter, never I or O, then two digits — 2,400 in all per
- * team, all distinct.
+ * Learner suffixes to offer (D84): two letters, never I or O, then two digits — 57,600 in all
+ * per team, all distinct.
  */
 export function learnerSuggestionCandidates(
   count: number,
   random: () => number = Math.random,
 ): string[] {
   const pick = (chars: string) => chars[Math.floor(random() * chars.length)];
-  const wanted = Math.min(count, LETTERS.length * DIGITS.length ** 2);
+  const wanted = Math.min(count, LETTERS.length ** 2 * DIGITS.length ** 2);
   const found = new Set<string>();
   for (let attempt = 0; found.size < wanted && attempt < wanted * 50; attempt++) {
-    found.add(pick(LETTERS) + pick(DIGITS) + pick(DIGITS));
+    found.add(pick(LETTERS) + pick(LETTERS) + pick(DIGITS) + pick(DIGITS));
   }
   return [...found];
 }
 
-/** Every learner suffix the suggestion can offer (D83), in order: a00 … z99, never I or O. */
+/** Every learner suffix the suggestion can offer (D84), in order: aa00 … zz99, never I or O. */
 export function allLearnerSuffixes(): string[] {
   const codes: string[] = [];
-  for (const letter of LETTERS) {
-    for (const tens of DIGITS) for (const units of DIGITS) codes.push(letter + tens + units);
+  for (const first of LETTERS) {
+    for (const second of LETTERS) {
+      for (const tens of DIGITS) {
+        for (const units of DIGITS) codes.push(first + second + tens + units);
+      }
+    }
   }
   return codes;
 }
