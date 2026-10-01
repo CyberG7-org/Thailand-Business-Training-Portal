@@ -23,7 +23,7 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
     key: 'content',
     items: [
       { href: '/admin/exceptions', key: 'exceptions' },
-      { href: '/admin/questions', key: 'questions' },
+      { href: '/admin/questions', key: 'questions', adminOnly: true },
     ],
   },
   {

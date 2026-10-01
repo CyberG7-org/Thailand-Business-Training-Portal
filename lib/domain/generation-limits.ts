@@ -7,3 +7,9 @@ export const MAX_GENERATION_COUNT = 10;
 /** Client timeouts that fit the same window, with room for the rest of the request. */
 export const GENERATION_TIMEOUT_MS = 270_000;
 export const TRANSLATION_TIMEOUT_MS = 120_000;
+
+/**
+ * AI question generation is hidden from P17d on (spec §10): the bank is written concept by
+ * concept by the Owner. The code stays until P17i removes it.
+ */
+export const AI_QUESTION_GENERATION_VISIBLE = false;

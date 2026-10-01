@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireStaff } from '@/lib/auth/session';
+import { requireAdmin } from '@/lib/auth/session';
 import { listGenerationBatches } from '@/lib/db/question-gen';
 import { listQuestions } from '@/lib/db/questions';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -18,7 +18,7 @@ export default async function QuestionsPage({
 }) {
   const { locale } = await params;
   const { batch, status } = await searchParams;
-  await requireStaff(locale);
+  await requireAdmin(locale);
   const db = await createSupabaseServerClient();
   const [all, batches] = await Promise.all([listQuestions(db), listGenerationBatches(db)]);
   const questions = all.filter(
@@ -38,13 +38,6 @@ export default async function QuestionsPage({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="staff-title">{t('title')}</h1>
         <div className="flex gap-2">
-          <Link
-            href="/admin/questions/generate"
-            data-testid="generate-link"
-            className="staff-btn-ghost staff-btn-sm"
-          >
-            {t('generate')}
-          </Link>
           <Link href="/admin/questions/new" className="staff-btn staff-btn-sm">
             {t('new')}
           </Link>

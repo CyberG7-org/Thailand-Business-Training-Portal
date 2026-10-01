@@ -1,9 +1,11 @@
+import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireStaff } from '@/lib/auth/session';
+import { requireAdmin } from '@/lib/auth/session';
 import { listDbdRecords } from '@/lib/db/dbd-records';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listStudyMaterials } from '@/lib/db/study';
+import { AI_QUESTION_GENERATION_VISIBLE } from '@/lib/domain/generation-limits';
 import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen';
 import { GenerateForm } from './generate-form';
 
@@ -18,7 +20,9 @@ export default async function GenerateQuestionsPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  await requireStaff(locale);
+  await requireAdmin(locale);
+  // Hidden from P17d on (spec §10); the rest of the page stays for P17i to remove.
+  if (!AI_QUESTION_GENERATION_VISIBLE) redirect(`/${locale}/admin/questions`);
   const db = await createSupabaseServerClient();
   const [materials, records] = await Promise.all([listStudyMaterials(db), listDbdRecords(db)]);
   const references = records

@@ -2,9 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireStaff } from '@/lib/auth/session';
+import { requireAdmin } from '@/lib/auth/session';
 import { generateQuestionsIntoBank } from '@/lib/db/question-gen';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { AI_QUESTION_GENERATION_VISIBLE } from '@/lib/domain/generation-limits';
 import { QuestionGenError } from '@/lib/integrations/question-gen/types';
 
 export type GenerateState = {
@@ -21,9 +22,9 @@ export async function generateQuestionsAction(
   formData: FormData,
 ): Promise<GenerateState> {
   const locale = String(formData.get('locale') ?? 'th');
-  // Spec §4 lets a manager generate from their own records; the reference list and the domain
-  // call both run under the caller's client, so RLS decides which records are reachable.
-  const admin = await requireStaff(locale);
+  // Only the Owner writes the bank (D76), and generation is hidden from P17d on.
+  const admin = await requireAdmin(locale);
+  if (!AI_QUESTION_GENERATION_VISIBLE) return { error: 'not_configured', rejected: [] };
 
   const count = Number(formData.get('count') ?? 10);
   const templateCount = Number(formData.get('templateCount') ?? 0);
