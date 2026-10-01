@@ -366,7 +366,13 @@
       "sourceDocument": "来自 {name}",
       "sourcePage": "第 {page} 页",
       "fileHint": "PDF，每个文件最大 30 MB",
-      "interviewHint": "银行也会问这些问题，但 DBD 文件中没有答案。请填写公司准备的答案；它们会用于学习卡片、测验、考试和准备度面谈。",
+      "interviewHint": "仅需填写任何文件都无法回答的问题。银行会问的其他问题已在下方自动填好，无需输入。",
+      "amountHint": "请用数字填写金额，例如 300,000。每月交易笔数由这两个金额计算得出。",
+      "standardAnswers": {
+        "title": "自动填写",
+        "hint": "学员将学习这些答案。它们来自 DBD 文件、上面的回答，或对所有公司都相同。",
+        "pending": "填写其依据的答案后自动生成"
+      },
       "interviewFields": {
         "contact_email": "公司电子邮箱",
         "contact_phone": "公司电话号码",
@@ -432,37 +438,12 @@
         "contact": "公司联系方式",
         "business": "公司的业务",
         "bank": "银行的其他问题",
-        "status": "公司状况",
         "customers": "客户与供应商",
         "money": "资金与交易",
-        "banking": "银行账户",
         "legacy": "以前的答案"
       },
       "team": "团队",
-      "legacyHint": "新评估之前填写的答案，按原样保留，评估中不使用。",
-      "interviewFieldsAlt": {
-        "main_clients": "预期的主要客户",
-        "client_origin": "将从哪里、如何获得客户",
-        "customer_examples": "预期的目标客户",
-        "customer_profile": "预期的客户类型",
-        "main_suppliers": "将如何采购商品（尚无固定供应商）",
-        "business_address": "计划的经营地点",
-        "monthly_revenue": "预期月收入",
-        "revenue_basis": "预期收入的依据",
-        "average_transaction": "预期每笔交易金额",
-        "monthly_transactions": "预期每月交易笔数",
-        "transaction_details": "预期的购买与付款方式"
-      },
-      "statusFacts": {
-        "hint": "这些决定部分问题的问法（例如询问预期客户而非现有客户），系统从不猜测。",
-        "operations_started": "公司是否已开始经营？",
-        "has_existing_customers": "是否已有客户？",
-        "has_completed_transactions": "是否已有成交？",
-        "has_regular_suppliers": "是否有固定供应商？",
-        "unset": "尚未说明",
-        "yes": "是",
-        "no": "否"
-      },
+      "legacyHint": "新评估之前填写的答案，仍会显示在银行面谈学习卡片上。留空时沿用上面的回答。",
       "address": {
         "title": "注册地址（按泰国行政区划核对）",
         "status": {
