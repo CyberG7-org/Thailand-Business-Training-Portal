@@ -5,6 +5,7 @@ import {
   fillBusinessAnswers,
   loginAs,
   openManualRecordForm,
+  openRecordTab,
 } from './helpers';
 
 test('admin creates a record with a BE date, sees it as printed, and confirms it', async ({
@@ -45,12 +46,15 @@ test('the record lists what blocks acceptance, and accepts itself the moment it 
   const level1 = page.locator('form:has(input[name="juristic_id"])');
   await level1.getByRole('button', { name: 'บันทึก' }).click();
   await expect(level1.getByRole('status')).toContainText('บันทึกแล้ว');
+  await openRecordTab(page, 'exceptions');
   await expect(page.getByTestId('exception-invalid-juristic_id')).toBeVisible();
   await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 
+  await openRecordTab(page, 'details');
   await page.locator('input[name="juristic_id"]').fill('0105568233704');
   await level1.getByRole('button', { name: 'บันทึก' }).click();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
+  await openRecordTab(page, 'exceptions');
   await expect(page.getByTestId('exceptions-acceptance')).toHaveCount(0);
   // The version waits for the rest of the sheet.
   await expect(page.getByTestId('exceptions-version')).toBeVisible();

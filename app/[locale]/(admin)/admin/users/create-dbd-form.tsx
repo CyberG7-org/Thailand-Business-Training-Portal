@@ -1,6 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
+import { PdfFilePicker } from '@/components/staff/pdf-file-picker';
 import { Link } from '@/i18n/navigation';
 import { REQUIRED_INTERVIEW_FIELDS } from '@/lib/domain/bank-interview';
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../dbd-records/use-direct-upload';
@@ -12,9 +13,16 @@ const PROSE_FIELDS = new Set<string>(['nature_of_business', 'products_services']
  * "Create DBD" (D80): the pack and the four details only a manager can give, sent in one go.
  * The record is created with the details already on it, the documents go straight from the
  * browser to storage (D45), and the reader fills and indexes the rest in the background — a
- * clean record then confirms itself. The staff member stays here and watches the list below.
+ * clean record then confirms itself. The staff member stays here and watches the list above.
+ * `embedded` drops the card and the title, for the foot of the companies list, which has both.
  */
-export function CreateDbdForm({ extractionAvailable }: { extractionAvailable: boolean }) {
+export function CreateDbdForm({
+  extractionAvailable,
+  embedded = false,
+}: {
+  extractionAvailable: boolean;
+  embedded?: boolean;
+}) {
   const locale = useLocale();
   const t = useTranslations('admin.createDbd');
   const td = useTranslations('admin.dbd');
@@ -30,6 +38,9 @@ export function CreateDbdForm({ extractionAvailable }: { extractionAvailable: bo
     : [];
   const fieldLabel = (field: string) =>
     td(`interviewFields.${field}` as 'interviewFields.contact_email');
+  // Embedded, the two contact lines sit side by side and everything else spans the row.
+  const wide = embedded ? 'md:col-span-2' : '';
+  const label = embedded ? 'font-semibold text-ink-900' : undefined;
 
   return (
     <form
@@ -38,26 +49,22 @@ export function CreateDbdForm({ extractionAvailable }: { extractionAvailable: bo
         submit(e.currentTarget);
       }}
       id="create-dbd"
-      className="staff-card grid max-w-2xl scroll-mt-6 gap-3"
+      className={`grid scroll-mt-6 ${embedded ? 'max-w-3xl gap-4 md:grid-cols-2' : 'staff-card max-w-2xl gap-3'}`}
       data-testid="create-dbd"
     >
-      <h2 className="font-semibold">{t('title')}</h2>
-      <p className="text-sm text-ink-700">
+      {!embedded && <h2 className="font-semibold">{t('title')}</h2>}
+      <p className={`text-sm text-ink-700 ${wide}`}>
         {extractionAvailable ? t('intro') : t('introNoReader')}
       </p>
-      <label className="text-sm">
-        {t('documents')}
-        <input
+      <div className={wide}>
+        <PdfFilePicker
           name="document"
-          type="file"
-          accept="application/pdf"
-          multiple
-          required
-          data-testid="create-dbd-files"
-          className="mt-1 block text-sm"
+          label={t('documents')}
+          hint={td('fileHint')}
+          testId="create-dbd-files"
+          strongLabel={embedded}
         />
-        <span className="mt-1 block text-sm text-ink-500">{td('fileHint')}</span>
-      </label>
+      </div>
       {REQUIRED_INTERVIEW_FIELDS.map((field) => {
         const invalid = badAnswers.includes(field);
         const common = {
@@ -68,8 +75,8 @@ export function CreateDbdForm({ extractionAvailable }: { extractionAvailable: bo
           className: 'staff-input mt-1',
         };
         return (
-          <label key={field} className="text-sm">
-            {fieldLabel(field)}
+          <label key={field} className={`text-sm ${PROSE_FIELDS.has(field) ? wide : ''}`}>
+            <span className={label}>{fieldLabel(field)}</span>
             {PROSE_FIELDS.has(field) ? (
               <textarea {...common} rows={3} maxLength={2000} />
             ) : (
@@ -84,7 +91,7 @@ export function CreateDbdForm({ extractionAvailable }: { extractionAvailable: bo
         );
       })}
       {state.error && (
-        <p role="alert" data-testid="create-dbd-error" className="text-sm text-bad-600">
+        <p role="alert" data-testid="create-dbd-error" className={`text-sm text-bad-600 ${wide}`}>
           {badAnswers.length > 0
             ? t('answersInvalid', { fields: badAnswers.map(fieldLabel).join(', ') })
             : uploadError
@@ -93,11 +100,11 @@ export function CreateDbdForm({ extractionAvailable }: { extractionAvailable: bo
         </p>
       )}
       {state.ok && (
-        <p role="status" data-testid="create-dbd-status" className="staff-notice-ok">
+        <p role="status" data-testid="create-dbd-status" className={`staff-notice-ok ${wide}`}>
           {extractionAvailable ? t('created') : t('createdNoReader')}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${wide}`}>
         <button
           type="submit"
           disabled={pending}

@@ -2,6 +2,8 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
+import { FileIcon } from '@/components/icons';
+import { PdfFilePicker } from '@/components/staff/pdf-file-picker';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
   recheckRecordAction,
@@ -11,6 +13,7 @@ import {
   type ToolState,
 } from '../actions';
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
+import { useOpenRecordTab } from './record-tabs';
 
 const initial: ToolState = { ok: false, error: null };
 
@@ -71,26 +74,32 @@ function FillOutcome({ state }: { state: ToolState }) {
   );
 }
 
-export function RecordTools({
+const INDEX_TONE: Partial<Record<IndexStatus, string>> = {
+  ready: 'bg-ok-50 text-ok-600',
+  failed: 'bg-bad-50 text-bad-600',
+};
+
+/**
+ * The Documents tab's card: every uploaded file with what kind it is and how far its indexing
+ * got, a way to add more (they are read in the background, D46), and "Read the documents again".
+ * A confirmed company keeps its documents but takes no new reading.
+ */
+export function DocumentsCard({
   id,
   status,
   documents,
   reading,
   extractionAvailable,
-  acceptance,
 }: {
   id: string;
   status: string;
   documents: DocumentSummary[];
   reading: ReadingState | null;
   extractionAvailable: boolean;
-  /** Where acceptance stands (P17c): what blocks it, or who accepted. */
-  acceptance: { blockers: number; confirmedByName: string | null; automatic: boolean };
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const readingErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === reading?.error);
-  const [recheckState, recheckAction, rechecking] = useActionState(recheckRecordAction, initial);
   const {
     state: uploadState,
     pending: uploading,
@@ -105,34 +114,38 @@ export function RecordTools({
     type ? t(`documentTypes.${type}` as 'documentTypes.certificate') : t('documentTypes.unknown');
 
   return (
-    <div className="grid max-w-2xl gap-4">
-      <div className="staff-card grid gap-3">
-        <p className="text-sm font-semibold">{t('documents')}</p>
+    <section className="staff-card divide-y divide-ink-100 p-0 md:p-0">
+      <div className="grid gap-3 p-4 md:px-6 md:py-5">
+        <div>
+          <h2 className="text-base font-semibold text-ink-900">{t('documents')}</h2>
+          {documents.length > 0 && <p className="text-sm text-ink-500">{t('index.hint')}</p>}
+        </div>
         {documents.length === 0 ? (
-          <p className="text-sm">{t('documentMissing')}</p>
+          <p className="text-sm text-ink-700">{t('documentMissing')}</p>
         ) : (
-          <ul className="grid gap-1 text-sm" data-testid="document-list">
-            {documents.map((doc, i) => (
-              <li key={doc.id} className="flex flex-wrap items-center gap-2">
-                <span className="text-ink-500">{i + 1}.</span>
-                <span>{doc.name}</span>
+          <ul className="grid gap-2 text-sm" data-testid="document-list">
+            {documents.map((doc) => (
+              <li
+                key={doc.id}
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-ink-100 px-3 py-2"
+              >
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="shrink-0 text-brand-600">
+                    <FileIcon />
+                  </span>
+                  <span className="truncate font-medium text-ink-900">{doc.name}</span>
+                </span>
                 <span className="staff-tag" data-testid="document-type">
                   {typeLabel(doc.type)}
                 </span>
-                <span className="text-xs text-ink-500">
+                <span className="text-ink-500 tabular-nums">
                   {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
                 </span>
                 <span
                   data-testid="index-status"
                   data-status={doc.indexStatus}
                   title={doc.indexError ?? undefined}
-                  className={`rounded px-1 text-xs ${
-                    doc.indexStatus === 'ready'
-                      ? 'bg-ok-50'
-                      : doc.indexStatus === 'failed'
-                        ? 'bg-bad-50'
-                        : 'bg-ink-100'
-                  }`}
+                  className={`staff-tag ${INDEX_TONE[doc.indexStatus] ?? ''}`}
                 >
                   {t(`index.status.${doc.indexStatus}` as 'index.status.ready', {
                     done: doc.indexedPages,
@@ -171,15 +184,12 @@ export function RecordTools({
             ))}
           </ul>
         )}
-        {documents.length > 0 && <p className="text-xs text-ink-500">{t('index.hint')}</p>}
         {reading && (
           <p
             role={reading.status === 'failed' ? 'alert' : 'status'}
             data-testid="reading-status"
             data-state={reading.status}
-            className={`rounded p-2 text-sm ${
-              reading.status === 'failed' ? 'bg-warn-50 text-warn-700' : 'bg-ink-50 text-ink-700'
-            }`}
+            className={reading.status === 'failed' ? 'staff-notice-warn' : 'staff-notice-info'}
           >
             {reading.status === 'failed'
               ? t('readingFailed', {
@@ -192,26 +202,23 @@ export function RecordTools({
                 : t('readingQueued')}
           </p>
         )}
+      </div>
 
-        <div className="grid gap-2 border-t pt-3">
-          <p className="text-xs text-ink-500">
-            {extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
-          </p>
+      {!locked && (
+        <div className="grid gap-3 p-4 md:px-6 md:py-5">
           {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
               submitUpload(e.currentTarget);
             }}
-            className="grid gap-2"
+            className="grid gap-3"
           >
-            <input
+            <PdfFilePicker
               name="document"
-              type="file"
-              accept="application/pdf"
-              multiple
-              required
-              className="text-sm"
+              label={t('addDocuments')}
+              hint={extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
+              strongLabel
             />
             {uploadState.error && (
               <p role="alert" className="text-sm text-bad-600">
@@ -219,23 +226,21 @@ export function RecordTools({
               </p>
             )}
             <FillOutcome state={uploadState} />
-            <button
-              type="submit"
-              disabled={uploading || locked}
-              className="staff-btn-ghost justify-self-start"
-            >
-              {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="submit" disabled={uploading} className="staff-btn">
+                {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
+              </button>
+            </div>
           </form>
-          <form action={extractAction} className="grid gap-2">
+          <form action={extractAction} className="grid gap-2 border-t border-ink-100 pt-3">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="id" value={id} />
+            <p className="text-sm text-ink-500">{t('extractHint')}</p>
             <button
               type="submit"
               disabled={!canExtract || extracting || uploading}
               data-testid="extract-button"
               className="staff-btn-ghost justify-self-start"
-              title={t('extractHint')}
             >
               {extracting ? t('extracting') : t('reExtract')}
             </button>
@@ -247,47 +252,113 @@ export function RecordTools({
             <FillOutcome state={extractState} />
           </form>
         </div>
-      </div>
+      )}
+    </section>
+  );
+}
 
-      <form action={recheckAction} className="staff-card grid gap-2">
-        <input type="hidden" name="locale" value={locale} />
-        <input type="hidden" name="id" value={id} />
-        <p className="text-sm">
-          {t('status')}: <span data-testid="record-status">{status}</span>
-        </p>
-        {locked ? (
-          <p className="staff-notice-ok text-sm" data-testid="acceptance-state">
-            {acceptance.automatic
-              ? t('acceptance.acceptedAuto')
-              : t('acceptance.accepted', { name: acceptance.confirmedByName ?? '—' })}
-          </p>
-        ) : (
-          <p
-            className="staff-notice-warn text-sm"
-            data-testid="acceptance-state"
-            data-blockers={acceptance.blockers}
+/** One line of "Before it can be used": done, or still in the way. */
+export type AcceptanceCheck = { key: string; label: string; done: boolean };
+
+/**
+ * The status column's first card (P17c): where acceptance stands, as a list ticked like the
+ * learner form's — the documents read, nothing missing, no conflicts — then who accepted, or
+ * "Check again" with a way to the exceptions that stand in the way.
+ */
+export function StatusCard({
+  id,
+  status,
+  checks,
+  acceptance,
+}: {
+  id: string;
+  status: string;
+  checks: AcceptanceCheck[];
+  acceptance: { blockers: number; confirmedByName: string | null; automatic: boolean };
+}) {
+  const locale = useLocale();
+  const t = useTranslations('admin.dbd');
+  const openTab = useOpenRecordTab();
+  const [recheckState, recheckAction, rechecking] = useActionState(recheckRecordAction, initial);
+  const locked = status === 'confirmed';
+
+  return (
+    <form action={recheckAction} className="staff-card grid gap-3">
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="id" value={id} />
+      <p className="text-sm font-semibold text-ink-900">{t('checks.title')}</p>
+      {/* The stored status, for the suite and for support; people read the badge in the header. */}
+      <span hidden data-testid="record-status">
+        {status}
+      </span>
+      <ul className="grid gap-2" data-testid="acceptance-checks">
+        {checks.map(({ key, label, done }) => (
+          <li
+            key={key}
+            data-testid={`check-${key}`}
+            data-done={done}
+            className="flex min-h-6 items-center gap-3 text-sm"
           >
-            {acceptance.blockers > 0
-              ? t('acceptance.waiting', { count: acceptance.blockers })
-              : t('acceptance.blocked')}
-          </p>
-        )}
-        {recheckState.error && recheckState.error !== 'blocked' && (
-          <p role="alert" data-testid="recheck-error" className="text-sm text-bad-600">
-            {recheckState.error}
-          </p>
-        )}
-        {!locked && (
+            <span
+              aria-hidden="true"
+              className={`grid size-5 shrink-0 place-items-center rounded-full ${
+                done ? 'bg-ok-600 text-white' : 'bg-ink-100 ring-1 ring-ink-300 ring-inset'
+              }`}
+            >
+              {done && (
+                <svg viewBox="0 0 16 16" className="size-3" fill="none" stroke="currentColor">
+                  <path d="M3.5 8.5l3 3 6-7" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              )}
+            </span>
+            <span className={done ? 'text-ink-900' : 'text-ink-500'}>{label}</span>
+            <span className="sr-only">{done ? t('checks.done') : t('checks.todo')}</span>
+          </li>
+        ))}
+      </ul>
+      {locked ? (
+        <p className="staff-notice-ok" data-testid="acceptance-state">
+          {acceptance.automatic
+            ? t('acceptance.acceptedAuto')
+            : t('acceptance.accepted', { name: acceptance.confirmedByName ?? '—' })}
+        </p>
+      ) : (
+        <p
+          className="staff-notice-warn"
+          data-testid="acceptance-state"
+          data-blockers={acceptance.blockers}
+        >
+          {acceptance.blockers > 0
+            ? t('acceptance.waiting', { count: acceptance.blockers })
+            : t('acceptance.blocked')}
+        </p>
+      )}
+      {recheckState.error && recheckState.error !== 'blocked' && (
+        <p role="alert" data-testid="recheck-error" className="text-sm text-bad-600">
+          {recheckState.error}
+        </p>
+      )}
+      {!locked && (
+        <div className="flex flex-wrap gap-2">
           <button
             type="submit"
             disabled={rechecking}
             data-testid="recheck-button"
-            className="staff-btn-ghost justify-self-start"
+            className="staff-btn-ghost flex-1"
           >
             {t('recheck')}
           </button>
-        )}
-      </form>
-    </div>
+          {acceptance.blockers > 0 && (
+            <button
+              type="button"
+              onClick={() => openTab('exceptions')}
+              className="staff-btn-ghost flex-1 text-brand-600"
+            >
+              {t('checks.openExceptions')}
+            </button>
+          )}
+        </div>
+      )}
+    </form>
   );
 }

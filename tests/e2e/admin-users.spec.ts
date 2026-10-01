@@ -97,7 +97,7 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
   await page
     .locator('select[name="dbdRecordId"]')
     .selectOption((await option.getAttribute('value'))!);
-  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   await expect(page.getByTestId('create-user-error')).toHaveText(
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',
   );
@@ -121,8 +121,9 @@ test('the admin must say which team', async ({ page }) => {
   await page
     .locator('select[name="dbdRecordId"]')
     .selectOption((await option.getAttribute('value'))!);
-  // The team select is required, so the browser keeps the form here and nothing is created.
-  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  // Until a team is chosen nothing can be created: the list says so and the button sleeps.
+  await expect(page.getByTestId('check-team')).toHaveAttribute('data-done', 'false');
+  await expect(page.getByRole('button', { name: 'สร้างผู้เรียน' })).toBeDisabled();
   await expect(page.getByTestId('create-user-status')).toHaveCount(0);
   await expect(page.locator('select[name="managerId"]')).toHaveAttribute('required', '');
 });
@@ -145,8 +146,11 @@ test('a learner is not created without a name', async ({ page }) => {
   await page
     .locator('select[name="dbdRecordId"]')
     .selectOption((await option.getAttribute('value'))!);
-  // The name is required, so the browser keeps the form here and nobody is created.
-  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  // The name is required: the list ticks what is there, not the name, and the button sleeps.
+  await expect(page.getByTestId('check-company')).toHaveAttribute('data-done', 'true');
+  await expect(page.getByTestId('check-password')).toHaveAttribute('data-done', 'true');
+  await expect(page.getByTestId('check-name')).toHaveAttribute('data-done', 'false');
+  await expect(page.getByRole('button', { name: 'สร้างผู้เรียน' })).toBeDisabled();
   await expect(page.getByTestId('create-user-status')).toHaveCount(0);
   await expect(page.getByTestId('login-suffix')).not.toHaveValue('');
 });
@@ -155,7 +159,8 @@ test('a learner cannot be created without a confirmed company', async ({ page })
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users');
   await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
-  await page.getByRole('button', { name: 'สร้างผู้ใช้' }).click();
+  await expect(page.getByTestId('check-company')).toHaveAttribute('data-done', 'false');
+  await expect(page.getByRole('button', { name: 'สร้างผู้เรียน' })).toBeDisabled();
   await expect(page.getByTestId('create-user-status')).toHaveCount(0);
   await expect(page.locator('select[name="dbdRecordId"]')).toHaveAttribute('required', '');
 });

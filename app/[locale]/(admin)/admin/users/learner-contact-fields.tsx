@@ -3,17 +3,32 @@
 import { useTranslations } from 'next-intl';
 import type { LearnerContact } from '@/lib/domain/learner-contact';
 
+export type ContactField = 'phone' | 'contactEmail' | 'website' | 'facebookPage';
+
+const ALL: ContactField[] = ['phone', 'contactEmail', 'website', 'facebookPage'];
+
 /**
  * A learner's contact details as their manager gives them (D80): phone and email required,
  * website and Facebook page optional. Shared by the create form and the learner's own page, so
- * both post the same field names to the same validation.
+ * both post the same field names to the same validation. The create form lays them out in two
+ * sections, so it asks for some of them at a time (`only`) with its bolder labels (`strong`).
  */
-export function LearnerContactFields({ values }: { values?: Partial<LearnerContact> | null }) {
+export function LearnerContactFields({
+  values,
+  only = ALL,
+  strong = false,
+}: {
+  values?: Partial<LearnerContact> | null;
+  only?: ContactField[];
+  strong?: boolean;
+}) {
   const t = useTranslations('admin.users.contact');
-  return (
-    <>
-      <label className="text-sm">
-        {t('phone')}
+  const label = strong ? 'font-semibold text-ink-900' : undefined;
+  const optional = <span className="font-normal text-ink-500">{t('optional')}</span>;
+  const fields: Record<ContactField, React.ReactNode> = {
+    phone: (
+      <label key="phone" className="text-sm">
+        <span className={label}>{t('phone')}</span>
         <input
           name="phone"
           type="tel"
@@ -26,8 +41,10 @@ export function LearnerContactFields({ values }: { values?: Partial<LearnerConta
           className="staff-input mt-1 tabular-nums"
         />
       </label>
-      <label className="text-sm">
-        {t('contactEmail')}
+    ),
+    contactEmail: (
+      <label key="contactEmail" className="text-sm">
+        <span className={label}>{t('contactEmail')}</span>
         <input
           name="contactEmail"
           type="email"
@@ -35,11 +52,14 @@ export function LearnerContactFields({ values }: { values?: Partial<LearnerConta
           maxLength={320}
           autoComplete="off"
           defaultValue={values?.contactEmail ?? ''}
+          placeholder={t('emailPlaceholder')}
           className="staff-input mt-1"
         />
       </label>
-      <label className="text-sm">
-        {t('website')} <span className="text-ink-500">{t('optional')}</span>
+    ),
+    website: (
+      <label key="website" className="text-sm">
+        <span className={label}>{t('website')}</span> {optional}
         <input
           name="website"
           inputMode="url"
@@ -50,8 +70,10 @@ export function LearnerContactFields({ values }: { values?: Partial<LearnerConta
           className="staff-input mt-1"
         />
       </label>
-      <label className="text-sm">
-        {t('facebookPage')} <span className="text-ink-500">{t('optional')}</span>
+    ),
+    facebookPage: (
+      <label key="facebookPage" className="text-sm">
+        <span className={label}>{t('facebookPage')}</span> {optional}
         <input
           name="facebookPage"
           maxLength={300}
@@ -61,6 +83,7 @@ export function LearnerContactFields({ values }: { values?: Partial<LearnerConta
           className="staff-input mt-1"
         />
       </label>
-    </>
-  );
+    ),
+  };
+  return <>{only.map((field) => fields[field])}</>;
 }

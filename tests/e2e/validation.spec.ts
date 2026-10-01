@@ -13,7 +13,7 @@ test('a low-confidence fact waits for a person; confirming it accepts the record
   const recordId = await setProvenance(learner, { registered_capital: 0.6 });
 
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await page.goto(`/th/admin/dbd-records/${recordId}`);
+  await page.goto(`/th/admin/dbd-records/${recordId}?tab=exceptions`);
   await page.getByTestId('recheck-button').click();
   await expect(page.getByTestId('exception-low_confidence-registered_capital')).toBeVisible();
   await expect(page.getByTestId('acceptance-state')).toHaveAttribute('data-blockers', '1');
@@ -24,7 +24,7 @@ test('a low-confidence fact waits for a person; confirming it accepts the record
     'low_confidence',
   );
 
-  await page.goto(`/th/admin/dbd-records/${recordId}`);
+  await page.goto(`/th/admin/dbd-records/${recordId}?tab=exceptions`);
   const row = page.getByTestId('exception-low_confidence-registered_capital');
   await row.locator('input[name="note"]').fill('ตรงกับหนังสือรับรอง');
   await row.getByTestId('exception-confirm').click();
@@ -41,7 +41,7 @@ test('a manager sees only their own team in the queue', async ({ page }) => {
   const company = `บริษัท ทีมอื่น ${Date.now()} จำกัด`;
   const learner = await seedLearnerWithCompleteCompany(company);
   const recordId = await setProvenance(learner, { registered_capital: 0.6 });
-  await page.goto(`/th/admin/dbd-records/${recordId}`);
+  await page.goto(`/th/admin/dbd-records/${recordId}?tab=exceptions`);
   await page.getByTestId('recheck-button').click();
   await expect(page.getByTestId('exception-low_confidence-registered_capital')).toBeVisible();
   await page.goto('/th/admin/exceptions');

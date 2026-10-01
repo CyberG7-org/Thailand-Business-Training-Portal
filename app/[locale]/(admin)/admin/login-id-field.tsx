@@ -28,6 +28,7 @@ export function LoginIdField({
   managerId,
   initialSuffix,
   busy = false,
+  compact = false,
 }: {
   kind: LoginIdKind;
   /** The stored prefix, e.g. `t-` or `t-g4-`; null while the admin has not chosen a team. */
@@ -36,6 +37,12 @@ export function LoginIdField({
   managerId?: string;
   initialSuffix: string | null;
   busy?: boolean;
+  /**
+   * One status line instead of status and hint ("✓ Available — keep it, press ↻ for another…"),
+   * for a form laid out in sections. The shape hint stays for screen readers, and the refusal
+   * for a wrong shape still says what is wanted.
+   */
+  compact?: boolean;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.loginIdField');
@@ -80,7 +87,7 @@ export function LoginIdField({
   const message: Record<FieldState, string | null> = {
     idle: null,
     checking: t('checking'),
-    available: t('available'),
+    available: t(compact ? 'availableKeep' : 'available'),
     taken: t('taken'),
     // A learner's code is two letters and two digits (D84); a manager's one letter and two (D85).
     invalid: t(kind === 'learner' ? 'invalidLearner' : 'invalid'),
@@ -91,7 +98,9 @@ export function LoginIdField({
 
   return (
     <div className="text-sm">
-      <label htmlFor={id}>{t('label')}</label>
+      <label htmlFor={id} className={compact ? 'font-semibold text-ink-900' : undefined}>
+        {t('label')}
+      </label>
       <div className="mt-1 flex items-stretch gap-2">
         <div className="staff-input-group">
           <span data-testid="login-id-prefix" className="staff-input-affix font-mono">
@@ -126,7 +135,9 @@ export function LoginIdField({
           data-testid="suggest-login-id"
           aria-label={t('suggest')}
           title={t('suggest')}
-          className="staff-btn-ghost staff-btn-sm"
+          className={
+            compact ? 'staff-btn-ghost w-11 shrink-0 px-0' : 'staff-btn-ghost staff-btn-sm'
+          }
         >
           <span aria-hidden="true">↻</span>
         </button>
@@ -136,12 +147,12 @@ export function LoginIdField({
         role="status"
         data-testid="login-id-status"
         data-state={state}
-        className={`mt-1 min-h-6 ${tone}`}
+        className={`mt-1 ${compact ? 'min-h-5' : 'min-h-6'} ${tone}`}
       >
         {message[state]}
       </p>
       {/* 14px, not the 12px of older hints: Thai is never set below 14 (design brief). */}
-      <span id={`${id}-hint`} className="block text-sm text-ink-500">
+      <span id={`${id}-hint`} className={compact ? 'sr-only' : 'block text-sm text-ink-500'}>
         {t(kind === 'learner' ? 'hintLearner' : 'hint')}
       </span>
     </div>

@@ -52,6 +52,8 @@ const DOCUMENT_FIELDS = [
 const BUSINESS_ANSWER_FIELDS = ['nature_of_business', 'products_services'] as const;
 
 const DATE_FIELDS = new Set(['registered_on', 'issued_on']);
+/** Long values take the whole row; everything else sits two to a row. */
+const WIDE_FIELDS = new Set(['signing_authority', 'head_office_address']);
 const initial: SaveState = { ok: false, error: null, fieldErrors: {} };
 
 export function DbdRecordForm({
@@ -82,6 +84,9 @@ export function DbdRecordForm({
   const missingAnswers = missingBusinessAnswers(answers);
   const profile = business ?? EMPTY_BUSINESS_PROFILE;
   const inputClass = 'staff-input mt-1';
+  const labelText = 'font-semibold text-ink-900';
+  const section = 'grid gap-4 p-4 md:grid-cols-2 md:px-6 md:py-5';
+  const wide = 'md:col-span-2';
 
   /**
    * Record value wins; otherwise the extraction suggestion (if any). A stored value that equals
@@ -155,8 +160,8 @@ export function DbdRecordForm({
     const shown =
       DATE_FIELDS.has(name) && isISODate(value) ? formatDate(value, locale as Locale) : value;
     return (
-      <label key={name} className="text-sm">
-        {t(`fields.${label}` as 'fields.companyNameTh')}
+      <label key={name} className={`text-sm ${WIDE_FIELDS.has(name) ? wide : ''}`}>
+        <span className={labelText}>{t(`fields.${label}` as 'fields.companyNameTh')}</span>
         <input
           name={name}
           defaultValue={shown}
@@ -182,15 +187,15 @@ export function DbdRecordForm({
   );
 
   return (
-    <form action={formAction} className="grid max-w-2xl gap-6">
+    <form action={formAction} className="staff-card grid divide-y divide-ink-100 p-0 md:p-0">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={record?.id ?? ''} />
 
-      <fieldset className="staff-card grid gap-3">
-        <legend className="px-1 text-sm font-semibold">{t('levels.identity')}</legend>
+      <section className={section}>
+        <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.identity')}</h3>
         {IDENTITY_FIELDS.map(renderField)}
-        <label className="text-sm">
-          {t('fields.directors')}
+        <label className={`text-sm ${wide}`}>
+          <span className={labelText}>{t('fields.directors')}</span>
           <textarea
             name="directors_text"
             rows={3}
@@ -201,51 +206,57 @@ export function DbdRecordForm({
           <span className="text-xs text-ink-500">{t('directorsHint')}</span>
           {suggestionNote('directors_text', directorsDefault.suggested)}
         </label>
+      </section>
 
-        <div className="grid gap-3 border-t pt-3">
-          {missingAnswers.length > 0 && (
-            <p data-testid="answers-missing" className="text-sm text-warn-700">
-              {t('answersMissing', {
-                fields: missingAnswers
-                  .map((f) => t(`interviewFields.${f}` as 'interviewFields.account_purpose'))
-                  .join(', '),
-              })}
-            </p>
-          )}
-          <p className="text-xs font-semibold text-ink-700">{t('interviewGroups.contact')}</p>
-          {CONTACT_FIELDS.map((field) => (
-            <label key={field} className="text-sm">
-              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
-              <span className="text-bad-600"> *</span>
-              <input
-                name={`interview_${field}`}
-                type={field === 'contact_email' ? 'email' : 'text'}
-                defaultValue={answers?.[field] ?? ''}
-                className={inputClass}
-              />
-            </label>
-          ))}
-          <p className="text-xs font-semibold text-ink-700">{t('interviewGroups.business')}</p>
-          {BUSINESS_ANSWER_FIELDS.map((field) => (
-            <label key={field} className="text-sm">
-              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
-              <span className="text-bad-600"> *</span>
-              <textarea
-                name={`interview_${field}`}
-                rows={3}
-                defaultValue={answers?.[field] ?? ''}
-                className={inputClass}
-              />
-            </label>
-          ))}
+      <section className={section}>
+        <div className={wide}>
+          <h3 className="text-base font-semibold text-ink-900">{t('levels.answers')}</h3>
+          <p className="text-sm text-ink-500">{t('levels.answersIntro')}</p>
         </div>
-      </fieldset>
+        {missingAnswers.length > 0 && (
+          <p data-testid="answers-missing" className={`staff-notice-warn ${wide}`}>
+            {t('answersMissing', {
+              fields: missingAnswers
+                .map((f) => t(`interviewFields.${f}` as 'interviewFields.account_purpose'))
+                .join(', '),
+            })}
+          </p>
+        )}
+        {CONTACT_FIELDS.map((field) => (
+          <label key={field} className="text-sm">
+            <span className={labelText}>
+              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
+            </span>
+            <span className="text-bad-600"> *</span>
+            <input
+              name={`interview_${field}`}
+              type={field === 'contact_email' ? 'email' : 'text'}
+              defaultValue={answers?.[field] ?? ''}
+              className={inputClass}
+            />
+          </label>
+        ))}
+        {BUSINESS_ANSWER_FIELDS.map((field) => (
+          <label key={field} className={`text-sm ${wide}`}>
+            <span className={labelText}>
+              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
+            </span>
+            <span className="text-bad-600"> *</span>
+            <textarea
+              name={`interview_${field}`}
+              rows={3}
+              defaultValue={answers?.[field] ?? ''}
+              className={inputClass}
+            />
+          </label>
+        ))}
+      </section>
 
       {record && (
-        <fieldset className="staff-card grid gap-3" data-testid="business-profile">
-          <legend className="px-1 text-sm font-semibold">{t('levels.business')}</legend>
-          <label className="text-sm">
-            {t('fields.objectives')}
+        <section className={section} data-testid="business-profile">
+          <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.business')}</h3>
+          <label className={`text-sm ${wide}`}>
+            <span className={labelText}>{t('fields.objectives')}</span>
             <textarea
               name="objectives_text"
               rows={5}
@@ -256,8 +267,8 @@ export function DbdRecordForm({
             <span className="text-xs text-ink-500">{t('objectivesHint')}</span>
             {levelTwoNote('objectives')}
           </label>
-          <label className="text-sm">
-            {t('fields.businessCategories')}
+          <label className={`text-sm ${wide}`}>
+            <span className={labelText}>{t('fields.businessCategories')}</span>
             <textarea
               name="business_categories_text"
               rows={2}
@@ -268,9 +279,9 @@ export function DbdRecordForm({
             <span className="text-xs text-ink-500">{t('onePerLine')}</span>
             {levelTwoNote('business_categories')}
           </label>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={`grid gap-4 sm:grid-cols-2 ${wide}`}>
             <label className="text-sm">
-              {t('fields.totalShares')}
+              <span className={labelText}>{t('fields.totalShares')}</span>
               <input
                 name="total_shares"
                 readOnly={locked}
@@ -279,7 +290,7 @@ export function DbdRecordForm({
               />
             </label>
             <label className="text-sm">
-              {t('fields.parValue')}
+              <span className={labelText}>{t('fields.parValue')}</span>
               <input
                 name="par_value"
                 readOnly={locked}
@@ -288,7 +299,7 @@ export function DbdRecordForm({
               />
             </label>
             <label className="text-sm">
-              {t('fields.paidUpCapital')}
+              <span className={labelText}>{t('fields.paidUpCapital')}</span>
               <input
                 name="paid_up_capital"
                 readOnly={locked}
@@ -297,7 +308,7 @@ export function DbdRecordForm({
               />
             </label>
             <label className="text-sm">
-              {t('fields.shareType')}
+              <span className={labelText}>{t('fields.shareType')}</span>
               <input
                 name="share_type"
                 readOnly={locked}
@@ -306,9 +317,9 @@ export function DbdRecordForm({
               />
             </label>
           </div>
-          {levelTwoNote('share_structure')}
+          <div className={wide}>{levelTwoNote('share_structure')}</div>
           <label className="text-sm">
-            {t('fields.shareholders')}
+            <span className={labelText}>{t('fields.shareholders')}</span>
             <textarea
               name="shareholders_text"
               rows={4}
@@ -320,7 +331,7 @@ export function DbdRecordForm({
             {levelTwoNote('shareholders')}
           </label>
           <label className="text-sm">
-            {t('fields.promoters')}
+            <span className={labelText}>{t('fields.promoters')}</span>
             <textarea
               name="promoters_text"
               rows={3}
@@ -334,34 +345,36 @@ export function DbdRecordForm({
           {['objectives', 'business_categories', 'share_structure', 'shareholders', 'promoters']
             .filter((k) => state.fieldErrors[k])
             .map((k) => (
-              <span key={k} role="alert" className="block text-xs text-bad-600">
+              <span key={k} role="alert" className={`block text-xs text-bad-600 ${wide}`}>
                 {k}: {state.fieldErrors[k]}
               </span>
             ))}
-        </fieldset>
+        </section>
       )}
 
-      <fieldset className="staff-card grid gap-3">
-        <legend className="px-1 text-sm font-semibold">{t('levels.document')}</legend>
+      <section className={section}>
+        <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.document')}</h3>
         {DOCUMENT_FIELDS.map(renderField)}
-      </fieldset>
+      </section>
 
-      {state.error && state.error !== 'validation' && (
-        <p role="alert" className="text-sm text-bad-600">
-          {state.error === 'answers-required' ? t('errors.answers-required') : state.error}
-        </p>
-      )}
-      {state.ok && (
-        <p role="status" className="text-sm text-ok-600">
-          {t('saved')}
-        </p>
-      )}
-      {/* Always present: the four answers above stay editable after confirmation, and a
+      <div className="flex flex-wrap items-center justify-end gap-3 p-4 md:px-6">
+        {state.error && state.error !== 'validation' && (
+          <p role="alert" className="mr-auto text-sm text-bad-600">
+            {state.error === 'answers-required' ? t('errors.answers-required') : state.error}
+          </p>
+        )}
+        {state.ok && (
+          <p role="status" className="mr-auto text-sm text-ok-600">
+            {t('saved')}
+          </p>
+        )}
+        {/* Always present: the four answers above stay editable after confirmation, and a
           record confirmed before they were required still owes them. The certificate inputs are
           read-only once confirmed, so saving then rewrites them unchanged. */}
-      <button type="submit" disabled={pending} className="staff-btn justify-self-start">
-        {t('save')}
-      </button>
+        <button type="submit" disabled={pending} className="staff-btn">
+          {t('save')}
+        </button>
+      </div>
     </form>
   );
 }

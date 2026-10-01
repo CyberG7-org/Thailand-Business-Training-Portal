@@ -104,19 +104,14 @@
       "enable": "启用账户",
       "progression": "进度",
       "company": "公司（学员使用的 DBD 记录）",
-      "chooseCompany": "选择公司…",
       "unconfirmedCompany": "{name} — 尚未确认（{status}）",
-      "companyHint": "学员的学习内容、题目和银行预约日期均来自该公司的 DBD 记录，只能选择已确认的记录。",
       "noConfirmedCompany": "尚无已确认的 DBD 记录，请先确认公司记录再创建学员。",
-      "goToRecords": "可在下方“创建DBD”中创建。",
       "untitledCompany": "（公司名称缺失）",
       "createdFor": "已创建 {loginId} 并分配给 {company}",
       "team": "团队",
       "chooseTeam": "属于哪个团队？",
       "noManager": "请先创建经理——每位学员都属于某个团队。",
-      "learnerName": "学员姓名",
       "appointment": "预约",
-      "newIntro": "为学员设置登录ID、密码、姓名、联系方式以及所学习的已确认公司。",
       "contact": {
         "title": "联系方式",
         "phone": "电话号码",
@@ -132,7 +127,8 @@
           "contactEmail": "请输入有效的电子邮箱",
           "website": "请输入网址，例如 example.co.th",
           "facebookPage": "请输入主页名称或 facebook.com 链接"
-        }
+        },
+        "emailPlaceholder": "name@example.com"
       },
       "version": {
         "title": "培训版本",
@@ -157,7 +153,34 @@
           "no-version": "公司尚无版本。",
           "role-missing": "请先填写学员在 DBD 文件中的姓名。"
         }
-      }
+      },
+      "tabLearner": "学员信息",
+      "tabCompanies": "公司（DBD）",
+      "signIn": "登录信息",
+      "signInIntro": "学员首次登录时使用这些信息。",
+      "passwordPlaceholder": "至少 10 个字符",
+      "generatePassword": "生成",
+      "showPassword": "显示密码",
+      "hidePassword": "隐藏密码",
+      "learnerSection": "学员",
+      "name": "姓名",
+      "namePlaceholder": "学员姓名",
+      "nameCardSection": "名片信息",
+      "companyCard": "学员学习的公司",
+      "chooseConfirmedCompany": "选择已确认的公司…",
+      "notListed": "没有列出？",
+      "addInCompanies": "在“公司（DBD）”中添加",
+      "checklist": {
+        "title": "创建前请确认",
+        "team": "已选择团队",
+        "company": "已选择公司",
+        "password": "密码不少于 10 个字符",
+        "name": "全名",
+        "contact": "电话和邮箱",
+        "done": "已完成",
+        "todo": "待完成"
+      },
+      "createLearner": "创建学员"
     },
     "learners": {
       "title": "学员记录",
@@ -216,9 +239,22 @@
       "statuses": {
         "confirmed_auto": "已自动确认",
         "confirmed": "已确认",
-        "reading": "读取中…",
+        "reading": "正在读取文件…",
         "unread": "无法读取",
         "attention": "需要处理"
+      },
+      "companiesIntro": "每位学员学习一家公司的 DBD 记录——包括学习资料、题目和银行预约日期。只有已确认的公司才能分配给学员。",
+      "search": "搜索名称或 13 位注册号",
+      "noMatch": "没有与“{query}”匹配的公司。",
+      "addCompany": "添加未列出的公司",
+      "addCompanyHint": "上传其 DBD 文件——系统会在 1–3 分钟内自动检查。",
+      "closeAdd": "关闭",
+      "columns": {
+        "company": "公司（泰文名称）",
+        "juristicId": "法人注册号",
+        "issuedOn": "证书签发日期",
+        "team": "团队",
+        "status": "状态"
       }
     },
     "loginIdField": {
@@ -232,7 +268,8 @@
       "noTeam": "该团队无法添加新学员",
       "chooseTeam": "请先选择团队",
       "hintLearner": "2位字母加2位数字，例如 DA42。系统已填入一个可用代码——可直接使用、按 ↻ 换一个，或自行输入。",
-      "invalidLearner": "请使用2位字母加2位数字，例如 DA42"
+      "invalidLearner": "请使用2位字母加2位数字，例如 DA42",
+      "availableKeep": "✓ 可以使用——直接使用、按 ↻ 换一个，或自行输入"
     },
     "dbd": {
       "title": "DBD 记录",
@@ -307,7 +344,9 @@
         "identity": "第 1 级 — 公司信息（注册证明）",
         "business": "第 2 级 — 业务信息（经营目的 / 股东名册 บอจ.5 / 备忘录 บอจ.2）",
         "document": "第 3 级 — DBD 文件信息",
-        "interview": "第 4 级 — 银行面谈答案（DBD 文件中没有的信息）"
+        "interview": "第 4 级 — 银行面谈答案（DBD 文件中没有的信息）",
+        "answers": "联系与业务",
+        "answersIntro": "DBD 文件无法提供的四项答案，公司投入使用前必须填写。"
       },
       "documentTypes": {
         "certificate": "注册证明",
@@ -477,7 +516,8 @@
         "perLearner": "按学员检查：{list}",
         "allReady": "所有概念的信息都已齐全。",
         "missingFacts": "仍缺少",
-        "missingConcepts": "等待中的概念：{list}"
+        "missingConcepts": "等待中的概念：{list}",
+        "whatIsMissing": "缺少的信息（{count}）"
       },
       "facts": {
         "company_name_th": "公司名称（泰文）",
@@ -542,7 +582,7 @@
         "accepted": "由 {name} 接受",
         "acceptedAuto": "自动接受：读取无问题且四项详情齐全。",
         "waiting": "{count} 个例外阻止接受",
-        "blocked": "尚未接受——请处理下方的例外。"
+        "blocked": "尚未接受——请处理例外。"
       },
       "exceptions": {
         "title": "例外",
@@ -588,7 +628,25 @@
           "not-found": "未找到。"
         }
       },
-      "answersMissing": "该记录被接受前还需填写：{fields}"
+      "answersMissing": "该记录被接受前还需填写：{fields}",
+      "tabs": {
+        "details": "公司信息",
+        "interview": "银行面谈",
+        "documents": "文件",
+        "exceptions": "例外"
+      },
+      "checks": {
+        "title": "使用前需完成",
+        "documents": "文件已读取",
+        "missing": "信息完整",
+        "problems": "没有冲突或错误",
+        "accepted": "已接受",
+        "done": "已完成",
+        "todo": "待完成",
+        "openExceptions": "查看例外"
+      },
+      "addDocuments": "添加文件",
+      "teamChip": "团队 {code}"
     },
     "assignment": {
       "title": "已分配公司",
@@ -944,6 +1002,10 @@
         "none": "—"
       },
       "count": "{count, plural, =0 {无待处理例外} other {# 个待处理例外}}"
+    },
+    "filePicker": {
+      "choose": "选择 PDF 文件",
+      "orDrop": "或拖放到此处"
     },
     "bank": {
       "title": "题库",

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs } from './helpers';
+import { loginAs, openRecordTab } from './helpers';
 import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 
 test('starter cards, interview answers and the learner role combine into a personalised study card', async ({
@@ -43,9 +43,10 @@ test('starter cards, interview answers and the learner role combine into a perso
   await ensureStarterCards();
 
   // Company-level interview answers on the record, opened from the companies list (D80).
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=companies');
   await page.getByRole('link', { name: 'บริษัท สัมภาษณ์ธนาคาร จำกัด' }).first().click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
+  await openRecordTab(page, 'interview');
   const answers = page.getByTestId('interview-answers');
   await answers.locator('[name="interview_account_purpose"]').fill('รับชำระค่าสินค้าจากลูกค้า');
   // The earlier answers sit behind a closed disclosure (P17a, spec §5.4); open it to fill them.

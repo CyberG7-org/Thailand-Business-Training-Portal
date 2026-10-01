@@ -104,19 +104,14 @@
       "enable": "Enable account",
       "progression": "Progression",
       "company": "Company (the DBD record the learner studies)",
-      "chooseCompany": "Choose the company…",
       "unconfirmedCompany": "{name} — not confirmed yet ({status})",
-      "companyHint": "The learner's study material, questions and bank date come from this company's DBD record. Only confirmed records can be chosen.",
       "noConfirmedCompany": "No confirmed DBD record yet — confirm the company’s record before creating a learner.",
-      "goToRecords": "Create one in “Create DBD” below.",
       "untitledCompany": "(company name missing)",
       "createdFor": "Created {loginId} and assigned to {company}",
       "team": "Team",
       "chooseTeam": "Which team?",
       "noManager": "Create a manager first — every learner belongs to a team.",
-      "learnerName": "Learner's name",
       "appointment": "Appointment",
-      "newIntro": "Give the learner a login ID, a password, their name and contact details, and the confirmed company they study.",
       "contact": {
         "title": "Contact details",
         "phone": "Phone number",
@@ -132,7 +127,8 @@
           "contactEmail": "Enter a valid email address",
           "website": "Enter a web address, e.g. example.co.th",
           "facebookPage": "Enter the page name or its facebook.com link"
-        }
+        },
+        "emailPlaceholder": "name@example.com"
       },
       "version": {
         "title": "Training version",
@@ -157,7 +153,34 @@
           "no-version": "The company has no version yet.",
           "role-missing": "Write the learner's name as in the DBD documents first."
         }
-      }
+      },
+      "tabLearner": "Learner details",
+      "tabCompanies": "Companies (DBD)",
+      "signIn": "Sign-in",
+      "signInIntro": "The learner uses these to log in the first time.",
+      "passwordPlaceholder": "At least 10 characters",
+      "generatePassword": "Generate",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "learnerSection": "Learner",
+      "name": "Name",
+      "namePlaceholder": "Learner's name",
+      "nameCardSection": "Name card information",
+      "companyCard": "Company the learner studies",
+      "chooseConfirmedCompany": "Choose a confirmed company…",
+      "notListed": "Not listed?",
+      "addInCompanies": "Add it in Companies (DBD)",
+      "checklist": {
+        "title": "Before you create",
+        "team": "Team chosen",
+        "company": "Company chosen",
+        "password": "Password, 10+ characters",
+        "name": "Full name",
+        "contact": "Phone and email",
+        "done": "done",
+        "todo": "still to do"
+      },
+      "createLearner": "Create learner"
     },
     "learners": {
       "title": "Learner Record",
@@ -216,9 +239,22 @@
       "statuses": {
         "confirmed_auto": "Confirmed automatically",
         "confirmed": "Confirmed",
-        "reading": "Reading…",
+        "reading": "Reading documents…",
         "unread": "Could not be read",
         "attention": "Needs attention"
+      },
+      "companiesIntro": "Each learner studies one company's DBD record — its study material, questions and bank date. Only confirmed companies can be given to a learner.",
+      "search": "Search name or 13-digit ID",
+      "noMatch": "No company matches “{query}”.",
+      "addCompany": "Add a company that isn't listed",
+      "addCompanyHint": "Upload its DBD documents — it's checked automatically in 1–3 minutes.",
+      "closeAdd": "Close",
+      "columns": {
+        "company": "Company (Thai name)",
+        "juristicId": "Juristic person ID",
+        "issuedOn": "Certificate issued",
+        "team": "Team",
+        "status": "Status"
       }
     },
     "loginIdField": {
@@ -232,7 +268,8 @@
       "noTeam": "This team cannot take new learners",
       "chooseTeam": "Choose a team first",
       "hintLearner": "Two letters and two numbers, e.g. DA42. A free code is filled in — keep it, press ↻ for another, or type your own.",
-      "invalidLearner": "Use two letters and two numbers, e.g. DA42"
+      "invalidLearner": "Use two letters and two numbers, e.g. DA42",
+      "availableKeep": "✓ Available — keep it, press ↻ for another, or type your own"
     },
     "dbd": {
       "title": "DBD records",
@@ -307,7 +344,9 @@
         "identity": "Level 1 — Company identity (certificate)",
         "business": "Level 2 — Business profile (objectives sheet / Bor.Or.Jor.5 / Bor.Or.Jor.2)",
         "document": "Level 3 — DBD document metadata",
-        "interview": "Level 4 — Bank interview answers (facts the DBD does not hold)"
+        "interview": "Level 4 — Bank interview answers (facts the DBD does not hold)",
+        "answers": "Contact and business",
+        "answersIntro": "The four answers the DBD documents can't give. They're needed before the company can be used."
       },
       "documentTypes": {
         "certificate": "Certificate",
@@ -477,7 +516,8 @@
         "perLearner": "Checked for each learner: {list}",
         "allReady": "Every concept has what it needs.",
         "missingFacts": "Still missing",
-        "missingConcepts": "Concepts waiting: {list}"
+        "missingConcepts": "Concepts waiting: {list}",
+        "whatIsMissing": "What's missing ({count})"
       },
       "facts": {
         "company_name_th": "Company name (Thai)",
@@ -542,7 +582,7 @@
         "accepted": "Accepted by {name}",
         "acceptedAuto": "Accepted automatically: the reading was clean and the four details were there.",
         "waiting": "{count, plural, one {# exception} other {# exceptions}} blocking acceptance",
-        "blocked": "Not accepted yet — settle the exceptions below."
+        "blocked": "Not accepted yet — settle the exceptions."
       },
       "exceptions": {
         "title": "Exceptions",
@@ -588,7 +628,25 @@
           "not-found": "Not found."
         }
       },
-      "answersMissing": "Still to fill in before this record is accepted: {fields}"
+      "answersMissing": "Still to fill in before this record is accepted: {fields}",
+      "tabs": {
+        "details": "Company details",
+        "interview": "Bank interview",
+        "documents": "Documents",
+        "exceptions": "Exceptions"
+      },
+      "checks": {
+        "title": "Before it can be used",
+        "documents": "Documents read",
+        "missing": "Nothing missing",
+        "problems": "No conflicts or errors",
+        "accepted": "Accepted",
+        "done": "done",
+        "todo": "still to do",
+        "openExceptions": "See exceptions"
+      },
+      "addDocuments": "Add documents",
+      "teamChip": "Team {code}"
     },
     "assignment": {
       "title": "Assigned company",
@@ -944,6 +1002,10 @@
         "none": "—"
       },
       "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
+    },
+    "filePicker": {
+      "choose": "Choose PDF files",
+      "orDrop": "or drop them here"
     },
     "bank": {
       "title": "Question bank",

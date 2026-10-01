@@ -76,25 +76,33 @@ export function InterviewForm({
       ? t(`interviewFieldsAlt.${field}` as 'interviewFieldsAlt.main_clients')
       : t(`interviewFields.${field}` as 'interviewFields.account_purpose');
 
+  const section = 'grid gap-4 p-4 md:grid-cols-2 md:px-6 md:py-5';
+  const heading = 'text-base font-semibold text-ink-900 md:col-span-2';
+  const labelText = 'font-semibold text-ink-900';
+
   return (
     <form
       action={formAction}
-      className="staff-card grid max-w-2xl gap-4"
+      className="staff-card grid divide-y divide-ink-100 p-0 md:p-0"
       data-testid="interview-answers"
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={recordId} />
-      <h2 className="text-sm font-semibold">{t('levels.interview')}</h2>
-      <p className="text-sm text-ink-500">{t('interviewHint')}</p>
+      <div className="grid gap-1 p-4 md:px-6 md:py-5">
+        <h2 className="text-base font-semibold text-ink-900">{t('levels.interview')}</h2>
+        <p className="text-sm text-ink-500">{t('interviewHint')}</p>
+      </div>
 
-      <fieldset className="grid gap-3" data-testid="status-facts">
-        <legend className="text-sm font-semibold text-ink-700">
-          {t('interviewGroups.status')}
-        </legend>
-        <p className="text-sm text-ink-500">{t('statusFacts.hint')}</p>
+      <section className={section} data-testid="status-facts">
+        <div className="md:col-span-2">
+          <h3 className="text-base font-semibold text-ink-900">{t('interviewGroups.status')}</h3>
+          <p className="text-sm text-ink-500">{t('statusFacts.hint')}</p>
+        </div>
         {COMPANY_STATUS_FACTS.map((fact) => (
           <label key={fact} className="text-sm">
-            {t(`statusFacts.${fact}` as 'statusFacts.operations_started')}
+            <span className={labelText}>
+              {t(`statusFacts.${fact}` as 'statusFacts.operations_started')}
+            </span>
             <select
               name={`interview_${fact}`}
               value={status[fact] ?? ''}
@@ -110,16 +118,18 @@ export function InterviewForm({
             </select>
           </label>
         ))}
-      </fieldset>
+      </section>
 
       {GROUPS.map((group) => (
-        <fieldset key={group.key} className="grid gap-3 border-t pt-3">
-          <legend className="text-sm font-semibold text-ink-700">
+        <section key={group.key} className={section}>
+          <h3 className={heading}>
             {t(`interviewGroups.${group.key}` as 'interviewGroups.customers')}
-          </legend>
+          </h3>
           {group.fields.map((f) => (
             <label key={f.field} className="text-sm">
-              <span data-testid={`label-${f.field}`}>{label(f)}</span>
+              <span data-testid={`label-${f.field}`} className={labelText}>
+                {label(f)}
+              </span>
               <textarea
                 name={`interview_${f.field}`}
                 rows={2}
@@ -128,44 +138,43 @@ export function InterviewForm({
               />
             </label>
           ))}
-        </fieldset>
+        </section>
       ))}
 
-      <details className="border-t pt-3" data-testid="legacy-answers">
-        <summary className="min-h-11 cursor-pointer text-sm font-semibold text-ink-700">
+      <details className="p-4 md:px-6" data-testid="legacy-answers">
+        <summary className="min-h-11 cursor-pointer content-center text-sm font-semibold text-ink-700">
           {t('interviewGroups.legacy')}
         </summary>
         <p className="text-sm text-ink-500">{t('legacyHint')}</p>
-        {LEGACY_INTERVIEW_FIELDS.map((field) => (
-          <label key={field} className="mt-2 block text-sm">
-            {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
-            <input
-              name={`interview_${field}`}
-              defaultValue={answers[field] ?? ''}
-              className="staff-input mt-1"
-            />
-          </label>
-        ))}
+        <div className="mt-2 grid gap-4 md:grid-cols-2">
+          {LEGACY_INTERVIEW_FIELDS.map((field) => (
+            <label key={field} className="text-sm">
+              {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
+              <input
+                name={`interview_${field}`}
+                defaultValue={answers[field] ?? ''}
+                className="staff-input mt-1"
+              />
+            </label>
+          ))}
+        </div>
       </details>
 
-      {state.error && (
-        <p role="alert" className="text-sm text-bad-600">
-          {state.error}
-        </p>
-      )}
-      {state.ok && (
-        <p role="status" data-testid="interview-saved" className="text-sm text-ok-600">
-          {t('saved')}
-        </p>
-      )}
-      <button
-        type="submit"
-        disabled={pending}
-        data-testid="save-interview"
-        className="staff-btn justify-self-start"
-      >
-        {t('saveInterview')}
-      </button>
+      <div className="flex flex-wrap items-center justify-end gap-3 p-4 md:px-6">
+        {state.error && (
+          <p role="alert" className="mr-auto text-sm text-bad-600">
+            {state.error}
+          </p>
+        )}
+        {state.ok && (
+          <p role="status" data-testid="interview-saved" className="mr-auto text-sm text-ok-600">
+            {t('saved')}
+          </p>
+        )}
+        <button type="submit" disabled={pending} data-testid="save-interview" className="staff-btn">
+          {t('saveInterview')}
+        </button>
+      </div>
     </form>
   );
 }

@@ -3,23 +3,28 @@ import { requireStaff } from '@/lib/auth/session';
 import { listDbdRecords, readingStatesOf } from '@/lib/db/dbd-records';
 import { suggestSuffix } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { companyStatus } from '@/lib/domain/auto-confirm';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
+import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
-import { CompaniesTable } from './companies-table';
-import { CreateDbdForm } from './create-dbd-form';
-import { NewUserForm, type CompanyOption, type TeamOption } from './new-user-form';
+import type { CompanyRow } from './companies-panel';
+import { CreateLearnerTabs } from './create-learner-tabs';
+import type { CompanyOption, TeamOption } from './new-user-form';
 
 /**
- * "Create learner & DBD" (D80): the two things a manager creates, in one place — a learner at
- * the top, a company (its DBD pack and four details) below it, then the companies with where
- * each stands. The learners themselves are listed on their own page.
+ * "Create learner & DBD" (D80): the two things a manager creates, in one place, as two tabs —
+ * the learner form, and the companies (DBD records) with where each stands and a way to add
+ * one. `?tab=companies` opens the second tab, and `&add=1` its upload form as well. The
+ * learners themselves are listed on their own page.
  */
 export default async function CreateLearnerAndDbdPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ tab?: string; add?: string }>;
 }) {
-  const { locale } = await params;
+  const [{ locale }, query] = await Promise.all([params, searchParams]);
   const staff = await requireStaff(locale);
   const supabase = await createSupabaseServerClient();
 
@@ -50,7 +55,7 @@ export default async function CreateLearnerAndDbdPage({
   const t = await getTranslations('admin.users');
 
   // RLS narrows the records to the caller's team; the picker offers them, confirmed ones
-  // selectable, and the table below shows where each stands.
+  // selectable, and the companies tab shows where each stands.
   const records = await listDbdRecords(supabase);
   const reading = await readingStatesOf(
     supabase,
@@ -70,18 +75,28 @@ export default async function CreateLearnerAndDbdPage({
   const teamCodeOf = managers
     ? new Map(managers.map((m) => [m.id, displayLoginId(m.login_id)]))
     : null;
+  const rows: CompanyRow[] = records.map((r) => ({
+    id: r.id,
+    name: r.company_name_th,
+    juristicId: r.juristic_id,
+    issuedOn: r.issued_on ? formatDate(r.issued_on, locale as Locale) : null,
+    status: companyStatus(r, reading.get(r.id) ?? null),
+    teamCode: r.team_id ? (teamCodeOf?.get(r.team_id) ?? null) : null,
+  }));
 
   return (
-    <section className="grid gap-6">
+    <section className="grid gap-5">
       <h1 className="staff-title">{t('title')}</h1>
-      <NewUserForm
+      <CreateLearnerTabs
         companies={companies}
+        rows={rows}
         teams={teams}
         ownLoginId={teams ? null : staff.loginId}
         initialSuffix={initialSuffix}
+        extractionAvailable={getDbdExtractor() !== null}
+        initialTab={query.tab === 'companies' || query.add === '1' ? 'companies' : 'learner'}
+        initialAddOpen={query.add === '1'}
       />
-      <CreateDbdForm extractionAvailable={getDbdExtractor() !== null} />
-      <CompaniesTable records={records} reading={reading} teamCodeOf={teamCodeOf} locale={locale} />
     </section>
   );
 }

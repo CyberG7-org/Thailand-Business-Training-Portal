@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { fillBusinessAnswers, loginAs, openManualRecordForm } from './helpers';
+import { fillBusinessAnswers, loginAs, openManualRecordForm, openRecordTab } from './helpers';
 
 const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
 
@@ -48,6 +48,7 @@ test('uploading a certificate creates the record and fills its fields in the bac
   await expect(page.getByTestId('suggestion-juristic_id')).toContainText('หน้า 1');
 
   // Level 2 is editable like everything else.
+  await openRecordTab(page, 'details');
   await business.locator('textarea[name="promoters_text"]').fill('นายแก้ไข ทดสอบ | ไทย');
   await page.getByRole('button', { name: 'บันทึก', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'บันทึกแล้ว' })).toBeVisible();
@@ -69,6 +70,7 @@ test('uploading on an existing record fills only the empty fields', async ({ pag
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
 
+  await openRecordTab(page, 'documents');
   await expect(page.getByTestId('extract-button')).toBeDisabled();
   await page.locator('input[name="document"]').setInputFiles('tests/fixtures/tiny.pdf');
   await page.getByRole('button', { name: 'อัปโหลดและกรอกอัตโนมัติ' }).click();
