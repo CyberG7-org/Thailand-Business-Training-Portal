@@ -134,14 +134,14 @@ export async function approveQuestionAction(formData: FormData): Promise<void> {
   const questionId = String(formData.get('questionId') ?? '');
   await requireAdmin(locale);
   await setApprovalStatus(await createSupabaseServerClient(), questionId, 'approved');
-  revalidatePath(`/${locale}/admin/questions`);
+  revalidatePath(`/${locale}/admin/questions/legacy`);
   const query = new URLSearchParams();
   const batch = String(formData.get('batch') ?? '');
   const status = String(formData.get('status') ?? '');
   if (batch) query.set('batch', batch);
   if (status) query.set('status', status);
   const suffix = query.toString();
-  redirect(`/${locale}/admin/questions${suffix ? `?${suffix}` : ''}`);
+  redirect(`/${locale}/admin/questions/legacy${suffix ? `?${suffix}` : ''}`);
 }
 
 export type FillState = { ok: boolean; error: string | null; written: string[] };

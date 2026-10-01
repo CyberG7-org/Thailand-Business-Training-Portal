@@ -944,6 +944,157 @@
         "none": "—"
       },
       "count": "{count, plural, =0 {无待处理例外} other {# 个待处理例外}}"
+    },
+    "bank": {
+      "title": "题库",
+      "intro": "每个概念一道题，共三十个概念。每种情况都有已批准的题目版本时，该概念即就绪。",
+      "ready": "{total} 个概念中已有 {ready} 个就绪",
+      "checkCompany": "按公司检查",
+      "legacy": "早期题目",
+      "loadStarter": "添加 {count} 道示例草稿",
+      "starterHint": "可直接使用的示例，覆盖每一种配方。它们以草稿形式加入，供您编辑、批准或停用。",
+      "starterLoaded": "{count, plural, =0 {没有需要添加的草稿} other {已添加 # 道草稿}}",
+      "starterFailed": "添加草稿失败，请重试。",
+      "columns": {
+        "order": "#",
+        "concept": "概念",
+        "source": "读取自",
+        "cases": "情况",
+        "variants": "题目版本"
+      },
+      "critical": "关键",
+      "caseAlways": "所有公司",
+      "caseYes": "{fact}：是",
+      "caseNo": "{fact}：否",
+      "covered": "已覆盖",
+      "uncovered": "尚无已批准的版本",
+      "counts": "已批准 {approved} · 草稿 {draft} · 已停用 {retired}",
+      "statusFacts": {
+        "operations_started": "已开始经营",
+        "has_existing_customers": "已有客户",
+        "has_completed_transactions": "已有完成的交易",
+        "has_regular_suppliers": "有固定供应商",
+        "learner_is_shareholder": "学员是股东"
+      },
+      "sources": {
+        "DBD_FACT": "DBD 资料",
+        "BUSINESS_PROFILE": "业务资料",
+        "DERIVED": "推算",
+        "ROLE": "学员的角色",
+        "KYC_POLICY": "政策"
+      },
+      "status": {
+        "draft": "草稿",
+        "approved": "已批准",
+        "retired": "已停用"
+      },
+      "recipes": {
+        "DIRECT_FACT": "原样事实",
+        "NUMERIC_VARIATION": "数值变化",
+        "COUNT_VARIATION": "数量变化",
+        "DATE_VARIATION": "日期变化",
+        "ID_MUTATION": "注册号变位",
+        "GEOGRAPHY_ALTERNATIVE": "其他地点",
+        "BUSINESS_ALTERNATIVE": "其他业务",
+        "STATIC": "固定文字",
+        "COMPOSITE_TEMPLATE": "含事实的文字"
+      },
+      "concept": {
+        "back": "题库",
+        "facts": "正确答案可用的事实",
+        "noFacts": "无：正确答案是固定的政策文字。",
+        "grammarTitle": "占位符与配方",
+        "grammar": "把事实写在花括号里。错误选项中可以这样变化事实：",
+        "allTokens": "全部占位符",
+        "variants": "题目版本",
+        "none": "还没有题目版本。",
+        "newVariant": "新建版本",
+        "columns": {
+          "key": "版本",
+          "when": "适用",
+          "prompt": "泰文题目",
+          "status": "状态"
+        }
+      },
+      "variant": {
+        "new": "新建版本",
+        "structure": "选项",
+        "correct": "正确",
+        "recipe": "配方",
+        "appliesWhen": "适用情况",
+        "thai": "泰文（据此批准）",
+        "english": "英文（参考）",
+        "chinese": "中文（参考）",
+        "prompt": "题目",
+        "option": "选项 {key}",
+        "explanation": "答错后显示的解释",
+        "inheritHint": "选项留空时，若泰文选项只含占位符，则沿用泰文选项。",
+        "save": "保存",
+        "saved": "已保存",
+        "statusTitle": "状态",
+        "approve": "批准",
+        "toDraft": "退回草稿",
+        "retire": "停用",
+        "approveHint": "按泰文文字批准。修改泰文、正确选项、配方或适用情况后，该版本会退回草稿。"
+      },
+      "issues": {
+        "unknown_concept": "未知的概念",
+        "thai_required": "必须有泰文文字",
+        "prompt_required": "{where}：题目为空",
+        "option_required": "{where}：选项为空",
+        "grammar": "{where}：{detail}",
+        "recipe_mismatch": "{where}：该文字属于“{detail}”，与所选配方不符",
+        "prompt_varies": "{where}：此处只能使用原样事实，不能使用变化值",
+        "correct_varies": "{where}：正确选项不得变化事实",
+        "correct_foreign_fact": "{where}：正确选项使用了不属于本概念的事实（{detail}）",
+        "correct_needs_fact": "{where}：正确选项必须使用本概念的一项事实",
+        "duplicate_option": "{where}：与选项 {detail} 的文字相同",
+        "applies_when_fact": "该概念没有针对这种情况的措辞",
+        "translation_placeholders": "{where}：必须保留泰文中的占位符（{detail}）",
+        "failed": "保存失败，请重试。"
+      },
+      "preview": {
+        "title": "预览",
+        "company": "公司",
+        "sample": "示例公司（虚构）",
+        "show": "显示",
+        "redraw": "重新抽取",
+        "ok": "可以向该公司提问",
+        "fail": "不能向该公司提问：{reason}",
+        "noVersion": "该公司还没有培训版本。"
+      },
+      "failures": {
+        "no_text": "没有文字",
+        "not_applicable": "措辞针对另一种情况",
+        "missing_fact": "缺少事实（{detail}）",
+        "no_category": "尚未匹配业务类别",
+        "no_alternatives": "可抽取的备选项不足",
+        "out_of_range": "变化后的数值超出范围（{detail}）",
+        "grammar": "占位符无效（{detail}）",
+        "invalid": "该版本违反规则（{detail}）",
+        "empty_option": "有选项结果为空（{detail}）",
+        "duplicate_option": "有两个选项结果相同（{detail}）"
+      },
+      "check": {
+        "title": "按公司检查",
+        "intro": "已批准的题库今天能向一家公司提出哪些问题，逐个概念列出。",
+        "company": "公司",
+        "choose": "选择公司",
+        "learner": "学员",
+        "companyOnly": "仅公司",
+        "run": "检查",
+        "none": "还没有公司拥有培训版本。",
+        "summary": "{total} 个概念中可提问 {ok} 个",
+        "columns": {
+          "concept": "概念",
+          "variant": "版本",
+          "asks": "将会提问",
+          "result": "结果"
+        },
+        "usable": "可以提问",
+        "blocked": "不能提问",
+        "noApproved": "尚无已批准的版本"
+      }
     }
   },
   "stages": {
