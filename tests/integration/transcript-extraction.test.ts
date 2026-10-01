@@ -170,7 +170,7 @@ describe('the transcript path', () => {
   it('filled empty facts and empty lists, keeping what the admin typed, with provenance for what it filled', async () => {
     const record = (await getDbdRecord(asAdmin, recordId))!;
     expect(record.company_name_th).toBe('บริษัท ตัวอย่างการสกัด จำกัด');
-    expect(record.juristic_id).toBe('0105569000123');
+    expect(record.juristic_id).toBe('0105569000134');
     expect(record.directors).toEqual([
       { name_th: 'นางสาวตัวอย่าง ทดสอบ', name_en: 'Miss Sample Test' },
     ]);
@@ -279,7 +279,7 @@ describe('the transcript path', () => {
     await svc.from('dbd_records').update({ juristic_id: null }).eq('id', recordId);
     const racing = fakeWith({
       async extractFacts(passages) {
-        await svc.from('dbd_records').update({ juristic_id: '0999999999999' }).eq('id', recordId);
+        await svc.from('dbd_records').update({ juristic_id: '0999999999991' }).eq('id', recordId);
         return new FakeDbdExtractor().extractFacts(passages);
       },
     });
@@ -290,8 +290,8 @@ describe('the transcript path', () => {
     });
     expect(result.status).toBe('done');
     expect(result.applied).not.toContain('juristic_id');
-    expect((await getDbdRecord(svc, recordId))?.juristic_id).toBe('0999999999999');
-    await svc.from('dbd_records').update({ juristic_id: '0105569000123' }).eq('id', recordId);
+    expect((await getDbdRecord(svc, recordId))?.juristic_id).toBe('0999999999991');
+    await svc.from('dbd_records').update({ juristic_id: '0105569000134' }).eq('id', recordId);
   });
 
   it('re-reads a batch that overflows the output limit page by page instead of failing the run', async () => {

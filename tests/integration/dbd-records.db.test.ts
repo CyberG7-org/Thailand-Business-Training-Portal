@@ -106,7 +106,7 @@ describe('a confirmed record carries the company contact and what it sells', () 
     confirmer = await createTestUser('admin');
     const { data } = await svc
       .from('dbd_records')
-      .insert({ company_name_th: 'บริษัท ยืนยัน จำกัด', juristic_id: '0105500009991' })
+      .insert({ company_name_th: 'บริษัท ยืนยัน จำกัด', juristic_id: '0105500009990' })
       .select()
       .single();
     recordId = data!.id;
@@ -148,7 +148,7 @@ describe('a confirmed record carries the company contact and what it sells', () 
       .from('dbd_records')
       .insert({
         company_name_th: 'บริษัท ครบถ้วน จำกัด',
-        juristic_id: '0105500009992',
+        juristic_id: '0105500010009',
         extraction_status: 'confirmed',
         confirmed_by: confirmer.id,
         confirmed_at: new Date().toISOString(),

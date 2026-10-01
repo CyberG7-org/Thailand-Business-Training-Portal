@@ -18,7 +18,7 @@ const ANSWERS = {
 /** What a finished reading of a clean pack leaves on the record. */
 const READ_FACTS = {
   company_name_th: 'บริษัท ยืนยันเอง จำกัด',
-  juristic_id: '0105568233799',
+  juristic_id: '0105568233828',
   issued_on: '2026-04-09',
   extraction_status: 'extracted',
 };

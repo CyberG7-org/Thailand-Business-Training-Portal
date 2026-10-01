@@ -24,9 +24,9 @@ export const SAMPLE_EXTRACTION: DbdExtraction = {
     ...at(1),
   },
   juristic_id: {
-    value: '0105569000123',
+    value: '0105569000134',
     confidence: 0.98,
-    source_text: 'เลขทะเบียน 0105569000123',
+    source_text: 'เลขทะเบียน 0105569000134',
     ...at(1),
   },
   registered_on: {
@@ -53,13 +53,14 @@ export const SAMPLE_EXTRACTION: DbdExtraction = {
     source_text: null,
     ...at(1),
   },
+  // A real, resolvable address (P17c): the validators must find the sample company clean.
   head_office_address: {
-    value: '99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง',
-    confidence: 0.62,
-    source_text: 'สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 99/9 หมู่ 1',
+    value: 'เลขที่ 99/9 หมู่ที่ 1 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+    confidence: 0.78,
+    source_text: 'สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 99/9 หมู่ที่ 1',
     ...at(1),
   },
-  province: { value: 'ตัวอย่าง', confidence: 0.7, source_text: 'จังหวัดตัวอย่าง', ...at(1) },
+  province: { value: 'ร้อยเอ็ด', confidence: 0.7, source_text: 'จังหวัดร้อยเอ็ด', ...at(1) },
 
   // Level 2
   objectives: {
@@ -151,10 +152,10 @@ export function fakePageText(page: number): string {
     return [
       'หนังสือรับรอง',
       'ชื่อบริษัท บริษัท ตัวอย่างการสกัด จำกัด',
-      'ทะเบียนเลขที่ 0105569000123',
+      'ทะเบียนเลขที่ 0105569000134',
       'จดทะเบียนเมื่อวันที่ 10 เมษายน 2569',
       'ทุนจดทะเบียน 2,000,000 บาท',
-      'สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง',
+      'สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 99/9 หมู่ที่ 1 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
     ].join('\n');
   }
   if (page === 2) {

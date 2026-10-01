@@ -48,7 +48,7 @@ describe('applyExtractionToRecord', () => {
     const current = { company_name_th: 'บริษัท ที่แอดมินพิมพ์ จำกัด', juristic_id: '' };
     const { input, applied, rejected } = applyExtractionToRecord(SAMPLE_EXTRACTION, current);
     expect(input.company_name_th).toBe('บริษัท ที่แอดมินพิมพ์ จำกัด');
-    expect(input.juristic_id).toBe('0105569000123');
+    expect(input.juristic_id).toBe('0105569000134');
     expect(input.issued_on).toBe('2026-07-13');
     expect(input.registered_capital).toBe(2000000);
     expect(input.directors.length).toBeGreaterThan(0);

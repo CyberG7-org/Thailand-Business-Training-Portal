@@ -451,8 +451,9 @@ const walk = (dir) =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
     e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)],
   );
-const files = [...walk('tests'), ...walk('lib/integrations/extraction')].filter((f) =>
-  /\.(ts|tsx|mts)$/.test(f),
+// The validators' own tests hold deliberately invalid ids: leave them alone.
+const files = [...walk('tests'), ...walk('lib/integrations/extraction')].filter(
+  (f) => /.(ts|tsx|mts)$/.test(f) && !f.includes(join('tests', 'unit', 'domain', 'validation')),
 );
 const used = new Set();
 const invalid = new Set();

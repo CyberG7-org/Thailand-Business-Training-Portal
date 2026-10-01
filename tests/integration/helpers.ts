@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { withCheckDigit } from '@/lib/domain/validation/juristic-id';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db/database.types';
 
@@ -151,7 +152,7 @@ export async function confirmRecord(recordId: string, confirmedBy: string): Prom
     .update({
       extraction_status: 'confirmed',
       structured_data: CONFIRMED_ANSWERS as never,
-      juristic_id: String(Date.now()).padStart(13, '0').slice(-13),
+      juristic_id: withCheckDigit(String(Date.now()).padStart(12, '0').slice(-12)),
       confirmed_by: confirmedBy,
       confirmed_at: new Date().toISOString(),
     })

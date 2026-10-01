@@ -151,11 +151,11 @@ describe('extractAndApply', () => {
     );
     expect(record.extraction_status).toBe('extracted');
     expect(record.company_name_th).toBe('บริษัท ที่แอดมินพิมพ์ จำกัด');
-    expect(record.juristic_id).toBe('0105569000123');
+    expect(record.juristic_id).toBe('0105569000134');
     expect(record.issued_on).toBe('2026-07-13');
     expect(Number(record.registered_capital)).toBe(2000000);
     expect(record.directors).toEqual(SAMPLE_EXTRACTION.directors.value);
-    expect(record.province).toBe('ตัวอย่าง');
+    expect(record.province).toBe('ร้อยเอ็ด');
 
     // Level 2 lands in structured_data, Level 3 provenance points at document/page.
     const structured = readStructuredData(record.structured_data);
@@ -197,7 +197,7 @@ describe('extractAndApply', () => {
     // A second run has nothing left to fill and changes nothing.
     const again = await extractAndApply(asAdmin, recordId, new FakeDbdExtractor());
     expect(again.applied).toEqual([]);
-    expect(again.record.juristic_id).toBe('0105569000123');
+    expect(again.record.juristic_id).toBe('0105569000134');
   });
 
   it('fills a deferred pack from its transcripts (P14c)', async () => {

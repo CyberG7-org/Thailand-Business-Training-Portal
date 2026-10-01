@@ -47,7 +47,7 @@ describe('AI question authoring', () => {
       .insert({
         company_name_th: 'บริษัท อ้างอิงเจน จำกัด',
         company_name_en: 'Gen Reference Co., Ltd.',
-        juristic_id: '0105569000777',
+        juristic_id: '0105569000771',
         registered_capital: 3000000,
         head_office_address: '77/7 หมู่ 7 ตำบลอ้างอิง',
         directors: [{ name_th: 'นายอ้างอิง ทดสอบ', name_en: null }],

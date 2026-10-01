@@ -22,7 +22,7 @@ import {
 
 const fixture = readFileSync('tests/fixtures/three-pages.pdf');
 const PAGES: Record<number, string> = {
-  1: 'หนังสือรับรอง\nชื่อบริษัท บริษัท อ้างอิงแรก จำกัด\nทะเบียนเลขที่ 0105569000777\nทุนจดทะเบียน 3,000,000 บาท\nกรรมการของบริษัทมี 1 คน',
+  1: 'หนังสือรับรอง\nชื่อบริษัท บริษัท อ้างอิงแรก จำกัด\nทะเบียนเลขที่ 0105569000771\nทุนจดทะเบียน 3,000,000 บาท\nกรรมการของบริษัทมี 1 คน',
   2: 'วัตถุที่ประสงค์\n1. ประกอบกิจการค้าปลีก\n2. ประกอบกิจการนำเข้าส่งออก',
   3: 'บัญชีรายชื่อผู้ถือหุ้น (บอจ.5)\n1 | นายอ้างอิง ทดสอบ | ไทย | 29,998 หุ้น\n2 | นายสอง ทดสอบ | ไทย | 2 หุ้น',
 };
@@ -88,7 +88,7 @@ describe('retrieval consumers', () => {
     const confirmed = {
       ...dbdRecordInputSchema.parse({}),
       company_name_th: 'บริษัท อ้างอิงแรก จำกัด',
-      juristic_id: '0105569000777',
+      juristic_id: '0105569000771',
       registered_capital: 3000000,
       directors: [{ name_th: 'นายอ้างอิง ทดสอบ', name_en: null }],
     };
@@ -96,7 +96,7 @@ describe('retrieval consumers', () => {
     otherRecordId = (
       await createDbdRecord(
         asAdmin,
-        { ...confirmed, company_name_th: 'บริษัท อีกแห่ง จำกัด', juristic_id: '0105569000778' },
+        { ...confirmed, company_name_th: 'บริษัท อีกแห่ง จำกัด', juristic_id: '0105569000789' },
         admin.id,
       )
     ).id;

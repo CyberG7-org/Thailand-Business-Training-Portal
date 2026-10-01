@@ -18,7 +18,7 @@ test('the admin cannot reassign a learner to another team company', async ({ pag
   const companyB = `บริษัท ของทีมบี ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: companyB,
-    juristicId: '0105568233717',
+    juristicId: '0105568233739',
     issuedOn: '13/07/2569',
   });
 
@@ -26,7 +26,7 @@ test('the admin cannot reassign a learner to another team company', async ({ pag
   const companyX = `บริษัท กลาง ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: companyX,
-    juristicId: '0105568233718',
+    juristicId: '0105568233747',
     issuedOn: '13/07/2569',
   });
   const learner = await createLearner(page, {

@@ -22,7 +22,7 @@ import {
 const record: TemplateRecord = {
   company_name_th: 'บริษัท ทดสอบ จำกัด',
   company_name_en: 'TEST CO., LTD.',
-  juristic_id: '0105569000123',
+  juristic_id: '0105569000134',
   certificate_no: 'E1',
   registered_capital: 2000000,
   head_office_address: '99/9',

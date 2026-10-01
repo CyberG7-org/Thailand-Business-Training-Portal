@@ -56,7 +56,7 @@ test('a learner studies what their own company sells', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await createConfirmedRecord(page, {
     companyNameTh: 'บริษัท ขายของ จำกัด',
-    juristicId: '0105568233705',
+    juristicId: '0105568233721',
     issuedOn: '13/07/2569',
   });
   await expect(page.locator('textarea[name="interview_nature_of_business"]')).toHaveValue(

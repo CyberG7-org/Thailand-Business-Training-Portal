@@ -222,7 +222,7 @@ test('the admin cannot pair a team with another team company', async ({ page }) 
   const company = `บริษัท ของทีมเอ ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: company,
-    juristicId: '0105568233714',
+    juristicId: '0105568233755',
     issuedOn: '13/07/2569',
   });
 

@@ -51,7 +51,7 @@ describe('name cards', () => {
       .from('dbd_records')
       .insert({
         company_name_th: 'บริษัท นามบัตร จำกัด',
-        juristic_id: '0105569000123',
+        juristic_id: '0105569000134',
         head_office_address: '1 ถนนตัวอย่าง',
         issued_on: '2026-07-13',
         structured_data: CONFIRMED_ANSWERS as never,

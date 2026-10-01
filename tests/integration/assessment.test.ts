@@ -37,7 +37,7 @@ describe('assessment attempts', () => {
       .from('dbd_records')
       .insert({
         company_name_th: 'บริษัท สอบ จำกัด',
-        juristic_id: '0105569000123',
+        juristic_id: '0105569000134',
         registered_capital: 2000000,
         issued_on: '2026-07-13',
         structured_data: CONFIRMED_ANSWERS as never,
