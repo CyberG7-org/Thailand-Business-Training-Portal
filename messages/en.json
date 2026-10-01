@@ -587,7 +587,8 @@
           "note-required": "Write a note first.",
           "not-found": "Not found."
         }
-      }
+      },
+      "answersMissing": "Still to fill in before this record is accepted: {fields}"
     },
     "assignment": {
       "title": "Assigned company",

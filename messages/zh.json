@@ -587,7 +587,8 @@
           "note-required": "请先填写备注。",
           "not-found": "未找到。"
         }
-      }
+      },
+      "answersMissing": "该记录被接受前还需填写：{fields}"
     },
     "assignment": {
       "title": "已分配公司",
