@@ -21,7 +21,7 @@ export type TrainingVersionRow = Database['public']['Tables']['company_training_
 /** What a version records about its own readiness (spec §5.6): company scope, at freeze time. */
 export type VersionCoverage = Pick<Coverage, 'mcq' | 'interview' | 'missingFacts'>;
 
-export type SyncResult = 'not_found' | 'unconfirmed' | 'unchanged' | 'activated';
+export type SyncResult = 'not_found' | 'unconfirmed' | 'unchanged' | 'activated' | 'draft';
 
 /** Content identity of a sheet: the facts and the extras, never the provenance. */
 export function snapshotHash(snapshot: TrainingSnapshot): string {
@@ -94,6 +94,24 @@ export async function countAssignmentsBehind(
   return count ?? 0;
 }
 
+/** Open exceptions that hold back the version (P17c, plan decision 1): both tiers count. */
+export async function countOpenBlockers(
+  db: Db,
+  recordId: string,
+): Promise<{ acceptance: number; version: number }> {
+  const { data, error } = await db
+    .from('training_fact_exceptions')
+    .select('blocks')
+    .eq('dbd_record_id', recordId)
+    .eq('status', 'open')
+    .in('blocks', ['acceptance', 'version']);
+  if (error) throw error;
+  return {
+    acceptance: data.filter((e) => e.blocks === 'acceptance').length,
+    version: data.filter((e) => e.blocks === 'version').length,
+  };
+}
+
 const isComplete = (c: Coverage) =>
   c.mcq.ready === c.mcq.total && c.interview.ready === c.interview.total;
 
@@ -101,9 +119,8 @@ const isComplete = (c: Coverage) =>
  * Freezes a confirmed record's current sheet as its active version when the sheet changed
  * (spec §5.6): the previous active version is superseded, an assignment without a version is
  * pinned to this one (plan decision 2), and nobody else moves (D75) — all in one serialized
- * database step, so a failure leaves the previous version active and two syncs take turns. No
- * blocking-exception gate yet — P17c adds it in front of the activation; the `draft` status
- * waits for it. `admin` is the service role: versions have no write policy.
+ * database step, so a failure leaves the previous version active and two syncs take turns. An
+ * open blocking exception keeps the sheet as a draft (P17c). `admin` is the service role: versions have no write policy.
  */
 export async function syncTrainingVersion(
   admin: Db,
@@ -122,7 +139,27 @@ export async function syncTrainingVersion(
   const active = await getActiveVersion(admin, recordId);
   if (active && active.facts_hash === hash) return 'unchanged';
 
+  // A sheet with an open blocking exception waits as the record's draft (spec §5.6); the
+  // learners stay on the active version until the last one is resolved.
+  const blockers = await countOpenBlockers(admin, recordId);
   const coverage = conceptCoverage(snapshot.facts, 'company');
+  if (blockers.acceptance + blockers.version > 0) {
+    await upsertDraft(admin, recordId, {
+      facts: snapshot.facts as unknown as Json,
+      extras: snapshot.extras as unknown as Json,
+      provenance: (structured.provenance ?? {}) as unknown as Json,
+      coverage: {
+        mcq: coverage.mcq,
+        interview: coverage.interview,
+        missingFacts: coverage.missingFacts,
+      } as unknown as Json,
+      company_complete: isComplete(coverage),
+      facts_hash: hash,
+      source_updated_at: record.updated_at,
+      created_by: actorId,
+    });
+    return 'draft';
+  }
   // One serialized step in the database (review on #6): supersede, insert, pin — or nothing.
   const { data: activeId, error } = await admin.rpc('activate_training_version', {
     p_record_id: recordId,
@@ -151,4 +188,48 @@ export async function syncAfterChange(recordId: string, actorId: string | null):
   } catch (e) {
     console.error('training version', recordId, e);
   }
+}
+
+type DraftColumns = Pick<
+  Database['public']['Tables']['company_training_versions']['Insert'],
+  | 'facts'
+  | 'extras'
+  | 'provenance'
+  | 'coverage'
+  | 'company_complete'
+  | 'facts_hash'
+  | 'source_updated_at'
+  | 'created_by'
+>;
+
+/** The record's one draft: the sheet as it would be activated, kept current for the panels. */
+async function upsertDraft(admin: Db, recordId: string, columns: DraftColumns): Promise<void> {
+  const { data: draft } = await admin
+    .from('company_training_versions')
+    .select('id')
+    .eq('dbd_record_id', recordId)
+    .eq('status', 'draft')
+    .maybeSingle();
+  if (draft) {
+    const { error } = await admin
+      .from('company_training_versions')
+      .update(columns)
+      .eq('id', draft.id);
+    if (error) throw error;
+    return;
+  }
+  const { data: last } = await admin
+    .from('company_training_versions')
+    .select('version_no')
+    .eq('dbd_record_id', recordId)
+    .order('version_no', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { error } = await admin.from('company_training_versions').insert({
+    ...columns,
+    dbd_record_id: recordId,
+    version_no: (last?.version_no ?? 0) + 1,
+    status: 'draft',
+  });
+  if (error) throw error;
 }

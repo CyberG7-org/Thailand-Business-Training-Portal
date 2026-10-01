@@ -174,6 +174,7 @@ export const COMPLETE_RECORD = {
   company_name_th: 'บริษัท ครบถ้วน จำกัด',
   company_name_en: 'COMPLETE CO., LTD.',
   registered_on: '2026-04-16',
+  issued_on: '2026-08-05',
   registered_capital: 2_000_000,
   directors: [{ name_th: 'นางสาวกุลธิดา พลเยี่ยม', name_en: null }],
   signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',

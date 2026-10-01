@@ -8,12 +8,8 @@ import {
 } from '@/lib/domain/facts/snapshot';
 import type { ActiveAssignment, AssignmentRow } from './assignments';
 import type { Database, Json } from './database.types';
-import {
-  getVersion,
-  readSnapshot,
-  syncTrainingVersion,
-  type TrainingVersionRow,
-} from './training-versions';
+import { getVersion, readSnapshot, type TrainingVersionRow } from './training-versions';
+import { validateRecord } from './validation';
 
 type Db = SupabaseClient<Database>;
 
@@ -146,7 +142,7 @@ export type PinnedFacts = {
 /**
  * What an assignment is studied and evaluated on. An assignment without a version (from before
  * P17b, or assigned before its record had one) is pinned to the record's first version here,
- * made now if the record is confirmed (plan decision 2). `admin` is the service role.
+ * made now if the record is confirmed and nothing blocks its version (P17c). `admin` is the service role.
  */
 export async function pinnedFactsFor(
   admin: Db,
@@ -154,7 +150,7 @@ export async function pinnedFactsFor(
 ): Promise<PinnedFacts | null> {
   let row: AssignmentRow = assignment;
   if (!row.training_version_id) {
-    await syncTrainingVersion(admin, assignment.dbd_record_id, null);
+    await validateRecord(admin, assignment.dbd_record_id, null);
     const { data, error } = await admin
       .from('user_dbd_assignments')
       .select('*')
