@@ -59,33 +59,16 @@ test('a manager cannot open a learner of another team', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'ระงับบัญชี' })).toHaveCount(0);
 });
 
-test('a manager can open the AI generation screen and use it', async ({ page }) => {
+test('a manager is sent back from the question bank and does not see it in the sidebar (D76)', async ({
+  page,
+}) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  const code = await createManager(page, 'ผู้จัดการสร้างข้อสอบ', MANAGER_PASSWORD);
-  const adminCompany = `บริษัท ต้นแบบของแอดมิน ${Date.now()} จำกัด`;
-  await createConfirmedRecord(page, {
-    companyNameTh: adminCompany,
-    juristicId: '0105568233798',
-    issuedOn: '13/07/2569',
-  });
-
+  const code = await createManager(page, 'ผู้จัดการไม่เขียนข้อสอบ', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
-  const company = `บริษัท ออกข้อสอบ ${Date.now()} จำกัด`;
-  await createConfirmedRecord(page, {
-    companyNameTh: company,
-    juristicId: '0105568233801',
-    issuedOn: '13/07/2569',
-  });
-
-  await page.goto('/th/admin/questions/generate');
-  await expect(page).toHaveURL(/\/th\/admin\/questions\/generate$/);
-  // The reference picker is RLS-narrowed: another team's company is not on offer.
-  await expect(page.locator('select[name="reference_record_id"]')).not.toContainText(adminCompany);
-  const record = page.locator('select[name="reference_record_id"] option', { hasText: company });
-  await page
-    .locator('select[name="reference_record_id"]')
-    .selectOption((await record.getAttribute('value'))!);
-  await page.getByTestId('generate-submit').click();
-  // The action must accept a manager: being bounced to /admin is the failure this pins.
-  await expect(page).not.toHaveURL(/\/th\/admin$/);
+  for (const path of ['/th/admin/questions', '/th/admin/questions/new']) {
+    await page.goto(path);
+    await expect(page, path).toHaveURL(/\/th\/admin$/);
+  }
+  await expect(page.getByTestId('staff-nav')).not.toContainText('คลังคำถาม');
+  await expect(page.getByTestId('admin-nav')).not.toContainText('คลังคำถาม');
 });

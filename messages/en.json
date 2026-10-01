@@ -944,6 +944,170 @@
         "none": "—"
       },
       "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
+    },
+    "bank": {
+      "title": "Question bank",
+      "intro": "One question per concept, thirty concepts. A concept is ready when it has an approved variant for every case.",
+      "ready": "{ready} of {total} concepts are ready",
+      "checkCompany": "Check a company",
+      "legacy": "Earlier questions",
+      "loadStarter": "{count, plural, one {Add # starter draft} other {Add # starter drafts}}",
+      "starterHint": "Worked examples, one for every recipe. They arrive as drafts for you to edit, approve or retire.",
+      "starterLoaded": "{count, plural, =0 {Nothing to add} one {# draft added} other {# drafts added}}",
+      "starterFailed": "Could not add the drafts. Try again.",
+      "columns": {
+        "order": "#",
+        "concept": "Concept",
+        "source": "Reads",
+        "cases": "Cases",
+        "variants": "Variants"
+      },
+      "critical": "critical",
+      "caseAlways": "every company",
+      "caseYes": "{fact}: yes",
+      "caseNo": "{fact}: no",
+      "covered": "covered",
+      "uncovered": "no approved variant",
+      "counts": "{approved} approved · {draft} draft · {retired} retired",
+      "statusFacts": {
+        "operations_started": "Operations started",
+        "has_existing_customers": "Has customers",
+        "has_completed_transactions": "Has completed transactions",
+        "has_regular_suppliers": "Has regular suppliers",
+        "learner_is_shareholder": "Learner is a shareholder"
+      },
+      "sources": {
+        "DBD_FACT": "DBD facts",
+        "BUSINESS_PROFILE": "Business profile",
+        "DERIVED": "Derived",
+        "ROLE": "The learner’s role",
+        "KYC_POLICY": "Policy"
+      },
+      "status": {
+        "draft": "Draft",
+        "approved": "Approved",
+        "retired": "Retired"
+      },
+      "recipes": {
+        "DIRECT_FACT": "Fact as it is",
+        "NUMERIC_VARIATION": "Number varied",
+        "COUNT_VARIATION": "Count varied",
+        "DATE_VARIATION": "Date varied",
+        "ID_MUTATION": "Registration number mutated",
+        "GEOGRAPHY_ALTERNATIVE": "Another place",
+        "BUSINESS_ALTERNATIVE": "Another business",
+        "STATIC": "Fixed text",
+        "COMPOSITE_TEMPLATE": "Text with facts"
+      },
+      "concept": {
+        "back": "Question bank",
+        "facts": "Facts the correct answer may use",
+        "noFacts": "None: the correct answer is a fixed policy text.",
+        "grammarTitle": "Placeholders and recipes",
+        "grammar": "Write a fact in braces. In a wrong option a fact can be varied:",
+        "allTokens": "Every placeholder",
+        "variants": "Variants",
+        "none": "No variants yet.",
+        "newVariant": "New variant",
+        "columns": {
+          "key": "Variant",
+          "when": "For",
+          "prompt": "Thai question",
+          "status": "Status"
+        }
+      },
+      "variant": {
+        "new": "New variant",
+        "structure": "Options",
+        "correct": "Correct",
+        "recipe": "Recipe",
+        "appliesWhen": "Worded for",
+        "thai": "Thai (the text that is approved)",
+        "english": "English (reference)",
+        "chinese": "Chinese (reference)",
+        "prompt": "Question",
+        "option": "Option {key}",
+        "explanation": "Explanation shown after a wrong answer",
+        "inheritHint": "Leave an option blank to take the Thai option when it is placeholders only.",
+        "save": "Save",
+        "saved": "Saved",
+        "statusTitle": "Status",
+        "approve": "Approve",
+        "toDraft": "Back to draft",
+        "retire": "Retire",
+        "approveHint": "Approved on the Thai text. Changing it, the correct option, a recipe or the status it is worded for returns the variant to draft."
+      },
+      "issues": {
+        "unknown_concept": "Unknown concept",
+        "thai_required": "The Thai text is required",
+        "prompt_required": "{where}: the question is blank",
+        "option_required": "{where}: the option is blank",
+        "grammar": "{where}: {detail}",
+        "recipe_mismatch": "{where}: this text is “{detail}”, not the recipe chosen",
+        "prompt_varies": "{where}: only plain facts here, no varied ones",
+        "correct_varies": "{where}: the correct option must not vary a fact",
+        "correct_foreign_fact": "{where}: the correct option uses a fact that is not this concept’s ({detail})",
+        "correct_needs_fact": "{where}: the correct option must use one of the concept’s facts",
+        "duplicate_option": "{where}: the same text as option {detail}",
+        "applies_when_fact": "This concept has no wording for that status",
+        "translation_placeholders": "{where}: must keep the Thai placeholders ({detail})",
+        "failed": "Could not save. Try again."
+      },
+      "preview": {
+        "title": "Preview",
+        "company": "Company",
+        "sample": "Sample company (fictional)",
+        "show": "Show",
+        "redraw": "Draw again",
+        "ok": "Can be asked of this company",
+        "fail": "Cannot be asked of this company: {reason}",
+        "noVersion": "This company has no training version."
+      },
+      "failures": {
+        "no_text": "no text",
+        "not_applicable": "worded for another status",
+        "missing_fact": "a fact is missing ({detail})",
+        "no_category": "no business category is mapped",
+        "no_alternatives": "not enough alternatives to draw from",
+        "out_of_range": "a varied value is out of range ({detail})",
+        "grammar": "a placeholder is not valid ({detail})",
+        "invalid": "the variant breaks a rule ({detail})",
+        "empty_option": "an option comes out empty ({detail})",
+        "duplicate_option": "two options come out the same ({detail})"
+      },
+      "check": {
+        "title": "Check a company",
+        "intro": "What the approved bank can ask one company today, concept by concept.",
+        "company": "Company",
+        "choose": "Choose a company",
+        "learner": "Learner",
+        "companyOnly": "Company only",
+        "run": "Check",
+        "none": "No company has a training version yet.",
+        "summary": "{ok} of {total} concepts can be asked",
+        "columns": {
+          "concept": "Concept",
+          "variant": "Variant",
+          "asks": "It would ask",
+          "result": "Result"
+        },
+        "usable": "can be asked",
+        "blocked": "cannot be asked",
+        "noApproved": "no approved variant"
+      },
+      "where": {
+        "th": "Thai",
+        "en": "English",
+        "zh": "Chinese",
+        "explanation": "Explanation"
+      },
+      "grammar": {
+        "unbalanced": "a brace is opened or closed without its pair",
+        "unknown_token": "unknown placeholder {raw}",
+        "unknown_recipe": "unknown recipe in {raw}",
+        "recipe_not_for_token": "that recipe does not fit this fact: {raw}",
+        "bad_argument": "the recipe’s argument is not valid: {raw}"
+      }
     }
   },
   "stages": {
