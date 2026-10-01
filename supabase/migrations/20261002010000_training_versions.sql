@@ -137,7 +137,71 @@ create trigger user_dbd_assignments_version_check
   before insert or update of training_version_id, dbd_record_id on public.user_dbd_assignments
   for each row execute function public.assignment_version_matches();
 
--- Results count against a version (D75): an attempt remembers the one it was rendered from.
+-- Results count against a version (D75): an attempt remembers the version and the role it was
+-- rendered from, so a later move never re-renders its explanations with other facts.
 alter table public.assessment_attempts
   add column training_version_id uuid
-    references public.company_training_versions (id) on delete set null;
+    references public.company_training_versions (id) on delete set null,
+  add column role_snapshot jsonb;
+
+-- Activating a version is one serialized step per record: the current active version is
+-- superseded, the new one inserted with the next number, and assignments without a version
+-- pinned to it — or nothing happens at all. The record row is locked for the duration, so two
+-- syncs of the same record take turns. Returns the new version's id, or null when the sheet
+-- is already the active one.
+create or replace function public.activate_training_version(
+  p_record_id uuid,
+  p_facts jsonb,
+  p_extras jsonb,
+  p_provenance jsonb,
+  p_coverage jsonb,
+  p_complete boolean,
+  p_hash text,
+  p_source_updated_at timestamptz,
+  p_actor uuid default null,
+  p_at timestamptz default now()
+)
+returns uuid
+language plpgsql
+as $$
+declare
+  v_active uuid;
+  v_active_hash text;
+  v_no integer;
+  v_id uuid;
+begin
+  perform 1 from public.dbd_records where id = p_record_id for update;
+  select id, facts_hash into v_active, v_active_hash
+    from public.company_training_versions
+    where dbd_record_id = p_record_id and status = 'active';
+  -- Already active with this very sheet: nothing to do, and the caller hears so.
+  if v_active is not null and v_active_hash = p_hash then
+    return null;
+  end if;
+  if v_active is not null then
+    update public.company_training_versions
+      set status = 'superseded', superseded_at = p_at
+      where id = v_active;
+  end if;
+  select coalesce(max(version_no), 0) + 1 into v_no
+    from public.company_training_versions
+    where dbd_record_id = p_record_id;
+  insert into public.company_training_versions (
+    dbd_record_id, version_no, status, facts, extras, provenance, coverage,
+    company_complete, facts_hash, source_updated_at, created_by, activated_at
+  ) values (
+    p_record_id, v_no, 'active', p_facts, p_extras, p_provenance, p_coverage,
+    p_complete, p_hash, p_source_updated_at, p_actor, p_at
+  ) returning id into v_id;
+  update public.user_dbd_assignments
+    set training_version_id = v_id
+    where dbd_record_id = p_record_id and active and training_version_id is null;
+  return v_id;
+end;
+$$;
+revoke all on function public.activate_training_version(
+  uuid, jsonb, jsonb, jsonb, jsonb, boolean, text, timestamptz, uuid, timestamptz
+) from public, anon, authenticated;
+grant execute on function public.activate_training_version(
+  uuid, jsonb, jsonb, jsonb, jsonb, boolean, text, timestamptz, uuid, timestamptz
+) to service_role;

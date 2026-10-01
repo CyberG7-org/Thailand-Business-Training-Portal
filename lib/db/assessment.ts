@@ -17,7 +17,7 @@ import {
   type TemplateRecord,
 } from '@/lib/domain/assessment/template';
 import { createSupabaseAdminClient } from './admin';
-import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
+import { templateRecordFromSnapshot, type RoleSnapshot } from '@/lib/domain/facts/snapshot';
 import { getActiveAssignmentForUser } from './assignments';
 import { pinnedFactsFor } from './pinning';
 import { getVersion, readSnapshot } from './training-versions';
@@ -169,6 +169,7 @@ export async function getOrStartAttempt(args: {
       shuffle_seed: seed,
       passing_mark_snapshot: args.passingMarkPercent ?? null,
       training_version_id: pinned.version.id,
+      role_snapshot: pinned.role as unknown as Json,
     })
     .select()
     .single();
@@ -211,9 +212,12 @@ async function templateRecordForAttempt(
   if (attempt.training_version_id) {
     const version = await getVersion(admin, attempt.training_version_id);
     if (version) {
-      const snapshot = readSnapshot(version);
-      const pinned = sameRecord ? await pinnedFactsFor(admin, sameRecord) : null;
-      return templateRecordFromSnapshot(snapshot, pinned?.role ?? null);
+      // The role as it was when the attempt was rendered (review on #6): a later move re-derives
+      // the assignment's role against another sheet, and this attempt must not follow it.
+      return templateRecordFromSnapshot(
+        readSnapshot(version),
+        (attempt.role_snapshot as RoleSnapshot | null) ?? null,
+      );
     }
   }
   if (!attempt.dbd_record_id) return null;

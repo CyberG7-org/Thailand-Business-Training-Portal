@@ -2673,3 +2673,12 @@ git commit -m "docs: D75 implemented, checklist row 29, runbooks and UAT A14 (P1
 | §11 `toTemplateRecord` superseded by the fact sheet | 2, 6 |
 | §12.4 record and user pages show "newer version available" | 7, 8 |
 | D75 pinned even when a newer version's answers are identical | 3 (hash: only a changed sheet makes a version; an identical sheet is `unchanged`) |
+
+---
+
+## Review fixes (PR #6)
+
+- **Atomic activation.** `syncTrainingVersion` calls `activate_training_version(...)` (in the migration): supersede, insert and first pins happen in one serialized step under a lock on the record row, so a failure leaves the previous version active and two syncs of one record take turns.
+- **Attempt-time role.** `assessment_attempts.role_snapshot` holds the role an attempt was rendered with; reviews read it instead of the assignment's current snapshot, which a move re-derives.
+- **Early end.** `endInterview` closes with the pinned facts (`factsFor`), the same the session was built on.
+- **Wording.** The move hint says the learner is studied and evaluated on the new version from now on; version-scoped progression and grandfathering are P17e (spec §10), not claimed here.

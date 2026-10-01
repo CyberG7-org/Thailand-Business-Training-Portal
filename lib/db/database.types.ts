@@ -190,6 +190,7 @@ export type Database = {
           passing_mark_snapshot: number | null
           question_ids: string[]
           result: string | null
+          role_snapshot: Json | null
           score: number | null
           shuffle_seed: string
           started_at: string
@@ -208,6 +209,7 @@ export type Database = {
           passing_mark_snapshot?: number | null
           question_ids: string[]
           result?: string | null
+          role_snapshot?: Json | null
           score?: number | null
           shuffle_seed: string
           started_at?: string
@@ -226,6 +228,7 @@ export type Database = {
           passing_mark_snapshot?: number | null
           question_ids?: string[]
           result?: string | null
+          role_snapshot?: Json | null
           score?: number | null
           shuffle_seed?: string
           started_at?: string
@@ -1624,6 +1627,21 @@ export type Database = {
       }
     }
     Functions: {
+      activate_training_version: {
+        Args: {
+          p_actor?: string
+          p_at?: string
+          p_complete: boolean
+          p_coverage: Json
+          p_extras: Json
+          p_facts: Json
+          p_hash: string
+          p_provenance: Json
+          p_record_id: string
+          p_source_updated_at: string
+        }
+        Returns: string
+      }
       claim_index_jobs: {
         Args: { p_limit?: number }
         Returns: {
@@ -1692,6 +1710,7 @@ export type Database = {
           passing_mark_snapshot: number | null
           question_ids: string[]
           result: string | null
+          role_snapshot: Json | null
           score: number | null
           shuffle_seed: string
           started_at: string

@@ -86,4 +86,16 @@ describe('syncTrainingVersion (spec §5.6, D75)', () => {
       before.facts.registered_capital,
     );
   });
+
+  it('serializes two syncs of one record: one active version, consecutive numbers', async () => {
+    await svc.from('dbd_records').update({ registered_capital: 4_000_000 }).eq('id', team.recordId);
+    const results = await Promise.all([
+      syncTrainingVersion(svc, team.recordId, null),
+      syncTrainingVersion(svc, team.recordId, null),
+    ]);
+    expect(results.sort()).toEqual(['activated', 'unchanged']);
+    const versions = await listVersions(svc, team.recordId);
+    expect(versions.filter((v) => v.status === 'active')).toHaveLength(1);
+    expect(versions.map((v) => v.version_no)).toEqual([4, 3, 2, 1]);
+  });
 });

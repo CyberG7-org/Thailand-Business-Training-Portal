@@ -100,9 +100,10 @@ const isComplete = (c: Coverage) =>
 /**
  * Freezes a confirmed record's current sheet as its active version when the sheet changed
  * (spec §5.6): the previous active version is superseded, an assignment without a version is
- * pinned to this one (plan decision 2), and nobody else moves (D75). No blocking-exception
- * gate yet — P17c adds it in front of the activation; the `draft` status waits for it.
- * `admin` is the service role: versions have no write policy.
+ * pinned to this one (plan decision 2), and nobody else moves (D75) — all in one serialized
+ * database step, so a failure leaves the previous version active and two syncs take turns. No
+ * blocking-exception gate yet — P17c adds it in front of the activation; the `draft` status
+ * waits for it. `admin` is the service role: versions have no write policy.
  */
 export async function syncTrainingVersion(
   admin: Db,
@@ -122,54 +123,25 @@ export async function syncTrainingVersion(
   if (active && active.facts_hash === hash) return 'unchanged';
 
   const coverage = conceptCoverage(snapshot.facts, 'company');
-  const { data: last } = await admin
-    .from('company_training_versions')
-    .select('version_no')
-    .eq('dbd_record_id', recordId)
-    .order('version_no', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const at = now.toISOString();
-
-  if (active) {
-    const { error } = await admin
-      .from('company_training_versions')
-      .update({ status: 'superseded', superseded_at: at })
-      .eq('id', active.id);
-    if (error) throw error;
-  }
-  const { data: created, error } = await admin
-    .from('company_training_versions')
-    .insert({
-      dbd_record_id: recordId,
-      version_no: (last?.version_no ?? 0) + 1,
-      status: 'active',
-      facts: snapshot.facts as unknown as Json,
-      extras: snapshot.extras as unknown as Json,
-      provenance: (structured.provenance ?? {}) as unknown as Json,
-      coverage: {
-        mcq: coverage.mcq,
-        interview: coverage.interview,
-        missingFacts: coverage.missingFacts,
-      } as unknown as Json,
-      company_complete: isComplete(coverage),
-      facts_hash: hash,
-      source_updated_at: record.updated_at,
-      created_by: actorId,
-      activated_at: at,
-    })
-    .select('id')
-    .single();
+  // One serialized step in the database (review on #6): supersede, insert, pin — or nothing.
+  const { data: activeId, error } = await admin.rpc('activate_training_version', {
+    p_record_id: recordId,
+    p_facts: snapshot.facts as unknown as Json,
+    p_extras: snapshot.extras as unknown as Json,
+    p_provenance: (structured.provenance ?? {}) as unknown as Json,
+    p_coverage: {
+      mcq: coverage.mcq,
+      interview: coverage.interview,
+      missingFacts: coverage.missingFacts,
+    } as unknown as Json,
+    p_complete: isComplete(coverage),
+    p_hash: hash,
+    p_source_updated_at: record.updated_at,
+    p_actor: actorId ?? undefined,
+    p_at: now.toISOString(),
+  });
   if (error) throw error;
-
-  const { error: pinError } = await admin
-    .from('user_dbd_assignments')
-    .update({ training_version_id: created.id })
-    .eq('dbd_record_id', recordId)
-    .eq('active', true)
-    .is('training_version_id', null);
-  if (pinError) throw pinError;
-  return 'activated';
+  return activeId ? 'activated' : 'unchanged';
 }
 
 /** After a change that may have altered the sheet: versioning never fails the change itself. */

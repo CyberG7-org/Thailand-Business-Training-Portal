@@ -140,7 +140,7 @@
         "newer": "Version {n} is newer.",
         "current": "This is the company's current version.",
         "move": "Move to version {n}",
-        "moveHint": "Results on the old version no longer count. Refused while a quiz, exam or interview is in progress.",
+        "moveHint": "From now on the learner studies and is evaluated on this version. Refused while a quiz, exam or interview is in progress.",
         "roleConfirmed": "Role confirmed on {date}",
         "roleUnconfirmed": "The role is not confirmed: the learner's own concepts do not count until it is.",
         "confirmRole": "Confirm role",

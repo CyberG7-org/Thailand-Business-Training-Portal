@@ -429,9 +429,11 @@ export async function endInterview(userId: string, sessionId: string): Promise<v
   const session = await ownSession(userId, sessionId);
   if (session.status !== 'in_progress') return;
   await assertFresh(session);
-  const admin = createSupabaseAdminClient();
-  const assignment = await getActiveAssignmentForUser(admin, userId);
-  const facts = assignment ? interviewFacts(assignment.dbd_records, assignment) : {};
+  // The pinned facts the session was built on (review on #6), or none when nothing is pinned
+  // any more — the narrative then has no facts to lean on, as before.
+  const facts = await factsFor(userId)
+    .then((f) => f.facts)
+    .catch(() => ({}) as FactSheet);
   await close(
     session,
     session.plan as unknown as InterviewPlan,
