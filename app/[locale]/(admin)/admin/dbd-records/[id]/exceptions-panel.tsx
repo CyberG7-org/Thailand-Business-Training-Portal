@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
+import { conceptTitle } from '@/lib/domain/concepts/registry';
 import type { ExceptionRow } from '@/lib/db/validation';
 import { resolveExceptionAction, type ToolState } from '../actions';
 
@@ -38,8 +39,10 @@ export function ExceptionsPanel({
   };
   const describe = (e: ExceptionRow) => {
     const d = (e.detail ?? {}) as Detail;
-    if (e.kind === 'missing')
-      return t('rules.missing', { concepts: (d.concepts ?? []).join(', ') || '—' });
+    if (e.kind === 'missing') {
+      const concepts = (d.concepts ?? []).map((k) => conceptTitle(k, locale));
+      return concepts.length ? t('rules.missing', { concepts: concepts.join(', ') }) : '';
+    }
     if (e.kind === 'low_confidence')
       return t('rules.confidence', {
         confidence: Math.round(((d.confidence as number) ?? 0) * 100),
