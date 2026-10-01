@@ -1,6 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { InterviewProvider, TurnInput } from '@/lib/integrations/interview/types';
-import { adminClient, confirmRecord, deleteTeam, seedTeam, type Team } from './helpers';
+import {
+  adminClient,
+  confirmRecord,
+  deleteTeam,
+  seedTeam,
+  type Team,
+  versionRecord,
+} from './helpers';
 
 type Mode =
   'fake' | 'fail-turn' | 'fail-narrate' | 'wrong-concept' | 'leak' | 'never-close' | 'evasive';
@@ -124,6 +131,7 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: learner, dbd_record_id: team.recordId });
+    await versionRecord(team.recordId);
     await svc.from('assessment_attempts').insert({
       user_id: learner,
       kind: 'exam',

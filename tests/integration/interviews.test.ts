@@ -6,7 +6,15 @@ import {
   submitLearnerMessage,
 } from '@/lib/db/interviews';
 import { loadProgressionFacts } from '@/lib/db/progression';
-import { adminClient, clientFor, confirmRecord, deleteTeam, seedTeam, type Team } from './helpers';
+import {
+  adminClient,
+  clientFor,
+  confirmRecord,
+  deleteTeam,
+  seedTeam,
+  type Team,
+  versionRecord,
+} from './helpers';
 
 const svc = adminClient();
 
@@ -43,6 +51,7 @@ describe('the readiness interview', () => {
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: team.learner.id, dbd_record_id: team.recordId });
+    await versionRecord(team.recordId);
     await svc.from('assessment_attempts').insert({
       user_id: team.learner.id,
       kind: 'exam',
@@ -185,6 +194,7 @@ describe('the readiness interview', () => {
       await svc
         .from('user_dbd_assignments')
         .insert({ user_id: other.learner.id, dbd_record_id: other.recordId });
+      await versionRecord(other.recordId);
       await expect(startOrResumeInterview(other.learner.id)).rejects.toBeInstanceOf(InterviewError);
     } finally {
       await deleteTeam(other);

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { withCheckDigit } from '@/lib/domain/validation/juristic-id';
+import { syncTrainingVersion } from '@/lib/db/training-versions';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db/database.types';
 
@@ -228,4 +229,16 @@ export async function completeRecord(recordId: string): Promise<void> {
     .update({ ...COMPLETE_RECORD, structured_data: COMPLETE_STRUCTURED } as never)
     .eq('id', recordId);
   if (error) throw error;
+}
+
+/**
+ * Gives a confirmed record an active version from its sheet as it stands — what every confirmed
+ * record held before P17c. A fixture whose sheet is deliberately thin calls this before any learner
+ * visit: the learner's first pin takes this version, and the sheet's exceptions, once raised, hold
+ * only the next version back (plan decision 9).
+ */
+export async function versionRecord(recordId: string): Promise<void> {
+  const result = await syncTrainingVersion(adminClient(), recordId, null);
+  if (result !== 'activated')
+    throw new Error(`fixture record ${recordId} got no version: ${result}`);
 }

@@ -15,6 +15,7 @@ import {
   deleteTestUser,
   type Client,
   type TestUser,
+  versionRecord,
 } from './helpers';
 
 describe('assessment attempts', () => {
@@ -51,6 +52,7 @@ describe('assessment attempts', () => {
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: learner.id, dbd_record_id: recordId, assigned_by: admin.id });
+    await versionRecord(recordId);
   });
 
   afterAll(async () => {

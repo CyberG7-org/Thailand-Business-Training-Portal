@@ -19,6 +19,7 @@ import {
   deleteTestUser,
   type Client,
   type TestUser,
+  versionRecord,
 } from './helpers';
 
 const HOLDER = { holderNameTh: 'สมชาย ทดสอบ', holderNameEn: 'SOMCHAI TESTER' };
@@ -65,6 +66,7 @@ describe('name cards', () => {
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: learner.id, dbd_record_id: recordId, assigned_by: admin.id });
+    await versionRecord(recordId);
     await svc.from('policy_config').upsert({ key: 'telegram_admin_chat_ids', value: ['777'] });
   });
 
