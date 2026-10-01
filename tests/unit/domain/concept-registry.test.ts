@@ -9,9 +9,15 @@ import {
 import { STATUS_FACTS } from '@/lib/domain/facts/fact-sheet';
 
 describe('the concept registry (spec §7.1)', () => {
-  it('has 37 distinct concepts', () => {
-    expect(EVALUATION_CONCEPTS).toHaveLength(37);
-    expect(new Set(EVALUATION_CONCEPTS.map((c) => c.key)).size).toBe(37);
+  it('has 36 distinct concepts (D91 removed the examples of customers)', () => {
+    expect(EVALUATION_CONCEPTS).toHaveLength(36);
+    expect(new Set(EVALUATION_CONCEPTS.map((c) => c.key)).size).toBe(36);
+    expect(EVALUATION_CONCEPTS.map((c) => c.key)).not.toContain('customer_examples');
+  });
+
+  it('keeps main customers as quiz question 14 only', () => {
+    const main = EVALUATION_CONCEPTS.find((c) => c.key === 'main_clients')!;
+    expect([main.mcqOrder, main.interviewSlot, main.interviewMatch]).toEqual([14, null, null]);
   });
 
   it('has exactly the 30 MCQ concepts in order 1–30', () => {
@@ -36,7 +42,7 @@ describe('the concept registry (spec §7.1)', () => {
     );
   });
 
-  it('has the 13 chatbot slots in the Owner’s order with the Owner’s match types (D78)', () => {
+  it('has the 11 chatbot slots in the Owner’s order with the Owner’s match types (D78, D91)', () => {
     expect(INTERVIEW_CONCEPTS.map((c) => [c.key, c.interviewMatch])).toEqual([
       ['company_name', 'normalized'],
       ['registration_number', 'exact'],
@@ -47,8 +53,6 @@ describe('the concept registry (spec §7.1)', () => {
       ['attendee_identity', 'normalized'],
       ['registration_date', 'normalized'],
       ['account_purpose', 'semantic'],
-      ['main_clients', 'semantic'],
-      ['customer_examples', 'semantic'],
       ['customer_profile', 'semantic'],
       ['transaction_details', 'semantic'],
     ]);
@@ -72,27 +76,14 @@ describe('the concept registry (spec §7.1)', () => {
     }
   });
 
-  it('holds exactly the alternate conditions the Owner confirmed (correction 4)', () => {
+  it('keeps one alternate wording: whether the learner holds shares (D91)', () => {
     const alt = Object.fromEntries(
       EVALUATION_CONCEPTS.filter((c) => c.alternateWhen.length > 0).map((c) => [
         c.key,
         [...c.alternateWhen],
       ]),
     );
-    expect(alt).toEqual({
-      learner_shareholding: ['learner_is_shareholder'],
-      main_clients: ['has_existing_customers'],
-      client_origin: ['has_existing_customers'],
-      main_suppliers: ['has_regular_suppliers'],
-      actual_business_location: ['operations_started'],
-      monthly_revenue: ['operations_started'],
-      revenue_basis: ['operations_started'],
-      average_transaction: ['has_completed_transactions'],
-      monthly_transactions: ['has_completed_transactions'],
-      customer_examples: ['has_existing_customers'],
-      customer_profile: ['has_existing_customers'],
-      transaction_details: ['has_completed_transactions'],
-    });
+    expect(alt).toEqual({ learner_shareholding: ['learner_is_shareholder'] });
   });
 
   it('titles every concept in three languages', () => {

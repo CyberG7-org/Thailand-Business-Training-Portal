@@ -9,8 +9,8 @@ import { EVALUATION_CONCEPTS, type ConceptDef } from './registry';
 export type ConceptStatus = 'resolved' | 'policy' | 'missing' | 'per_learner';
 export type ConceptResolution = { key: string; status: ConceptStatus; missing: FactKey[] };
 /**
- * company — a record or a training version: 29 MCQ and 12 chatbot company-level concepts.
- * assignment — one learner: all 30 and 13, their ROLE concepts included (D74).
+ * company — a record or a training version: 29 MCQ and 10 chatbot company-level concepts.
+ * assignment — one learner: all 30 and 11, their ROLE concepts included (D74, D91).
  */
 export type Scope = 'company' | 'assignment';
 export type CoverageCount = { ready: number; total: number };

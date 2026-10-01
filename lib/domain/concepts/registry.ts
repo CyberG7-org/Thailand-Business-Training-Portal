@@ -2,8 +2,9 @@ import type { FactKey, StatusFact } from '@/lib/domain/facts/fact-sheet';
 
 /**
  * The shared concept registry (spec 2026-09-30 §7; decisions D72, D76, D78). One row per concept
- * either evaluation asks about: the 30 MCQ concepts are fixed product decisions, the 13 chatbot
- * slots are fixed in the Owner's order. `supabase/migrations/20261001030000_evaluation_concepts.sql`
+ * either evaluation asks about: the 30 MCQ concepts are fixed product decisions, the 11 chatbot
+ * slots are fixed in the Owner's order (D91 removed two repeated customer questions from the
+ * interview). `supabase/migrations/20261001030000_evaluation_concepts.sql`
  * seeds the same rows and `tests/integration/evaluation-concepts.test.ts` holds the two equal.
  */
 export const CONCEPT_SOURCES = [
@@ -56,7 +57,7 @@ export type ConceptDef = {
   /** 1–30: position in the MCQ; null = chatbot only. */
   mcqOrder: number | null;
   critical: boolean;
-  /** 1–13: chatbot slot; null = MCQ only. */
+  /** 1–11: chatbot slot; null = MCQ only. */
   interviewSlot: number | null;
   interviewMatch: MatchType | null;
   /** Status facts that select alternate wording; they must be set for the concept to resolve. */
@@ -224,9 +225,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['main_clients'],
     answer: 'open_text',
     mcqOrder: 14,
-    interviewSlot: 10,
-    interviewMatch: 'semantic',
-    alternateWhen: ['has_existing_customers'],
     title: { th: 'ลูกค้าหลัก', en: 'Main customers', zh: '主要客户' },
   }),
   row({
@@ -236,7 +234,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['client_origin'],
     answer: 'open_text',
     mcqOrder: 15,
-    alternateWhen: ['has_existing_customers'],
     title: { th: 'ที่มาของลูกค้า', en: 'Where customers come from', zh: '客户来源' },
   }),
   row({
@@ -246,7 +243,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['main_suppliers'],
     answer: 'open_text',
     mcqOrder: 16,
-    alternateWhen: ['has_regular_suppliers'],
     title: { th: 'ซัพพลายเออร์หลัก', en: 'Main suppliers', zh: '主要供应商' },
   }),
   row({
@@ -256,7 +252,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['business_address'],
     answer: 'text',
     mcqOrder: 17,
-    alternateWhen: ['operations_started'],
     title: { th: 'สถานที่ประกอบกิจการจริง', en: 'Actual place of business', zh: '实际经营地点' },
   }),
   row({
@@ -266,7 +261,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['monthly_revenue'],
     answer: 'text',
     mcqOrder: 18,
-    alternateWhen: ['operations_started'],
     title: { th: 'รายได้ต่อเดือนโดยประมาณ', en: 'Estimated monthly revenue', zh: '预计月收入' },
   }),
   row({
@@ -276,7 +270,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['revenue_basis'],
     answer: 'open_text',
     mcqOrder: 19,
-    alternateWhen: ['operations_started'],
     title: {
       th: 'ที่มาของการประมาณรายได้',
       en: 'Basis of the revenue estimate',
@@ -290,7 +283,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['average_transaction'],
     answer: 'text',
     mcqOrder: 20,
-    alternateWhen: ['has_completed_transactions'],
     title: {
       th: 'ยอดธุรกรรมเฉลี่ยต่อครั้ง',
       en: 'Average transaction amount',
@@ -304,7 +296,6 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['monthly_transactions'],
     answer: 'text',
     mcqOrder: 21,
-    alternateWhen: ['has_completed_transactions'],
     title: { th: 'จำนวนธุรกรรมต่อเดือน', en: 'Transactions per month', zh: '每月交易笔数' },
   }),
   row({
@@ -461,27 +452,14 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     title: { th: 'วัตถุประสงค์ของการเปิดบัญชี', en: 'Purpose of the account', zh: '开户目的' },
   }),
   row({
-    key: 'customer_examples',
-    domain: 'business',
-    source: 'BUSINESS_PROFILE',
-    facts: ['customer_examples'],
-    answer: 'open_text',
-    mcqOrder: null,
-    interviewSlot: 11,
-    interviewMatch: 'semantic',
-    alternateWhen: ['has_existing_customers'],
-    title: { th: 'ตัวอย่างลูกค้า', en: 'Customer examples', zh: '客户示例' },
-  }),
-  row({
     key: 'customer_profile',
     domain: 'business',
     source: 'BUSINESS_PROFILE',
     facts: ['customer_profile'],
     answer: 'open_text',
     mcqOrder: null,
-    interviewSlot: 12,
+    interviewSlot: 10,
     interviewMatch: 'semantic',
-    alternateWhen: ['has_existing_customers'],
     title: { th: 'ลักษณะของลูกค้า', en: 'Customer profile', zh: '客户概况' },
   }),
   row({
@@ -491,9 +469,8 @@ export const EVALUATION_CONCEPTS: readonly ConceptDef[] = [
     facts: ['transaction_details'],
     answer: 'open_text',
     mcqOrder: null,
-    interviewSlot: 13,
+    interviewSlot: 11,
     interviewMatch: 'semantic',
-    alternateWhen: ['has_completed_transactions'],
     title: {
       th: 'รายละเอียดการซื้อขายและการชำระเงิน',
       en: 'Transaction details',
