@@ -55,6 +55,9 @@ test('the admin sees every section in the sidebar with the current one marked', 
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
   await page.goto('/th/admin/learners');
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/^บันทึกผู้เรียน$/);
+  // The home page is headed with the owner's role, not "Administration".
+  await page.goto('/th/admin');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('เจ้าของ');
 });
 
 test('a manager sees only the sections they may open', async ({ page }) => {
@@ -62,6 +65,7 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   const code = await createManager(page, 'ผู้จัดการแถบข้าง', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   await expect(page.getByTestId('shell-header')).toContainText('พอร์ทัลฝึกอบรมธุรกิจ · ผู้จัดการ');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
   await expect(nav.getByRole('link').first()).toHaveText('สร้างผู้เรียนและ DBD');
   await expect(nav).toContainText('สร้างผู้เรียนและ DBD');

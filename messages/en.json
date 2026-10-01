@@ -75,7 +75,7 @@
     }
   },
   "admin": {
-    "title": "Administration",
+    "title": "Sections",
     "nav": {
       "users": "Create learner & DBD",
       "questions": "Question bank",
@@ -659,7 +659,7 @@
     },
     "settings": {
       "title": "Policy settings",
-      "intro": "These values drive the business rules (policy_config). Every change is audited with the admin who made it.",
+      "intro": "These values drive the business rules (policy_config). Every change is audited with the owner who made it.",
       "save": "Save",
       "saved": "Saved",
       "yes": "Yes",
@@ -724,11 +724,11 @@
           "help": "When on, a learner must pass the exam before starting the readiness interview."
         },
         "telegram_admin_chat_ids": {
-          "label": "Admin Telegram chat ids",
+          "label": "Owner Telegram chat ids",
           "help": "One per line"
         },
         "email_admin_recipients": {
-          "label": "Admin notification emails",
+          "label": "Owner notification emails",
           "help": "One per line"
         },
         "study_completion_tracking": {
@@ -890,7 +890,7 @@
       "toHour": "To (hour)",
       "reason": "Reason",
       "teamFilter": "Team",
-      "adminCalendar": "Admin calendar",
+      "adminCalendar": "Owner calendar",
       "allTeams": "All teams",
       "show": "Show"
     },
