@@ -1519,6 +1519,69 @@ export type Database = {
           },
         ]
       }
+      training_fact_exceptions: {
+        Row: {
+          blocks: string
+          created_at: string
+          dbd_record_id: string
+          detail: Json
+          field: string
+          id: string
+          kind: string
+          note: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          blocks: string
+          created_at?: string
+          dbd_record_id: string
+          detail?: Json
+          field: string
+          id?: string
+          kind: string
+          note?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          blocks?: string
+          created_at?: string
+          dbd_record_id?: string
+          detail?: Json
+          field?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_fact_exceptions_dbd_record_id_fkey"
+            columns: ["dbd_record_id"]
+            isOneToOne: false
+            referencedRelation: "dbd_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_fact_exceptions_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_dbd_assignments: {
         Row: {
           active: boolean

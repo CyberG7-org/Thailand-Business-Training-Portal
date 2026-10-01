@@ -670,6 +670,14 @@
         "business_category_min_confidence_percent": {
           "label": "Business category: minimum confidence to accept automatically (%)",
           "help": "At or above this, the mapped category is used without review; below it the suggestion waits for a manager or the Owner."
+        },
+        "training_auto_accept_confidence_percent": {
+          "label": "Training facts: confidence read as certain (%)",
+          "help": "An extracted fact at or above this raises nothing. Below it, a low-confidence exception is listed for review."
+        },
+        "training_review_confidence_percent": {
+          "label": "Training facts: confidence below which a person must confirm (%)",
+          "help": "Below this, the exception blocks acceptance of the record until a person confirms the value."
         }
       }
     },

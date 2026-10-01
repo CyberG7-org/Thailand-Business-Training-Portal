@@ -48,6 +48,8 @@ export const POLICY_DEFAULTS = {
   appointment_holidays: THAI_BANK_HOLIDAYS_2026 as string[],
   // P17a (spec §5.3): an automatic business-category mapping is accepted at or above this.
   business_category_min_confidence_percent: 85 as number,
+  training_auto_accept_confidence_percent: 95 as number,
+  training_review_confidence_percent: 75 as number,
 };
 
 export type PolicyKey = keyof typeof POLICY_DEFAULTS;

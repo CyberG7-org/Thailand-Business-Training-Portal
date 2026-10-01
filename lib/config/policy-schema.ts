@@ -90,6 +90,14 @@ export const POLICY_FIELDS = {
     control: { kind: 'number', min: 50, max: 100, nullable: false },
     schema: intRange(50, 100),
   },
+  training_auto_accept_confidence_percent: {
+    control: { kind: 'number', min: 50, max: 100, nullable: false },
+    schema: intRange(50, 100),
+  },
+  training_review_confidence_percent: {
+    control: { kind: 'number', min: 50, max: 100, nullable: false },
+    schema: intRange(50, 100),
+  },
 } satisfies Record<string, PolicyFieldDef>;
 
 export type PolicyFieldKey = keyof typeof POLICY_FIELDS;

@@ -670,6 +670,14 @@
         "business_category_min_confidence_percent": {
           "label": "业务类别：自动采用的最低置信度（%）",
           "help": "达到此值时直接采用匹配的类别；低于此值时，建议的类别需由经理或所有者审核。"
+        },
+        "training_auto_accept_confidence_percent": {
+          "label": "培训信息：视为确定的置信度（%）",
+          "help": "提取结果达到或高于此值不会提示；低于此值会列为待复核的例外。"
+        },
+        "training_review_confidence_percent": {
+          "label": "培训信息：低于此置信度须人工确认（%）",
+          "help": "低于此值的例外会阻止记录被接受，直到有人确认该值。"
         }
       }
     },
