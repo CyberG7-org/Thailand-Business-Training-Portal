@@ -3,6 +3,7 @@ import {
   MIN_PASSWORD_LENGTH,
   generatePassword,
   newLearnerChecklist,
+  secureIndex,
   type NewLearnerValues,
 } from '@/lib/domain/new-learner';
 
@@ -68,5 +69,27 @@ describe('generatePassword', () => {
   it('differs from one call to the next with the real random source', () => {
     const seen = new Set(Array.from({ length: 20 }, () => generatePassword()));
     expect(seen.size).toBe(20);
+  });
+});
+
+describe('secureIndex', () => {
+  it('stays below its bound and reaches every value', () => {
+    const seen = new Set<number>();
+    for (let i = 0; i < 5000; i++) {
+      const n = secureIndex(54);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThan(54);
+      seen.add(n);
+    }
+    expect(seen.size).toBe(54);
+  });
+
+  it('is not tilted towards low values: each half is drawn about as often', () => {
+    let low = 0;
+    const draws = 20_000;
+    for (let i = 0; i < draws; i++) if (secureIndex(54) < 27) low++;
+    // A remainder of a byte would put about 52% in the low half; even draws stay near 50%.
+    expect(low / draws).toBeGreaterThan(0.47);
+    expect(low / draws).toBeLessThan(0.53);
   });
 });

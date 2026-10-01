@@ -47,14 +47,26 @@ export function newLearnerChecklist(
 const PASSWORD_CHARS = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 /**
+ * A whole number below `below` (at most 256), every value equally likely: a random byte past the
+ * last whole multiple of `below` is drawn again, and the rest are divided down — a plain
+ * remainder would favour the low values.
+ */
+export function secureIndex(below: number): number {
+  const span = Math.floor(256 / below);
+  const limit = span * below;
+  const byte = new Uint8Array(1);
+  for (;;) {
+    crypto.getRandomValues(byte);
+    if (byte[0] < limit) return Math.floor(byte[0] / span);
+  }
+}
+
+/**
  * A starting password for the manager to hand over: three groups of four, e.g. `Kp7w-Xm3r-Tz9q`
  * — fourteen characters, past the minimum, and easy to read out. `random` returns a whole
- * number below its argument; the default draws from the browser's or Node's crypto.
+ * number below its argument; the default draws evenly from the browser's or Node's crypto.
  */
-export function generatePassword(
-  random: (below: number) => number = (below) =>
-    crypto.getRandomValues(new Uint32Array(1))[0] % below,
-): string {
+export function generatePassword(random: (below: number) => number = secureIndex): string {
   const group = () =>
     Array.from({ length: 4 }, () => PASSWORD_CHARS[random(PASSWORD_CHARS.length)]).join('');
   return [group(), group(), group()].join('-');
