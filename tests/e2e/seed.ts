@@ -109,7 +109,13 @@ export async function seedPassedExam(
     .eq('login_id', loginId)
     .single();
   if (!profile) throw new Error(`no profile for ${loginId}`);
-  const { data: question } = await admin.from('questions').select('id').limit(1).single();
+  // An earlier free-form question: a concept variant (P17d) is not what the old exam asks.
+  const { data: question } = await admin
+    .from('questions')
+    .select('id')
+    .is('concept_key', null)
+    .limit(1)
+    .single();
   const { error } = await admin.from('assessment_attempts').insert({
     user_id: profile.id,
     kind: 'exam',
@@ -452,8 +458,9 @@ export async function seedExamWithAnswer(
   const { userId, recordId } = await learnerAndRecord(loginId);
   const { data: loc, error: locError } = await admin
     .from('question_localizations')
-    .select('question_id, prompt, options, correct_key')
+    .select('question_id, prompt, options, correct_key, questions!inner(concept_key)')
     .eq('language', 'th')
+    .is('questions.concept_key', null)
     .not('prompt', 'like', '%{%')
     .limit(1)
     .single();
