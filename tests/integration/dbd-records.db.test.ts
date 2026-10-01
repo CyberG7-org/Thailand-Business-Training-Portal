@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
-  confirmDbdRecord,
   createDbdRecord,
   getDbdRecord,
   listDbdRecords,
@@ -52,8 +51,11 @@ describe('lib/db/dbd-records', () => {
     });
   });
 
-  it('refuses confirmation naming what is missing, then confirms', async () => {
-    await expect(confirmDbdRecord(asAdmin, recordId, admin.id)).rejects.toThrow(/juristic_id/);
+  it('is accepted by validation once the certificate facts and the four answers are there', async () => {
+    const { validateRecord } = await import('@/lib/db/validation');
+    const svc = adminClient();
+    const before = (await validateRecord(svc, recordId, admin.id))!;
+    expect(before.accepted).toBe(false);
     await updateDbdRecord(
       asAdmin,
       recordId,
@@ -64,15 +66,15 @@ describe('lib/db/dbd-records', () => {
       }),
     );
     // The certificate is complete, but nobody has said how to reach the company or what it sells.
-    await expect(confirmDbdRecord(asAdmin, recordId, admin.id)).rejects.toThrow(
-      /nature_of_business/,
-    );
-
+    const stillBlocked = (await validateRecord(svc, recordId, admin.id))!;
+    expect(stillBlocked.accepted).toBe(false);
     await asAdmin
       .from('dbd_records')
       .update({ structured_data: CONFIRMED_ANSWERS as never })
       .eq('id', recordId);
-    const confirmed = await confirmDbdRecord(asAdmin, recordId, admin.id);
+    const after = (await validateRecord(svc, recordId, admin.id))!;
+    expect(after.accepted).toBe(true);
+    const confirmed = (await getDbdRecord(asAdmin, recordId))!;
     expect(confirmed.extraction_status).toBe('confirmed');
     expect(confirmed.confirmed_by).toBe(admin.id);
   });

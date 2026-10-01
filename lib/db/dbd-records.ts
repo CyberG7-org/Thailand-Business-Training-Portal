@@ -1,8 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DbdRecordInput } from '@/lib/domain/dbd-record';
-import { missingFieldsForConfirmation } from '@/lib/domain/dbd-record';
 import { MAX_DOCUMENT_BYTES } from '@/lib/domain/document-upload';
-import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
+import { type StructuredData } from '@/lib/domain/dbd-profile';
 import { getVectorStore, resolveVectorProvider, type VectorStore } from '@/lib/integrations/vector';
 import { countPages } from '@/lib/pdf/slice';
 import { inChunks } from './chunks';
@@ -114,46 +113,6 @@ export async function updateDbdRecord(
 
 /** The database check constraint rejects this while juristic_id / company_name_th are missing. */
 /** Why a record could not be confirmed, naming every field still to fill. */
-export class IncompleteRecordError extends Error {
-  constructor(public readonly missing: string[]) {
-    super(`Record is missing ${missing.join(', ')}`);
-    this.name = 'IncompleteRecordError';
-  }
-}
-
-/**
- * The single path that confirms a record, and so the single place the rule lives: the certificate
- * facts must be present, and the manager must have written the four business answers the DBD pack
- * cannot supply (owner, 2026-09-24). The check constraint behind it catches direct SQL; this
- * catches everything the app does, with a message that names the gap.
- */
-export async function confirmDbdRecord(
-  db: Db,
-  id: string,
-  confirmedBy: string,
-): Promise<DbdRecordRow> {
-  const current = await getDbdRecord(db, id);
-  if (!current) throw new IncompleteRecordError(['record']);
-  const missing = missingFieldsForConfirmation(
-    current,
-    readStructuredData(current.structured_data).interview ?? null,
-  );
-  if (missing.length > 0) throw new IncompleteRecordError(missing);
-
-  const { data, error } = await db
-    .from('dbd_records')
-    .update({
-      extraction_status: 'confirmed',
-      confirmed_by: confirmedBy,
-      confirmed_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
 const PDF_MAGIC = '%PDF-';
 
 /** Why an uploaded object could not become a document; the UI has a message per code. */

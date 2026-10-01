@@ -5,7 +5,7 @@ import { useActionState } from 'react';
 import { INTERVIEW_FIELDS } from '@/lib/domain/bank-interview';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
-  confirmDbdRecordAction,
+  recheckRecordAction,
   extractDocumentAction,
   removeDocumentAction,
   retryIndexAction,
@@ -98,7 +98,7 @@ export function RecordTools({
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const readingErrorKey = EXTRACT_ERROR_KEYS.find((k) => k === reading?.error);
-  const [confirmState, confirmAction, confirming] = useActionState(confirmDbdRecordAction, initial);
+  const [confirmState, confirmAction, confirming] = useActionState(recheckRecordAction, initial);
   const {
     state: uploadState,
     pending: uploading,

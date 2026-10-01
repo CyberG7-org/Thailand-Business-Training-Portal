@@ -3,10 +3,10 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireStaff } from '@/lib/auth/session';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import {
   DocumentUploadError,
-  confirmDbdRecord,
   createDbdRecord,
   getDbdRecord,
   listDbdDocuments,
@@ -27,7 +27,12 @@ import {
   setBusinessCategory,
 } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
-import { syncAfterChange } from '@/lib/db/training-versions';
+import {
+  ValidationError,
+  resolveException,
+  validateAfterChange,
+  validateRecord,
+} from '@/lib/db/validation';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
 import {
@@ -48,11 +53,7 @@ import {
   parseShareholdersText,
   readStructuredData,
 } from '@/lib/domain/dbd-profile';
-import {
-  dbdRecordInputSchema,
-  missingFieldsForConfirmation,
-  parseDirectorsText,
-} from '@/lib/domain/dbd-record';
+import { dbdRecordInputSchema, parseDirectorsText } from '@/lib/domain/dbd-record';
 
 export type SaveState = { ok: boolean; error: string | null; fieldErrors: Record<string, string> };
 export type ToolState = {
@@ -154,9 +155,9 @@ function errorMessage(e: unknown): string {
 }
 
 /**
- * A save has succeeded; a failure to derive must not undo it (the next save derives again). A
- * confirmed record's sheet may have changed with it (spec §5.6): a new version, never a moved
- * learner.
+ * A save has succeeded; a failure to derive must not undo it (the next save derives again). The
+ * record's facts may have changed with it (spec §5.5): the exceptions follow, and so do
+ * acceptance and the version.
  */
 async function deriveAfterSave(
   db: Awaited<ReturnType<typeof createSupabaseServerClient>>,
@@ -164,7 +165,7 @@ async function deriveAfterSave(
   actorId: string,
 ): Promise<void> {
   await refreshDerivedFacts(db, id).catch((e) => console.error('derived facts', id, e));
-  await syncAfterChange(id, actorId);
+  await validateAfterChange(id, actorId);
 }
 
 export async function saveDbdRecordAction(
@@ -223,7 +224,8 @@ export async function saveDbdRecordAction(
   redirect(`/${locale}/admin/dbd-records/${createdId}`);
 }
 
-export async function confirmDbdRecordAction(
+/** "Check again" (plan decision 8): validation runs, and acceptance follows by itself when nothing blocks it. */
+export async function recheckRecordAction(
   _prev: ToolState,
   formData: FormData,
 ): Promise<ToolState> {
@@ -233,18 +235,46 @@ export async function confirmDbdRecordAction(
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
   if (!record) return { ok: false, error: 'not-found' };
-  const missing = missingFieldsForConfirmation(
-    record,
-    readStructuredData(record.structured_data).interview ?? null,
-  );
-  if (missing.length > 0) return { ok: false, error: `missing:${missing.join(',')}` };
   try {
-    await confirmDbdRecord(db, id, admin.id);
-    await syncAfterChange(id, admin.id);
+    const result = await validateRecord(createSupabaseAdminClient(), id, admin.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+    if (!result) return { ok: false, error: 'not-found' };
+    if (!result.accepted && record.extraction_status !== 'confirmed') {
+      return { ok: false, error: 'blocked' };
+    }
     return { ok: true, error: null };
   } catch (e) {
     return { ok: false, error: errorMessage(e) };
+  }
+}
+
+/** A person settles an exception on the record page (spec §5.5); the record is checked again at once. */
+export async function resolveExceptionAction(
+  _prev: ToolState,
+  formData: FormData,
+): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  const exceptionId = String(formData.get('exceptionId') ?? '');
+  const resolution = formData.get('resolution') === 'dismissed' ? 'dismissed' : 'confirmed';
+  const note = String(formData.get('note') ?? '');
+  const staff = await requireStaff(locale);
+  try {
+    await resolveException(await createSupabaseServerClient(), {
+      exceptionId,
+      resolution,
+      note,
+      actorId: staff.id,
+    });
+    await validateAfterChange(id, staff.id);
+    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+    revalidatePath(`/${locale}/admin/exceptions`);
+    return { ok: true, error: null };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof ValidationError ? e.code.replace(/_/g, '-') : errorMessage(e),
+    };
   }
 }
 
@@ -479,7 +509,7 @@ export async function setBusinessCategoryAction(
   const db = await createSupabaseServerClient();
   try {
     await setBusinessCategory(db, id, key);
-    await syncAfterChange(id, staff.id);
+    await validateAfterChange(id, staff.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
@@ -498,7 +528,7 @@ export async function remapBusinessCategoryAction(
   const db = await createSupabaseServerClient();
   try {
     await remapBusinessCategory(db, id);
-    await syncAfterChange(id, staff.id);
+    await validateAfterChange(id, staff.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
   } catch (e) {
