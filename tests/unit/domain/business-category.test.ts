@@ -4,18 +4,18 @@ import {
   failedCategory,
   manualCategory,
   needsRemap,
+  settleCategory,
 } from '@/lib/domain/business-category';
 
 const at = '2026-09-30T00:00:00.000Z';
 const active = new Set(['clothing_fashion', 'furniture_home']);
 
 describe('decideCategory', () => {
-  it('accepts a mapping at or above the threshold automatically', () => {
+  it('takes the best match as the category, whatever its confidence (D90)', () => {
     expect(
       decideCategory({
         result: { key: 'clothing_fashion', confidence: 0.85 },
         activeKeys: active,
-        minConfidencePercent: 85,
         model: 'claude-sonnet-5',
         inputHash: 'h1',
         at,
@@ -26,19 +26,20 @@ describe('decideCategory', () => {
       source: 'auto',
       confidence: 0.85,
     });
-  });
-
-  it('keeps a weaker one as a candidate for review, never as the category', () => {
     expect(
       decideCategory({
         result: { key: 'furniture_home', confidence: 0.6 },
         activeKeys: active,
-        minConfidencePercent: 85,
         model: null,
         inputHash: 'h1',
         at,
       }),
-    ).toMatchObject({ status: 'needs_review', key: null, candidate_key: 'furniture_home' });
+    ).toMatchObject({
+      status: 'mapped',
+      key: 'furniture_home',
+      candidate_key: null,
+      confidence: 0.6,
+    });
   });
 
   it('never takes a key that is not an active category', () => {
@@ -46,12 +47,32 @@ describe('decideCategory', () => {
       decideCategory({
         result: { key: 'retired_key', confidence: 0.99 },
         activeKeys: active,
-        minConfidencePercent: 85,
         model: null,
         inputHash: 'h1',
         at,
       }),
     ).toMatchObject({ status: 'unmapped', key: null, candidate_key: null });
+  });
+});
+
+describe('settleCategory', () => {
+  it('makes a match that was waiting for a person the category', () => {
+    const waiting = {
+      ...manualCategory('clothing_fashion', 'h1', at),
+      key: null,
+      candidate_key: 'furniture_home',
+      confidence: 0.6,
+      source: 'auto' as const,
+      status: 'needs_review' as const,
+    };
+    expect(settleCategory(waiting)).toMatchObject({
+      status: 'mapped',
+      key: 'furniture_home',
+      candidate_key: null,
+      confidence: 0.6,
+    });
+    const mapped = manualCategory('clothing_fashion', 'h1', at);
+    expect(settleCategory(mapped)).toBe(mapped);
   });
 });
 

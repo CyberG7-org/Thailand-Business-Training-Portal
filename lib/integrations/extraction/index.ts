@@ -1,6 +1,7 @@
 import 'server-only';
 import { ClaudeDbdExtractor } from './claude';
 import { FakeDbdExtractor } from './fake';
+import { withThaiNormalization } from './normalizing';
 import type { DbdExtractor } from './types';
 
 export type ExtractionProvider = 'claude' | 'fake' | 'off';
@@ -21,9 +22,9 @@ export function resolveExtractionProvider(
 export function getDbdExtractor(): DbdExtractor | null {
   switch (resolveExtractionProvider()) {
     case 'claude':
-      return new ClaudeDbdExtractor();
+      return withThaiNormalization(new ClaudeDbdExtractor());
     case 'fake':
-      return new FakeDbdExtractor();
+      return withThaiNormalization(new FakeDbdExtractor());
     case 'off':
       return null;
   }

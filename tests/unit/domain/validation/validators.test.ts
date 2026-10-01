@@ -265,15 +265,16 @@ describe('validateFacts (spec §5.5)', () => {
     });
   });
 
-  it('flags a category that needs a person, never blocking', () => {
+  it('flags a business with no category for a person, never blocking', () => {
     const f = run({
       structured: {
         category: {
           ...structured.category!,
-          status: 'needs_review',
+          status: 'unmapped',
           key: null,
-          candidate_key: 'furniture_home',
-          confidence: 0.6,
+          candidate_key: null,
+          confidence: null,
+          error: 'provider',
         },
       },
     });

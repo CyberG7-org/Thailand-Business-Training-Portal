@@ -479,21 +479,16 @@
         },
         "parts": {
           "house_no": "House no.",
-          "moo": "Moo",
-          "road": "Road",
           "subdistrict": "Subdistrict",
           "district": "District",
-          "province": "Province",
-          "postcode": "Postcode"
+          "province": "Province"
         },
-        "postcodeFromGeography": "The postcode was not printed; it is the subdistrict's.",
         "notStoredYet": "Shown from the printed address; it is stored with the next save."
       },
       "category": {
         "title": "Business category",
         "auto": "chosen automatically ({confidence}% confidence)",
         "manual": "chosen by a person",
-        "needsReview": "Needs a person: the best match is {candidate} ({confidence}% confidence)",
         "unmapped": "No category yet",
         "errors": {
           "no_text": "Write what the business does first",
@@ -812,10 +807,6 @@
         "appointment_holidays": {
           "label": "Bank holidays",
           "help": "The Bank of Thailand's public holidays, one ISO date (YYYY-MM-DD) per line, substitution days included; add next year's list each December"
-        },
-        "business_category_min_confidence_percent": {
-          "label": "Business category: minimum confidence to accept automatically (%)",
-          "help": "At or above this, the mapped category is used without review; below it the suggestion waits for a manager or the Owner."
         },
         "training_auto_accept_confidence_percent": {
           "label": "Training facts: confidence read as certain (%)",

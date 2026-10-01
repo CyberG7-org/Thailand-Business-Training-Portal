@@ -1,9 +1,15 @@
 import { z } from 'zod';
 import { parseDateInput } from './thai-date';
+import { normalizeThai } from './thai-text';
 
 export type Director = { name_th: string; name_en: string | null };
 
-const emptyToNull = (v: unknown) => (typeof v === 'string' && v.trim() === '' ? null : v);
+/** Blank is null; anything else is spelled as a keyboard spells it (`thai-text.ts`). */
+const emptyToNull = (v: unknown) => {
+  if (typeof v !== 'string') return v;
+  const text = normalizeThai(v);
+  return text.trim() === '' ? null : text;
+};
 
 const optionalText = z.preprocess(emptyToNull, z.string().trim().max(500).nullable().default(null));
 

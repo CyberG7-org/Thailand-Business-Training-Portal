@@ -1,3 +1,5 @@
+import { normalizeThai } from '@/lib/domain/thai-text';
+
 /**
  * Splits a printed Thai registered address into its parts (spec 2026-09-30 §5.2, D73). Purely
  * textual: the parts are names as printed; `resolve.ts` checks them against the geography tables
@@ -44,6 +46,10 @@ const BANGKOK_NAMES = /^(กรุงเทพมหานคร|กรุงเ
 const BANGKOK_IN_TEXT = /(^|[\s,])(กรุงเทพมหานคร|กรุงเทพฯ|กรุงเทพ|กทม\.?)(?=$|[\s,\d])/;
 const POSTCODE_RE = /(^|[\s,])(\d{5})(?=$|[\s,])/g;
 const HOUSE_RE = /^\s*(?:เลขที่\s*)?(\d+(?:\/\d+)*(?:-\d+)?)/;
+/** A whole printed line: "สำนักงานแห่งใหญ่ ตั้งอยู่เลขที่ 194/3 …". */
+const HOUSE_AFTER_LABEL_RE = /เลขที่\s*(\d+(?:\/\d+)*(?:-\d+)?)/;
+/** A certificate closes the address with a slash; a typed one may end in a stop or a comma. */
+const TRAILING_RE = /[\s/.,;]+$/;
 
 const EMPTY: ParsedAddress = {
   house_no: null,
@@ -56,7 +62,8 @@ const EMPTY: ParsedAddress = {
 };
 
 export function normalizePlaceName(name: string): string {
-  const compact = name
+  const compact = normalizeThai(name)
+    .replace(TRAILING_RE, '')
     .replace(/\s+/g, '')
     .replace(/^(จังหวัด|อำเภอ|เขต|ตำบล|แขวง|จ\.|อ\.|ต\.)/, '');
   return BANGKOK_NAMES.test(compact) ? 'กรุงเทพมหานคร' : compact;
@@ -68,15 +75,17 @@ function clean(value: string): string | null {
 }
 
 export function parseThaiAddress(printed: string): ParsedAddress {
-  let text = printed.replace(/\s+/g, ' ').trim();
+  // The markers are matched character by character, so the text is first spelled the way a
+  // keyboard spells it: a PDF's text layer writes ตำบล, อำเภอ and หมู่ with other characters.
+  let text = normalizeThai(printed).replace(/\s+/g, ' ').replace(TRAILING_RE, '').trim();
   if (!text) return { ...EMPTY };
   const result: ParsedAddress = { ...EMPTY };
 
-  const house = HOUSE_RE.exec(text);
+  const house = HOUSE_RE.exec(text) ?? HOUSE_AFTER_LABEL_RE.exec(text);
   if (house) result.house_no = house[1];
 
   // The postcode is the last standalone five-digit number after the house number.
-  const houseEnd = house ? house[0].length : 0;
+  const houseEnd = house ? house.index + house[0].length : 0;
   const postcodes = [...text.matchAll(POSTCODE_RE)].filter((m) => (m.index ?? 0) >= houseEnd);
   const postcode = postcodes.at(-1);
   if (postcode) {

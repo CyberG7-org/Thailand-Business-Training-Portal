@@ -275,13 +275,10 @@ export function validateFacts(input: ValidationInput): Finding[] {
     );
   }
 
-  // 10. A category that needs a person: never blocking (D73).
+  // 10. No category although the business is written down (the mapper failed or found none):
+  //     a person picks one; never blocking (D73). A weak match is no longer held back (D90).
   const category = structured.category ?? null;
-  if (
-    category &&
-    (category.status === 'needs_review' ||
-      (category.status === 'unmapped' && interview.nature_of_business))
-  ) {
+  if (category && category.status === 'unmapped' && interview.nature_of_business) {
     push(
       'category_review',
       'business_category',

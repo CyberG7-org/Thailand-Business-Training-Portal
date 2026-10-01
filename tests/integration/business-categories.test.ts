@@ -27,18 +27,12 @@ describe('business categories', () => {
     for (const u of [learner, manager, owner]) await deleteTestUser(u.id);
   });
 
-  it('ships a draft dictionary and the confidence threshold', async () => {
+  it('ships a draft dictionary', async () => {
     const { count } = await svc
       .from('business_categories')
       .select('*', { count: 'exact', head: true })
       .eq('active', true);
     expect(count).toBeGreaterThanOrEqual(20);
-    const { data } = await svc
-      .from('policy_config')
-      .select('value')
-      .eq('key', 'business_category_min_confidence_percent')
-      .single();
-    expect(data!.value).toBe(85);
   });
 
   it('lets a manager read but never write', async () => {

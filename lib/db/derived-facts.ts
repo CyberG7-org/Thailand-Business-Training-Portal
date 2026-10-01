@@ -1,6 +1,5 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { getPolicy } from '@/lib/config/policy';
 import { EMPTY_INTERVIEW_PROFILE, type InterviewProfile } from '@/lib/domain/bank-interview';
 import {
   categoryInputHash,
@@ -11,6 +10,7 @@ import {
   type CategoryAssignment,
 } from '@/lib/domain/business-category';
 import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
+import { normalizeThai } from '@/lib/domain/thai-text';
 import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
 import { getCategoryMapper } from '@/lib/integrations/category-map';
 import type { CategoryMapper } from '@/lib/integrations/category-map/types';
@@ -23,8 +23,6 @@ type Db = SupabaseClient<Database>;
 
 export type DerivedFactsDeps = {
   mapper: CategoryMapper | null;
-  /** Tests pass it; otherwise the policy key is read. */
-  minConfidencePercent?: number;
   now?: () => Date;
 };
 
@@ -86,9 +84,13 @@ export async function refreshDerivedFacts(
       const at = (deps.now?.() ?? new Date()).toISOString();
       let changed = false;
 
-      const printed = record.head_office_address?.replace(/\s+/g, ' ').trim() ?? '';
+      const printed = normalizeThai(record.head_office_address ?? '')
+        .replace(/\s+/g, ' ')
+        .trim();
       let address = stored.address ?? null;
-      if (!address || address.full !== printed) {
+      // An address that did not resolve is read again every time: the reading may have improved,
+      // and three lookups cost nothing.
+      if (!address || address.full !== printed || address.status !== 'resolved') {
         address = await resolveRegisteredAddress(printed, geoLookup(db));
         changed = true;
       }
@@ -130,12 +132,9 @@ async function mapCategory(
         label_en: c.label_en,
       })),
     });
-    const minConfidencePercent =
-      deps.minConfidencePercent ?? (await getPolicy('business_category_min_confidence_percent'));
     return decideCategory({
       result,
       activeKeys: new Set(categories.map((c) => c.key)),
-      minConfidencePercent,
       model: deps.mapper.model,
       inputHash: hash,
       at,

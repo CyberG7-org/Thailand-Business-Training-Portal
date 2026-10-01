@@ -40,13 +40,13 @@ export function categoryInputHash(
 }
 
 /**
- * The mapper's answer as a stored decision (spec §5.3): accepted at or above the threshold,
- * kept as a candidate below it, discarded when the key is not an active category.
+ * The mapper's answer as a stored decision: its best match is the category, whatever the
+ * confidence (D90, superseding the threshold of spec §5.3); a key that is not an active category
+ * is discarded.
  */
 export function decideCategory(input: {
   result: { key: string | null; confidence: number };
   activeKeys: ReadonlySet<string>;
-  minConfidencePercent: number;
   model: string | null;
   inputHash: string;
   at: string;
@@ -62,10 +62,16 @@ export function decideCategory(input: {
     decided_at: input.at,
   };
   if (!known) return { ...base, key: null, candidate_key: null, status: 'unmapped' };
-  if (result.confidence * 100 >= input.minConfidencePercent) {
-    return { ...base, key: result.key, candidate_key: null, status: 'mapped' };
-  }
-  return { ...base, key: null, candidate_key: result.key, status: 'needs_review' };
+  return { ...base, key: result.key, candidate_key: null, status: 'mapped' };
+}
+
+/**
+ * A decision stored while a weak match still waited for a person (before D90): its candidate
+ * is the category now. Read through here, so the next save stores it that way.
+ */
+export function settleCategory(category: CategoryAssignment): CategoryAssignment {
+  if (category.status !== 'needs_review' || !category.candidate_key) return category;
+  return { ...category, key: category.candidate_key, candidate_key: null, status: 'mapped' };
 }
 
 /** A person's choice; it holds until the business text changes. */

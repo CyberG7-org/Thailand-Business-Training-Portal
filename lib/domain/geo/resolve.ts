@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeThai } from '@/lib/domain/thai-text';
 import { normalizePlaceName, parseThaiAddress } from './address';
 import type { GeoLookup } from './types';
 
@@ -39,7 +40,9 @@ export async function resolveRegisteredAddress(
   printed: string | null | undefined,
   lookup: GeoLookup,
 ): Promise<RegisteredAddress> {
-  const full = printed?.replace(/\s+/g, ' ').trim() ?? '';
+  const full = normalizeThai(printed ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
   const parsed = parseThaiAddress(full);
   const base: RegisteredAddress = {
     full,

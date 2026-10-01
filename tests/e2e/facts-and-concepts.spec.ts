@@ -47,7 +47,11 @@ test('a record reads its address, maps its category, and shows what is still mis
   // The address resolved against the geography tables, postcode taken from the subdistrict.
   await expect(page.getByTestId('address-panel')).toHaveAttribute('data-status', 'resolved');
   await expect(page.getByTestId('address-district')).toHaveText('โพนทอง');
-  await expect(page.getByTestId('address-postcode')).toHaveText('45110');
+  await expect(page.getByTestId('address-subdistrict')).toHaveText('หนองใหญ่');
+  // Moo, road and postcode are read but not listed (D89).
+  for (const part of ['moo', 'road', 'postcode']) {
+    await expect(page.getByTestId(`address-${part}`)).toHaveCount(0);
+  }
 
   // A record counts its company-level concepts only (D74): 29 and 12, the learner's own named
   // as checked per learner.
