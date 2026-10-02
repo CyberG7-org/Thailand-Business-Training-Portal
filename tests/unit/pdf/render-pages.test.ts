@@ -58,7 +58,11 @@ describe('what pdf.js opens at run time', () => {
     // A deployment only holds what file tracing finds. pdf.js opens these by a path worked out
     // at run time, so each must be named in next.config.ts — the worker was missing on Vercel.
     const config = nextConfig;
-    const included = (config.outputFileTracingIncludes?.['/*'] ?? []).join('\n');
+    const patterns = config.outputFileTracingIncludes?.['/*'] ?? [];
+    // Through pnpm's store, never through the link beside it: Vercel refuses a package whose
+    // files sit in a linked folder.
+    expect(patterns.every((p) => p.startsWith('node_modules/.pnpm/'))).toBe(true);
+    const included = patterns.join('\n');
     expect(included).toContain('node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
     for (const folder of ['wasm', 'standard_fonts', 'cmaps', 'iccs']) {
       expect(included).toContain(`node_modules/pdfjs-dist/${folder}/**`);

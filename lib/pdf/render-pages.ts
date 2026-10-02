@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { createCanvas } from '@napi-rs/canvas';
 
@@ -23,6 +23,24 @@ export const RENDER_SCALE = 3;
 export const MAX_PAGE_IMAGES = 16;
 
 /**
+ * The folder pdf.js is installed in. A deployment holds the package only under pnpm's own
+ * store (`node_modules/.pnpm/pdfjs-dist@…`): the link beside it that a checkout has is not there.
+ */
+function pdfjsRoot(): string | null {
+  const modules = path.join(process.cwd(), 'node_modules');
+  const linked = path.join(modules, 'pdfjs-dist');
+  if (existsSync(path.join(linked, 'wasm'))) return linked;
+  const store = path.join(modules, '.pnpm');
+  if (!existsSync(store)) return null;
+  for (const entry of readdirSync(store)) {
+    if (!entry.startsWith('pdfjs-dist@')) continue;
+    const stored = path.join(store, entry, 'node_modules', 'pdfjs-dist');
+    if (existsSync(path.join(stored, 'wasm'))) return stored;
+  }
+  return null;
+}
+
+/**
  * Where pdf.js keeps the files it reads while drawing: the decoders for scanned pages (JBIG2,
  * JPEG 2000), the standard fonts, the character maps and the colour profiles. It has no default
  * for them outside a browser, and a scanned page without its decoder is drawn blank.
@@ -32,8 +50,8 @@ export function pdfjsDataUrls(): Record<
   'wasmUrl' | 'standardFontDataUrl' | 'cMapUrl' | 'iccUrl',
   string
 > | null {
-  const root = path.join(process.cwd(), 'node_modules', 'pdfjs-dist');
-  if (!existsSync(path.join(root, 'wasm'))) return null;
+  const root = pdfjsRoot();
+  if (!root) return null;
   // pdf.js wants a directory ending in a forward slash, on Windows too.
   const dir = (name: string) => path.join(root, name).replaceAll(path.sep, '/') + '/';
   return {

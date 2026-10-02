@@ -18,14 +18,15 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
   // What pdf.js and the canvas open by a path worked out at run time, which file tracing cannot
   // see: the worker, the decoders for scanned pages, the fonts and maps, and the canvas's
-  // native binary for the platform the deployment runs on.
+  // native binary for the platform the deployment runs on. Named under pnpm's own store: a
+  // path through the link beside it (`node_modules/pdfjs-dist`) makes a package Vercel refuses.
   outputFileTracingIncludes: {
     '/*': [
-      'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
-      'node_modules/pdfjs-dist/wasm/**',
-      'node_modules/pdfjs-dist/standard_fonts/**',
-      'node_modules/pdfjs-dist/cmaps/**',
-      'node_modules/pdfjs-dist/iccs/**',
+      'node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
+      'node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/wasm/**',
+      'node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/standard_fonts/**',
+      'node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/cmaps/**',
+      'node_modules/.pnpm/pdfjs-dist@*/node_modules/pdfjs-dist/iccs/**',
       'node_modules/.pnpm/@napi-rs+canvas-*/node_modules/@napi-rs/**',
     ],
   },
