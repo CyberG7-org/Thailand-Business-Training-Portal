@@ -19,7 +19,12 @@ type Current = {
 } | null;
 
 const initial: AccountActionState = { message: null, error: null };
-const ASSIGN_ERROR_KEYS = ['no-record', 'already-assigned', 'not-confirmed'] as const;
+const ASSIGN_ERROR_KEYS = [
+  'no-record',
+  'already-assigned',
+  'not-confirmed',
+  'company-taken',
+] as const;
 
 export function AssignmentPanel({
   userId,

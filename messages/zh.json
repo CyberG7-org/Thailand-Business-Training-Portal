@@ -180,7 +180,10 @@
         "done": "已完成",
         "todo": "待完成"
       },
-      "createLearner": "创建学员"
+      "createLearner": "创建学员",
+      "takenCompany": "{name} — 已有学员",
+      "noFreeCompany": "所有已确认的公司都已有学员，请在“公司（DBD）”中添加公司。",
+      "companyTaken": "该公司已有学员。每家公司只能有一名学员。"
     },
     "learners": {
       "title": "学员记录",
@@ -254,8 +257,12 @@
         "juristicId": "法人注册号",
         "issuedOn": "证书签发日期",
         "team": "团队",
-        "status": "状态"
-      }
+        "status": "状态",
+        "learner": "学员"
+      },
+      "assignLearner": "分配学员",
+      "learnerOtherTeam": "其他团队的学员",
+      "learnerAfterConfirm": "确认后可分配"
     },
     "loginIdField": {
       "label": "登录ID",
@@ -634,7 +641,8 @@
       "errors": {
         "no-record": "请选择记录",
         "already-assigned": "该学员已有生效的分配",
-        "not-confirmed": "仅可分配已确认的记录"
+        "not-confirmed": "仅可分配已确认的记录",
+        "company-taken": "该公司已有学员。每家公司只能有一名学员。"
       }
     },
     "questions": {

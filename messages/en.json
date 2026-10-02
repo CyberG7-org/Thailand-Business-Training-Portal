@@ -180,7 +180,10 @@
         "done": "done",
         "todo": "still to do"
       },
-      "createLearner": "Create learner"
+      "createLearner": "Create learner",
+      "takenCompany": "{name} — has a learner",
+      "noFreeCompany": "Every confirmed company already has its learner — add a company in Companies (DBD).",
+      "companyTaken": "This company already has a learner. Each company is studied by one learner."
     },
     "learners": {
       "title": "Learner Record",
@@ -254,8 +257,12 @@
         "juristicId": "Juristic person ID",
         "issuedOn": "Certificate issued",
         "team": "Team",
-        "status": "Status"
-      }
+        "status": "Status",
+        "learner": "Learner"
+      },
+      "assignLearner": "Assign learner",
+      "learnerOtherTeam": "Another team's learner",
+      "learnerAfterConfirm": "Once confirmed"
     },
     "loginIdField": {
       "label": "Login ID",
@@ -634,7 +641,8 @@
       "errors": {
         "no-record": "Choose a record",
         "already-assigned": "This learner already has an active assignment",
-        "not-confirmed": "Only confirmed records can be assigned"
+        "not-confirmed": "Only confirmed records can be assigned",
+        "company-taken": "This company already has a learner. Each company is studied by one learner."
       }
     },
     "questions": {

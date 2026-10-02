@@ -1,7 +1,15 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  type Ref,
+} from 'react';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
 import {
   MIN_PASSWORD_LENGTH,
@@ -24,7 +32,12 @@ export type CompanyOption = {
   name: string;
   status: string;
   confirmed: boolean;
+  /** It already has its learner: one per company (D93). */
+  taken: boolean;
 };
+
+/** What the companies tab may ask of the form: choose a company, as "Assign learner" does. */
+export type NewUserFormHandle = { assign: (companyId: string) => void };
 
 /**
  * Every account created here is a learner studying one company: the record chosen becomes the
@@ -59,6 +72,7 @@ export function NewUserForm({
   teams = null,
   ownLoginId = null,
   initialSuffix = null,
+  ref,
   onAddCompany,
 }: {
   companies: CompanyOption[];
@@ -68,6 +82,8 @@ export function NewUserForm({
   ownLoginId?: string | null;
   /** A free suffix for a manager's own team; the admin's arrives once a team is chosen. */
   initialSuffix?: string | null;
+  /** Lets "Assign learner" on the companies tab choose a company here. */
+  ref?: Ref<NewUserFormHandle>;
   /** "Not listed?": open the companies tab at its upload form. */
   onAddCompany: () => void;
 }) {
@@ -76,6 +92,7 @@ export function NewUserForm({
   const formRef = useRef<HTMLFormElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [teamId, setTeamId] = useState('');
+  const [companyId, setCompanyId] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [suggestion, setSuggestion] = useState({
     suffix: initialSuffix,
@@ -99,8 +116,12 @@ export function NewUserForm({
   const [state, formAction, pending] = useActionState(
     async (prev: CreateUserState, formData: FormData) => {
       const next = await createUserAction(prev, formData);
-      // The code just created is taken now, so a success brings the next suggestion (D69).
-      if (next.createdLoginId) await refreshSuggestion(teams ? teamId : undefined);
+      // The code just created is taken now, so a success brings the next suggestion (D69); the
+      // company is taken too (D93), so the choice empties.
+      if (next.createdLoginId) {
+        setCompanyId('');
+        await refreshSuggestion(teams ? teamId : undefined);
+      }
       return next;
     },
     initial,
@@ -131,14 +152,29 @@ export function NewUserForm({
       ),
     );
   }, [teamId, teams]);
-  useEffect(recompute, [recompute, state]);
+  useEffect(recompute, [recompute, state, companyId]);
+
+  // "Assign learner" on a company: that company chosen, and for the owner its team as well.
+  useImperativeHandle(ref, () => ({
+    assign(id: string) {
+      const company = companies.find((c) => c.id === id);
+      if (!company) return;
+      if (teams && company.teamId && company.teamId !== teamId) {
+        setTeamId(company.teamId);
+        void refreshSuggestion(company.teamId);
+      }
+      setCompanyId(company.id);
+    },
+  }));
 
   // An admin choosing a team sees that team's companies and their own untied ones; a manager
   // (teams === null) sees whatever RLS already gave them.
-  const offered = teams
-    ? companies.filter((c) => !teamId || c.teamId === teamId || c.teamId == null)
-    : companies;
+  const offeredFor = (team: string) =>
+    teams ? companies.filter((c) => !team || c.teamId === team || c.teamId == null) : companies;
+  const offered = offeredFor(teamId);
   const confirmed = companies.filter((c) => c.confirmed);
+  // A company is given once (D93): confirmed and still without a learner.
+  const free = confirmed.filter((c) => !c.taken);
   const teamLoginId = teams
     ? (teams.find((team) => team.id === teamId)?.loginId ?? null)
     : ownLoginId;
@@ -254,6 +290,10 @@ export function NewUserForm({
                   value={teamId}
                   onChange={(e) => {
                     setTeamId(e.target.value);
+                    // A company the new team may not take is let go rather than kept hidden.
+                    if (!offeredFor(e.target.value).some((c) => c.id === companyId)) {
+                      setCompanyId('');
+                    }
                     void refreshSuggestion(e.target.value || undefined);
                   }}
                   className="staff-input mt-1"
@@ -270,19 +310,33 @@ export function NewUserForm({
           )}
           <label className="text-sm">
             <span className={label}>{t('companyCard')}</span>
-            <select name="dbdRecordId" required defaultValue="" className="staff-input mt-1">
+            <select
+              name="dbdRecordId"
+              required
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
+              className="staff-input mt-1"
+            >
               <option value="">{t('chooseConfirmedCompany')}</option>
               {offered.map((c) => (
-                <option key={c.id} value={c.id} disabled={!c.confirmed}>
-                  {c.confirmed
-                    ? c.name
-                    : t('unconfirmedCompany', { name: c.name, status: c.status })}
+                <option key={c.id} value={c.id} disabled={!c.confirmed || c.taken}>
+                  {!c.confirmed
+                    ? t('unconfirmedCompany', { name: c.name, status: c.status })
+                    : c.taken
+                      ? t('takenCompany', { name: c.name })
+                      : c.name}
                 </option>
               ))}
             </select>
           </label>
-          {confirmed.length === 0 && (
+          {confirmed.length === 0 ? (
             <p className="text-sm text-warn-700">{t('noConfirmedCompany')}</p>
+          ) : (
+            free.length === 0 && (
+              <p data-testid="no-free-company" className="text-sm text-warn-700">
+                {t('noFreeCompany')}
+              </p>
+            )
           )}
           <p className="text-sm text-ink-500">
             {t('notListed')}{' '}
@@ -336,7 +390,7 @@ export function NewUserForm({
           )}
           <button
             type="submit"
-            disabled={pending || !ready || confirmed.length === 0}
+            disabled={pending || !ready || free.length === 0}
             className="staff-btn w-full disabled:bg-ink-100 disabled:text-ink-500 disabled:opacity-100"
           >
             {t('createLearner')}

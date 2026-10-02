@@ -25,7 +25,7 @@ test('owner creates a manager, the manager creates a learner, the learner studie
 
   // 3. The manager creates a learner: the code follows their own (T-A12 → T-A12-LA08), and no team
   //    is asked for.
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=learner');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
   const learner = await createLearner(page, {
     password: LEARNER_PASSWORD,

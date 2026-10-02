@@ -3,15 +3,10 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { listBusinessCategories } from '@/lib/db/business-categories';
-import { getDbdRecord, listDbdDocuments } from '@/lib/db/dbd-records';
-import { currentAddress } from '@/lib/db/training-sheet';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { companyStatus } from '@/lib/domain/auto-confirm';
-import { EMPTY_INTERVIEW_PROFILE, missingBusinessAnswers } from '@/lib/domain/bank-interview';
+import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { displayLoginId } from '@/lib/domain/login-id';
-import { conceptCoverage } from '@/lib/domain/concepts/resolve';
-import { readStructuredData } from '@/lib/domain/dbd-profile';
-import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import {
   ASKED_INTERVIEW_FIELDS,
@@ -19,28 +14,18 @@ import {
   withStandardAnswers,
   type StandardAnswerField,
 } from '@/lib/domain/standard-answers';
-import { createSupabaseServerClient } from '@/lib/db/server';
-import { countAssignmentsBehind, listVersions } from '@/lib/db/training-versions';
-import { listOpenExceptions } from '@/lib/db/validation';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
 import { AddressPanel } from './address-panel';
 import { CategoryPanel } from './category-panel';
-import { CoveragePanel } from './coverage-panel';
 import { ExceptionsPanel } from './exceptions-panel';
-import { TrainingVersionsPanel } from './training-versions-panel';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
+import { loadRecord } from './record-data';
 import { isRecordTab, type RecordTab } from './record-tab-keys';
 import { RecordTabs } from './record-tabs';
-import {
-  DocumentsCard,
-  StatusCard,
-  type AcceptanceCheck,
-  type DocumentSummary,
-  type ReadingState,
-} from './record-tools';
+import { DocumentsCard, type DocumentSummary, type ReadingState } from './record-tools';
 
 // Upload + extraction run inside the page's server actions; allow the full serverless window.
 export const maxDuration = 60;
@@ -60,35 +45,15 @@ export default async function DbdRecordPage({
   const { locale, id } = await params;
   const { extraction, extractionError, error, tab } = await searchParams;
   const staff = await requireStaff(locale);
-  const db = await createSupabaseServerClient();
-  const record = await getDbdRecord(db, id);
-  if (!record) notFound();
-  const documents = await listDbdDocuments(db, id);
-  const structured = readStructuredData(record.structured_data);
+  // Read once for the page and the status column under the sidebar (`@side`).
+  const loaded = await loadRecord(id);
+  if (!loaded) notFound();
+  const { db, record, structured, documents, exceptions, address } = loaded;
   const t = await getTranslations('admin.dbd');
 
-  // Derived on the fly when not stored yet (a record saved before P17a); never written on a GET.
-  const address = await currentAddress(db, record, structured);
   const categories = await listBusinessCategories(db, { activeOnly: true });
   const labelOf = (c: (typeof categories)[number]) =>
     locale === 'en' ? c.label_en : locale === 'zh' ? c.label_zh : c.label_th;
-  const coverage = conceptCoverage(
-    buildFactSheet({ record, structured, address, role: null }),
-    'company',
-  );
-  const versions = await listVersions(db, record.id);
-  const activeVersion = versions.find((v) => v.status === 'active') ?? null;
-  const behind = activeVersion ? await countAssignmentsBehind(db, record.id, activeVersion.id) : 0;
-  // What the validators found (P17c), and who accepted the record.
-  const exceptions = await listOpenExceptions(db, record.id);
-  const blockers = exceptions.filter((e) => e.blocks === 'acceptance').length;
-  const { data: confirmer } = record.confirmed_by
-    ? await db
-        .from('profiles')
-        .select('display_name, login_id')
-        .eq('id', record.confirmed_by)
-        .maybeSingle()
-    : { data: null };
 
   // The reading runs in the background (D46): show the latest extract job, or that oversized
   // documents are still being indexed before their transcripts can fill the record.
@@ -130,28 +95,7 @@ export default async function DbdRecordPage({
       ? await db.from('profiles').select('login_id').eq('id', record.team_id).maybeSingle()
       : { data: null };
 
-  // Where acceptance stands (P17c), as the status column's list.
-  const acceptanceExceptions = exceptions.filter((e) => e.blocks === 'acceptance');
   const confirmed = record.extraction_status === 'confirmed';
-  // Nothing can be called complete or clean before the documents are read: the checks run then.
-  const read = documents.length > 0 && (record.extraction_raw !== null || confirmed);
-  const checks: AcceptanceCheck[] = [
-    { key: 'documents', label: t('checks.documents'), done: read },
-    {
-      key: 'missing',
-      label: t('checks.missing'),
-      done:
-        read &&
-        !acceptanceExceptions.some((e) => e.kind === 'missing') &&
-        missingBusinessAnswers(structured.interview ?? null).length === 0,
-    },
-    {
-      key: 'problems',
-      label: t('checks.problems'),
-      done: read && !acceptanceExceptions.some((e) => e.kind !== 'missing'),
-    },
-    { key: 'accepted', label: t('checks.accepted'), done: confirmed },
-  ];
   // Level 4 asks five questions (D91); the rest are standard answers, shown as the sheet reads
   // them.
   const answered = ASKED_INTERVIEW_FIELDS.filter(
@@ -227,22 +171,6 @@ export default async function DbdRecordPage({
             ? { exceptions: { text: String(exceptions.length), warn: true } }
             : {}),
         }}
-        aside={
-          <>
-            <StatusCard
-              id={record.id}
-              status={record.extraction_status}
-              checks={checks}
-              acceptance={{
-                blockers,
-                confirmedByName: confirmer?.display_name ?? confirmer?.login_id ?? null,
-                automatic: record.confirmed_automatically,
-              }}
-            />
-            <CoveragePanel coverage={coverage} compact />
-            <TrainingVersionsPanel versions={versions} behind={behind} compact />
-          </>
-        }
         panels={{
           details: (
             <>

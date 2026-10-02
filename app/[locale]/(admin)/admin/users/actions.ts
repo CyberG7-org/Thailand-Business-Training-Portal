@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
 import { requireStaff } from '@/lib/auth/session';
-import { assignDbdRecord } from '@/lib/db/assignments';
+import { assignDbdRecord, learnersOfRecords } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { createLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
@@ -67,6 +68,12 @@ export async function createUserAction(
   if (recordError) return fail(recordError.message);
   if (!record || record.extraction_status !== 'confirmed') {
     return fail('The chosen DBD record is not confirmed yet');
+  }
+  // One learner per company (D93), checked before any account exists so a refusal leaves none.
+  const taken = await learnersOfRecords(createSupabaseAdminClient(), [record.id]);
+  if (taken.has(record.id)) {
+    const t = await getTranslations({ locale, namespace: 'admin.users' });
+    return fail(t('companyTaken'));
   }
 
   let created: { id: string; loginId: string };

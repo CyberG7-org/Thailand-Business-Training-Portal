@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
+import { inChunks } from './chunks';
 import type { Database } from './database.types';
 import type { DbdRecordRow } from './dbd-records';
 
@@ -7,6 +8,49 @@ type Db = SupabaseClient<Database>;
 export type AssignmentRow = Database['public']['Tables']['user_dbd_assignments']['Row'];
 export type EligibilitySnapshotRow = Database['public']['Tables']['eligibility_snapshots']['Row'];
 export type ActiveAssignment = AssignmentRow & { dbd_records: DbdRecordRow };
+
+/** The learner a company has now: one at a time (D93). */
+export type RecordLearner = { userId: string; loginId: string; managerId: string | null };
+
+/**
+ * The learner each company has now (D93). Pass the service-role client: a company studied by a
+ * learner of another team must still read as taken, and RLS hides that learner from a manager.
+ * Only the learner's id, code and team come back; the caller decides who may see the code. A
+ * company given two learners before D93 answers with the first.
+ */
+export async function learnersOfRecords(
+  admin: Db,
+  recordIds: string[],
+): Promise<Map<string, RecordLearner>> {
+  const learners = new Map<string, RecordLearner>();
+  // The owner's list holds every company, so the ids go in slices (a whole list overflows the URL).
+  const assignments = await inChunks(recordIds, async (ids) => {
+    const { data, error } = await admin
+      .from('user_dbd_assignments')
+      .select('dbd_record_id, user_id')
+      .eq('active', true)
+      .in('dbd_record_id', ids)
+      .order('assigned_at');
+    if (error) throw error;
+    return data;
+  });
+  if (assignments.length === 0) return learners;
+  const profiles = await inChunks([...new Set(assignments.map((a) => a.user_id))], async (ids) => {
+    const { data, error } = await admin
+      .from('profiles')
+      .select('id, login_id, manager_id')
+      .in('id', ids);
+    if (error) throw error;
+    return data;
+  });
+  const byId = new Map(profiles.map((p) => [p.id, p]));
+  for (const a of assignments) {
+    const p = byId.get(a.user_id);
+    if (!p || learners.has(a.dbd_record_id)) continue;
+    learners.set(a.dbd_record_id, { userId: p.id, loginId: p.login_id, managerId: p.manager_id });
+  }
+  return learners;
+}
 
 export async function getActiveAssignmentForUser(
   db: Db,

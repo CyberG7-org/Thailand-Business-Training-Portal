@@ -107,7 +107,7 @@ test('a select and the typed code are drawn editable; only the fixed prefix is n
       .locator(selector)
       .first()
       .evaluate((el) => getComputedStyle(el).backgroundColor);
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=learner');
   expect(await background('select[name="dbdRecordId"]')).toBe('rgb(255, 255, 255)');
   await page.goto('/th/admin/managers');
   await expect(page.getByTestId('login-suffix')).not.toHaveValue('');

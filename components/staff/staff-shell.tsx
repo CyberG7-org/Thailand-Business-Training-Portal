@@ -12,9 +12,18 @@ import { StaffNav } from './staff-nav';
  * The staff shell (admin and manager screens): the learner portal's navy band and glass header,
  * slimmer, with a role chip; the sidebar and the page on the dot grid. The sidebar reaches every
  * section, so there are no Back and Home buttons (D82); a detail page links to its own list.
- * Pages render inside `main.staff`, where the shared patterns apply.
+ * Pages render inside `main.staff`, where the shared patterns apply; a page may put a column
+ * under the sidebar (`side`, a company record's status), and then the sidebar scrolls with it.
  */
-export async function StaffShell({ user, children }: { user: CurrentUser; children: ReactNode }) {
+export async function StaffShell({
+  user,
+  side,
+  children,
+}: {
+  user: CurrentUser;
+  side?: ReactNode;
+  children: ReactNode;
+}) {
   const [t, ta] = await Promise.all([getTranslations('app'), getTranslations('admin')]);
   const role = user.role === 'admin' ? 'admin' : 'manager';
   return (
@@ -55,7 +64,11 @@ export async function StaffShell({ user, children }: { user: CurrentUser; childr
         </header>
       </div>
       <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-5 px-4 py-5 md:grid-cols-[236px_minmax(0,1fr)] md:gap-6 md:px-6 md:py-6">
-        <StaffNav role={role} />
+        {/* Sticky while it is the sidebar alone; with a column under it, it is too tall to pin. */}
+        <div className="grid min-w-0 content-start gap-5 md:sticky md:top-6 md:self-start md:has-data-staff-side:static">
+          <StaffNav role={role} />
+          {side}
+        </div>
         <main className="staff min-w-0">{children}</main>
       </div>
     </div>

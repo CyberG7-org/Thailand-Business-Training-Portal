@@ -3,15 +3,22 @@
 import { useTranslations } from 'next-intl';
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { CompaniesPanel, type CompanyRow } from './companies-panel';
-import { NewUserForm, type CompanyOption, type TeamOption } from './new-user-form';
+import {
+  NewUserForm,
+  type CompanyOption,
+  type NewUserFormHandle,
+  type TeamOption,
+} from './new-user-form';
 
 export type CreateLearnerTab = 'learner' | 'companies';
 
-const TABS: CreateLearnerTab[] = ['learner', 'companies'];
+/** In the order a manager works (D93): the company first, then the learner who studies it. */
+const TABS: CreateLearnerTab[] = ['companies', 'learner'];
 
 /**
- * "Create learner & DBD" as two tabs (D80): the learner form, and the companies a learner can
- * study. Both stay mounted, so switching never loses what was typed.
+ * "Create learner & DBD" as two tabs (D80): the companies a learner can study, and the learner
+ * form. Both stay mounted, so switching never loses what was typed. "Assign learner" on a
+ * company opens the learner form with that company chosen.
  */
 export function CreateLearnerTabs({
   companies,
@@ -35,6 +42,7 @@ export function CreateLearnerTabs({
   const t = useTranslations('admin.users');
   const [tab, setTab] = useState<CreateLearnerTab>(initialTab);
   const [addOpen, setAddOpen] = useState(initialAddOpen);
+  const form = useRef<NewUserFormHandle>(null);
   const tabRefs = useRef<Record<CreateLearnerTab, HTMLButtonElement | null>>({
     learner: null,
     companies: null,
@@ -49,7 +57,9 @@ export function CreateLearnerTabs({
   };
 
   return (
-    <div className="grid gap-5">
+    // One column that never grows past the page: on a phone the companies table scrolls inside
+    // its card instead of pushing the page sideways.
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5">
       <div
         role="tablist"
         aria-label={t('title')}
@@ -93,24 +103,6 @@ export function CreateLearnerTabs({
 
       <div
         role="tabpanel"
-        id="create-panel-learner"
-        aria-labelledby="create-tab-learner"
-        hidden={tab !== 'learner'}
-      >
-        <NewUserForm
-          companies={companies}
-          teams={teams}
-          ownLoginId={ownLoginId}
-          initialSuffix={initialSuffix}
-          onAddCompany={() => {
-            setAddOpen(true);
-            setTab('companies');
-          }}
-        />
-      </div>
-
-      <div
-        role="tabpanel"
         id="create-panel-companies"
         aria-labelledby="create-tab-companies"
         hidden={tab !== 'companies'}
@@ -121,6 +113,30 @@ export function CreateLearnerTabs({
           extractionAvailable={extractionAvailable}
           addOpen={addOpen}
           onAddOpenChange={setAddOpen}
+          onAssign={(companyId) => {
+            form.current?.assign(companyId);
+            setTab('learner');
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      </div>
+
+      <div
+        role="tabpanel"
+        id="create-panel-learner"
+        aria-labelledby="create-tab-learner"
+        hidden={tab !== 'learner'}
+      >
+        <NewUserForm
+          companies={companies}
+          teams={teams}
+          ownLoginId={ownLoginId}
+          initialSuffix={initialSuffix}
+          ref={form}
+          onAddCompany={() => {
+            setAddOpen(true);
+            setTab('companies');
+          }}
         />
       </div>
     </div>
