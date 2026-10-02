@@ -1,5 +1,6 @@
 import { createRng, shuffleWith } from '@/lib/domain/assessment/random';
 import type { FactKey, FactSheet } from '@/lib/domain/facts/fact-sheet';
+import { firstAmount } from '@/lib/domain/standard-answers';
 import { formatDate, type ISODate, type Locale } from '@/lib/domain/thai-date';
 import { withCheckDigit } from '@/lib/domain/validation/juristic-id';
 import type { CategoryLabel, RenderContext } from './context';
@@ -103,6 +104,13 @@ function numberOf(token: TokenName, facts: FactSheet): number | null {
       return facts.director_count;
     case 'shareholder_count':
       return facts.shareholder_count;
+    // An answer written in words has no amount to vary: the placeholder is missing.
+    case 'monthly_revenue_amount':
+      return firstAmount(facts.monthly_revenue);
+    case 'average_transaction_amount':
+      return firstAmount(facts.average_transaction);
+    case 'monthly_transactions_count':
+      return firstAmount(facts.monthly_transactions);
     default:
       return null;
   }
