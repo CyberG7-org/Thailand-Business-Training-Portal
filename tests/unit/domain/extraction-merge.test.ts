@@ -123,7 +123,7 @@ describe('restoreProfileMarks (D92)', () => {
     total_shares: 20000,
     par_value: 100,
     paid_up_capital: null,
-    share_type: null,
+    share_type: 'หุนสามัญ',
   };
   const stored = {
     objectives: [
@@ -144,7 +144,7 @@ describe('restoreProfileMarks (D92)', () => {
       { no: 2, text: 'ประกอบกิจการค้าปลีกและค้าส่ง' },
     ],
     business_categories: ['ค้าปลีก', 'บริการที่ปรึกษา'],
-    share_structure: { ...share_structure, total_shares: 99 },
+    share_structure: { ...share_structure, total_shares: 99, share_type: 'หุ้นสามัญ' },
     shareholders: [
       { name: 'นายตัวอย่าง ทดสอบ', nationality: 'ไทย', shares: 1, percent: 50 },
       // The two readings disagree on a letter here: nobody's to choose.
@@ -165,7 +165,8 @@ describe('restoreProfileMarks (D92)', () => {
       stored.shareholders[1],
     ]);
     expect(out.promoters).toEqual([{ name: 'นายสมพงษ์ ทดสอบ', nationality: 'ไทย' }]);
-    expect(out.share_structure).toEqual(share_structure);
+    // Only the share type gets its mark back; the figures are not touched.
+    expect(out.share_structure).toEqual({ ...share_structure, share_type: 'หุ้นสามัญ' });
   });
 
   it('returns the stored profile itself when no row lost a mark', () => {
@@ -173,6 +174,7 @@ describe('restoreProfileMarks (D92)', () => {
     expect(
       restoreProfileMarks(stored, {
         ...fresh,
+        share_structure,
         objectives: [],
         shareholders: [],
         promoters: [],
