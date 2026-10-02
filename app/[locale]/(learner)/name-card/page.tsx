@@ -68,10 +68,7 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
                 {t('preview')}
               </h2>
               <span data-testid="card-meta" className="text-sm text-ink-700 tabular-nums">
-                {t('meta', {
-                  version: card.template_version,
-                  phone: formatThaiMobile(card.phone_number),
-                })}
+                {t('meta', { phone: formatThaiMobile(card.phone_number) })}
               </span>
             </div>
             <div

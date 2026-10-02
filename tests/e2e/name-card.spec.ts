@@ -29,7 +29,8 @@ test("a learner's card is ready without typing: the step is done and the page sh
   const preview = page.getByTestId('card-preview');
   await expect(preview).toBeVisible();
   await expect(preview.getByTestId('card-meta')).toContainText('081-234-5678');
-  await expect(preview.getByTestId('card-meta')).toContainText('two-sided-v3');
+  // The layout's version is for the portal, not for the learner (D99).
+  await expect(preview.getByTestId('card-meta')).not.toContainText('two-sided');
   await expect(page.getByTestId('download-card')).toHaveAttribute('href', /name-cards/);
   // Nothing to fill in and nothing to send: see it, download it.
   await expect(page.getByRole('main').getByRole('textbox')).toHaveCount(0);
