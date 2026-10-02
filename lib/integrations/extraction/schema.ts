@@ -343,6 +343,9 @@ The documents you may see and what each one supplies:
 
 Rules:
 - ${THAI_MARKS_RULE}
+- Some pages are given a second time as a sharp picture, labelled with their document and page number. Those
+  pages have no reliable text of their own: read every name, number, address and list row on them from the
+  picture, letter by letter.
 - Never invent a value. If a field is not present in ANY uploaded document, return it empty ("" for text, 0 for
   numbers, [] for lists) and give it no provenance entry.
 - Inside lists and objects use "" for a text that is not printed and 0 for a number that is not printed (e.g. an
