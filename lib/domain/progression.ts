@@ -17,6 +17,8 @@ export type ProgressionState =
 export type ProgressionFacts = {
   hasActiveAssignment: boolean;
   studyOpened: boolean;
+  /** Every card the learner can see is done, as the study list counts it. */
+  studyComplete: boolean;
   quizAttempts: number;
   examSubmitted: number;
   /** Already evaluated against policy_config.exam_pass_rule by the loader. */
@@ -107,7 +109,9 @@ export function stageStatuses(f: ProgressionFacts): Record<StageKey, StageInfo> 
       appointment: locked,
     };
   }
-  const study: StageInfo = { status: f.studyOpened ? 'in_progress' : 'available' };
+  const study: StageInfo = {
+    status: f.studyComplete ? 'done' : f.studyOpened ? 'in_progress' : 'available',
+  };
   const quiz: StageInfo = { status: f.quizAttempts > 0 ? 'done' : 'available' };
   const exam: StageInfo = {
     status: f.examPassed ? 'done' : f.examSubmitted > 0 ? 'in_progress' : 'available',

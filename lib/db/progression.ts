@@ -1,13 +1,37 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
 import type { ProgressionFacts } from '@/lib/domain/progression';
+import { isStudyComplete, type CardProgress, type StudyCard } from '@/lib/domain/study-progress';
 import { todayInBangkok, type ISODate } from '@/lib/domain/thai-date';
 import { getActiveAssignmentForUser, getLatestEligibility } from './assignments';
-import { IN_FILTER_CHUNK } from './chunks';
+import { IN_FILTER_CHUNK, allRows } from './chunks';
 import { examPassedFor } from './exam';
 import type { Database } from './database.types';
 
 type Db = SupabaseClient<Database>;
+
+/** The cards a learner studies: every active one, as the study list shows them, with its languages. */
+async function activeCards(db: Db): Promise<StudyCard[]> {
+  const { data, error } = await db
+    .from('study_materials')
+    .select('id, study_material_localizations(language)')
+    .eq('active', true);
+  if (error) throw error;
+  return data.map((m) => ({
+    id: m.id,
+    languages: m.study_material_localizations.map((l) => l.language),
+  }));
+}
+
+/** The language a learner last chose; Thai when none is stored. */
+async function preferredLanguages(db: Db, userIds: string[]): Promise<Map<string, string>> {
+  const { data, error } = await db
+    .from('profiles')
+    .select('id, preferred_language')
+    .in('id', userIds);
+  if (error) throw error;
+  return new Map(data.map((p) => [p.id, p.preferred_language]));
+}
 
 /**
  * Builds the facts `deriveProgression` needs from what the database holds today.
@@ -15,16 +39,27 @@ type Db = SupabaseClient<Database>;
 export async function loadProgressionFacts(
   db: Db,
   userId: string,
-  options: { today?: ISODate } = {},
+  /** `language`: the one the learner is reading in; the one they last chose when absent. */
+  options: { today?: ISODate; language?: string } = {},
 ): Promise<ProgressionFacts> {
-  const [assignment, requireExamPassForInterview, requireExamPassForNameCard] = await Promise.all([
+  const [
+    assignment,
+    requireExamPassForInterview,
+    requireExamPassForNameCard,
+    tracking,
+    cards,
+    language,
+  ] = await Promise.all([
     getActiveAssignmentForUser(db, userId),
     getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
+    getPolicy('study_completion_tracking'),
+    activeCards(db),
+    options.language ?? preferredLanguages(db, [userId]).then((m) => m.get(userId) ?? 'th'),
   ]);
   const [snapshot, studyRows, quizRows, exam, cardRows, interviews, upcoming] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
-    db.from('study_progress').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+    db.from('study_progress').select('material_id, completed_at').eq('user_id', userId),
     db
       .from('assessment_attempts')
       .select('id', { count: 'exact', head: true })
@@ -41,13 +76,15 @@ export async function loadProgressionFacts(
       .eq('status', 'booked')
       .gte('starts_at', new Date().toISOString()),
   ]);
+  if (studyRows.error) throw studyRows.error;
   if (interviews.error) throw interviews.error;
   if (upcoming.error) throw upcoming.error;
   const sessions = interviews.data ?? [];
 
   return {
     hasActiveAssignment: assignment !== null,
-    studyOpened: (studyRows.count ?? 0) > 0,
+    studyOpened: studyRows.data.length > 0,
+    studyComplete: isStudyComplete(cards, studyRows.data, tracking, language),
     quizAttempts: quizRows.count ?? 0,
     examSubmitted: exam.submitted,
     examPassed: exam.passed,
@@ -93,9 +130,12 @@ export async function loadProgressionFactsForUsers(
     requireExamPassForInterview,
     requireExamPassForNameCard,
     examPassRule,
+    tracking,
+    studyCards,
+    languages,
+    study,
     assignments,
     snapshots,
-    study,
     attempts,
     cards,
     interviews,
@@ -104,6 +144,19 @@ export async function loadProgressionFactsForUsers(
     getPolicy('require_exam_pass_for_interview'),
     getPolicy('require_exam_pass_for_name_card'),
     getPolicy('exam_pass_rule'),
+    getPolicy('study_completion_tracking'),
+    activeCards(db),
+    // Staff see a learner's steps in the language that learner last chose.
+    preferredLanguages(db, userIds),
+    // One row per learner and card: read a page at a time, never cut off at `max_rows`.
+    allRows((from, to) =>
+      db
+        .from('study_progress')
+        .select('id, user_id, material_id, completed_at')
+        .in('user_id', userIds)
+        .order('id')
+        .range(from, to),
+    ),
     db
       .from('user_dbd_assignments')
       .select('user_id, dbd_record_id')
@@ -114,7 +167,6 @@ export async function loadProgressionFactsForUsers(
       .select('user_id, dbd_record_id, available_from, expires_at, calculated_at')
       .in('user_id', userIds)
       .order('calculated_at', { ascending: false }),
-    db.from('study_progress').select('user_id').in('user_id', userIds),
     db
       .from('assessment_attempts')
       .select('user_id, kind, result, submitted_at')
@@ -130,7 +182,7 @@ export async function loadProgressionFactsForUsers(
       .eq('status', 'booked')
       .gte('starts_at', new Date().toISOString()),
   ]);
-  for (const r of [assignments, snapshots, study, attempts, cards, interviews, bookings]) {
+  for (const r of [assignments, snapshots, attempts, cards, interviews, bookings]) {
     if (r.error) throw r.error;
   }
 
@@ -141,7 +193,9 @@ export async function loadProgressionFactsForUsers(
     if (!a || a.dbd_record_id !== s.dbd_record_id || latestSnapshot.has(s.user_id)) continue;
     latestSnapshot.set(s.user_id, { available_from: s.available_from, expires_at: s.expires_at });
   }
-  const studied = new Set((study.data ?? []).map((s) => s.user_id));
+  const progressByUser = new Map<string, CardProgress[]>();
+  for (const p of study)
+    progressByUser.set(p.user_id, [...(progressByUser.get(p.user_id) ?? []), p]);
   const carded = new Set((cards.data ?? []).map((c) => c.user_id));
   const quizCount = new Map<string, number>();
   const examRows = new Map<string, { result: string | null }[]>();
@@ -169,7 +223,13 @@ export async function loadProgressionFactsForUsers(
     const eligibility = latestSnapshot.get(userId) ?? null;
     out.set(userId, {
       hasActiveAssignment: assignmentByUser.has(userId),
-      studyOpened: studied.has(userId),
+      studyOpened: progressByUser.has(userId),
+      studyComplete: isStudyComplete(
+        studyCards,
+        progressByUser.get(userId) ?? [],
+        tracking,
+        languages.get(userId) ?? 'th',
+      ),
       quizAttempts: quizCount.get(userId) ?? 0,
       examSubmitted: exams.length,
       examPassed,

@@ -14,8 +14,8 @@ import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import { displayLoginId } from '@/lib/domain/login-id';
-import { STAGE_KEYS, stageStatuses, type StageInfo, type StageKey } from '@/lib/domain/progression';
-import { currentStage, doneCount } from '@/lib/domain/stage-progress';
+import { stageStatuses, type StageInfo, type StageKey } from '@/lib/domain/progression';
+import { LEARNER_STAGES, currentStage, doneCount } from '@/lib/domain/stage-progress';
 import { formatDate } from '@/lib/domain/thai-date';
 import { CompanyCard } from './company-card';
 import { Hero } from './hero';
@@ -39,7 +39,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
   const [mine, facts, lastExam, passMark, booking] = await Promise.all([
     getMyCompany(db, user.id),
-    loadProgressionFacts(db, user.id),
+    loadProgressionFacts(db, user.id, { language: locale }),
     latestSubmittedExam(db, user.id),
     getPolicy('exam_passing_mark_percent'),
     myUpcomingAppointment(user.id),
@@ -69,7 +69,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     if (info.reason) return ts(`reasons.${info.reason}`);
     return null;
   };
-  const rows: StageRow[] = STAGE_KEYS.map((key) => {
+  const rows: StageRow[] = LEARNER_STAGES.map((key) => {
     const info = stages[key];
     const open = info.status !== 'locked' && info.status !== 'pending';
     return {
@@ -103,15 +103,16 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   const progress = (
     <ProgressCard
       done={done}
-      total={STAGE_KEYS.length}
-      ringLabel={t('progress.ring', { done, total: STAGE_KEYS.length })}
+      total={LEARNER_STAGES.length}
+      ringLabel={t('progress.ring', { done, total: LEARNER_STAGES.length })}
       stepsDoneLabel={t('progress.stepsDone')}
-      lastScoreLabel={t('progress.lastScore')}
-      lastScore={
+      quizLabel={t('progress.quiz')}
+      quizValue={
         lastExam ? `${lastExam.score ?? 0} / ${lastExam.max_score ?? 0}` : t('progress.noExam')
       }
-      passMarkLabel={t('progress.passMark')}
-      passMark={`${passMark}%`}
+      quizNote={t('progress.passMarkNote', { mark: `${passMark}%` })}
+      interviewLabel={t('progress.interview')}
+      interviewValue={t(`progress.interviewStatus.${stages.interview.status}`)}
     />
   );
 

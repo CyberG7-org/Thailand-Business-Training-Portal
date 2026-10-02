@@ -8,7 +8,7 @@
   },
   "home": {
     "title": "泰国商业培训与银行验证门户",
-    "description": "为贵公司的银行账户验证做好准备：研读公司的 DBD 登记证明，通过测验和考试，并与模拟银行专员演练面谈。"
+    "description": "为贵公司的银行账户验证做好准备：研读公司的 DBD 登记证明，通过业务知识测验，并与模拟银行专员进行银行准备面试。"
   },
   "auth": {
     "title": "登录",
@@ -50,11 +50,11 @@
       "kicker": "银行身份验证准备"
     },
     "next": {
-      "study": "下一步是学习资料。请先阅读关于贵公司的学习卡片，再进行测验。",
-      "quiz": "下一步是评估测验，帮助你了解考试前需要复习的内容。",
-      "exam": "下一步是考试。通过考试后即可解锁准备度面谈。",
-      "nameCard": "下一步是名片。请在准备度面谈前创建名片。",
-      "interview": "下一步是准备度面谈。面谈官会用泰语询问贵公司的情况。",
+      "study": "下一步是学习资料。请先阅读关于贵公司的学习卡片，再参加业务知识测验。",
+      "quiz": "下一步是练习测验，帮助你了解业务知识测验前需要复习的内容。",
+      "exam": "下一步是业务知识测验。通过后即可解锁银行准备面试。",
+      "nameCard": "下一步是名片。请在银行准备面试前创建名片。",
+      "interview": "下一步是银行准备面试。面试官会用泰语询问贵公司的情况。",
       "appointment": "你已准备好。下一步是预约银行。",
       "done": "你已完成所有步骤，做得好。"
     },
@@ -65,9 +65,17 @@
     "progress": {
       "ring": "已完成 {total} 步中的 {done} 步",
       "stepsDone": "已完成步骤",
-      "lastScore": "上次考试成绩",
-      "passMark": "及格线",
-      "noExam": "尚未考试"
+      "noExam": "尚未参加",
+      "quiz": "业务知识测验",
+      "interview": "银行准备面试",
+      "passMarkNote": "及格线 {mark}",
+      "interviewStatus": {
+        "done": "已准备好",
+        "in_progress": "练习中",
+        "available": "尚未开始",
+        "pending": "尚未开始",
+        "locked": "通过测验后开放"
+      }
     },
     "steps": {
       "title": "你的步骤",
@@ -79,7 +87,7 @@
     "nav": {
       "users": "创建学员与DBD",
       "questions": "题库",
-      "interviews": "准备度面谈",
+      "interviews": "银行准备面试",
       "appointments": "银行预约",
       "notifications": "通知",
       "settings": "策略设置",
@@ -137,14 +145,14 @@
         "newer": "版本 {n} 更新。",
         "current": "这已是公司的当前版本。",
         "move": "移到版本 {n}",
-        "moveHint": "从现在起，学员将按此版本学习和评估。测验、考试或面谈进行中时无法移动。",
+        "moveHint": "从现在起，学员将按此版本学习和评估。练习测验、业务知识测验或银行准备面试进行中时无法移动。",
         "roleConfirmed": "角色已于 {date} 确认",
         "roleUnconfirmed": "角色尚无姓名：请在上方从 DBD 文件中的人员里选择学员。有了姓名后会自动确认。",
         "messages": {
           "moved": "已移到版本 {n}。"
         },
         "errors": {
-          "evaluation-in-progress": "测验、考试或面谈正在进行中，请在结束后重试。",
+          "evaluation-in-progress": "练习测验、业务知识测验或银行准备面试正在进行中，请在结束后重试。",
           "not-active": "这不是公司的当前版本。",
           "other-record": "该版本属于另一家公司。",
           "not-found": "未找到。",
@@ -184,7 +192,7 @@
     },
     "learners": {
       "title": "学员记录",
-      "intro": "您团队正在培训的所有学员：公司、MCQ与聊天机器人结果以及预约。如需添加学员，请前往",
+      "intro": "您团队正在培训的所有学员：公司、业务知识测验与银行准备面试结果以及预约。如需添加学员，请前往",
       "toCreate": "创建学员与DBD",
       "empty": "暂无学员。",
       "backToRecord": "← 学员记录",
@@ -192,8 +200,8 @@
         "loginId": "登录ID",
         "company": "公司名称",
         "issuedOn": "DBD签发日期",
-        "mcq": "MCQ",
-        "chatbot": "聊天机器人",
+        "mcq": "业务知识测验",
+        "chatbot": "银行准备面试",
         "appointment": "预约"
       },
       "results": {
@@ -208,19 +216,19 @@
         "result": "结果"
       },
       "mcq": {
-        "title": "MCQ记录",
-        "empty": "暂无MCQ记录。",
+        "title": "业务知识测验记录",
+        "empty": "暂无业务知识测验记录。",
         "score": "得分",
         "review": "查看答题",
-        "reviewTitle": "MCQ 第{no}次",
+        "reviewTitle": "业务知识测验 第{no}次",
         "reviewHeading": "题目与答案",
-        "backToHistory": "← MCQ记录"
+        "backToHistory": "← 业务知识测验记录"
       },
       "chatbot": {
-        "title": "聊天机器人记录",
-        "empty": "暂无聊天机器人记录。",
+        "title": "银行准备面试记录",
+        "empty": "暂无银行准备面试记录。",
         "review": "查看对话",
-        "backToHistory": "← 聊天机器人记录"
+        "backToHistory": "← 银行准备面试记录"
       }
     },
     "createDbd": {
@@ -488,10 +496,10 @@
       },
       "coverage": {
         "title": "评估准备情况",
-        "introCompany": "本公司已可提问的公司层面概念：选择题 29 个、银行面谈 10 个。学员本人的概念在各学员页面检查。",
-        "introAssignment": "该学员将被问到的全部内容：选择题全部 30 个概念、银行面谈全部 11 个概念，包括其本人的概念。",
-        "mcq": "选择题",
-        "interview": "银行面谈",
+        "introCompany": "本公司已可提问的公司层面概念：业务知识测验 29 个、银行准备面试 10 个。学员本人的概念在各学员页面检查。",
+        "introAssignment": "该学员将被问到的全部内容：业务知识测验全部 30 个概念、银行准备面试全部 11 个概念，包括其本人的概念。",
+        "mcq": "业务知识测验",
+        "interview": "银行准备面试",
         "count": "{total} 个中已就绪 {ready} 个",
         "perLearner": "按学员检查：{list}",
         "allReady": "所有概念的信息都已齐全。",
@@ -547,7 +555,7 @@
         "intro": "学员学习和评估所依据的是这些信息的冻结副本。改变信息的保存会生成新版本；在人员操作之前，没有学员会被移到新版本。",
         "none": "尚无版本——没有阻止项时即生效（见例外）。",
         "active": "版本 {n}——自 {date} 起生效",
-        "complete": "公司层面已完整：选择题 29 个概念和银行面谈 10 个概念全部可解析。",
+        "complete": "公司层面已完整：业务知识测验 29 个概念和银行准备面试 10 个概念全部可解析。",
         "incomplete": "尚不完整——仍缺少：",
         "behind": "{count, plural, =0 {所有学员都在此版本。} other {# 名学员仍在旧版本。}}",
         "history": "历史",
@@ -648,8 +656,8 @@
       "key": "键",
       "kind": "类型",
       "pools": "用于",
-      "poolQuiz": "测验",
-      "poolExam": "考试",
+      "poolQuiz": "练习测验",
+      "poolExam": "业务知识测验",
       "active": "启用",
       "dependencies": "使用的公司字段",
       "status": "状态",
@@ -731,36 +739,36 @@
           "help": "从开放日起计算；留空 = 永不过期"
         },
         "exam_passing_mark_percent": {
-          "label": "考试及格线（%）",
+          "label": "业务知识测验及格线（%）",
           "help": "最低分数百分比"
         },
         "quiz_question_count": {
-          "label": "每次测验题数",
+          "label": "每次练习测验题数",
           "help": "每次尝试"
         },
         "exam_question_count": {
-          "label": "每次考试题数",
+          "label": "每次业务知识测验题数",
           "help": "每次尝试"
         },
         "exam_max_attempts": {
-          "label": "考试最多次数",
+          "label": "业务知识测验最多次数",
           "help": "留空 = 不限"
         },
         "exam_retry_wait_hours": {
-          "label": "重考前需等待的小时数",
-          "help": "0 = 可立即重考"
+          "label": "重新参加业务知识测验前需等待的小时数",
+          "help": "0 = 可立即重新参加"
         },
         "exam_pass_rule": {
-          "label": "考试通过规则",
+          "label": "业务知识测验通过规则",
           "help": "以哪次结果判定通过状态"
         },
         "require_exam_pass_for_name_card": {
-          "label": "制作名片需先通过考试",
-          "help": "开启后，学员须先通过考试才能制作名片"
+          "label": "制作名片需先通过业务知识测验",
+          "help": "开启后，学员须先通过业务知识测验才能制作名片"
         },
         "require_exam_pass_for_interview": {
-          "label": "准备度面谈前须通过考试",
-          "help": "开启后，学员必须先通过考试才能开始准备度面谈。"
+          "label": "银行准备面试前须通过业务知识测验",
+          "help": "开启后，学员必须先通过业务知识测验才能开始银行准备面试。"
         },
         "telegram_admin_chat_ids": {
           "label": "所有者 Telegram 聊天 ID",
@@ -823,8 +831,8 @@
       "difficultyMedium": "中等",
       "difficultyHard": "困难",
       "pools": "用于",
-      "poolQuiz": "测验",
-      "poolExam": "考试",
+      "poolQuiz": "练习测验",
+      "poolExam": "业务知识测验",
       "focus": "侧重点（可选）",
       "focusHint": "例如：侧重银行工作人员常问的问题",
       "generate": "生成题目",
@@ -879,21 +887,21 @@
       "rename": "重命名"
     },
     "interviews": {
-      "title": "准备度面谈",
-      "intro": "你团队学员的每一次面谈，附结论与逐题评估。",
-      "empty": "尚无面谈",
+      "title": "银行准备面试",
+      "intro": "你团队学员的每一次银行准备面试，附结论与逐题评估。",
+      "empty": "尚无面试",
       "learner": "学员",
       "company": "公司",
       "started": "开始时间",
       "status": "状态",
       "verdict": "结论",
       "open": "打开",
-      "detailTitle": "面谈详情",
+      "detailTitle": "面试详情",
       "transcript": "对话记录",
       "assessments": "逐题评估",
       "narrative": "专员总结",
       "noVerdict": "尚无结论",
-      "back": "返回面谈列表",
+      "back": "返回面试列表",
       "statuses": {
         "in_progress": "进行中",
         "completed": "已完成",
@@ -949,7 +957,7 @@
     },
     "businessCategories": {
       "title": "业务类别",
-      "intro": "自动匹配从此受控列表中选择，选择题也从中生成业务干扰项。停用类别请将其关闭；代码永不更改。",
+      "intro": "自动匹配从此受控列表中选择，业务知识测验也从中生成业务干扰项。停用类别请将其关闭；代码永不更改。",
       "key": "代码",
       "keyHint": "小写字母、数字和 _；创建后不可更改。",
       "labelTh": "泰文名称",
@@ -1157,10 +1165,10 @@
   "stages": {
     "titles": {
       "study": "学习资料",
-      "quiz": "评估测验",
-      "exam": "考试",
+      "quiz": "练习测验",
+      "exam": "业务知识测验",
       "nameCard": "名片",
-      "interview": "准备度面谈",
+      "interview": "银行准备面试",
       "appointment": "银行预约"
     },
     "status": {
@@ -1172,20 +1180,20 @@
     },
     "reasons": {
       "no_assignment": "尚未分配公司",
-      "exam_required": "请先通过考试",
+      "exam_required": "请先通过业务知识测验",
       "before_available_from": "尚未开放",
       "expired": "访问期限已结束",
       "missing_issue_date": "缺少证书签发日期",
-      "interview_required": "请先通过准备度面谈"
+      "interview_required": "请先通过银行准备面试"
     },
     "open": "打开",
     "stepOf": "第 {n} 步（共 {total} 步）",
     "short": {
       "study": "学习",
-      "quiz": "测验",
-      "exam": "考试",
+      "quiz": "练习",
+      "exam": "测验",
       "nameCard": "名片",
-      "interview": "面谈",
+      "interview": "面试",
       "appointment": "预约"
     }
   },
@@ -1193,11 +1201,11 @@
     "UNASSIGNED": "未分配",
     "PROVISIONED": "已开通",
     "LEARNING": "学习中",
-    "EXAM_PENDING": "待通过考试",
-    "EXAM_PASSED": "考试已通过",
+    "EXAM_PENDING": "待通过业务知识测验",
+    "EXAM_PASSED": "业务知识测验已通过",
     "WAITING_BANK_ELIGIBILITY": "等待银行验证资格",
     "BANK_ELIGIBLE": "可进行银行验证",
-    "INTERVIEW_STARTED": "已开始面谈",
+    "INTERVIEW_STARTED": "已开始银行准备面试",
     "INTERVIEW_READY": "已准备好",
     "APPOINTMENT_BOOKED": "已预约银行"
   },
@@ -1237,24 +1245,24 @@
     "nextCard": "第 {n} 张：{title}"
   },
   "quiz": {
-    "title": "评估测验",
+    "title": "练习测验",
     "intro": "练习关于您公司和流程的问题。每题作答后立即显示对错和解释，最后可查看完整回顾。",
-    "start": "开始测验",
-    "resume": "继续测验",
+    "start": "开始练习测验",
+    "resume": "继续练习测验",
     "history": "历史记录",
     "attemptLine": "第 {no} 次：{score} / {max}",
     "progress": "第 {position} 题，共 {total} 题",
     "correct": "正确！",
     "incorrect": "不正确 — 正确答案是 {key}",
     "saved": "答案已保存",
-    "submit": "提交测验",
-    "reviewTitle": "测验回顾",
+    "submit": "提交练习测验",
+    "reviewTitle": "练习测验回顾",
     "scoreLine": "得分：{score} / {max}",
     "errors": {
       "no_assignment": "尚未为您分配公司。",
       "no_questions": "您的公司暂无可用题目。",
-      "not_found": "未找到该测验。",
-      "not_in_progress": "该测验已结束。",
+      "not_found": "未找到该练习测验。",
+      "not_in_progress": "该练习测验已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。",
@@ -1267,26 +1275,26 @@
     "reviewIncorrect": "错误"
   },
   "exam": {
-    "title": "考试",
+    "title": "业务知识测验",
     "intro": "共 {count} 题。提交前不会显示答案对错。及格线：{passingMark}%。",
-    "start": "开始考试",
-    "resume": "继续考试",
+    "start": "开始业务知识测验",
+    "resume": "继续业务知识测验",
     "history": "历史记录",
     "attemptLine": "第 {no} 次：{score} / {max} — {result}",
     "noFeedbackNote": "答案会即时保存；结果仅在提交后显示。",
-    "submit": "提交考试",
-    "resultTitle": "考试结果",
+    "submit": "提交业务知识测验",
+    "resultTitle": "业务知识测验结果",
     "pass": "通过",
     "fail": "未通过",
     "scoreLine": "得分：{score} / {max}（及格线 {passingMark}%）",
     "resultNote": "标有 ✗ 的题目回答错误；绿色选项为正确答案，划线的选项是您的选择。",
     "errors": {
-      "max_attempts": "您已用完允许的考试次数。",
-      "retry_wait": "请稍后再重考。",
+      "max_attempts": "您已用完允许的测验次数。",
+      "retry_wait": "请稍后再重新参加业务知识测验。",
       "no_assignment": "尚未为您分配公司。",
-      "no_questions": "您的公司暂无可用考题。",
-      "not_found": "未找到该考试。",
-      "not_in_progress": "该考试已结束。",
+      "no_questions": "您的公司暂无可用的业务知识测验题目。",
+      "not_found": "未找到该测验。",
+      "not_in_progress": "该测验已结束。",
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。",
@@ -1298,18 +1306,18 @@
       "attempt": "第几次"
     },
     "reviewHeading": "你的答案",
-    "passedNext": "你已通过考试。准备度面谈现已开放。",
+    "passedNext": "你已通过。银行准备面试现已开放。",
     "notPassedNext": "这次未通过。请查看下方答案，准备好后再试一次。",
-    "toInterview": "前往准备度面谈",
-    "retake": "重新考试"
+    "toInterview": "前往银行准备面试",
+    "retake": "重新参加业务知识测验"
   },
   "interview": {
-    "title": "准备度面谈",
-    "intro": "AI 银行专员将用泰语像正式面谈一样提问：询问贵公司情况、核对登记证明，并给出你是否准备好的结论。可无限次重复。",
-    "thaiOnly": "面谈全程使用泰语。",
-    "start": "开始面谈",
-    "resume": "继续面谈",
-    "history": "过往面谈",
+    "title": "银行准备面试",
+    "intro": "AI 银行专员将用泰语像正式面试一样提问：询问贵公司情况、核对登记证明，并给出你是否准备好的结论。可无限次重复。",
+    "thaiOnly": "面试全程使用泰语。",
+    "start": "开始面试",
+    "resume": "继续面试",
+    "history": "过往面试",
     "verdict": {
       "ready": "已准备好",
       "not_ready": "尚未准备好",
@@ -1318,7 +1326,7 @@
     "chat": {
       "placeholder": "请用泰语输入回答…",
       "send": "发送",
-      "end": "结束面谈",
+      "end": "结束面试",
       "typing": "专员正在输入…",
       "officer": "银行专员",
       "you": "你",
@@ -1326,7 +1334,7 @@
       "budget": "第 {n} 条消息（共 {max} 条）"
     },
     "debrief": {
-      "title": "面谈结果",
+      "title": "面试结果",
       "reasons": "你的逐题回答",
       "correctValue": "证明文件记载：{value}",
       "review": "复习卡片",
@@ -1346,14 +1354,14 @@
       "juristic_id": "法人注册号"
     },
     "errors": {
-      "not_open": "面谈尚未开放。",
-      "not_configured": "尚未配置面谈官。",
+      "not_open": "面试尚未开放。",
+      "not_configured": "尚未配置面试官。",
       "no_assignment": "尚未为你分配公司。",
-      "closed": "本次面谈已结束。",
+      "closed": "本次面试已结束。",
       "too_long": "消息过长。",
-      "not_found": "找不到面谈。",
+      "not_found": "找不到面试。",
       "unknown": "出错了，请重试。",
-      "expired": "面谈闲置过久，请重新开始。",
+      "expired": "面试闲置过久，请重新开始。",
       "no_facts": "公司记录尚无可核对的信息，请联系你的经理。",
       "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
     },
@@ -1361,9 +1369,9 @@
       "plan_complete": "所有问题均已问完。",
       "too_many_evasions": "因三次回避问题而结束。",
       "off_topic_limit": "因多次答非所问而结束。",
-      "learner_ended": "你提前结束了面谈。",
-      "turn_limit": "面谈已达到消息上限。",
-      "abandoned": "面谈闲置超过 30 分钟，已被放弃。"
+      "learner_ended": "你提前结束了面试。",
+      "turn_limit": "面试已达到消息上限。",
+      "abandoned": "面试闲置超过 30 分钟，已被放弃。"
     }
   },
   "appointment": {
@@ -1418,7 +1426,7 @@
     "meta": "模板 {version} · {phone}",
     "errors": {
       "no_assignment": "尚未为您分配公司。",
-      "exam_required": "请先通过考试再生成名片。",
+      "exam_required": "请先通过业务知识测验再生成名片。",
       "invalid_phone": "请输入有效的泰国手机号。",
       "missing_fields": "您的公司记录缺少：{fields}。请联系管理员补全。",
       "not_found": "未找到名片。",

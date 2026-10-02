@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { getMyStudyProgress, listStudyMaterials, pickLocalization } from '@/lib/db/study';
+import { isCardDone } from '@/lib/domain/study-progress';
 
 type State = 'new' | 'viewed' | 'completed';
 
@@ -49,7 +50,8 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
       href: loc ? `/study/${m.content_key}` : null,
       type: m.type === 'pdf' ? 'PDF' : t('card'),
       state,
-      done: state === 'completed' || (tracking === 'viewed' && state === 'viewed'),
+      // The same rule the steps use to call study Done.
+      done: isCardDone(p, tracking),
     };
   });
   const total = rows.length;
@@ -62,7 +64,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
       intro={total > 0 ? t('intro', { count: total }) : undefined}
       step="study"
     >
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
         <section className="rise overflow-hidden rounded-card bg-white shadow-raised">
           {total === 0 && <p className="px-6 py-5 text-sm text-ink-700">{t('empty')}</p>}
           <ol>

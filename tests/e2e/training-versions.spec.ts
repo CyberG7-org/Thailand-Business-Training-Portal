@@ -53,7 +53,7 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await expect(page.getByTestId('version-panel')).toHaveAttribute('data-pinned', '1');
   await expect(page.getByTestId('version-newest')).toContainText('รุ่นที่ 2');
   await page.getByTestId('version-move').click();
-  await expect(page.getByTestId('version-error')).toContainText('กำลังทำแบบทดสอบ');
+  await expect(page.getByTestId('version-error')).toContainText('กำลังทำแบบฝึกหัด');
   await submitAttempt(attemptId);
   await page.getByTestId('version-move').click();
   await expect(page.getByTestId('version-message')).toContainText('ย้ายไปรุ่นที่ 2');

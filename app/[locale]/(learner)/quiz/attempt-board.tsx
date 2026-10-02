@@ -56,7 +56,7 @@ export function AttemptBoard({
   const bar = instantFeedback ? 'bg-brand-600' : 'bg-brand-700';
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,780px)_16rem] lg:items-start lg:justify-center lg:gap-8">
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,780px)_16rem] xl:items-start xl:justify-center xl:gap-8">
       <ol className="grid gap-4">
         {questions.map((q) => (
           <li key={q.questionId}>
@@ -81,7 +81,7 @@ export function AttemptBoard({
         data-testid="attempt-progress"
         data-answered={done}
         data-total={total}
-        className="glass-strong sticky top-2 z-10 order-first grid gap-3 rounded-card px-4 py-3 text-ink-900 lg:sticky lg:top-6 lg:order-last lg:bg-white lg:p-5 lg:shadow-raised"
+        className="glass-strong sticky top-2 z-10 order-first grid gap-3 rounded-card px-4 py-3 text-ink-900 xl:sticky xl:top-6 xl:order-last xl:bg-white xl:p-5 xl:shadow-raised"
       >
         <p className="text-sm font-semibold tabular-nums">
           {t('answeredOf', { answered: done, total })}

@@ -9,6 +9,7 @@ import {
 const base: ProgressionFacts = {
   hasActiveAssignment: true,
   studyOpened: false,
+  studyComplete: false,
   quizAttempts: 0,
   examSubmitted: 0,
   examPassed: false,
@@ -44,6 +45,13 @@ describe('stageStatuses', () => {
     expect(s.nameCard.status).toBe('available');
     expect(s.interview).toEqual({ status: 'locked', reason: 'exam_required' });
     expect(s.appointment).toEqual({ status: 'locked', reason: 'interview_required' });
+  });
+
+  it('calls study in progress once a card is opened, and done once every card is', () => {
+    expect(stageStatuses({ ...base, studyOpened: true }).study.status).toBe('in_progress');
+    expect(stageStatuses({ ...base, studyOpened: true, studyComplete: true }).study.status).toBe(
+      'done',
+    );
   });
 
   it('opens the interview at once when the policy does not require the exam', () => {

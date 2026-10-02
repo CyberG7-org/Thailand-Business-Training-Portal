@@ -50,7 +50,9 @@ test('a learner’s MCQ attempts and Chatbot conversations open from the Learner
   await expect(page.getByTestId('mcq-attempt-2')).toContainText('1 / 1');
   await expect(page.getByTestId('mcq-attempt-1')).toContainText('ไม่ผ่าน');
   await page.getByTestId('mcq-attempt-1').getByRole('link', { name: 'ดูคำตอบ' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('MCQ ครั้งที่ 1');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+    'แบบทดสอบความรู้ธุรกิจ ครั้งที่ 1',
+  );
   await expect(current).toHaveText(/บันทึกผู้เรียน/);
   await expect(page.getByTestId('mcq-review-score')).toContainText('0 / 1');
   await expect(page.getByText(prompt)).toBeVisible();
@@ -69,7 +71,9 @@ test('a learner’s MCQ attempts and Chatbot conversations open from the Learner
   await expect(transcript).toContainText('ชื่อบริษัทของคุณคืออะไรคะ');
   await expect(transcript).toContainText('ไม่ทราบค่ะ');
   await expect(page.getByTestId('admin-verdict')).toHaveAttribute('data-verdict', 'not_ready');
-  await expect(page.getByRole('link', { name: '← ประวัติแชตบอต' })).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: '← ประวัติสัมภาษณ์ความพร้อมกับธนาคาร' }),
+  ).toBeVisible();
   await expect(current).toHaveText(/บันทึกผู้เรียน/);
 });
 

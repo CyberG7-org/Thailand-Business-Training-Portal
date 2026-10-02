@@ -33,6 +33,9 @@ test('learners see passages from their own documents', async ({ page, request })
   await expect(evidence).toBeVisible();
   await expect(evidence).toContainText('หน้า 1');
   await expect(evidence).toContainText('บริษัท');
+  // Below the card, not beside it (the owner, 2026-10-02).
+  const card = (await page.getByTestId('study-body').boundingBox())!;
+  expect((await evidence.boundingBox())!.y).toBeGreaterThan(card.y + card.height);
   // The tips card has no concept group: no panel, no error.
   await page.goto('/th/study/bank-interview-5-tips');
   await expect(page.getByTestId('study-body')).toBeVisible();
