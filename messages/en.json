@@ -908,8 +908,8 @@
         "abandoned": "Abandoned"
       },
       "verdicts": {
-        "ready": "Ready",
-        "not_ready": "Not yet ready"
+        "ready": "Ready — can open the account",
+        "not_ready": "Not yet ready — cannot open the account yet"
       },
       "assessment": {
         "correct": "Correct",
@@ -1322,6 +1322,20 @@
       "ready": "Ready",
       "not_ready": "Not yet ready",
       "abandoned": "Not finished"
+    },
+    "outcome": {
+      "ready": {
+        "title": "Result: you can open the bank account",
+        "detail": "You are ready to go to the bank. Book your appointment."
+      },
+      "not_ready": {
+        "title": "Result: you cannot open the bank account yet",
+        "detail": "Review the answers marked below, then take the interview again."
+      },
+      "abandoned": {
+        "title": "No result: you cannot open the bank account yet",
+        "detail": "The interview was not finished. Take it again from the start."
+      }
     },
     "chat": {
       "placeholder": "Type your answer in Thai…",
