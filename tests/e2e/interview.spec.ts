@@ -40,7 +40,9 @@ test('the interview is locked before the exam and open after it', async ({ page 
   const loginId = await seedLearnerWithCompany('บริษัท ล็อกสัมภาษณ์ จำกัด', '2026-07-13');
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/interview');
-  await expect(page.getByTestId('interview-blocked')).toContainText('ต้องสอบผ่านก่อน');
+  await expect(page.getByTestId('interview-blocked')).toContainText(
+    'ต้องผ่านแบบทดสอบความรู้ธุรกิจก่อน',
+  );
   await expect(page.getByTestId('interview-start')).toHaveCount(0);
 });
 

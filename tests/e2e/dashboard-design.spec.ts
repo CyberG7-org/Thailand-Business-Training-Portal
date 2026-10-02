@@ -24,7 +24,7 @@ test('a new learner sees the company, the first step current, and the interview 
     'href',
     '/th/study',
   );
-  await expect(page.getByRole('link', { name: 'ดูผลสอบล่าสุด' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveCount(0);
   await expect(page.getByTestId('stage-interview')).toHaveAttribute('data-locked', 'true');
   await expect(page.getByTestId('stage-appointment')).toHaveAttribute('data-locked', 'true');
   await expect(page.getByTestId('stage-study').getByRole('link', { name: 'เปิด' })).toHaveAttribute(
@@ -41,7 +41,7 @@ test('after a passed exam the next step moves on and the last result is one clic
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page.getByTestId('stepper').locator('[aria-current="step"]')).toHaveText(/นามบัตร/);
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
-  await expect(page.getByRole('link', { name: 'ดูผลสอบล่าสุด' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveAttribute(
     'href',
     /\/th\/exam\/[0-9a-f-]{36}\/result$/,
   );

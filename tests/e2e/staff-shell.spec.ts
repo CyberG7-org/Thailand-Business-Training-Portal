@@ -79,7 +79,7 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await expect(nav.getByRole('link').first()).toHaveText('สร้างผู้เรียนและ DBD');
   await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
   await expect(nav).toContainText('บันทึกผู้เรียน');
-  await expect(nav).toContainText('ผลสัมภาษณ์ความพร้อม');
+  await expect(nav).toContainText('สัมภาษณ์ความพร้อมกับธนาคาร');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
   await expect(nav).not.toContainText('ผู้จัดการ');
   await expect(nav).not.toContainText('การแจ้งเตือน');

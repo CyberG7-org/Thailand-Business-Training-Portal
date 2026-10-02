@@ -21,8 +21,8 @@ describe('examResultMessage', () => {
       passing_mark_percent: 70,
       submitted_on: '2026-09-11',
     });
-    expect(m.subject).toBe('[Exam PASS] Somchai (siam001) — 15/20 (75%)');
-    expect(m.text).toContain('ผลสอบ: ผ่าน');
+    expect(m.subject).toBe('[Business Knowledge Quiz PASS] Somchai (siam001) — 15/20 (75%)');
+    expect(m.text).toContain('ผลแบบทดสอบความรู้ธุรกิจ: ผ่าน');
     expect(m.text).toContain('11 กันยายน 2569');
     expect(m.text).toContain('passing mark 70%');
   });
