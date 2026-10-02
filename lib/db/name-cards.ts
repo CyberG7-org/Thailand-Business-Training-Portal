@@ -3,13 +3,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
 import type { Director } from '@/lib/domain/dbd-record';
 import {
+  NAME_CARD_TEMPLATE_VERSION,
   buildNameCardData,
   missingNameCardFields,
   type NameCardSource,
 } from '@/lib/domain/name-card';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { normalizeThaiMobile } from '@/lib/domain/phone';
-import type { PdfRenderer } from '@/lib/integrations/pdf/name-card';
+import { ReactPdfRenderer, type PdfRenderer } from '@/lib/integrations/pdf/name-card';
 import { createSupabaseAdminClient } from './admin';
 import { getActiveAssignmentForUser } from './assignments';
 import { pinnedFactsFor } from './pinning';
@@ -27,6 +28,8 @@ export class NameCardError extends Error {
       | 'exam_required'
       | 'invalid_phone'
       | 'invalid_name'
+      | 'no_phone'
+      | 'no_name'
       | 'missing_fields'
       | 'not_found',
     public readonly fields: string[] = [],
@@ -39,7 +42,7 @@ export class NameCardError extends Error {
 const BUCKET = 'name-cards';
 const SIGNED_URL_SECONDS = 300;
 
-/** The name the form offers before the learner types their own: the role, the profile, a director. */
+/** The holder's name on the card: the role (D95), the profile, a director. */
 async function sourceFor(
   userId: string,
 ): Promise<{ source: NameCardSource; dbdRecordId: string; defaultHolderName: string }> {
@@ -86,31 +89,8 @@ async function sourceFor(
   };
 }
 
-/** What the page needs to decide whether generation is possible. */
-export async function nameCardReadiness(userId: string): Promise<{
-  examRequired: boolean;
-  examPassed: boolean;
-  missingFields: string[];
-  defaultHolderName: string;
-}> {
-  const [requireExam, exam] = await Promise.all([
-    getPolicy('require_exam_pass_for_name_card'),
-    examPassedFor(userId),
-  ]);
-  let missingFields: string[] = [];
-  let defaultHolderName = '';
-  try {
-    const found = await sourceFor(userId);
-    missingFields = missingNameCardFields(found.source);
-    defaultHolderName = found.defaultHolderName;
-  } catch {
-    missingFields = ['company_name_th', 'head_office_address'];
-  }
-  return { examRequired: requireExam, examPassed: exam.passed, missingFields, defaultHolderName };
-}
-
 /** Renders and stores a new card; never fabricates missing DBD data (BR-008). */
-export type NameCardInput = { phone: string; holderNameTh: string; holderNameEn: string | null };
+export type NameCardInput = { phone: string; holderNameTh: string };
 
 export async function generateNameCard(
   userId: string,
@@ -133,7 +113,7 @@ export async function generateNameCard(
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new NameCardError('Missing DBD fields', 'missing_fields', missing);
 
-  const data = buildNameCardData(source, phone, { nameTh, nameEn: input.holderNameEn });
+  const data = buildNameCardData(source, phone, nameTh);
   const bytes = await renderer.renderNameCard(data);
   const path = `${userId}/${Date.now()}-${data.templateVersion}.pdf`;
   const { error: uploadError } = await admin.storage
@@ -148,7 +128,7 @@ export async function generateNameCard(
       dbd_record_id: dbdRecordId,
       phone_number: phone,
       holder_name: data.holderName,
-      holder_name_en: data.holderNameEn,
+      holder_name_en: null,
       template_version: data.templateVersion,
       pdf_path: path,
     })
@@ -156,6 +136,72 @@ export async function generateNameCard(
     .single();
   if (error) throw error;
   return row;
+}
+
+/** The card as it stands, or why it cannot be made yet. */
+export type EnsuredNameCard =
+  | { card: NameCardRow; blocked: null }
+  | { card: null; blocked: { code: NameCardError['code']; fields: string[] } };
+
+/**
+ * The learner's name card, made from what staff entered (D96): the holder's name from the
+ * documents (D95), the phone given at Create learner, the company from its record. The learner
+ * types nothing. A card made from the same name, phone, company and layout is kept; any change
+ * makes a new one, so the card follows the record without anyone asking for it.
+ */
+export async function ensureNameCard(
+  userId: string,
+  renderer: PdfRenderer,
+): Promise<EnsuredNameCard> {
+  const admin = createSupabaseAdminClient();
+  try {
+    const [requireExam, exam, found, { data: profile }, latest] = await Promise.all([
+      getPolicy('require_exam_pass_for_name_card'),
+      examPassedFor(userId),
+      sourceFor(userId),
+      admin.from('profiles').select('phone').eq('id', userId).single(),
+      getMyLatestNameCard(admin, userId),
+    ]);
+    if (requireExam && !exam.passed) {
+      throw new NameCardError('Exam pass required', 'exam_required');
+    }
+    const missing = missingNameCardFields(found.source);
+    if (missing.length > 0) {
+      throw new NameCardError('Missing DBD fields', 'missing_fields', missing);
+    }
+    const phone = profile?.phone ? normalizeThaiMobile(profile.phone) : null;
+    if (!phone) throw new NameCardError('No phone given for the learner', 'no_phone');
+    const name = found.defaultHolderName.trim();
+    if (!name) throw new NameCardError('No holder name', 'no_name');
+    const current =
+      latest &&
+      latest.dbd_record_id === found.dbdRecordId &&
+      latest.phone_number === phone &&
+      latest.holder_name === name &&
+      latest.template_version === NAME_CARD_TEMPLATE_VERSION;
+    if (current) return { card: latest, blocked: null };
+    const card = await generateNameCard(userId, { phone, holderNameTh: name }, renderer);
+    return { card, blocked: null };
+  } catch (e) {
+    if (e instanceof NameCardError) {
+      return { card: null, blocked: { code: e.code, fields: e.fields } };
+    }
+    throw e;
+  }
+}
+
+/**
+ * Makes or remakes a learner's card after staff changed what it prints (D96): a learner created
+ * or given a company, a new phone, name or training version. A card that cannot be made yet, or
+ * a render that fails, never stops what staff were doing — the learner's page tries again and
+ * says why.
+ */
+export async function refreshNameCard(userId: string): Promise<void> {
+  try {
+    await ensureNameCard(userId, new ReactPdfRenderer());
+  } catch (e) {
+    console.error(`name card: could not make the card for ${userId}`, e);
+  }
 }
 
 export async function getMyLatestNameCard(db: Db, userId: string): Promise<NameCardRow | null> {

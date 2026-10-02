@@ -3,10 +3,10 @@ import { moveAssignmentToVersion } from '@/lib/db/pinning';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createMyNameCardUrl,
+  ensureNameCard,
   generateNameCard,
   getMyLatestNameCard,
   queueNameCardToTelegram,
-  nameCardReadiness,
 } from '@/lib/db/name-cards';
 import { processDueNotifications } from '@/lib/db/notifications';
 import { FakeNotifier } from '@/lib/integrations/notify/fake';
@@ -22,7 +22,7 @@ import {
   versionRecord,
 } from './helpers';
 
-const HOLDER = { holderNameTh: 'สมชาย ทดสอบ', holderNameEn: 'SOMCHAI TESTER' };
+const HOLDER = { holderNameTh: 'สมชาย ทดสอบ' };
 
 const fakeRenderer: PdfRenderer = {
   name: 'fake',
@@ -100,11 +100,7 @@ describe('name cards', () => {
 
   it('refuses a blank holder name', async () => {
     await expect(
-      generateNameCard(
-        learner.id,
-        { phone: '0812345678', holderNameTh: '   ', holderNameEn: null },
-        fakeRenderer,
-      ),
+      generateNameCard(learner.id, { phone: '0812345678', holderNameTh: '   ' }, fakeRenderer),
     ).rejects.toMatchObject({ code: 'invalid_name' });
   });
 
@@ -117,14 +113,40 @@ describe('name cards', () => {
     cardId = card.id;
     expect(card.phone_number).toBe('0812345678');
     expect(card.holder_name).toBe('สมชาย ทดสอบ');
-    expect(card.holder_name_en).toBe('SOMCHAI TESTER');
-    expect(card.template_version).toBe('two-sided-v2');
+    expect(card.holder_name_en).toBeNull();
+    expect(card.template_version).toBe('two-sided-v3');
     expect(card.pdf_path.startsWith(`${learner.id}/`)).toBe(true);
 
     expect((await getMyLatestNameCard(asLearner, learner.id))?.id).toBe(card.id);
     expect(await getMyLatestNameCard(asOther, learner.id)).toBeNull();
     expect(await createMyNameCardUrl(learner.id, card.id)).toMatch(/name-cards/);
     expect(await createMyNameCardUrl(other.id, card.id)).toBeNull();
+  });
+
+  it('makes the card from what staff entered, keeps it while nothing changes, remakes it when something does (D96)', async () => {
+    // No phone given yet: nothing to print, and nothing typed by the learner fills it.
+    await svc.from('profiles').update({ phone: null }).eq('id', learner.id);
+    expect((await ensureNameCard(learner.id, fakeRenderer)).blocked).toEqual({
+      code: 'no_phone',
+      fields: [],
+    });
+
+    await svc.from('profiles').update({ phone: '0812345678' }).eq('id', learner.id);
+    const first = await ensureNameCard(learner.id, fakeRenderer);
+    expect(first.blocked).toBeNull();
+    expect(first.card).toMatchObject({
+      phone_number: '0812345678',
+      holder_name: 'สมชาย ทดสอบ',
+      dbd_record_id: recordId,
+      template_version: 'two-sided-v3',
+    });
+    expect((await ensureNameCard(learner.id, fakeRenderer)).card?.id).toBe(first.card!.id);
+
+    await svc.from('profiles').update({ phone: '0899999999' }).eq('id', learner.id);
+    const second = await ensureNameCard(learner.id, fakeRenderer);
+    expect(second.card?.id).not.toBe(first.card!.id);
+    expect(second.card?.phone_number).toBe('0899999999');
+    expect((await ensureNameCard(other.id, fakeRenderer)).blocked?.code).toBe('no_assignment');
   });
 
   it('refuses when the pinned sheet lacks a required field — a record change reaches the learner only by a move (D75)', async () => {
@@ -143,8 +165,12 @@ describe('name cards', () => {
     };
     await svc.from('dbd_records').update({ head_office_address: null }).eq('id', recordId);
     // The live row changed; the learner is still on the version that has the address.
-    expect((await nameCardReadiness(learner.id)).missingFields).toEqual([]);
+    expect((await ensureNameCard(learner.id, fakeRenderer)).blocked).toBeNull();
     await moveToNewest();
+    expect((await ensureNameCard(learner.id, fakeRenderer)).blocked).toEqual({
+      code: 'missing_fields',
+      fields: ['head_office_address'],
+    });
     await expect(
       generateNameCard(learner.id, { phone: '0812345678', ...HOLDER }, fakeRenderer),
     ).rejects.toMatchObject({

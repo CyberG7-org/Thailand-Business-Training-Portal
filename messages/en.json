@@ -1410,30 +1410,16 @@
   },
   "nameCard": {
     "title": "Name card",
-    "intro": "One design for every company, filled from your company record plus the name and phone number you enter. Preview, download the PDF, or send it to Telegram.",
-    "phone": "Mobile phone number",
-    "phoneHint": "Thai mobile, e.g. 081-234-5678 or +66 81 234 5678",
-    "generate": "Create name card",
-    "regenerate": "Create a new version",
-    "generating": "Creating…",
-    "generated": "Name card created.",
+    "intro": "Made for you from your company record and the details your manager gave. Preview it and download the PDF.",
     "preview": "Preview",
     "download": "Download PDF",
-    "send": "Send to Telegram",
-    "sendAgain": "Send to Telegram again",
-    "sentQueued": "Queued for {count} Telegram destination(s).",
-    "sentNoDestinations": "No Telegram destination is configured yet.",
     "meta": "Template {version} · {phone}",
     "errors": {
       "no_assignment": "No company is assigned to you yet.",
-      "exam_required": "Pass the Business Knowledge Quiz first to create your name card.",
-      "invalid_phone": "Enter a valid Thai mobile number.",
-      "missing_fields": "Your company record is missing: {fields}. Ask your administrator to complete it.",
-      "not_found": "Name card not found.",
-      "invalid_name": "Please enter the name in Thai for the card"
-    },
-    "holderName": "Full name (Thai)",
-    "holderNameEn": "Full name (English, optional)",
-    "holderNameHint": "As it should be printed on the card"
+      "exam_required": "Pass the Business Knowledge Quiz first to get your name card.",
+      "missing_fields": "Your company record is missing: {fields}. Ask your manager to complete it.",
+      "no_phone": "Your mobile number has not been given yet. Ask your manager to add it.",
+      "no_name": "Your name is not on your company record yet. Ask your manager."
+    }
   }
 }

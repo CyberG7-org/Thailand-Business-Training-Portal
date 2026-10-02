@@ -37,31 +37,29 @@ const source: NameCardSource = {
   nature_of_business: 'ค้าปลีกอุปกรณ์ไฟฟ้า',
   products_services: 'สายไฟและอุปกรณ์ติดตั้ง',
 };
-const holder = { nameTh: 'นายตัวอย่าง นามสมมติ', nameEn: 'Sample Holder' };
+const holder = 'นายตัวอย่าง นามสมมติ';
 
-/** One two-sided design for every company (D63): the learner names the holder, the record does the rest. */
+/** One two-sided design for every company (D63): the holder's name and phone, the record's the rest (D96). */
 describe('name card data', () => {
-  it('builds the render model from the record and the name the learner typed', () => {
+  it('builds the render model from the record and the holder', () => {
     const d = buildNameCardData(source, '0812345678', holder);
     expect(d.holderName).toBe('นายตัวอย่าง นามสมมติ');
-    expect(d.holderNameEn).toBe('Sample Holder');
     expect(d.companyInitials).toBe('TV');
     expect(d.phoneDisplay).toBe('081-234-5678');
     expect(d.email).toBe('contact@example.co.th');
     expect(d.natureOfBusiness).toBe('ค้าปลีกอุปกรณ์ไฟฟ้า');
     expect(d.productsServices).toBe('สายไฟและอุปกรณ์ติดตั้ง');
     expect(d.templateVersion).toBe(NAME_CARD_TEMPLATE_VERSION);
-    expect(d.templateVersion).toBe('two-sided-v2');
+    expect(d.templateVersion).toBe('two-sided-v3');
   });
 
-  it('keeps the English name and the business answers optional', () => {
+  it("keeps the company's English name and the business answers optional", () => {
     const d = buildNameCardData(
       { ...source, company_name_en: null, nature_of_business: null, products_services: '  ' },
       '0812345678',
-      { nameTh: 'สมชาย', nameEn: '' },
+      'สมชาย',
     );
     expect(d.companyNameEn).toBeNull();
-    expect(d.holderNameEn).toBeNull();
     expect(d.natureOfBusiness).toBeNull();
     expect(d.productsServices).toBeNull();
   });
@@ -73,9 +71,7 @@ describe('name card data', () => {
     expect(() =>
       buildNameCardData({ ...source, company_name_th: null }, '0812345678', holder),
     ).toThrow(/company_name_th/);
-    expect(() => buildNameCardData(source, '0812345678', { nameTh: '  ', nameEn: null })).toThrow(
-      /holder/,
-    );
+    expect(() => buildNameCardData(source, '0812345678', '  ')).toThrow(/holder/);
   });
 });
 

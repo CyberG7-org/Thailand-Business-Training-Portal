@@ -120,6 +120,13 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await expect(page.getByTestId('contact-form').locator('input[name="phone"]')).toHaveValue(
     '0823334444',
   );
+
+  // The learner's name card was made from all this (D96): done before they open it, with the
+  // phone the manager changed.
+  await switchTo(page, learner, LEARNER_PASSWORD);
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เสร็จสิ้น');
+  await page.goto('/th/name-card');
+  await expect(page.getByTestId('card-meta')).toContainText('082-333-4444');
 });
 
 test('the four details are checked before anything is uploaded', async ({ page }) => {

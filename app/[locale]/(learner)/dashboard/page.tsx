@@ -5,6 +5,7 @@ import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
 import { myUpcomingAppointment } from '@/lib/db/appointments';
 import { createMyDocumentSignedUrl, getMyCompany, latestSubmittedExam } from '@/lib/db/learner';
+import { refreshNameCard } from '@/lib/db/name-cards';
 import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { pinnedFactsFor } from '@/lib/db/pinning';
@@ -36,6 +37,9 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     createSupabaseServerClient(),
   ]);
   const loc = locale as AppLocale;
+  // The name card is made for the learner (D96); a learner created before it was, or whose
+  // details changed, gets theirs here, so the step reads done.
+  await refreshNameCard(user.id);
 
   const [mine, facts, lastExam, passMark, booking] = await Promise.all([
     getMyCompany(db, user.id),

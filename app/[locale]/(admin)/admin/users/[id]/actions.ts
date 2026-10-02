@@ -13,6 +13,7 @@ import {
   updateAssignmentRole,
 } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
+import { refreshNameCard } from '@/lib/db/name-cards';
 import { dbdPeople, isDbdPerson } from '@/lib/domain/standard-role';
 import { PinError, evaluationInProgress, moveAssignmentToVersion } from '@/lib/db/pinning';
 import {
@@ -112,6 +113,7 @@ export async function assignRecordAction(
   if (taken.has(dbdRecordId)) return { message: null, error: 'company-taken' };
   try {
     await assignDbdRecord(db, { userId, dbdRecordId });
+    await refreshNameCard(userId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'assigned', error: null };
   } catch (e) {
@@ -166,6 +168,8 @@ export async function updateContactAction(
     .single();
   if (error) return { message: null, error: errorMessage(error) };
   await recordAccountAction(staff.id, 'contact', userId, contactColumns(parsed.data));
+  // A new phone is a new card (D96).
+  await refreshNameCard(userId);
   revalidatePath(`/${locale}/admin/users/${userId}`);
   return { message: 'contact-saved', error: null };
 }
@@ -210,6 +214,7 @@ export async function updateAssignmentRoleAction(
       responsibilities: current.responsibilities,
       relationship_to_shareholders: current.relationship_to_shareholders,
     });
+    await refreshNameCard(userId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'role-saved', error: null };
   } catch (e) {
@@ -242,6 +247,7 @@ export async function moveAssignmentAction(
       assignmentId,
       versionId,
     });
+    await refreshNameCard(userId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'moved', n: moved.to, error: null };
   } catch (e) {
