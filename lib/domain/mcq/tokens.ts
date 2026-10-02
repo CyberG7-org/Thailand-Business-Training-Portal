@@ -70,6 +70,10 @@ export const TOKENS = {
   revenue_basis: text('revenue_basis'),
   average_transaction: text('average_transaction'),
   monthly_transactions: text('monthly_transactions'),
+  // The first amount in digits a manager typed, so a recipe can vary it (D100).
+  monthly_revenue_amount: { kind: 'money', facts: ['monthly_revenue'] },
+  average_transaction_amount: { kind: 'money', facts: ['average_transaction'] },
+  monthly_transactions_count: { kind: 'number', facts: ['monthly_transactions'] },
   source_of_funds: text('source_of_funds'),
   first_incoming_funds: text('first_incoming_funds'),
   account_purpose: text('account_purpose'),

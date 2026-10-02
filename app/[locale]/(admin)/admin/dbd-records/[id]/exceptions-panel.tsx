@@ -31,7 +31,9 @@ export function ExceptionsPanel({
   const tg = useTranslations('admin.dbd.address.issues');
   const [state, action, pending] = useActionState(resolveExceptionAction, initial);
 
-  const fieldLabel = (field: string) => {
+  const fieldLabel = (field: string, kind: string) => {
+    // A quiz that could not start names the concept it could not ask (D100).
+    if (kind === 'render_failure') return conceptTitle(field, locale);
     const base = field.split('.')[0]!;
     if (tf.has(base as 'address')) return tf(base as 'address');
     if (ti.has(base as 'account_purpose')) return ti(base as 'account_purpose');
@@ -92,10 +94,12 @@ export function ExceptionsPanel({
               >
                 <p>
                   <span className="staff-tag">{t(`kinds.${e.kind as 'missing'}`)}</span>{' '}
-                  <strong>{fieldLabel(e.field)}</strong>
+                  <strong>{fieldLabel(e.field, e.kind)}</strong>
                 </p>
                 <p className="text-ink-700">{describe(e)}</p>
-                {e.kind !== 'missing' && (
+                {/* Nothing to confirm on these two: one is filled in, the other closes itself
+                    when a quiz starts (D100). */}
+                {e.kind !== 'missing' && e.kind !== 'render_failure' && (
                   <form action={action} className="flex flex-wrap items-end gap-2">
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="id" value={recordId} />

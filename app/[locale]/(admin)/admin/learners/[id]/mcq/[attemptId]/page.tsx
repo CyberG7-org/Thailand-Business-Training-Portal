@@ -51,7 +51,11 @@ export default async function McqReviewPage({
         learner={learner}
       />
       <p className="flex flex-wrap items-center gap-3 text-sm text-ink-700">
-        <ResultTag result={attempt.result === 'pass' ? 'pass' : 'fail'} />
+        <ResultTag
+          result={
+            attempt.result === 'pass' || attempt.result === 'retest' ? attempt.result : 'fail'
+          }
+        />
         <span className="tabular-nums" data-testid="mcq-review-score">
           {t('mcq.score')}: {attempt.score ?? 0} / {attempt.max_score ?? 0}
         </span>

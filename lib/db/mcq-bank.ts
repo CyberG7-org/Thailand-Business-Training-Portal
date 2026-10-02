@@ -198,6 +198,31 @@ export async function setVariantStatus(db: Db, id: string, status: VariantStatus
   if (data.length === 0) throw new Error('variant not found');
 }
 
+/** A draft that may be approved as it stands: its Thai text is written and it keeps every rule. */
+export const isCheckedDraft = (variant: Variant): boolean =>
+  variant.status === 'draft' && Boolean(variant.texts.th) && validateVariant(variant).length === 0;
+
+/**
+ * Approves every checked draft, one by one under the caller's own session, so RLS admits only
+ * the Owner and the audit names them (D100). A draft that breaks a rule is left as a draft.
+ */
+export async function approveCheckedDrafts(
+  db: Db,
+): Promise<{ approved: string[]; skipped: string[] }> {
+  const drafts = (await listVariants(db)).filter((v) => v.status === 'draft');
+  const approved: string[] = [];
+  const skipped: string[] = [];
+  for (const variant of drafts) {
+    if (!isCheckedDraft(variant)) {
+      skipped.push(variant.key);
+      continue;
+    }
+    await setVariantStatus(db, variant.id, 'approved');
+    approved.push(variant.key);
+  }
+  return { approved, skipped };
+}
+
 /**
  * Adds the starter drafts that are not in the bank yet, each under its own key. A key that
  * exists is left alone, so loading again never overwrites what the Owner has edited.

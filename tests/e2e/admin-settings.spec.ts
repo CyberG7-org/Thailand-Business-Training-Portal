@@ -16,7 +16,7 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
     await expect(field.getByTestId('setting-saved')).toBeVisible();
 
     // Validation happens server-side: out-of-range values are refused.
-    const mark = page.getByTestId('setting-exam_passing_mark_percent');
+    const mark = page.getByTestId('setting-mcq_pass_score');
     await mark.locator('input[name="value"]').fill('150');
     await mark.locator('input[name="value"]').evaluate((el) => el.removeAttribute('max'));
     await mark.getByRole('button', { name: 'บันทึก' }).click();

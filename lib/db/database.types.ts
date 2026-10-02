@@ -125,10 +125,37 @@ export type Database = {
           },
         ]
       }
+      assessment_answer_keys: {
+        Row: {
+          answer_id: string
+          correct_key: string
+          localized: Json
+        }
+        Insert: {
+          answer_id: string
+          correct_key: string
+          localized: Json
+        }
+        Update: {
+          answer_id?: string
+          correct_key?: string
+          localized?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessment_answer_keys_answer_id_fkey"
+            columns: ["answer_id"]
+            isOneToOne: true
+            referencedRelation: "assessment_answers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assessment_answers: {
         Row: {
           answered_at: string | null
           attempt_id: string
+          concept_key: string | null
           id: string
           is_correct: boolean | null
           position: number
@@ -141,6 +168,7 @@ export type Database = {
         Insert: {
           answered_at?: string | null
           attempt_id: string
+          concept_key?: string | null
           id?: string
           is_correct?: boolean | null
           position: number
@@ -153,6 +181,7 @@ export type Database = {
         Update: {
           answered_at?: string | null
           attempt_id?: string
+          concept_key?: string | null
           id?: string
           is_correct?: boolean | null
           position?: number
@@ -169,6 +198,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "assessment_attempts"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assessment_answers_concept_key_fkey"
+            columns: ["concept_key"]
+            isOneToOne: false
+            referencedRelation: "evaluation_concepts"
+            referencedColumns: ["key"]
           },
           {
             foreignKeyName: "assessment_answers_question_id_fkey"
@@ -191,6 +227,7 @@ export type Database = {
           question_ids: string[]
           result: string | null
           role_snapshot: Json | null
+          rule_snapshot: Json | null
           score: number | null
           shuffle_seed: string
           started_at: string
@@ -210,6 +247,7 @@ export type Database = {
           question_ids: string[]
           result?: string | null
           role_snapshot?: Json | null
+          rule_snapshot?: Json | null
           score?: number | null
           shuffle_seed: string
           started_at?: string
@@ -229,6 +267,7 @@ export type Database = {
           question_ids?: string[]
           result?: string | null
           role_snapshot?: Json | null
+          rule_snapshot?: Json | null
           score?: number | null
           shuffle_seed?: string
           started_at?: string
@@ -1793,6 +1832,7 @@ export type Database = {
           question_ids: string[]
           result: string | null
           role_snapshot: Json | null
+          rule_snapshot: Json | null
           score: number | null
           shuffle_seed: string
           started_at: string

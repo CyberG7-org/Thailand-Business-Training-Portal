@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { requireAdmin } from '@/lib/auth/session';
 import { MCQ_STARTER } from '@/lib/content/mcq-starter';
 import {
+  approveCheckedDrafts,
   loadStarterVariants,
   saveVariant,
   setVariantStatus,
@@ -45,6 +46,25 @@ export async function loadStarterAction(
   } catch (e) {
     console.error('starter drafts', e);
     return { done: false, created: 0, failed: true };
+  }
+}
+
+export type ApproveDraftsState = { done: boolean; approved: number; failed: boolean };
+
+/** Approves every draft that keeps the bank's rules, under the Owner's own session (D100). */
+export async function approveDraftsAction(
+  _prev: ApproveDraftsState,
+  formData: FormData,
+): Promise<ApproveDraftsState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  await requireAdmin(locale);
+  try {
+    const { approved } = await approveCheckedDrafts(await createSupabaseServerClient());
+    revalidatePath(`/${locale}/admin/questions`);
+    return { done: true, approved: approved.length, failed: false };
+  } catch (e) {
+    console.error('approve drafts', e);
+    return { done: false, approved: 0, failed: true };
   }
 }
 

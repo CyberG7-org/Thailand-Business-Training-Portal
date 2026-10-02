@@ -48,6 +48,9 @@ export const POLICY_DEFAULTS = {
   appointment_holidays: THAI_BANK_HOLIDAYS_2026 as string[],
   training_auto_accept_confidence_percent: 95 as number,
   training_review_confidence_percent: 75 as number,
+  // The Business Knowledge Quiz (D71): of 30, this many right passes, this many earns a retest.
+  mcq_pass_score: 27 as number,
+  mcq_retest_score: 23 as number,
 };
 
 export type PolicyKey = keyof typeof POLICY_DEFAULTS;

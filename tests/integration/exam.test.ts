@@ -4,47 +4,34 @@ import { examPassedFor, finalizeExam, startExam } from '@/lib/db/exam';
 import { processDueNotifications, requeueNotification } from '@/lib/db/notifications';
 import { FakeNotifier } from '@/lib/integrations/notify/fake';
 import {
-  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   createTestUser,
+  deleteTeam,
   deleteTestUser,
+  seedApprovedBank,
+  seedQuizTeam,
   type Client,
+  type Team,
   type TestUser,
-  versionRecord,
 } from './helpers';
 
 describe('exam + notifications', () => {
   let admin: TestUser;
+  let team: Team;
   let learner: TestUser;
   let asLearner: Client;
   let asAdmin: Client;
-  let recordId: string;
   let attemptId: string;
+  let removeBank: () => Promise<void>;
   const svc = adminClient();
 
   beforeAll(async () => {
-    [admin, learner] = await Promise.all([createTestUser('admin'), createTestUser('learner')]);
+    admin = await createTestUser('admin');
+    removeBank = await seedApprovedBank(admin.id);
+    team = await seedQuizTeam('สอบจริง');
+    learner = team.learner;
     [asLearner, asAdmin] = await Promise.all([clientFor(learner), clientFor(admin)]);
-    const { data } = await svc
-      .from('dbd_records')
-      .insert({
-        company_name_th: 'บริษัท สอบจริง จำกัด',
-        juristic_id: '0105569000134',
-        registered_capital: 1000000,
-        issued_on: '2026-07-13',
-        structured_data: CONFIRMED_ANSWERS as never,
-        extraction_status: 'confirmed',
-        confirmed_by: admin.id,
-        confirmed_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-    recordId = data!.id;
-    await svc
-      .from('user_dbd_assignments')
-      .insert({ user_id: learner.id, dbd_record_id: recordId, assigned_by: admin.id });
-    await versionRecord(recordId);
     await svc.from('policy_config').upsert([
       { key: 'telegram_admin_chat_ids', value: ['123456'] },
       { key: 'email_admin_recipients', value: ['ops@example.com'] },
@@ -54,21 +41,20 @@ describe('exam + notifications', () => {
   afterAll(async () => {
     await svc.from('notifications').delete().like('idempotency_key', `exam_result:${attemptId}:%`);
     await svc.from('assessment_attempts').delete().eq('user_id', learner.id);
-    await svc.from('user_dbd_assignments').delete().eq('dbd_record_id', recordId);
-    await svc.from('eligibility_snapshots').delete().eq('dbd_record_id', recordId);
-    await svc.from('dbd_records').delete().eq('id', recordId);
     await svc.from('policy_config').upsert([
       { key: 'telegram_admin_chat_ids', value: [] },
       { key: 'email_admin_recipients', value: [] },
     ]);
-    await Promise.all([admin, learner].map((u) => deleteTestUser(u.id)));
+    await deleteTeam(team);
+    await removeBank();
+    await deleteTestUser(admin.id);
   });
 
-  it('starts an exam with the passing mark snapshotted, answers without revealing, finalizes atomically with notifications', async () => {
+  it('starts a quiz with its rule frozen, answers it, finalizes atomically with notifications', async () => {
     const attempt = await startExam(learner.id, 'en');
     attemptId = attempt.id;
     expect(attempt.kind).toBe('exam');
-    expect(Number(attempt.passing_mark_snapshot)).toBe(70);
+    expect(attempt.rule_snapshot).toMatchObject({ passScore: 27, retestScore: 23 });
 
     const full = await getAttemptWithAnswers(asLearner, attempt.id);
     for (const a of full!.assessment_answers) {
@@ -86,7 +72,7 @@ describe('exam + notifications', () => {
 
     const done = await finalizeExam(learner.id, attempt.id);
     expect(done.status).toBe('submitted');
-    expect(['pass', 'fail']).toContain(done.result);
+    expect(['pass', 'retest', 'fail']).toContain(done.result);
     expect(done.max_score).toBe(full!.assessment_answers.length);
 
     // Idempotent: finalizing again is a no-op and creates no duplicate rows.
@@ -115,7 +101,7 @@ describe('exam + notifications', () => {
     expect(summary.sent).toBeGreaterThanOrEqual(1);
     expect(summary.retried).toBeGreaterThanOrEqual(1);
     expect(telegram.sent[0]?.destination).toBe('123456');
-    expect(telegram.sent[0]?.subject).toMatch(/^\[Business Knowledge Quiz (PASS|FAIL)\]/);
+    expect(telegram.sent[0]?.subject).toMatch(/^\[Business Knowledge Quiz (PASS|RETEST|FAIL)\]/);
 
     const { data: rows } = await asAdmin
       .from('notifications')

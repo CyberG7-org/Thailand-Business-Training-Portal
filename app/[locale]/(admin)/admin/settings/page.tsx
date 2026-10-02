@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { requireAdmin } from '@/lib/auth/session';
-import { POLICY_FIELDS, formatPolicyValue } from '@/lib/config/policy-schema';
+import { POLICY_FIELDS, RETIRED_POLICY_KEYS, formatPolicyValue } from '@/lib/config/policy-schema';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listPolicies } from '@/lib/db/settings';
 import { SettingForm } from './setting-form';
@@ -8,7 +8,9 @@ import { SettingForm } from './setting-form';
 export default async function SettingsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   await requireAdmin(locale);
-  const rows = await listPolicies(await createSupabaseServerClient());
+  const rows = (await listPolicies(await createSupabaseServerClient())).filter(
+    (row) => !RETIRED_POLICY_KEYS.includes(row.key),
+  );
   const t = await getTranslations('admin.settings');
   return (
     <section className="grid gap-4">

@@ -30,7 +30,7 @@ test('a new learner sees the company, the first step current, and the interview 
   await expect(page.getByTestId('stage-appointment')).toHaveAttribute('data-locked', 'true');
   // The card: the quiz not taken yet, its pass mark, and the interview waiting on it.
   await expect(page.getByTestId('exam-score')).toHaveText('ยังไม่ได้ทำ');
-  await expect(page.getByTestId('quiz-pass-mark')).toHaveText(/^เกณฑ์ผ่าน \d+%$/);
+  await expect(page.getByTestId('quiz-pass-mark')).toHaveText(/^เกณฑ์ผ่าน \d+ \/ 30$/);
   await expect(page.getByTestId('interview-status')).toHaveText('หลังผ่านแบบทดสอบ');
   await expect(page.getByTestId('stage-study').getByRole('link', { name: 'เปิด' })).toHaveAttribute(
     'href',

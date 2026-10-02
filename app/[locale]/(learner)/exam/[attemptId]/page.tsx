@@ -6,6 +6,7 @@ import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
 import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { readMcqRule } from '@/lib/domain/mcq/result';
 import { AttemptBoard, type BoardQuestion } from '../../quiz/attempt-board';
 import { answerExamAction, submitExamAction } from '../actions';
 
@@ -24,25 +25,34 @@ export default async function ExamAttemptPage({
     localizeAttemptAnswers(attempt, locale as AppLocale),
     getPolicy('exam_passing_mark_percent'),
   ]);
+  // An attempt from the Owner's bank marks each answer at once (D100); an earlier one reveals
+  // nothing while it is open (EXAM-002).
+  const rule = readMcqRule(attempt.rule_snapshot);
 
-  // An open exam reveals nothing (EXAM-002): the correct keys never leave the server, so the
-  // page carries only the prompt, the options and which one the learner picked.
+  // The correct key leaves the server only for a question already answered: the page carries
+  // the prompt, the options, the learner's pick and, for those, what the marking was.
   const questions: BoardQuestion[] = attempt.assessment_answers.map((a) => {
     const shown = texts.get(a.question_id)!;
+    const marked = rule !== null && a.selected_key !== null && shown.correctKey !== null;
     return {
       questionId: a.question_id,
       position: a.position,
       prompt: shown.prompt,
       options: shown.options,
       answeredKey: a.selected_key,
-      revealed: null,
+      revealed: marked ? { correctKey: shown.correctKey!, explanation: shown.explanation } : null,
     };
   });
 
   // Handoff, 04: what this attempt is, at a glance, beside the title.
   const meta = [
     { label: t('meta.questions'), value: String(questions.length) },
-    { label: t('meta.passingMark'), value: (attempt.passing_mark_snapshot ?? policyMark) + '%' },
+    rule
+      ? { label: t('meta.toPass'), value: rule.passScore + ' / ' + questions.length }
+      : {
+          label: t('meta.passingMark'),
+          value: (attempt.passing_mark_snapshot ?? policyMark) + '%',
+        },
     { label: t('meta.attempt'), value: String(attempt.attempt_no) },
   ];
 
@@ -56,7 +66,7 @@ export default async function ExamAttemptPage({
               {t('title')}
             </h1>
             <p className="mt-1.5 max-w-[640px] text-base leading-[1.75] text-brand-100">
-              {t('noFeedbackNote')}
+              {rule ? t('feedbackNote') : t('noFeedbackNote')}
             </p>
           </div>
           <dl
@@ -77,7 +87,7 @@ export default async function ExamAttemptPage({
       <AttemptBoard
         attemptId={attempt.id}
         questions={questions}
-        instantFeedback={false}
+        instantFeedback={rule !== null}
         answerAction={answerExamAction}
         submitAction={submitExamAction}
         submitTestId="submit-exam"

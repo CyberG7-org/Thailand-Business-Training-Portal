@@ -143,6 +143,8 @@ export async function validateRecord(
   let closed = 0;
   for (const [k, row] of openByKey) {
     if (kept.has(k)) continue;
+    // Raised by a quiz that could not start, not by a validator: closed when one starts (D100).
+    if (row.kind === 'render_failure') continue;
     const { error: closeError } = await admin
       .from('training_fact_exceptions')
       .update({ status: 'resolved', resolution: 'fixed', resolved_at: at })

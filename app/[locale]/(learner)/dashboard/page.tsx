@@ -10,6 +10,7 @@ import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { pinnedFactsFor } from '@/lib/db/pinning';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
@@ -45,7 +46,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     getMyCompany(db, user.id),
     loadProgressionFacts(db, user.id, { language: locale }),
     latestSubmittedExam(db, user.id),
-    getPolicy('exam_passing_mark_percent'),
+    getPolicy('mcq_pass_score'),
     myUpcomingAppointment(user.id),
   ]);
   const stages = stageStatuses(facts);
@@ -114,7 +115,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       quizValue={
         lastExam ? `${lastExam.score ?? 0} / ${lastExam.max_score ?? 0}` : t('progress.noExam')
       }
-      quizNote={t('progress.passMarkNote', { mark: `${passMark}%` })}
+      quizNote={t('progress.passMarkNote', { mark: `${passMark} / ${MCQ_CONCEPTS.length}` })}
       interviewLabel={t('progress.interview')}
       interviewValue={t(`progress.interviewStatus.${stages.interview.status}`)}
     />

@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
+import { MCQ_STARTER } from '@/lib/content/mcq-starter';
+import { manualCategory } from '@/lib/domain/business-category';
 import { withCheckDigit } from '@/lib/domain/validation/juristic-id';
+import { listVariants, loadStarterVariants, setVariantStatus } from '@/lib/db/mcq-bank';
 import { syncTrainingVersion } from '@/lib/db/training-versions';
+import { validateRecord } from '@/lib/db/validation';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db/database.types';
 
@@ -241,4 +245,55 @@ export async function versionRecord(recordId: string): Promise<void> {
   const result = await syncTrainingVersion(adminClient(), recordId, null);
   if (result !== 'activated')
     throw new Error(`fixture record ${recordId} got no version: ${result}`);
+}
+
+const STARTER_KEYS = MCQ_STARTER.map((s) => s.key);
+
+/**
+ * The starter bank, approved: what a Business Knowledge Quiz needs to start (D100). Safe to call
+ * twice. The returned function removes it; attempts that asked it must be gone by then.
+ */
+export async function seedApprovedBank(ownerId: string): Promise<() => Promise<void>> {
+  const svc = adminClient();
+  await loadStarterVariants(svc, MCQ_STARTER, ownerId);
+  for (const variant of await listVariants(svc)) {
+    if (STARTER_KEYS.includes(variant.key) && variant.status !== 'approved') {
+      await setVariantStatus(svc, variant.id, 'approved');
+    }
+  }
+  return async () => {
+    await svc.from('questions').delete().in('question_key', STARTER_KEYS);
+  };
+}
+
+/**
+ * A team whose learner can take the quiz: the record complete, categorised, versioned, and the
+ * learner assigned to it as its one director.
+ */
+export async function seedQuizTeam(label: string): Promise<Team> {
+  const svc = adminClient();
+  const team = await seedTeam(label);
+  await confirmRecord(team.recordId, team.manager.id);
+  await completeRecord(team.recordId);
+  const { error } = await svc
+    .from('dbd_records')
+    .update({
+      structured_data: {
+        ...COMPLETE_STRUCTURED,
+        category: manualCategory('clothing_fashion', 'fixture', new Date().toISOString()),
+      } as never,
+    })
+    .eq('id', team.recordId);
+  if (error) throw error;
+  const validated = await validateRecord(svc, team.recordId, null);
+  if (validated?.version !== 'activated') {
+    throw new Error(`quiz fixture ${team.recordId} got no version: ${validated?.version}`);
+  }
+  const { error: assignError } = await svc.from('user_dbd_assignments').insert({
+    user_id: team.learner.id,
+    dbd_record_id: team.recordId,
+    assigned_by: team.manager.id,
+  });
+  if (assignError) throw assignError;
+  return team;
 }

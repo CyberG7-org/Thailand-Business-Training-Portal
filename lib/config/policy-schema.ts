@@ -94,9 +94,27 @@ export const POLICY_FIELDS = {
     control: { kind: 'number', min: 50, max: 100, nullable: false },
     schema: intRange(50, 100),
   },
+  mcq_pass_score: {
+    control: { kind: 'number', min: 1, max: 30, nullable: false },
+    schema: intRange(1, 30),
+  },
+  mcq_retest_score: {
+    control: { kind: 'number', min: 1, max: 30, nullable: false },
+    schema: intRange(1, 30),
+  },
 } satisfies Record<string, PolicyFieldDef>;
 
 export type PolicyFieldKey = keyof typeof POLICY_FIELDS;
+
+/**
+ * Settings the Business Knowledge Quiz no longer reads (D100): it asks one question for each of
+ * the 30 concepts and passes by `mcq_pass_score`. They stay stored, for attempts made before,
+ * and leave the Settings screen.
+ */
+export const RETIRED_POLICY_KEYS: readonly PolicyFieldKey[] = [
+  'exam_question_count',
+  'exam_passing_mark_percent',
+];
 export const POLICY_FIELD_KEYS = Object.keys(POLICY_FIELDS) as PolicyFieldKey[];
 
 export function isPolicyFieldKey(key: string): key is PolicyFieldKey {

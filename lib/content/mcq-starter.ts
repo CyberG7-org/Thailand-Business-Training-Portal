@@ -1,11 +1,13 @@
 import type { Recipe } from '@/lib/domain/mcq/tokens';
 import type { StarterVariant, VariantText } from '@/lib/domain/mcq/variant';
+import { MCQ_STARTER_CONCEPTS } from './mcq-starter-concepts';
 
 /**
  * Ten worked examples for the Owner's bank (P17d plan decision 12; D91 removed the one worded
  * for a company with no customers yet, a status that is now always yes): one for every recipe of
  * D77, loaded as drafts and never approved by code. They show the grammar at work; the wording
- * is the Owner's to change, approve or retire, and the other concepts are the Owner's to write.
+ * is the Owner's to change, approve or retire. The other concepts' starters are in
+ * `mcq-starter-concepts.ts` (D100); `MCQ_STARTER` below is both together.
  */
 const text = (
   prompt: string,
@@ -55,7 +57,7 @@ const BUSINESS: [string, string, string, string] = [
   '{business_category|business_alt}',
 ];
 
-export const MCQ_STARTER: readonly StarterVariant[] = [
+const WORKED_EXAMPLES: readonly StarterVariant[] = [
   {
     key: 'mcq-registered-capital-1',
     conceptKey: 'registered_capital',
@@ -341,3 +343,6 @@ export const MCQ_STARTER: readonly StarterVariant[] = [
     },
   },
 ];
+
+/** Every starter draft: at least one question for each of the 30 MCQ concepts. */
+export const MCQ_STARTER: readonly StarterVariant[] = [...WORKED_EXAMPLES, ...MCQ_STARTER_CONCEPTS];

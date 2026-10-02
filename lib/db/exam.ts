@@ -2,11 +2,13 @@ import 'server-only';
 import type { AppLocale } from '@/i18n/routing';
 import { getPolicy } from '@/lib/config/policy';
 import { evaluateResult, scoreAnswers } from '@/lib/domain/assessment/engine';
+import { mcqResult, readMcqRule } from '@/lib/domain/mcq/result';
 import { canStartExam, type ExamResultPayload } from '@/lib/domain/notifications';
 import { todayInBangkok } from '@/lib/domain/thai-date';
 import { createSupabaseAdminClient } from './admin';
-import { AssessmentError, getOrStartAttempt, type AttemptRow } from './assessment';
+import { AssessmentError, getInProgressAttempt, type AttemptRow } from './assessment';
 import type { Json } from './database.types';
+import { McqStartError, startMcqAttempt } from './mcq-attempt';
 
 export class ExamPolicyError extends Error {
   constructor(
@@ -18,9 +20,15 @@ export class ExamPolicyError extends Error {
   }
 }
 
-/** Starts (or resumes) the exam after enforcing the configured retry policy. */
+/**
+ * Starts (or resumes) the Business Knowledge Quiz after enforcing the configured retry policy.
+ * A new attempt asks the Owner's bank, one question for each of the 30 concepts (D100); the
+ * earlier question pool is the practice round's alone.
+ */
 export async function startExam(userId: string, language: AppLocale): Promise<AttemptRow> {
   const admin = createSupabaseAdminClient();
+  const open = await getInProgressAttempt(admin, userId, 'exam');
+  if (open) return open;
   const { data: submitted } = await admin
     .from('assessment_attempts')
     .select('submitted_at')
@@ -28,36 +36,24 @@ export async function startExam(userId: string, language: AppLocale): Promise<At
     .eq('kind', 'exam')
     .eq('status', 'submitted')
     .order('submitted_at', { ascending: false });
-  const [maxAttempts, retryWaitHours, count, passingMark] = await Promise.all([
+  const [maxAttempts, retryWaitHours] = await Promise.all([
     getPolicy('exam_max_attempts'),
     getPolicy('exam_retry_wait_hours'),
-    getPolicy('exam_question_count'),
-    getPolicy('exam_passing_mark_percent'),
   ]);
-  const inProgress = await admin
-    .from('assessment_attempts')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('kind', 'exam')
-    .eq('status', 'in_progress')
-    .maybeSingle();
-  if (!inProgress.data) {
-    const verdict = canStartExam({
-      submittedCount: submitted?.length ?? 0,
-      lastSubmittedAt: submitted?.[0]?.submitted_at ?? null,
-      maxAttempts,
-      retryWaitHours,
-      now: new Date(),
-    });
-    if (!verdict.ok) throw new ExamPolicyError(verdict.reason, verdict.retryAt);
-  }
-  return getOrStartAttempt({
-    userId,
-    kind: 'exam',
-    language,
-    count,
-    passingMarkPercent: passingMark,
+  const verdict = canStartExam({
+    submittedCount: submitted?.length ?? 0,
+    lastSubmittedAt: submitted?.[0]?.submitted_at ?? null,
+    maxAttempts,
+    retryWaitHours,
+    now: new Date(),
   });
+  if (!verdict.ok) throw new ExamPolicyError(verdict.reason, verdict.retryAt);
+  try {
+    return await startMcqAttempt({ userId, language });
+  } catch (e) {
+    if (e instanceof McqStartError) throw new AssessmentError(e.message, e.code);
+    throw e;
+  }
 }
 
 /**
@@ -78,7 +74,7 @@ export async function finalizeExam(userId: string, attemptId: string): Promise<A
 
   const { data: answers, error } = await admin
     .from('assessment_answers')
-    .select('is_correct, selected_key')
+    .select('is_correct, selected_key, concept_key')
     .eq('attempt_id', attemptId);
   if (error) throw error;
   if (answers.some((a) => a.selected_key === null)) {
@@ -86,10 +82,19 @@ export async function finalizeExam(userId: string, attemptId: string): Promise<A
   }
 
   const { score, maxScore } = scoreAnswers(answers);
-  const passingMark = Number(
-    attempt.passing_mark_snapshot ?? (await getPolicy('exam_passing_mark_percent')),
-  );
-  const result = evaluateResult(score, maxScore, passingMark);
+  // An attempt from the Owner's bank is judged by the rule frozen on it (D71); an earlier one by
+  // its passing mark.
+  const rule = readMcqRule(attempt.rule_snapshot);
+  const passingMark = rule
+    ? Math.round((rule.passScore / Math.max(1, maxScore)) * 100)
+    : Number(attempt.passing_mark_snapshot ?? (await getPolicy('exam_passing_mark_percent')));
+  const judged = rule
+    ? mcqResult(
+        answers.map((a) => ({ conceptKey: a.concept_key ?? '', isCorrect: a.is_correct === true })),
+        rule,
+      )
+    : null;
+  const result = judged ? judged.result : evaluateResult(score, maxScore, passingMark);
 
   const profile = attempt.profiles as unknown as { login_id: string; display_name: string | null };
   const record = attempt.dbd_records as unknown as { company_name_th: string | null } | null;
@@ -102,6 +107,9 @@ export async function finalizeExam(userId: string, attemptId: string): Promise<A
     max_score: maxScore,
     result,
     passing_mark_percent: passingMark,
+    ...(rule && judged
+      ? { pass_score: rule.passScore, critical_wrong: judged.criticalWrong.length }
+      : {}),
     submitted_on: todayInBangkok(),
   };
 

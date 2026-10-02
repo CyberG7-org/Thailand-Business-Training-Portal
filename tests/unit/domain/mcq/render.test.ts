@@ -201,6 +201,30 @@ describe('renderVariant', () => {
   });
 });
 
+describe('the amounts a manager typed (D100)', () => {
+  it('prints the first amount in digits and varies it', () => {
+    const v = of(
+      text('รายได้ต่อเดือนประมาณเท่าใด', [
+        '{monthly_revenue_amount}',
+        '{monthly_revenue_amount|numeric(x3)}',
+        '{average_transaction_amount|numeric(x0.2)}',
+        'ประมาณ {monthly_transactions_count|numeric(x2)} รายการ',
+      ]),
+    );
+    expect(texts(v)).toEqual(['300,000 บาท', '900,000 บาท', '2,000 บาท', 'ประมาณ 60 รายการ']);
+    expect(texts(v, 'en')[0]).toBe('300,000 THB');
+  });
+
+  it('has no value when the answer is written in words', () => {
+    const ctx: RenderContext = {
+      ...SAMPLE_CONTEXT,
+      facts: { ...SAMPLE_CONTEXT.facts, monthly_revenue: 'สามแสนบาท' },
+    };
+    const v = of(text('รายได้', ['{monthly_revenue_amount}', 'ก', 'ข', 'ค']));
+    expect(failure(v, ctx)).toBe('missing_fact');
+  });
+});
+
 describe('inheritPlaceholders', () => {
   it('fills a blank translated option from a Thai option that is placeholders only', () => {
     const th = text('ทุนเท่าใด', [

@@ -288,6 +288,14 @@ and a missing or low-confidence one is a non-blocking exception of its own.
 - **Attempt.** One variant per concept (unseen variants first), options shuffled, order
   shuffled, all frozen before the first answer; score and result by D71 with the thresholds and
   critical keys snapshotted on the attempt.
+- **Implemented (P17e, D100, 2026-10-02).** As above, with these particulars. Each answer is
+  marked at once and locked. The frozen question is kept in three languages, with the correct
+  option, in `assessment_answer_keys` (service role only); a learner's own rows know options by
+  position. A concept the bank cannot ask blocks the start and raises one `render_failure`
+  exception per concept on the record, for its staff, which closes when a quiz starts.
+  **Not built:** the review-required flag (the result page reviews every question) and
+  grandfathering (production holds only test learners). The practice round keeps the earlier
+  pool until P17i.
 
 ## 9. Chatbot evaluation (P17f–P17h)
 
