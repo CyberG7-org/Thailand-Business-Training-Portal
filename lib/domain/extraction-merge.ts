@@ -4,7 +4,9 @@ import {
   parseDirectorsText,
   type DbdRecordInput,
 } from './dbd-record';
+import type { BusinessProfile } from './dbd-profile';
 import { normalizeYear, parseDateInput, type ISODate } from './thai-date';
+import { lostOnlyMarks } from './thai-text';
 import {
   EXTRACTION_NUMBER_FIELDS,
   EXTRACTION_TEXT_FIELDS,
@@ -90,6 +92,9 @@ export type ExtractionPatch = {
  * Fills the record's empty fields from an extraction (decision D37). Existing values always win,
  * each extracted value is validated on its own, and anything invalid is dropped rather than
  * failing the whole fill — the admin sees what was filled and still confirms explicitly.
+ *
+ * One exception (D92): a stored value that is the newly read one with Thai marks missing, and
+ * nothing else different, was read by a reader that dropped them; the new reading replaces it.
  */
 export function applyExtractionToRecord(
   extraction: DbdExtraction,
@@ -98,7 +103,8 @@ export function applyExtractionToRecord(
   const suggestions = extractionToFormValues(extraction);
   const isEmpty = (v: string | undefined) => v === undefined || v.trim() === '';
   const candidates = Object.entries(suggestions.values).filter(
-    ([field, value]) => !isEmpty(value) && isEmpty(current[field]),
+    ([field, value]) =>
+      !isEmpty(value) && (isEmpty(current[field]) || restoresMarks(current[field], value)),
   );
   const rejected: string[] = [];
   let applied = candidates.map(([field]) => field);
@@ -125,4 +131,48 @@ export function applyExtractionToRecord(
   });
   if (!parsed.success) throw new Error('Record values are invalid; fix them before extracting');
   return { input: parsed.data, applied: [], rejected: candidates.map(([f]) => f) };
+}
+
+const squeeze = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+/** Whether `fresh` is `stored` with the Thai marks an earlier reading dropped put back (D92). */
+export function restoresMarks(stored: string | undefined, fresh: string): boolean {
+  return stored !== undefined && lostOnlyMarks(squeeze(stored), squeeze(fresh));
+}
+
+/**
+ * The stored business profile with the marks an earlier reading dropped put back from a new
+ * one (D92), row by row: an objective's text, a shareholder's or a promoter's name, a category
+ * label. A row is touched only when the new reading of the same row is the stored text with
+ * marks missing and nothing else different, so a row a person corrected, or one the two
+ * readings disagree on, stays as it is. Returns the same object when nothing was restored.
+ */
+export function restoreProfileMarks(
+  stored: BusinessProfile,
+  fresh: BusinessProfile,
+): BusinessProfile {
+  let restored = false;
+  const pick = (mine: string, theirs: string | undefined): string => {
+    if (theirs === undefined || !restoresMarks(mine, theirs)) return mine;
+    restored = true;
+    return theirs;
+  };
+  const next: BusinessProfile = {
+    ...stored,
+    objectives: stored.objectives.map((o, i) =>
+      fresh.objectives[i]?.no === o.no ? { ...o, text: pick(o.text, fresh.objectives[i].text) } : o,
+    ),
+    business_categories: stored.business_categories.map((c, i) =>
+      pick(c, fresh.business_categories[i]),
+    ),
+    shareholders: stored.shareholders.map((h, i) => ({
+      ...h,
+      name: pick(h.name, fresh.shareholders[i]?.name),
+    })),
+    promoters: stored.promoters.map((h, i) => ({
+      ...h,
+      name: pick(h.name, fresh.promoters[i]?.name),
+    })),
+  };
+  return restored ? next : stored;
 }

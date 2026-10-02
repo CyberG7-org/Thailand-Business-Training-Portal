@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeThai, normalizeThaiDeep } from '@/lib/domain/thai-text';
+import { lostOnlyMarks, normalizeThai, normalizeThaiDeep } from '@/lib/domain/thai-text';
 
 const typed = 'เลขที่ 194/3 หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา';
 
@@ -52,5 +52,24 @@ describe('normalizeThaiDeep', () => {
       pages: 3,
       at,
     });
+  });
+});
+
+describe('lostOnlyMarks', () => {
+  it('recognises a word a reader dropped marks from', () => {
+    expect(lostOnlyMarks('วังใหญ', 'วังใหญ่')).toBe(true);
+    expect(lostOnlyMarks('ผูถือหุน', 'ผู้ถือหุ้น')).toBe(true);
+    expect(lostOnlyMarks('พงษ', 'พงษ์')).toBe(true);
+    // A vowel above a tall letter is kept as a private glyph too.
+    expect(lostOnlyMarks('ปตตานี', 'ปัตตานี')).toBe(true);
+  });
+
+  it('is false when nothing was lost, or when anything but a mark differs', () => {
+    expect(lostOnlyMarks('วังใหญ่', 'วังใหญ่')).toBe(false);
+    expect(lostOnlyMarks('วังใหญ่', 'วังใหญ')).toBe(false);
+    expect(lostOnlyMarks('วังใหม', 'วังใหญ่')).toBe(false);
+    expect(lostOnlyMarks('วัง', 'วังใหญ่')).toBe(false);
+    // A different mark is a different word, not a lost one.
+    expect(lostOnlyMarks('ใหม้', 'ใหม่')).toBe(false);
   });
 });

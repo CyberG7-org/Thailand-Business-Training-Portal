@@ -84,6 +84,23 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     await refreshDerivedFacts(svc, recordId, deps);
   });
 
+  it('writes the marks a reader dropped back into the record’s own address (D92)', async () => {
+    await svc
+      .from('dbd_records')
+      .update({ head_office_address: 'เลขที่ 87 หมูที่ 9 ตำบลหนองใหญ อำเภอโพนทอง จังหวัดร้อยเอ็ด' })
+      .eq('id', recordId);
+    expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('updated');
+    const { data } = await svc
+      .from('dbd_records')
+      .select('head_office_address')
+      .eq('id', recordId)
+      .single();
+    expect(data?.head_office_address).toBe(ROI_ET);
+    expect((await stored(recordId)).address).toMatchObject({ status: 'resolved', full: ROI_ET });
+    // Nothing left to repair: the next derive changes nothing.
+    expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('unchanged');
+  });
+
   it('holds a person’s choice until the business words change', async () => {
     await setBusinessCategory(svc, recordId, 'furniture_home');
     await refreshDerivedFacts(svc, recordId, deps);

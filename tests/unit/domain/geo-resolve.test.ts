@@ -21,6 +21,23 @@ function memoryLookup(): GeoLookup {
       prefixTh: 'ตำบล',
       postcode: '45110',
     },
+    // Two places in one district that differ by a mark only.
+    {
+      id: 450790,
+      districtId: 4507,
+      nameTh: 'นาแก้ว',
+      nameEn: 'Na Kaeo',
+      prefixTh: 'ตำบล',
+      postcode: '45110',
+    },
+    {
+      id: 450791,
+      districtId: 4507,
+      nameTh: 'นาแก่ว',
+      nameEn: 'Na Kaeo (2)',
+      prefixTh: 'ตำบล',
+      postcode: '45110',
+    },
     {
       id: 100403,
       districtId: 1004,
@@ -36,6 +53,9 @@ function memoryLookup(): GeoLookup {
       districts.find((d) => d.provinceId === pid && d.nameTh === n) ?? null,
     subdistrictByName: async (did, n) =>
       subdistricts.find((s) => s.districtId === did && s.nameTh === n) ?? null,
+    provinces: async () => provinces,
+    districtsOf: async (pid) => districts.filter((d) => d.provinceId === pid),
+    subdistrictsOf: async (did) => subdistricts.filter((s) => s.districtId === did),
   };
 }
 
@@ -88,6 +108,40 @@ describe('resolveRegisteredAddress', () => {
     expect(
       await resolveRegisteredAddress('เลขที่ 1 จังหวัดไม่มีจริง', memoryLookup()),
     ).toMatchObject({ status: 'unresolved', issues: ['province_not_found'] });
+  });
+
+  it('resolves names a reader dropped marks from, and spells the address as the tables do (D92)', async () => {
+    // ร้อยเอ็ด, โพนทอง and หนองใหญ่ with every mark a PDF font keeps as a private glyph gone.
+    const a = await resolveRegisteredAddress(
+      'เลขที่ 87 หมูที่ 9 ตำบลหนองใหญ อำเภอโพนทอง จังหวัดรอยเอด',
+      memoryLookup(),
+    );
+    expect(a).toMatchObject({
+      status: 'resolved',
+      issues: [],
+      moo: '9',
+      subdistrict: 'หนองใหญ่',
+      province: 'ร้อยเอ็ด',
+      subdistrict_id: 450705,
+      full: ROI_ET,
+    });
+    // An address printed correctly is stored exactly as printed.
+    expect((await resolveRegisteredAddress(ROI_ET, memoryLookup())).full).toBe(ROI_ET);
+  });
+
+  it('does not choose between two places that differ only by a mark', async () => {
+    const a = await resolveRegisteredAddress(
+      'เลขที่ 1 ตำบลนาแกว อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+      memoryLookup(),
+    );
+    expect(a).toMatchObject({ status: 'partial', issues: ['subdistrict_not_found'] });
+    expect(a.full).toContain('ตำบลนาแกว');
+    // Printed with its mark, each is found.
+    const exact = await resolveRegisteredAddress(
+      'เลขที่ 1 ตำบลนาแก้ว อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+      memoryLookup(),
+    );
+    expect(exact).toMatchObject({ status: 'resolved', subdistrict_id: 450790 });
   });
 
   it('resolves Bangkok through แขวง and เขต', async () => {

@@ -61,6 +61,15 @@ const EMPTY: ParsedAddress = {
   postcode: null,
 };
 
+/**
+ * หมู่ read without its mark is หมู; before ที่ or a number in an address it can only be the moo
+ * marker a reader dropped the mark from (D92).
+ */
+const MOO_WITHOUT_MARK_RE = /(^|[\s,])หมู(?=ที่|\s*\d)/g;
+export function restoreMooMark(text: string): string {
+  return text.replace(MOO_WITHOUT_MARK_RE, '$1หมู่');
+}
+
 export function normalizePlaceName(name: string): string {
   const compact = normalizeThai(name)
     .replace(TRAILING_RE, '')
@@ -77,7 +86,10 @@ function clean(value: string): string | null {
 export function parseThaiAddress(printed: string): ParsedAddress {
   // The markers are matched character by character, so the text is first spelled the way a
   // keyboard spells it: a PDF's text layer writes ตำบล, อำเภอ and หมู่ with other characters.
-  let text = normalizeThai(printed).replace(/\s+/g, ' ').replace(TRAILING_RE, '').trim();
+  let text = restoreMooMark(normalizeThai(printed))
+    .replace(/\s+/g, ' ')
+    .replace(TRAILING_RE, '')
+    .trim();
   if (!text) return { ...EMPTY };
   const result: ParsedAddress = { ...EMPTY };
 

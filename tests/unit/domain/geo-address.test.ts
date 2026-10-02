@@ -94,6 +94,16 @@ describe('parseThaiAddress on text copied from a PDF', () => {
     ).toEqual(parts);
   });
 
+  it('reads หมู่ that lost its mark as the moo it is (D92)', () => {
+    expect(parseThaiAddress('เลขที่ 194/3 หมูที่ 2 ตำบลวังใหญ อำเภอเทพา จังหวัดสงขลา')).toEqual({
+      ...parts,
+      subdistrict: 'วังใหญ',
+    });
+    expect(parseThaiAddress('99 หมู 4 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา').moo).toBe('4');
+    // A name that merely starts with หมู is left alone.
+    expect(parseThaiAddress('1 ถนนหมูทอง ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา').road).toBe('หมูทอง');
+  });
+
   it('reads a whole certificate line: its label in front, a slash at the end', () => {
     expect(
       parseThaiAddress(

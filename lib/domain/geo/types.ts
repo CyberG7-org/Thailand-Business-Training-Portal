@@ -20,4 +20,8 @@ export interface GeoLookup {
   provinceByName(nameTh: string): Promise<GeoProvince | null>;
   districtByName(provinceId: number, nameTh: string): Promise<GeoDistrict | null>;
   subdistrictByName(districtId: number, nameTh: string): Promise<GeoSubdistrict | null>;
+  /** The whole level under one parent, for a name that matches none exactly (D92). */
+  provinces(): Promise<GeoProvince[]>;
+  districtsOf(provinceId: number): Promise<GeoDistrict[]>;
+  subdistrictsOf(districtId: number): Promise<GeoSubdistrict[]>;
 }

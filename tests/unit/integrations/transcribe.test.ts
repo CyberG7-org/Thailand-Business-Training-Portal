@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { formatPageMarkers, parsePageMarkers } from '@/lib/domain/rag/transcript';
 import { ClaudeDbdExtractor } from '@/lib/integrations/extraction/claude';
 import { FakeDbdExtractor, fakePageText } from '@/lib/integrations/extraction/fake';
+import { EXTRACTION_INSTRUCTIONS } from '@/lib/integrations/extraction/schema';
+import { THAI_MARKS_RULE } from '@/lib/integrations/extraction/thai-marks';
 import {
   DEFAULT_TRANSCRIPTION_MODEL,
   transcriptionModel,
@@ -15,6 +17,13 @@ describe('transcription prompt', () => {
     expect(prompt).toContain('page 6 of the original');
     expect(prompt).toContain('=== PAGE 6 ===, === PAGE 7 ===, === PAGE 8 ===');
     expect(prompt).toContain('verbatim');
+  });
+
+  it('tells every reader of a PDF to keep the Thai marks its font hides (D92)', () => {
+    expect(THAI_MARKS_RULE).toContain('U+F70B');
+    expect(THAI_MARKS_RULE).toContain('ผู้ถือหุ้น');
+    expect(transcriptionPrompt({ firstPage: 1, lastPage: 1 })).toContain(THAI_MARKS_RULE);
+    expect(EXTRACTION_INSTRUCTIONS).toContain(THAI_MARKS_RULE);
   });
 
   it('uses Sonnet unless TRANSCRIPTION_MODEL overrides it', () => {
