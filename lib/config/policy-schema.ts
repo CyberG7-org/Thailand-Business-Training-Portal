@@ -94,6 +94,14 @@ export const POLICY_FIELDS = {
     control: { kind: 'number', min: 50, max: 100, nullable: false },
     schema: intRange(50, 100),
   },
+  mcq_pass_score: {
+    control: { kind: 'number', min: 1, max: 30, nullable: false },
+    schema: intRange(1, 30),
+  },
+  mcq_retest_score: {
+    control: { kind: 'number', min: 1, max: 30, nullable: false },
+    schema: intRange(1, 30),
+  },
 } satisfies Record<string, PolicyFieldDef>;
 
 export type PolicyFieldKey = keyof typeof POLICY_FIELDS;
