@@ -59,6 +59,11 @@ test('the health probe reports database reachability and provider names without 
   const response = await request.get('/api/health');
   expect(response.status()).toBe(200);
   const body = await response.json();
-  expect(body).toMatchObject({ ok: true, db: 'ok', providers: { extraction: 'fake' } });
+  expect(body).toMatchObject({
+    ok: true,
+    db: 'ok',
+    pdfRender: 'ok',
+    providers: { extraction: 'fake' },
+  });
   expect(JSON.stringify(body)).not.toContain('local-cron-secret-for-dev');
 });

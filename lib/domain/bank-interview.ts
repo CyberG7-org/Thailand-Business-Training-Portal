@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { BusinessProfile } from './dbd-profile';
+import { lostOnlyMarks } from './thai-text';
 
 /**
  * The bank's account-opening interview, as obtained by the owner's lawyers (2026-09-18,
@@ -297,14 +298,29 @@ export const learnerRoleSchema = z.object({
 });
 export type LearnerRole = z.output<typeof learnerRoleSchema>;
 
+/**
+ * The holder a name refers to: the same name, or the only one that differs from it by marks
+ * alone. A certificate and its shareholder list can print the same person's surname with and
+ * without a ์ (D98); two holders that close to the name are not guessed between.
+ */
+function holderNamed<T extends { name: string }>(holders: readonly T[], name: string): T | null {
+  const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+  const wanted = norm(name);
+  const exact = holders.find((h) => norm(h.name) === wanted);
+  if (exact) return exact;
+  const near = holders.filter(
+    (h) => lostOnlyMarks(norm(h.name), wanted) || lostOnlyMarks(wanted, norm(h.name)),
+  );
+  return near.length === 1 ? near[0] : null;
+}
+
 /** The learner's shareholding, matched by name against the shareholder list. */
 export function myShareholding(
   business: BusinessProfile | null,
   holderName: string | null,
 ): { shares: number | null; percent: number | null } {
   if (!business || !holderName) return { shares: null, percent: null };
-  const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
-  const me = business.shareholders.find((s) => norm(s.name) === norm(holderName));
+  const me = holderNamed(business.shareholders, holderName);
   if (!me) return { shares: null, percent: null };
   const total = business.share_structure.total_shares;
   const percent =
@@ -322,6 +338,5 @@ export function isShareholder(
   holderName: string | null,
 ): boolean | null {
   if (!business || !holderName?.trim() || business.shareholders.length === 0) return null;
-  const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
-  return business.shareholders.some((s) => norm(s.name) === norm(holderName));
+  return holderNamed(business.shareholders, holderName) !== null;
 }

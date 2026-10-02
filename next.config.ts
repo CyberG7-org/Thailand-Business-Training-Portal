@@ -13,6 +13,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // pdf.js and its canvas draw document pages for the reader (D98); the canvas is a native
+  // module and neither is to be bundled.
+  serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },
