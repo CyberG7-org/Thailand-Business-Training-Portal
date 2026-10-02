@@ -62,4 +62,29 @@ describe('name card PDF (spike S3)', () => {
     expect(squashed).toMatch(/ตัวอย่างอ.{1,2}เภอตัวอย่าง/);
     expect(squashed).toMatch(/ส.{1,2}หรับงาน/);
   });
+
+  it('wraps a long address on the back and keeps it to the card', async () => {
+    const data = buildNameCardData(
+      {
+        company_name_th: 'บริษัท ตัวอย่างนามบัตร จำกัด',
+        company_name_en: 'SAMPLE CARD CO., LTD.',
+        head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง 10110',
+        juristic_id: '0105569000134',
+        contact_email: 'contact@example.co.th',
+        nature_of_business: 'ค้าปลีก',
+      },
+      '0812345678',
+      'นางสาวตัวอย่าง ทดสอบ',
+      {
+        website: 'https://www.sample-card.co.th/collections/' + 'summer'.repeat(40),
+        facebookPage: 'https://www.facebook.com/samplecard',
+      },
+    );
+    const bytes = await new ReactPdfRenderer().renderNameCard(data);
+    // Still one card: front and back, nothing pushed onto a third page.
+    expect(await countPages(bytes)).toBe(2);
+    const squashed = (await pdfTextItems(bytes)).flat().join('').replace(/\s/g, '');
+    expect(squashed).toContain('sample-card.co.th/collections/');
+    expect(squashed).toContain('…');
+  });
 });

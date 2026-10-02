@@ -133,6 +133,32 @@ export function printedFacebookPage(url: string): string {
   }
 }
 
+/**
+ * The longest address a card prints, in characters: about two lines of the back's column. The
+ * form takes up to 300, which would run off the card, so a longer one is cut with an ellipsis.
+ */
+export const MAX_PRINTED_LINK = 80;
+
+const bounded = (text: string): string =>
+  text.length > MAX_PRINTED_LINK ? text.slice(0, MAX_PRINTED_LINK - 1) + '…' : text;
+
+/** The longest run of an address printed without a place to break. */
+const MAX_LINK_PIECE = 20;
+
+/**
+ * Where a printed address may break: after a slash, dot, hyphen, underscore, `?`, `&`, `=` or
+ * `#`, and inside any run longer than a few characters. Joined, the pieces are the address.
+ */
+export function urlPieces(text: string): string[] {
+  const pieces: string[] = [];
+  for (const part of text.match(/[^/.\-_?&=#]*[/.\-_?&=#]?/g) ?? []) {
+    for (let i = 0; i < part.length; i += MAX_LINK_PIECE) {
+      pieces.push(part.slice(i, i + MAX_LINK_PIECE));
+    }
+  }
+  return pieces;
+}
+
 /** Builds the render model; throws when required DBD data or the holder's name is missing. */
 export function buildNameCardData(
   source: NameCardSource,
@@ -155,8 +181,10 @@ export function buildNameCardData(
     email: source.contact_email?.trim() || null,
     juristicId: source.juristic_id,
     natureOfBusiness: source.nature_of_business?.trim() || null,
-    website: links.website?.trim() ? printedWebsite(links.website) : null,
-    facebookPage: links.facebookPage?.trim() ? printedFacebookPage(links.facebookPage) : null,
+    website: links.website?.trim() ? bounded(printedWebsite(links.website)) : null,
+    facebookPage: links.facebookPage?.trim()
+      ? bounded(printedFacebookPage(links.facebookPage))
+      : null,
     templateVersion: NAME_CARD_TEMPLATE_VERSION,
   };
 }

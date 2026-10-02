@@ -18,7 +18,7 @@ import {
   View,
   renderToBuffer,
 } from '@react-pdf/renderer';
-import { NAME_CARD_COPY, thaiWords, type NameCardData } from '@/lib/domain/name-card';
+import { NAME_CARD_COPY, thaiWords, urlPieces, type NameCardData } from '@/lib/domain/name-card';
 
 type Style = Styles[string];
 
@@ -51,6 +51,23 @@ function ThaiText({ style, box, children }: { style: Style; box?: Style; childre
       {thaiWords(children).map((word, i) => (
         <T key={i} style={style}>
           {word}
+        </T>
+      ))}
+    </View>
+  );
+}
+
+/**
+ * A web or Facebook address that wraps like ThaiText: each piece from urlPieces (cut after a
+ * separator, or every few characters in a long run) is its own Text in a wrapping row, so a long
+ * address breaks across lines instead of running off the card, and is never hyphenated.
+ */
+function LinkText({ style, children }: { style: Style; children: string }) {
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+      {urlPieces(children).map((piece, i) => (
+        <T key={i} style={style}>
+          {piece}
         </T>
       ))}
     </View>
@@ -232,12 +249,15 @@ function Fact({
   children,
   sub,
   thai,
+  link,
 }: {
   icon: keyof typeof ICONS;
   children: string;
   sub?: string;
   /** Thai text wraps between words (see ThaiText). */
   thai?: boolean;
+  /** An address wraps after its separators (see LinkText). */
+  link?: boolean;
 }) {
   return (
     <View style={s.fact}>
@@ -245,6 +265,8 @@ function Fact({
       <View style={{ flex: 1 }}>
         {thai ? (
           <ThaiText style={s.factText}>{children}</ThaiText>
+        ) : link ? (
+          <LinkText style={s.factText}>{children}</LinkText>
         ) : (
           <T style={s.factText}>{children}</T>
         )}
@@ -326,8 +348,16 @@ function Back({ data }: { data: NameCardData }) {
         <Fact icon="pin" thai>
           {data.address}
         </Fact>
-        {data.website && <Fact icon="globe">{data.website}</Fact>}
-        {data.facebookPage && <Fact icon="facebook">{data.facebookPage}</Fact>}
+        {data.website && (
+          <Fact icon="globe" link>
+            {data.website}
+          </Fact>
+        )}
+        {data.facebookPage && (
+          <Fact icon="facebook" link>
+            {data.facebookPage}
+          </Fact>
+        )}
       </View>
     </Page>
   );

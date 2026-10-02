@@ -5,8 +5,10 @@ import {
   buildNameCardData,
   companyInitials,
   missingNameCardFields,
+  MAX_PRINTED_LINK,
   printedFacebookPage,
   printedWebsite,
+  urlPieces,
   thaiWords,
   type NameCardSource,
 } from '@/lib/domain/name-card';
@@ -85,6 +87,35 @@ describe('name card data', () => {
       buildNameCardData({ ...source, company_name_th: null }, '0812345678', holder),
     ).toThrow(/company_name_th/);
     expect(() => buildNameCardData(source, '0812345678', '  ')).toThrow(/holder/);
+  });
+});
+
+/** A long address wraps on the card and is never longer than the back can hold (D99). */
+describe('urlPieces and the printed length', () => {
+  it('cuts after separators and inside long runs, and the pieces join back to the address', () => {
+    const url = 'shop.example.co.th/collections/summer-sale?page=2&sort=price';
+    const pieces = urlPieces(url);
+    expect(pieces.join('')).toBe(url);
+    expect(pieces).toContain('collections/');
+    expect(pieces.every((p) => p.length > 0 && p.length <= 20)).toBe(true);
+    const run = 'a'.repeat(45);
+    expect(urlPieces(run)).toEqual(['a'.repeat(20), 'a'.repeat(20), 'a'.repeat(5)]);
+    expect(urlPieces('')).toEqual([]);
+  });
+
+  it('cuts an address longer than the back holds, with an ellipsis', () => {
+    const long = 'https://example.co.th/' + 'x'.repeat(250);
+    const d = buildNameCardData(source, '0812345678', holder, {
+      website: long,
+      facebookPage: null,
+    });
+    expect(d.website!.length).toBe(MAX_PRINTED_LINK);
+    expect(d.website!.endsWith('…')).toBe(true);
+    const short = buildNameCardData(source, '0812345678', holder, {
+      website: 'https://example.co.th',
+      facebookPage: null,
+    });
+    expect(short.website).toBe('example.co.th');
   });
 });
 
