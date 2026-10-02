@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { THAI_MARKS_RULE } from './thai-marks';
 
 /**
  * Every value carries its provenance (Level 3 of the three-level model, decision D38):
@@ -341,6 +342,7 @@ The documents you may see and what each one supplies:
 - ข้อบังคับ (articles of association) or anything else: classify as "articles" / "other".
 
 Rules:
+- ${THAI_MARKS_RULE}
 - Never invent a value. If a field is not present in ANY uploaded document, return it empty ("" for text, 0 for
   numbers, [] for lists) and give it no provenance entry.
 - Inside lists and objects use "" for a text that is not printed and 0 for a number that is not printed (e.g. an

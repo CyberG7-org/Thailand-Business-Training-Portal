@@ -121,4 +121,25 @@ describe('resolving against the real tables', () => {
     expect(read).toMatchObject({ ...resolved, full: `${typed}/` });
     expect(read.postcode_source).toBe('geography');
   });
+
+  it('resolves the address a reader dropped the marks from, and restores them (D92)', async () => {
+    // What the Owner's record held on 2026-10-02: หมู่ and วังใหญ่ without their low mai ek.
+    const stored = 'เลขที่ 194/3 หมูที่ 2 ตำบลวังใหญ อำเภอเทพา จังหวัดสงขลา';
+    const read = await resolveRegisteredAddress(stored, geoLookup(svc));
+    expect(read).toMatchObject({
+      status: 'resolved',
+      issues: [],
+      moo: '2',
+      subdistrict: 'วังใหญ่',
+      district: 'เทพา',
+      province: 'สงขลา',
+      full: 'เลขที่ 194/3 หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา',
+    });
+    // A name that is no place of that district with marks missing still does not resolve.
+    const wrong = await resolveRegisteredAddress(
+      'เลขที่ 194/3 ตำบลวังเล็ก อำเภอเทพา จังหวัดสงขลา',
+      geoLookup(svc),
+    );
+    expect(wrong).toMatchObject({ status: 'partial', issues: ['subdistrict_not_found'] });
+  });
 });

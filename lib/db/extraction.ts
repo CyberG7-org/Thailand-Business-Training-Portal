@@ -6,7 +6,7 @@ import {
   type Provenance,
   type StructuredData,
 } from '@/lib/domain/dbd-profile';
-import { applyExtractionToRecord } from '@/lib/domain/extraction-merge';
+import { applyExtractionToRecord, restoreProfileMarks } from '@/lib/domain/extraction-merge';
 import { DIRECT_READ_HARD_MAX_PAGES, planDirectRead } from '@/lib/domain/extraction-plan';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
@@ -250,11 +250,15 @@ async function directPass(
   const businessFilled =
     (currentBusiness === null || isBusinessProfileEmpty(currentBusiness)) &&
     !isBusinessProfileEmpty(business);
+  // A profile that is already there keeps its rows; a row that is this reading with Thai marks
+  // missing gets them back (D92).
+  const keptBusiness =
+    currentBusiness === null ? undefined : restoreProfileMarks(currentBusiness, business);
   // Everything else in the column (interview answers, provenance written by the transcript
   // path) is kept; this pass only adds what it read.
   const structured: StructuredData = {
     ...current,
-    business: businessFilled ? business : (currentBusiness ?? undefined),
+    business: businessFilled ? business : keptBusiness,
     document_type: extraction.documents?.[0]?.document_type ?? current.document_type ?? null,
     provenance: { ...(current.provenance ?? {}), ...extractedProvenance(extraction) },
   };

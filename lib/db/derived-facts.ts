@@ -37,7 +37,8 @@ export type StructuredDataUpdate = 'updated' | 'unchanged' | 'not_found' | 'race
  * Read → mutate → write, compared-and-set on `updated_at`, so an edit landing between the read
  * and the write (a background reading, another staff save) is never overwritten by a stale
  * snapshot: the write is refused, the record re-read and mutated again, up to `attempts` times.
- * `mutate` returns the whole structured data to store, or null when nothing changed.
+ * `mutate` returns the whole structured data to store, or null when nothing changed. `columns`
+ * names record columns to write in the same statement (the address a resolution repaired).
  */
 export async function updateStructuredData(
   db: Db,
@@ -47,6 +48,7 @@ export async function updateStructuredData(
     record: DbdRecordRow,
   ) => Promise<StructuredData | null> | StructuredData | null,
   attempts = CAS_ATTEMPTS,
+  columns: () => { head_office_address?: string } = () => ({}),
 ): Promise<StructuredDataUpdate> {
   for (let attempt = 0; attempt < attempts; attempt++) {
     const record = await getDbdRecord(db, recordId);
@@ -55,7 +57,7 @@ export async function updateStructuredData(
     if (next === null) return 'unchanged';
     const { data, error } = await db
       .from('dbd_records')
-      .update({ structured_data: next as unknown as Json })
+      .update({ structured_data: next as unknown as Json, ...columns() })
       .eq('id', recordId)
       .eq('updated_at', record.updated_at)
       .select('id');
@@ -77,6 +79,8 @@ export async function refreshDerivedFacts(
   deps: DerivedFactsDeps = defaultDeps(),
   options: { remapCategory?: boolean; attempts?: number } = {},
 ): Promise<StructuredDataUpdate> {
+  // The printed address with the marks a reader dropped put back (D92), when a resolution did.
+  let repaired: string | null = null;
   return updateStructuredData(
     db,
     recordId,
@@ -94,6 +98,9 @@ export async function refreshDerivedFacts(
         address = await resolveRegisteredAddress(printed, geoLookup(db));
         changed = true;
       }
+      // A place name or หมู่ got its marks back: the record's own address says so too, so the
+      // form, the name card and the questions all show the address as it is printed.
+      repaired = address.full !== printed ? address.full : null;
 
       const interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
       const hash = categoryInputHash(interview.nature_of_business, interview.products_services);
@@ -109,6 +116,7 @@ export async function refreshDerivedFacts(
       return changed ? { ...stored, address, category } : null;
     },
     options.attempts ?? 1,
+    () => (repaired === null ? {} : { head_office_address: repaired }),
   );
 }
 

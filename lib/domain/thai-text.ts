@@ -68,3 +68,22 @@ export function normalizeThaiDeep<T>(value: T): T {
   }
   return value;
 }
+
+/** Every Thai mark written above or below a letter: the ones a PDF font keeps as private glyphs. */
+const MARK_RE = /[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/;
+
+/**
+ * Whether `printed` is `complete` with some of its marks missing and nothing else different —
+ * วังใหญ against วังใหญ่, ผูถือหุน against ผู้ถือหุ้น. A reader that copies a PDF's text layer drops
+ * the marks the font keeps as private glyphs; this recognises what it left behind. False when
+ * the two are equal: nothing was lost.
+ */
+export function lostOnlyMarks(printed: string, complete: string): boolean {
+  if (printed === complete || printed.length >= complete.length) return false;
+  let i = 0;
+  for (const ch of complete) {
+    if (printed[i] === ch) i += 1;
+    else if (!MARK_RE.test(ch)) return false;
+  }
+  return i === printed.length;
+}
