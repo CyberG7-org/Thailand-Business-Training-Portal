@@ -28,6 +28,16 @@ describe('mcqResult', () => {
     expect(mcqResult(failedThenPassed, 'any')).toBe('pass');
     expect(mcqResult(passedThenFailed, 'any')).toBe('pass');
     expect(mcqResult([{ result: 'fail', submitted_at: at(1) }], 'any')).toBe('fail');
+    // Not passed yet: the most recent attempt says whether it is a retest or a fail (D71).
+    const failedThenRetest = [
+      { result: 'fail', submitted_at: at(1) },
+      { result: 'retest', submitted_at: at(2) },
+    ];
+    expect(mcqResult(failedThenRetest, 'any')).toBe('retest');
+    expect(mcqResult([...failedThenRetest].reverse(), 'any')).toBe('retest');
+    expect(mcqResult([{ result: 'retest', submitted_at: at(1) }, ...passedThenFailed], 'any')).toBe(
+      'pass',
+    );
   });
 
   it('under "latest", the most recent submitted attempt decides, in any order given', () => {

@@ -62,7 +62,13 @@ export default async function McqHistoryPage({
                     </td>
                     <td>
                       <ResultTag
-                        result={!submitted ? 'in_progress' : a.result === 'pass' ? 'pass' : 'fail'}
+                        result={
+                          !submitted
+                            ? 'in_progress'
+                            : a.result === 'pass' || a.result === 'retest'
+                              ? a.result
+                              : 'fail'
+                        }
                       />
                     </td>
                     <td className="tabular-nums">
