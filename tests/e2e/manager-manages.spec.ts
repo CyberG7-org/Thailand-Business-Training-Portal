@@ -18,7 +18,7 @@ test('a manager can open one of their learners and suspend them', async ({ page 
     issuedOn: '13/07/2569',
   });
   // A manager's own team is implied, so their prefix and a free code show straight away (D69).
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=learner');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
   await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
   await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z]{2}[0-9]{2}$/);

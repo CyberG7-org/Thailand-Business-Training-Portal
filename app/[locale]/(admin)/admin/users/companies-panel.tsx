@@ -16,6 +16,11 @@ export type CompanyRow = {
   status: CompanyStatus;
   /** The owning team's code; only the owner, who sees every team, gets the column. */
   teamCode: string | null;
+  /**
+   * Who studies it (D93: one learner per company): their code, `'other'` when they belong to a
+   * team the caller cannot see, or null while it has none.
+   */
+  learner: { id: string; code: string } | 'other' | null;
 };
 
 const TONE: Record<CompanyStatus, string> = {
@@ -31,8 +36,9 @@ const isConfirmed = (status: CompanyStatus) =>
 
 /**
  * "Companies (DBD)" (D80): every company the caller can see, newest first, where each stands,
- * and a search over name and juristic ID. A company not yet listed is added from the foot of
- * the list, its pack read in the background.
+ * who studies it, and a search over name and juristic ID. A confirmed company without a learner
+ * offers "Assign learner" (D93); a company not yet listed is added from the foot of the list,
+ * its pack read in the background.
  */
 export function CompaniesPanel({
   rows,
@@ -40,12 +46,15 @@ export function CompaniesPanel({
   extractionAvailable,
   addOpen,
   onAddOpenChange,
+  onAssign,
 }: {
   rows: CompanyRow[];
   showTeam: boolean;
   extractionAvailable: boolean;
   addOpen: boolean;
   onAddOpenChange: (open: boolean) => void;
+  /** Opens the learner form with this company chosen. */
+  onAssign: (recordId: string) => void;
 }) {
   const t = useTranslations('admin.createDbd');
   const [query, setQuery] = useState('');
@@ -96,7 +105,8 @@ export function CompaniesPanel({
                 {showTeam && <th>{t('columns.team')}</th>}
                 <th>{t('columns.juristicId')}</th>
                 <th>{t('columns.issuedOn')}</th>
-                <th className="md:pr-6">{t('columns.status')}</th>
+                <th>{t('columns.status')}</th>
+                <th className="md:pr-6">{t('columns.learner')}</th>
               </tr>
             </thead>
             <tbody>
@@ -123,7 +133,7 @@ export function CompaniesPanel({
                       {r.juristicId ?? '—'}
                     </td>
                     <td className="align-middle whitespace-nowrap">{r.issuedOn ?? '—'}</td>
-                    <td className="align-middle md:pr-6">
+                    <td className="align-middle">
                       <span
                         data-testid={`company-status-${r.id}`}
                         data-status={r.status}
@@ -131,6 +141,33 @@ export function CompaniesPanel({
                       >
                         {t(`statuses.${r.status}`)}
                       </span>
+                    </td>
+                    <td className="align-middle md:pr-6" data-testid={`company-learner-${r.id}`}>
+                      {r.learner === 'other' ? (
+                        <span className="text-sm whitespace-nowrap text-ink-500">
+                          {t('learnerOtherTeam')}
+                        </span>
+                      ) : r.learner ? (
+                        <Link
+                          href={`/admin/users/${r.learner.id}`}
+                          className="staff-link font-mono text-sm whitespace-nowrap tabular-nums"
+                        >
+                          {r.learner.code}
+                        </Link>
+                      ) : confirmed ? (
+                        <button
+                          type="button"
+                          onClick={() => onAssign(r.id)}
+                          data-testid={`assign-learner-${r.id}`}
+                          className="staff-btn-ghost px-4 whitespace-nowrap text-brand-600"
+                        >
+                          {t('assignLearner')}
+                        </button>
+                      ) : (
+                        <span className="text-sm whitespace-nowrap text-ink-500">
+                          {t('learnerAfterConfirm')}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );

@@ -103,6 +103,21 @@ export async function createManager(
 }
 
 /**
+ * Chooses the company a new learner studies, by its name. The select is controlled, so a choice
+ * made before the page has hydrated snaps back: choose until "Before you create" ticks it.
+ */
+export async function selectCompany(page: Page, company: string) {
+  const option = page.locator('select[name="dbdRecordId"] option', { hasText: company });
+  const value = (await option.getAttribute('value'))!;
+  await expect(async () => {
+    await page.locator('select[name="dbdRecordId"]').selectOption(value);
+    await expect(page.getByTestId('check-company')).toHaveAttribute('data-done', 'true', {
+      timeout: 1_000,
+    });
+  }).toPass();
+}
+
+/**
  * Creates a learner on the Users page and returns their stored code, e.g. "t-a12-da42": the team's
  * code, a hyphen and the suggestion unless `suffix` is given (D69). `team` is required when the
  * caller is the admin.
@@ -121,7 +136,7 @@ export async function createLearner(
     facebookPage?: string;
   },
 ): Promise<string> {
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=learner');
   if (fields.team) await selectTeam(page, fields.team);
   await fillLoginSuffix(page, fields.suffix);
   await page.locator('input[name="password"]').fill(fields.password);
@@ -134,10 +149,7 @@ export async function createLearner(
   if (fields.facebookPage) {
     await page.locator('input[name="facebookPage"]').fill(fields.facebookPage);
   }
-  const option = page.locator('select[name="dbdRecordId"] option', { hasText: fields.company });
-  await page
-    .locator('select[name="dbdRecordId"]')
-    .selectOption((await option.getAttribute('value'))!);
+  await selectCompany(page, fields.company);
   // The button wakes once the "Before you create" list is complete.
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   const status = page.getByTestId('create-user-status');

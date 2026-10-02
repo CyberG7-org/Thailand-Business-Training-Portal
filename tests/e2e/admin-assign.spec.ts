@@ -32,7 +32,7 @@ test('a learner created for a confirmed record is assigned to it, with the +45-d
   await page.locator('input[name="company_name_th"]').fill(pending);
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
-  await page.goto('/th/admin/users');
+  await page.goto('/th/admin/users?tab=learner');
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: pending });
   await expect(option).toBeAttached();
   await expect(option).toHaveAttribute('disabled', '');

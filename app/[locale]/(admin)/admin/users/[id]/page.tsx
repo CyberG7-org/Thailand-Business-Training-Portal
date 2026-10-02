@@ -7,6 +7,7 @@ import { requireStaff } from '@/lib/auth/session';
 import {
   getActiveAssignmentForUser,
   getLatestEligibility,
+  learnersOfRecords,
   listConfirmedDbdRecords,
 } from '@/lib/db/assignments';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
@@ -42,12 +43,18 @@ export default async function UserDetailPage({
   const active = await getActiveAssignmentForUser(db, user.id);
   const eligibility = active ? await getLatestEligibility(db, user.id, active.dbd_record_id) : null;
   // A learner may only study a company their own team may see: their team's, or the admin's
-  // untied ones. The admin's client reads every team, so the list is narrowed here as well.
-  const options = active
+  // untied ones. The admin's client reads every team, so the list is narrowed here as well;
+  // a company that already has its learner is not offered (D93).
+  const visible = active
     ? []
     : (await listConfirmedDbdRecords(db)).filter(
         (o) => o.team_id == null || o.team_id === user.manager_id,
       );
+  const taken = await learnersOfRecords(
+    createSupabaseAdminClient(),
+    visible.map((o) => o.id),
+  );
+  const options = visible.filter((o) => !taken.has(o.id));
   const current = active
     ? {
         assignmentId: active.id,

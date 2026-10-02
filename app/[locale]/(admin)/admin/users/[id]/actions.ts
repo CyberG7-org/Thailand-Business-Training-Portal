@@ -5,7 +5,13 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { requireStaff, type CurrentUser } from '@/lib/auth/session';
 import { recordAccountAction } from '@/lib/db/account-audit';
-import { assignDbdRecord, deactivateAssignment, updateAssignmentRole } from '@/lib/db/assignments';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
+import {
+  assignDbdRecord,
+  deactivateAssignment,
+  learnersOfRecords,
+  updateAssignmentRole,
+} from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
 import {
   PinError,
@@ -105,6 +111,9 @@ export async function assignRecordAction(
   if (record.team_id && record.team_id !== learner?.manager_id) {
     return { message: null, error: 'other-team' };
   }
+  // One learner per company (D93).
+  const taken = await learnersOfRecords(createSupabaseAdminClient(), [dbdRecordId]);
+  if (taken.has(dbdRecordId)) return { message: null, error: 'company-taken' };
   try {
     await assignDbdRecord(db, { userId, dbdRecordId });
     revalidatePath(`/${locale}/admin/users/${userId}`);
