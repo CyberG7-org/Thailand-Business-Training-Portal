@@ -6,7 +6,7 @@ import { requireStaff } from '@/lib/auth/session';
 import { assignDbdRecord, learnersOfRecords } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
-import { refreshNameCard } from '@/lib/db/name-cards';
+import { refreshNameCardAfter } from '@/lib/db/name-cards';
 import { createLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
@@ -102,7 +102,7 @@ export async function createUserAction(
     return fail(`Created ${created.loginId}, but the company could not be assigned: ${message}`);
   }
   // The name card is made now, from what was just entered (D96): the learner types nothing.
-  await refreshNameCard(created.id);
+  refreshNameCardAfter(created.id);
   revalidatePath(`/${locale}/admin/users`);
   return {
     ok: true,

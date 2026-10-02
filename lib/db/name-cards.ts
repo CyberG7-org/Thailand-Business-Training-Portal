@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { after } from 'next/server';
 import { getPolicy } from '@/lib/config/policy';
 import type { Director } from '@/lib/domain/dbd-record';
 import {
@@ -214,6 +215,11 @@ export async function refreshNameCard(userId: string): Promise<void> {
   } catch (e) {
     console.error(`name card: could not make the card for ${userId}`, e);
   }
+}
+
+/** The same, once the response has gone: a staff action never waits for a card to render. */
+export function refreshNameCardAfter(userId: string): void {
+  after(() => refreshNameCard(userId));
 }
 
 export async function getMyLatestNameCard(db: Db, userId: string): Promise<NameCardRow | null> {

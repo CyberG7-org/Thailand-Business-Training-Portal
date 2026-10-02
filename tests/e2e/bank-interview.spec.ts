@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs, openRecordTab } from './helpers';
+import { loginAs, openRecordTab, switchTo } from './helpers';
 import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 
 test('starter cards, interview answers and the learner role combine into a personalised study card', async ({
@@ -73,10 +73,11 @@ test('starter cards, interview answers and the learner role combine into a perso
   await role.getByTestId('role-holder').selectOption('นางสาวผู้เรียน ทดสอบ');
   await role.getByRole('button', { name: 'บันทึกบทบาท' }).click();
   await expect(role.getByTestId('role-holder')).toHaveAttribute('data-automatic', 'false');
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
 
-  // The learner reads the ownership card with their own numbers filled in.
-  await loginAs(page, learner, E2E_PASSWORD);
+  // The learner reads the ownership card with their own numbers filled in. `switchTo` waits for
+  // nothing staff started: clicking sign-out here could queue behind the last save and leave the
+  // session in place, and the login page sends a signed-in visitor away.
+  await switchTo(page, learner, E2E_PASSWORD);
   await page.goto('/th/study/bank-interview-2-ownership');
   const body = page.getByTestId('study-body');
   await expect(body).toContainText('1,000,000 บาท');
