@@ -52,8 +52,8 @@ test('admin authors a personalized question; learner takes the quiz with instant
   const company = 'บริษัท ควิซทดสอบ จำกัด';
   const learner = await seedLearnerWithCompany(company, '2026-07-13');
   await loginAs(page, learner, E2E_PASSWORD);
-  await expect(page.getByTestId('stage-quiz-status')).toHaveText('พร้อมใช้งาน');
-  await page.getByTestId('stage-quiz').getByRole('link', { name: 'เปิด' }).click();
+  // The practice round is not one of the learner's five steps; it is reached by its address.
+  await page.goto('/th/quiz');
   await page.getByTestId('start-quiz').click();
   await page.waitForURL(/\/th\/quiz\/[0-9a-f-]{36}$/);
   const attemptUrl = page.url();
@@ -120,6 +120,8 @@ test('admin authors a personalized question; learner takes the quiz with instant
   await expect(page.getByTestId('quiz-score')).toContainText(`/ ${total}`);
   await expect(page.getByTestId('review-0')).toBeVisible();
 
+  // The practice round is not one of the learner's five steps: it neither shows nor counts.
   await page.goto('/th/dashboard');
-  await expect(page.getByTestId('stage-quiz-status')).toHaveText('เสร็จสิ้น');
+  await expect(page.getByTestId('stage-quiz')).toHaveCount(0);
+  await expect(page.getByRole('img', { name: 'เสร็จแล้ว 0 จาก 5 ขั้นตอน' })).toBeVisible();
 });

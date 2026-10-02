@@ -14,10 +14,11 @@ test('a new learner sees the company, the first step current, and the interview 
   const loginId = await seedLearnerWithCompany('บริษัท แดชบอร์ดใหม่ จำกัด', '2026-07-13');
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page.getByTestId('hero-kicker')).toContainText('บริษัท แดชบอร์ดใหม่ จำกัด');
-  await expect(page.getByRole('img', { name: 'เสร็จแล้ว 0 จาก 6 ขั้นตอน' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'เสร็จแล้ว 0 จาก 5 ขั้นตอน' })).toBeVisible();
 
   const stepper = page.getByTestId('stepper');
-  await expect(stepper.getByRole('listitem')).toHaveCount(6);
+  await expect(stepper.getByRole('listitem')).toHaveCount(5);
+  await expect(stepper.getByRole('listitem').nth(1)).toHaveText(/นามบัตร/);
   await expect(stepper.locator('[aria-current="step"]')).toHaveText(/เอกสารเรียนรู้/);
 
   await expect(page.getByRole('link', { name: 'ไปที่เอกสารเรียนรู้' })).toHaveAttribute(
@@ -27,6 +28,10 @@ test('a new learner sees the company, the first step current, and the interview 
   await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveCount(0);
   await expect(page.getByTestId('stage-interview')).toHaveAttribute('data-locked', 'true');
   await expect(page.getByTestId('stage-appointment')).toHaveAttribute('data-locked', 'true');
+  // The card: the quiz not taken yet, its pass mark, and the interview waiting on it.
+  await expect(page.getByTestId('exam-score')).toHaveText('ยังไม่ได้ทำ');
+  await expect(page.getByTestId('quiz-pass-mark')).toHaveText(/^เกณฑ์ผ่าน \d+%$/);
+  await expect(page.getByTestId('interview-status')).toHaveText('หลังผ่านแบบทดสอบ');
   await expect(page.getByTestId('stage-study').getByRole('link', { name: 'เปิด' })).toHaveAttribute(
     'href',
     '/th/study',
@@ -39,13 +44,17 @@ test('after a passed exam the next step moves on and the last result is one clic
   const loginId = await seedLearnerWithCompany('บริษัท สอบผ่านแล้ว จำกัด', '2026-07-13');
   await seedPassedExam(loginId);
   await loginAs(page, loginId, E2E_PASSWORD);
-  await expect(page.getByTestId('stepper').locator('[aria-current="step"]')).toHaveText(/นามบัตร/);
+  // The name card is standalone (D88): the next step after the quiz is the interview.
+  await expect(page.getByTestId('stepper').locator('[aria-current="step"]')).toHaveText(
+    /สัมภาษณ์ความพร้อมกับธนาคาร/,
+  );
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
+  await expect(page.getByTestId('interview-status')).toHaveText('ยังไม่ได้เริ่ม');
   await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveAttribute(
     'href',
     /\/th\/exam\/[0-9a-f-]{36}\/result$/,
   );
-  await expect(page.getByRole('img', { name: 'เสร็จแล้ว 1 จาก 6 ขั้นตอน' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'เสร็จแล้ว 1 จาก 5 ขั้นตอน' })).toBeVisible();
 });
 
 test('the dashboard fits a phone with short step labels', async ({ page }) => {

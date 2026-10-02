@@ -26,7 +26,8 @@ test('a passed exam gets the gold band, the medallion and the way to the intervi
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
   await expect(page.getByTestId('exam-next')).toHaveText(/ไปสัมภาษณ์ความพร้อมกับธนาคาร/);
   await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/interview');
-  await expect(page.getByRole('link', { name: 'หน้าหลัก' })).toHaveAttribute(
+  // The band's own way home (the steps column beside the page has one too).
+  await expect(page.locator('.band').getByRole('link', { name: 'หน้าหลัก' })).toHaveAttribute(
     'href',
     '/th/dashboard',
   );

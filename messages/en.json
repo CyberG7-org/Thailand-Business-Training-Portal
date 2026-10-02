@@ -50,7 +50,7 @@
       "kicker": "Bank verification preparation"
     },
     "next": {
-      "study": "Your next step is the study material. Read the cards about your company before the practice quiz.",
+      "study": "Your next step is the study material. Read the cards about your company before the Business Knowledge Quiz.",
       "quiz": "Your next step is the practice quiz. It shows what to review before the Business Knowledge Quiz.",
       "exam": "Your next step is the Business Knowledge Quiz. Passing it unlocks the Bank Readiness Interview.",
       "nameCard": "Your next step is the name card. Create it before the Bank Readiness Interview.",
@@ -65,9 +65,17 @@
     "progress": {
       "ring": "{done} of {total} steps done",
       "stepsDone": "steps done",
-      "lastScore": "Last Business Knowledge Quiz score",
-      "passMark": "Needed to pass",
-      "noExam": "Not taken yet"
+      "noExam": "Not taken yet",
+      "quiz": "Business Knowledge Quiz",
+      "interview": "Bank Readiness Interview",
+      "passMarkNote": "Pass mark {mark}",
+      "interviewStatus": {
+        "done": "Ready",
+        "in_progress": "In progress",
+        "available": "Not started",
+        "pending": "Not started",
+        "locked": "After the quiz"
+      }
     },
     "steps": {
       "title": "Your steps",

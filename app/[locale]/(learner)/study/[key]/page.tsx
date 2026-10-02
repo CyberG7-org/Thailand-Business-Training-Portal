@@ -191,13 +191,8 @@ export default async function StudyMaterialPage({
       }
     >
       <ViewTracker materialId={material.id} />
-      <div
-        className={
-          evidence.length > 0
-            ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start'
-            : 'grid gap-6'
-        }
-      >
+      {/* The card first, then what the documents say about it (the owner, 2026-10-02). */}
+      <div className="grid gap-6">
         <article className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-9 md:py-8">
           {material.type === 'card' && (
             <div className="study-article" data-testid="study-body">
@@ -277,7 +272,7 @@ export default async function StudyMaterialPage({
               </h2>
               <p className="mt-1 text-sm leading-[1.7] text-brand-100">{t('evidence.hint')}</p>
             </div>
-            <ol className="flex flex-col gap-2.5 p-4">
+            <ol className="grid gap-2.5 p-4 md:grid-cols-2 md:p-5">
               {evidence.map((e, i) => (
                 <li key={i} className="rounded-control border border-ink-100 px-3.5 py-3">
                   <p className="mb-1 text-sm leading-[1.6] font-medium text-ink-500">

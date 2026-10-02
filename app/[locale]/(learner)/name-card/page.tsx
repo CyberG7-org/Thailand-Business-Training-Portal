@@ -46,7 +46,7 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
 
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="nameCard">
-      <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)] lg:items-start">
+      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)] xl:items-start">
         {blocked ? (
           <div className="rise grid gap-3">
             {examBlocked && <Blocked>{t('errors.exam_required')}</Blocked>}

@@ -18,14 +18,29 @@ test('a learner page shows the band with the step segments and a back pill; the 
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
 
   await page.goto('/th/study');
-  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 1 จาก 6');
+  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 1 จาก 5');
   const segments = page.getByTestId('step-segments').locator('[data-state]');
-  await expect(segments).toHaveCount(6);
+  await expect(segments).toHaveCount(5);
   await expect(segments.nth(0)).toHaveAttribute('data-state', 'current');
   // Nothing is done yet, so no segment claims gold.
   await expect(page.getByTestId('step-segments').locator('[data-state="done"]')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('เอกสารเรียนรู้');
 
+  // The steps beside the page (the owner, 2026-10-02): this page's step marked, an open step a
+  // link, a locked one not; the dashboard lists the steps itself and has no column.
+  const nav = page.getByTestId('learner-nav');
+  await expect(nav.getByRole('link', { name: /เอกสารเรียนรู้/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.getByTestId('learner-nav-interview').getByRole('link')).toHaveCount(0);
+  await nav.getByRole('link', { name: /นามบัตร/ }).click();
+  await expect(page).toHaveURL(/\/th\/name-card$/);
+  await page.getByTestId('learner-nav-home').click();
+  await expect(page).toHaveURL(/\/th\/dashboard$/);
+  await expect(page.getByTestId('learner-nav')).toHaveCount(0);
+
+  await page.goto('/th/study');
   await page.getByTestId('nav-back').click();
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await page.goto('/th/study');

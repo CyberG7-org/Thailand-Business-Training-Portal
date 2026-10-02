@@ -305,6 +305,27 @@ export async function ensureStarterCards(): Promise<void> {
   await loadStarterCards(svc() as never, BANK_INTERVIEW_CARDS, await ownerId());
 }
 
+/** Marks every active card opened by the learner, as reading each one would. */
+export async function seedAllCardsViewed(loginId: string): Promise<void> {
+  const admin = svc();
+  const { data: profile, error } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  if (error) throw error;
+  const { data: materials, error: materialsError } = await admin
+    .from('study_materials')
+    .select('id')
+    .eq('active', true);
+  if (materialsError) throw materialsError;
+  const { error: progressError } = await admin.from('study_progress').upsert(
+    materials.map((m) => ({ user_id: profile.id, material_id: m.id })),
+    { onConflict: 'user_id,material_id', ignoreDuplicates: true },
+  );
+  if (progressError) throw progressError;
+}
+
 /** One study card with its localizations; staff no longer write cards in the UI (D81). */
 export async function seedLocalizedStudyCard(
   contentKey: string,

@@ -18,8 +18,10 @@ test('a learner sees their company and the interview locked behind the exam, the
   await expect(page.getByTestId('stage-appointment')).toContainText(
     'ต้องผ่านการสัมภาษณ์ความพร้อมกับธนาคารก่อน',
   );
-  await expect(page.getByTestId('stage-quiz-status')).toHaveText('พร้อมใช้งาน');
+  // Five steps (the owner, 2026-10-01): the practice round is not one of them.
+  await expect(page.getByTestId('stage-quiz')).toHaveCount(0);
   await expect(page.getByTestId('stage-study-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('พร้อมใช้งาน');
 });
 
 test('a learner whose certificate has no issue date still sees the pending reason on the company card', async ({
@@ -36,7 +38,8 @@ test('a learner with no assignment sees the no-company message and every stage l
 }) => {
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
   await expect(page.getByTestId('no-company')).toBeVisible();
-  for (const stage of ['study', 'quiz', 'exam', 'nameCard', 'interview', 'appointment']) {
+  // The learner's five steps (the practice round is not one of them).
+  for (const stage of ['study', 'nameCard', 'exam', 'interview', 'appointment']) {
     await expect(page.getByTestId(`stage-${stage}-status`)).toHaveText('ล็อก');
   }
 });

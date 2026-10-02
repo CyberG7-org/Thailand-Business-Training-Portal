@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { getCurrentUser } from '@/lib/auth/session';
 import type { StageKey } from '@/lib/domain/progression';
 import { BackPill } from './back-pill';
+import { LearnerNav } from './learner-nav';
 import { ShellHeader } from './shell-header';
 import { cachedStageStatuses } from './stage-status';
 import { StepSegments } from './step-segments';
@@ -13,6 +14,8 @@ import { StepSegments } from './step-segments';
  * dot grid below. A page passes only what differs; the user and the stage statuses are read once
  * per request. The dashboard swaps the title for its hero and adds the stepper to the band; a
  * card page points the back pill at its list and shows its place there instead of the steps.
+ * Every page but the dashboard, which lists the steps itself, has the steps beside it (above it
+ * on a phone), so a learner moves between them as staff do with their sidebar.
  */
 export async function LearnerShell({
   title,
@@ -49,7 +52,7 @@ export async function LearnerShell({
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
-  const statuses = step && !subBarRight && user ? await cachedStageStatuses(user.id) : null;
+  const statuses = !home && user ? await cachedStageStatuses(user.id) : null;
   return (
     <>
       <div
@@ -80,7 +83,16 @@ export async function LearnerShell({
         )}
         {bandFooter}
       </div>
-      <main className="px-4 py-6 md:px-12 md:py-7">{children}</main>
+      <main className="px-4 py-6 md:px-12 md:py-7">
+        {home ? (
+          children
+        ) : (
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-6">
+            <LearnerNav current={step} statuses={statuses} />
+            <div className="min-w-0">{children}</div>
+          </div>
+        )}
+      </main>
     </>
   );
 }

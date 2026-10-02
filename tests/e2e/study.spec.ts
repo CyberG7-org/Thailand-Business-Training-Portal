@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany, seedLocalizedStudyCard } from './seed';
+import { seedAllCardsViewed, seedLearnerWithCompany, seedLocalizedStudyCard } from './seed';
 
 test('a learner reads a card in three languages, progress is recorded, Thai read-aloud works', async ({
   page,
@@ -46,6 +46,20 @@ test('a learner reads a card in three languages, progress is recorded, Thai read
   await expect(page.getByTestId('study-item-sample-bank-visit')).toContainText('此语言暂无内容');
   await page.goto('/zh/study/sample-bank-visit');
   await expect(page.getByTestId('study-not-available')).toBeVisible();
+});
+
+/** "All cards done" on the study list is what the steps call Done (the owner, 2026-10-02). */
+test('study is done once every card is opened', async ({ page }) => {
+  const learner = await seedLearnerWithCompany('บริษัท อ่านครบ จำกัด', '2026-07-13');
+  await seedAllCardsViewed(learner);
+  await loginAs(page, learner, E2E_PASSWORD);
+  await expect(page.getByTestId('stage-study-status')).toHaveText('เสร็จสิ้น');
+  await page.goto('/th/study');
+  await expect(page.getByTestId('study-continue')).toHaveCount(0);
+  await expect(page.getByTestId('learner-nav-study').getByRole('link')).toHaveAttribute(
+    'data-status',
+    'done',
+  );
 });
 
 test('read-aloud is refused for content that is not approved for TTS', async ({ page }) => {

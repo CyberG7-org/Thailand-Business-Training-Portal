@@ -87,3 +87,21 @@ export function FileIcon({ size = 16 }: { size?: number }) {
     </svg>
   );
 }
+
+export function HomeIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+    >
+      <path d="M4 11 12 4l8 7" />
+      <path d="M6 9.5V20h12V9.5" />
+    </svg>
+  );
+}

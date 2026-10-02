@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { StageInfo, StageKey, StageStatus } from '@/lib/domain/progression';
-import { currentStage, doneCount } from '@/lib/domain/stage-progress';
+import { LEARNER_STAGES, currentStage, doneCount } from '@/lib/domain/stage-progress';
 
 const statuses = (o: Partial<Record<StageKey, StageStatus>>): Record<StageKey, StageInfo> => ({
   study: { status: o.study ?? 'available' },
@@ -11,20 +11,30 @@ const statuses = (o: Partial<Record<StageKey, StageStatus>>): Record<StageKey, S
   appointment: { status: o.appointment ?? 'locked' },
 });
 
+/** The owner's five learner steps (2026-10-01): the practice round is not one of them. */
+describe('LEARNER_STAGES', () => {
+  it('lists study, name card, the quiz, the interview and the appointment, in that order', () => {
+    expect(LEARNER_STAGES).toEqual(['study', 'nameCard', 'exam', 'interview', 'appointment']);
+    expect(LEARNER_STAGES).not.toContain('quiz');
+  });
+});
+
 /** The dashboard's "next step" is the step after the last one done, whatever lies before it. */
 describe('currentStage', () => {
   it('is the first step for a learner who has done nothing', () => {
     expect(currentStage(statuses({}))).toBe('study');
   });
 
-  it('is the step after the last one done, even when earlier steps were skipped', () => {
-    expect(currentStage(statuses({ exam: 'done' }))).toBe('nameCard');
+  it('is the quiz once the name card is made', () => {
+    expect(currentStage(statuses({ nameCard: 'done' }))).toBe('exam');
   });
 
-  it('is the locked interview step once everything before it is done', () => {
-    expect(
-      currentStage(statuses({ study: 'done', quiz: 'done', exam: 'done', nameCard: 'done' })),
-    ).toBe('interview');
+  it('moves past a name card not yet made once the quiz is passed: the card is standalone', () => {
+    expect(currentStage(statuses({ exam: 'done' }))).toBe('interview');
+  });
+
+  it('ignores the practice round, which is not a learner step', () => {
+    expect(currentStage(statuses({ quiz: 'done' }))).toBe('study');
   });
 
   it('is nothing once every step is done', () => {
@@ -32,9 +42,8 @@ describe('currentStage', () => {
       currentStage(
         statuses({
           study: 'done',
-          quiz: 'done',
-          exam: 'done',
           nameCard: 'done',
+          exam: 'done',
           interview: 'done',
           appointment: 'done',
         }),
@@ -44,8 +53,9 @@ describe('currentStage', () => {
 });
 
 describe('doneCount', () => {
-  it('counts the steps done', () => {
-    expect(doneCount(statuses({ quiz: 'done', exam: 'done' }))).toBe(2);
+  it('counts the learner steps done, never the practice round', () => {
+    expect(doneCount(statuses({ quiz: 'done', exam: 'done' }))).toBe(1);
+    expect(doneCount(statuses({ nameCard: 'done', exam: 'done', interview: 'done' }))).toBe(3);
     expect(doneCount(statuses({}))).toBe(0);
   });
 });

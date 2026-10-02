@@ -50,7 +50,7 @@
       "kicker": "银行身份验证准备"
     },
     "next": {
-      "study": "下一步是学习资料。请先阅读关于贵公司的学习卡片，再进行练习测验。",
+      "study": "下一步是学习资料。请先阅读关于贵公司的学习卡片，再参加业务知识测验。",
       "quiz": "下一步是练习测验，帮助你了解业务知识测验前需要复习的内容。",
       "exam": "下一步是业务知识测验。通过后即可解锁银行准备面试。",
       "nameCard": "下一步是名片。请在银行准备面试前创建名片。",
@@ -65,9 +65,17 @@
     "progress": {
       "ring": "已完成 {total} 步中的 {done} 步",
       "stepsDone": "已完成步骤",
-      "lastScore": "上次业务知识测验成绩",
-      "passMark": "及格线",
-      "noExam": "尚未参加"
+      "noExam": "尚未参加",
+      "quiz": "业务知识测验",
+      "interview": "银行准备面试",
+      "passMarkNote": "及格线 {mark}",
+      "interviewStatus": {
+        "done": "已准备好",
+        "in_progress": "练习中",
+        "available": "尚未开始",
+        "pending": "尚未开始",
+        "locked": "通过测验后开放"
+      }
     },
     "steps": {
       "title": "你的步骤",

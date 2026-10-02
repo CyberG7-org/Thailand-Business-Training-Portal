@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { LanguageToggle } from '@/components/language-toggle';
 import { getCurrentUser, homePathFor } from '@/lib/auth/session';
-import { STAGE_KEYS } from '@/lib/domain/progression';
+import { LEARNER_STAGES } from '@/lib/domain/stage-progress';
 import { LoginForm } from './login-form';
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
@@ -92,14 +92,14 @@ export default async function LoginPage({
                 aria-hidden="true"
                 className="absolute top-4 bottom-4 left-[15px] w-0.5 bg-white/20"
               />
-              {STAGE_KEYS.map((key, i) => (
+              {LEARNER_STAGES.map((key, i) => (
                 <li
                   key={key}
                   className="relative flex items-center gap-3.5 text-base leading-[1.6]"
                 >
                   <span
                     className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${
-                      i === STAGE_KEYS.length - 1
+                      i === LEARNER_STAGES.length - 1
                         ? 'bg-gold-500 text-brand-900'
                         : 'border border-white/35 bg-brand-700'
                     }`}
