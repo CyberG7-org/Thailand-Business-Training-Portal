@@ -176,7 +176,6 @@ const s = StyleSheet.create({
     color: C.brand900,
     lineHeight: 1.3,
   },
-  holderEn: { fontSize: 5.4, color: C.ink700, letterSpacing: 0.8, marginTop: 1.5 },
   fact: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 4.2 },
   dot: {
     width: 9,
@@ -315,7 +314,6 @@ function Back({ data }: { data: NameCardData }) {
       </T>
       <View style={[s.abs, { left: 12, top: 12, width: 170 }]}>
         <ThaiText style={s.holderTh}>{data.holderName}</ThaiText>
-        {data.holderNameEn && <T style={s.holderEn}>{data.holderNameEn.toUpperCase()}</T>}
       </View>
       <View style={[s.abs, { left: 12, top: 62, width: 150 }]}>
         <Fact icon="phone">{data.phoneDisplay}</Fact>
@@ -323,11 +321,6 @@ function Back({ data }: { data: NameCardData }) {
         <Fact icon="pin" thai>
           {data.address}
         </Fact>
-        {data.juristicId && (
-          <Fact icon="hash" sub="เลขทะเบียนนิติบุคคล · Corporate Registration No.">
-            {data.juristicId}
-          </Fact>
-        )}
       </View>
       {data.productsServices && (
         <View
