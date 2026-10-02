@@ -302,7 +302,7 @@ describe('the starter drafts in the bank', () => {
     expect((await getVariant(asOwner, capital.id))!.texts.th!.prompt).toBe(prompt);
   });
 
-  it('approves every checked draft at once, for the Owner only, and leaves a broken one (D99)', async () => {
+  it('approves every checked draft at once, for the Owner only, and leaves a broken one (D100)', async () => {
     // A draft that breaks a rule, written past the editor: its correct option is a varied one.
     const broken = (await listVariants(asOwner)).find((v) => v.key === 'mcq-director-count-1')!;
     await svc.from('questions').update({ correct_option_key: 'B' }).eq('id', broken.id);

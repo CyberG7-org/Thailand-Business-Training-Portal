@@ -1,4 +1,4 @@
--- P17e: the Business Knowledge Quiz (spec 2026-09-30 §8, D71, D72, D99).
+-- P17e: the Business Knowledge Quiz (spec 2026-09-30 §8, D71, D72, D100).
 -- An attempt asks one bank variant for each of the 30 MCQ concepts, marks each answer at once
 -- and ends in pass, retest or fail.
 

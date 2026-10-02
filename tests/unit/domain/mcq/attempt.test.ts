@@ -10,7 +10,7 @@ const BANK: Variant[] = MCQ_STARTER.map((s) => ({ ...s, id: s.key, status: 'appr
 const build = (seed = 'seed-1', seen: ReadonlySet<string> = new Set(), bank = BANK) =>
   buildAttemptQuestions(bank, SAMPLE_CONTEXT, seed, seen);
 
-describe('the questions of one attempt (D99)', () => {
+describe('the questions of one attempt (D100)', () => {
   it('asks each of the 30 concepts once, with four different options known by position', () => {
     const { questions, missing } = build();
     expect(missing).toEqual([]);

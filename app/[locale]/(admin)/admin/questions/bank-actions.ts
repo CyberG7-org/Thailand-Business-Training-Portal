@@ -51,7 +51,7 @@ export async function loadStarterAction(
 
 export type ApproveDraftsState = { done: boolean; approved: number; failed: boolean };
 
-/** Approves every draft that keeps the bank's rules, under the Owner's own session (D99). */
+/** Approves every draft that keeps the bank's rules, under the Owner's own session (D100). */
 export async function approveDraftsAction(
   _prev: ApproveDraftsState,
   formData: FormData,

@@ -32,7 +32,7 @@ describe('the starter drafts', () => {
     expect([...used].sort()).toEqual([...RECIPES].sort());
   });
 
-  it('give every one of the 30 concepts a question (D99)', () => {
+  it('give every one of the 30 concepts a question (D100)', () => {
     expect(MCQ_CONCEPTS).toHaveLength(30);
     for (const concept of MCQ_CONCEPTS) {
       const own = MCQ_STARTER.filter((s) => s.conceptKey === concept.key);

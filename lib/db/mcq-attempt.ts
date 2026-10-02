@@ -77,7 +77,7 @@ async function closeRenderFailures(admin: Db, recordId: string): Promise<void> {
 }
 
 /**
- * Starts the Business Knowledge Quiz for a learner (D99): thirty questions from the Owner's bank,
+ * Starts the Business Knowledge Quiz for a learner (D100): thirty questions from the Owner's bank,
  * rendered from the facts the learner is pinned to, frozen on the attempt. The rule the attempt
  * will be judged by is frozen with it. The caller has already checked there is no attempt in
  * progress and that the retry policy allows a new one.

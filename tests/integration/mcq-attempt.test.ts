@@ -26,7 +26,7 @@ import {
 const svc = adminClient();
 const NON_CRITICAL = MCQ_CONCEPTS.filter((c) => !c.critical).map((c) => c.key);
 
-describe('the Business Knowledge Quiz attempt (D99)', () => {
+describe('the Business Knowledge Quiz attempt (D100)', () => {
   let team: Team;
   let owner: TestUser;
   let asLearner: Client;

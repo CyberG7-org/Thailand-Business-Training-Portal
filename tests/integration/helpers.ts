@@ -250,7 +250,7 @@ export async function versionRecord(recordId: string): Promise<void> {
 const STARTER_KEYS = MCQ_STARTER.map((s) => s.key);
 
 /**
- * The starter bank, approved: what a Business Knowledge Quiz needs to start (D99). Safe to call
+ * The starter bank, approved: what a Business Knowledge Quiz needs to start (D100). Safe to call
  * twice. The returned function removes it; attempts that asked it must be gone by then.
  */
 export async function seedApprovedBank(ownerId: string): Promise<() => Promise<void>> {

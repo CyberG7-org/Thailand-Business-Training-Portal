@@ -7,7 +7,7 @@ import { MCQ_STARTER_CONCEPTS } from './mcq-starter-concepts';
  * for a company with no customers yet, a status that is now always yes): one for every recipe of
  * D77, loaded as drafts and never approved by code. They show the grammar at work; the wording
  * is the Owner's to change, approve or retire. The other concepts' starters are in
- * `mcq-starter-concepts.ts` (D99); `MCQ_STARTER` below is both together.
+ * `mcq-starter-concepts.ts` (D100); `MCQ_STARTER` below is both together.
  */
 const text = (
   prompt: string,

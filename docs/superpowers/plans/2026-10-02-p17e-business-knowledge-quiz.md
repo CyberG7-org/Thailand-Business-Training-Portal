@@ -366,7 +366,7 @@ No new component is needed: the question card already draws right, wrong and the
 
 ### Task B10: Docs, gate, report
 
-- [ ] D99 in the decisions log; P17 spec §8 marked implemented with the two simplifications (no review-required flag: the result page is the review; no grandfathering); UAT A20; runbook row "the quiz says it is not ready".
+- [ ] D100 in the decisions log; P17 spec §8 marked implemented with the two simplifications (no review-required flag: the result page is the review; no grandfathering); UAT A20; runbook row "the quiz says it is not ready".
 - [ ] Full gate as in A4. Report the six items; the migration needs a production push on the Owner's word; push, PR and merge on the Owner's word.
 
 ## Self-review

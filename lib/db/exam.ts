@@ -22,7 +22,7 @@ export class ExamPolicyError extends Error {
 
 /**
  * Starts (or resumes) the Business Knowledge Quiz after enforcing the configured retry policy.
- * A new attempt asks the Owner's bank, one question for each of the 30 concepts (D99); the
+ * A new attempt asks the Owner's bank, one question for each of the 30 concepts (D100); the
  * earlier question pool is the practice round's alone.
  */
 export async function startExam(userId: string, language: AppLocale): Promise<AttemptRow> {

@@ -240,7 +240,7 @@ async function templateRecordForAttempt(
  * Grading is by option key, which every approved question mirrors across languages; a question
  * without that language falls back to the attempt's language, then to its snapshot.
  *
- * A question from the Owner's bank (an answer row with a concept, D99) was rendered in all three
+ * A question from the Owner's bank (an answer row with a concept, D100) was rendered in all three
  * languages when the attempt started and is read back as it was. The result carries the correct
  * key of every question: a caller showing an open attempt must leave out the unanswered ones.
  */
@@ -428,7 +428,7 @@ export async function answerQuestion(args: {
   };
 
   if (answer.concept_key !== null) {
-    // A question from the Owner's bank (D99): marked against the key frozen with the attempt.
+    // A question from the Owner's bank (D100): marked against the key frozen with the attempt.
     const key = (await answerKeysFor(admin, [answer.id])).get(answer.id);
     if (!key) throw new AssessmentError('Question text missing', 'not_found');
     const shown =

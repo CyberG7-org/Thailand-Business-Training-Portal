@@ -2,7 +2,7 @@ import type { Recipe } from '@/lib/domain/mcq/tokens';
 import type { StarterVariant, VariantText } from '@/lib/domain/mcq/variant';
 
 /**
- * A starter question for every concept the first ten did not cover (D99), so the Business
+ * A starter question for every concept the first ten did not cover (D100), so the Business
  * Knowledge Quiz can ask all thirty. Loaded as drafts like the others: the Owner reads the Thai
  * and approves. A wrong option is either the company's own fact varied by a recipe, or an answer
  * a bank officer would stop at — never something that could be true of a real company.

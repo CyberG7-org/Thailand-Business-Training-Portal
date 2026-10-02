@@ -204,7 +204,7 @@ export const isCheckedDraft = (variant: Variant): boolean =>
 
 /**
  * Approves every checked draft, one by one under the caller's own session, so RLS admits only
- * the Owner and the audit names them (D99). A draft that breaks a rule is left as a draft.
+ * the Owner and the audit names them (D100). A draft that breaks a rule is left as a draft.
  */
 export async function approveCheckedDrafts(
   db: Db,

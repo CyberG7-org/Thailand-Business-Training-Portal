@@ -201,7 +201,7 @@ describe('renderVariant', () => {
   });
 });
 
-describe('the amounts a manager typed (D99)', () => {
+describe('the amounts a manager typed (D100)', () => {
   it('prints the first amount in digits and varies it', () => {
     const v = of(
       text('รายได้ต่อเดือนประมาณเท่าใด', [
