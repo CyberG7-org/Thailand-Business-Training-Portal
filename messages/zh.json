@@ -1424,30 +1424,16 @@
   },
   "nameCard": {
     "title": "名片",
-    "intro": "所有公司使用同一设计，内容来自贵公司的记录以及你填写的姓名和电话。可预览、下载 PDF 或发送到 Telegram。",
-    "phone": "手机号码",
-    "phoneHint": "泰国手机号，例如 081-234-5678 或 +66 81 234 5678",
-    "generate": "生成名片",
-    "regenerate": "生成新版本",
-    "generating": "生成中…",
-    "generated": "名片已生成。",
+    "intro": "根据贵公司的记录和经理提供的信息为您制作。可预览并下载 PDF。",
     "preview": "预览",
     "download": "下载 PDF",
-    "send": "发送到 Telegram",
-    "sendAgain": "再次发送到 Telegram",
-    "sentQueued": "已排队发送到 {count} 个 Telegram 目标。",
-    "sentNoDestinations": "尚未配置 Telegram 目标。",
     "meta": "模板 {version} · {phone}",
     "errors": {
       "no_assignment": "尚未为您分配公司。",
-      "exam_required": "请先通过业务知识测验再生成名片。",
-      "invalid_phone": "请输入有效的泰国手机号。",
-      "missing_fields": "您的公司记录缺少：{fields}。请联系管理员补全。",
-      "not_found": "未找到名片。",
-      "invalid_name": "请填写泰文姓名"
-    },
-    "holderName": "姓名（泰文）",
-    "holderNameEn": "姓名（英文，可选）",
-    "holderNameHint": "按名片上应印的写法填写"
+      "exam_required": "请先通过业务知识测验再领取名片。",
+      "missing_fields": "您的公司记录缺少：{fields}。请让经理补全。",
+      "no_phone": "尚未提供您的手机号。请让经理添加。",
+      "no_name": "公司记录中还没有您的姓名。请联系经理。"
+    }
   }
 }

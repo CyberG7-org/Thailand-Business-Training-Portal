@@ -1,7 +1,11 @@
 import { formatThaiMobile } from './phone';
 
-/** One two-sided design for every company (D24, D63). Bumped whenever the layout changes. */
-export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v2';
+/**
+ * One two-sided design for every company (D24, D63). Bumped whenever the layout changes, which
+ * also remakes every card already made (D96). v3: the back keeps the holder's Thai name, the
+ * phone, the company email, the head office address and the products or services.
+ */
+export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v3';
 
 /**
  * The words every card carries, whatever the company (owner, 2026-09-28): a tagline on both
@@ -27,16 +31,12 @@ export type NameCardSource = {
   products_services: string | null;
 };
 
-/** What the learner types beside the phone number. */
-export type NameCardHolder = { nameTh: string; nameEn: string | null };
-
 export type NameCardData = {
   companyNameTh: string;
   companyNameEn: string | null;
   /** The monogram on the front. */
   companyInitials: string;
   holderName: string;
-  holderNameEn: string | null;
   address: string;
   phoneDisplay: string;
   email: string | null;
@@ -107,18 +107,18 @@ export function companyInitials(nameEn: string | null, nameTh: string | null): s
 export function buildNameCardData(
   source: NameCardSource,
   phoneNormalized: string,
-  holder: NameCardHolder,
+  /** The holder's Thai name: the learner's name as the documents print it (D95). */
+  holderNameTh: string,
 ): NameCardData {
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new Error(`Missing DBD fields: ${missing.join(', ')}`);
-  const nameTh = holder.nameTh.trim();
+  const nameTh = holderNameTh.trim();
   if (!nameTh) throw new Error('Missing holder name');
   return {
     companyNameTh: source.company_name_th!,
     companyNameEn: source.company_name_en?.trim() || null,
     companyInitials: companyInitials(source.company_name_en, source.company_name_th),
     holderName: nameTh,
-    holderNameEn: holder.nameEn?.trim() || null,
     address: source.head_office_address!,
     phoneDisplay: formatThaiMobile(phoneNormalized),
     email: source.contact_email?.trim() || null,

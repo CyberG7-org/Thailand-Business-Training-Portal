@@ -209,7 +209,7 @@ export async function pinnedFactsFor(
     return { version, snapshot, role, roleConfirmed: false, roleConfirmedAt: null };
   }
   const at = new Date().toISOString();
-  const { error } = await admin
+  const freeze = admin
     .from('user_dbd_assignments')
     .update({
       role_snapshot: role as unknown as Json,
@@ -218,6 +218,11 @@ export async function pinnedFactsFor(
     })
     .eq('id', row.id)
     .is('role_snapshot', null);
+  // Only the name that was read: a manager who picked another name meanwhile cleared the
+  // snapshot for theirs, and a late freeze must not bring the old name back.
+  const { error } = await (row.holder_name === null
+    ? freeze.is('holder_name', null)
+    : freeze.eq('holder_name', row.holder_name));
   if (error) throw error;
   return { version, snapshot, role, roleConfirmed: true, roleConfirmedAt: at };
 }

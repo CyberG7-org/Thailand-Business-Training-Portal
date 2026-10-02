@@ -18,7 +18,7 @@ describe('name card PDF (spike S3)', () => {
         products_services: 'สายไฟ ท่อร้อยสาย และอุปกรณ์ติดตั้ง',
       },
       '0812345678',
-      { nameTh: 'นางสาวตัวอย่าง ทดสอบ', nameEn: 'SAMPLE TESTER' },
+      'นางสาวตัวอย่าง ทดสอบ',
     );
     const bytes = await new ReactPdfRenderer().renderNameCard(data);
     expect(Buffer.from(bytes.slice(0, 5)).toString()).toBe('%PDF-');
@@ -37,7 +37,6 @@ describe('name card PDF (spike S3)', () => {
     for (const expected of [
       '081-234-5678',
       '0105569000134',
-      'SAMPLETESTER',
       NAME_CARD_COPY.tagline.replace(/\s/g, ''),
       'นางสาวตัวอย่างทดสอบ',
       'สายไฟ',
@@ -46,6 +45,10 @@ describe('name card PDF (spike S3)', () => {
       expect(squashed).toContain(expected);
     }
     expect(items.filter((item) => item.trimEnd().endsWith('-'))).toEqual([]);
+    // The back keeps the holder, the phone, the email, the address and the products (D96): the
+    // registration number is printed on the front only.
+    expect(squashed).not.toContain('CorporateRegistrationNo.');
+    expect(squashed).toContain('contact@example.co.th');
     // Words with sara am (ำ) keep every glyph; the viewer may give the vowel back as one
     // code point or two. Every Thai word on this card is its own text object.
     expect(squashed).toMatch(/นามบัตรจ.{1,2}กัด/);
