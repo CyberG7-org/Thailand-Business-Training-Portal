@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
+import { FIXED_ROLE } from '@/lib/domain/standard-role';
 import {
   buildRoleSnapshot,
   type RoleSnapshot,
@@ -140,15 +141,21 @@ export async function moveAssignmentToVersion(
 export type PinnedFacts = {
   version: TrainingVersionRow;
   snapshot: TrainingSnapshot;
-  /** The confirmed role, or — until confirmation — the role as typed (plan decision 4). */
+  /** The confirmed role; until it has a name, the role as it stands (plan decision 4, D94). */
   role: RoleSnapshot | null;
   roleConfirmed: boolean;
+  roleConfirmedAt: string | null;
 };
 
 /**
  * What an assignment is studied and evaluated on. An assignment without a version (from before
  * P17b, or assigned before its record had one) is pinned to the record's first version here,
  * made now if the record is confirmed and nothing blocks its version (P17c). `admin` is the service role.
+ *
+ * A role confirms itself here the first time it has a name (D94): the name is one printed in the
+ * DBD documents and the three other answers are the same for every learner, so there is nothing
+ * left for a person to check. It is stored with no confirming person, which is how the record
+ * says nobody did. A manager who then picks another name clears it, and it is confirmed again.
  */
 export async function pinnedFactsFor(
   admin: Db,
@@ -186,11 +193,31 @@ export async function pinnedFactsFor(
   const version = await getVersion(admin, row.training_version_id!);
   if (!version) return null;
   const snapshot = readSnapshot(version);
-  const confirmed = (row.role_snapshot as RoleSnapshot | null) ?? null;
-  return {
-    version,
-    snapshot,
-    role: confirmed ?? buildRoleSnapshot(roleOf(row), snapshot),
-    roleConfirmed: confirmed !== null,
-  };
+  const stored = (row.role_snapshot as RoleSnapshot | null) ?? null;
+  if (stored) {
+    return {
+      version,
+      snapshot,
+      // A role confirmed before D94 kept what was typed; the three answers are fixed now.
+      role: { ...stored, ...FIXED_ROLE },
+      roleConfirmed: true,
+      roleConfirmedAt: row.role_confirmed_at,
+    };
+  }
+  const role = buildRoleSnapshot(roleOf(row), snapshot);
+  if (!role.holder_name) {
+    return { version, snapshot, role, roleConfirmed: false, roleConfirmedAt: null };
+  }
+  const at = new Date().toISOString();
+  const { error } = await admin
+    .from('user_dbd_assignments')
+    .update({
+      role_snapshot: role as unknown as Json,
+      role_confirmed_at: at,
+      role_confirmed_by: null,
+    })
+    .eq('id', row.id)
+    .is('role_snapshot', null);
+  if (error) throw error;
+  return { version, snapshot, role, roleConfirmed: true, roleConfirmedAt: at };
 }

@@ -22,16 +22,13 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   const userUrl = page.url();
   await expect(page.getByTestId('version-panel')).toHaveAttribute('data-pinned', '1');
   await expect(page.getByTestId('version-newest')).toContainText('ปัจจุบัน');
-  // Complete company, but the role is not confirmed: 29/30 and 10/11 (plan decision 4, D91).
-  await expect(page.getByTestId('coverage-mcq')).toHaveAttribute('data-ready', '29');
-  await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '10');
+  // Complete company with one director: the role has its name and confirmed itself, so
+  // everything resolves with nobody pressing anything (D94).
+  await expect(page.getByTestId('role-confirm')).toHaveCount(0);
+  await expect(page.getByTestId('role-confirmation')).toHaveAttribute('data-confirmed', 'true');
 
-  // Confirm the role of a shareholder: everything resolves.
   // The name is the company's only director, filled in with nobody typing (D94).
   await expect(page.getByTestId('role-holder')).toHaveValue('นางสาวกุลธิดา พลเยี่ยม');
-  await page.getByTestId('role-confirm').click();
-  await expect(page.getByTestId('version-message')).toContainText('ยืนยันบทบาทแล้ว');
-  await page.reload();
   await expect(page.getByTestId('coverage-mcq')).toHaveAttribute('data-ready', '30');
   await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '11');
 

@@ -2,11 +2,14 @@
 
 import { useFormatter, useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import { confirmRoleAction, moveAssignmentAction, type VersionActionState } from './actions';
+import { moveAssignmentAction, type VersionActionState } from './actions';
 
 const initial: VersionActionState = { message: null, n: null, error: null };
 
-/** The learner's pinned version and role confirmation (spec §5.6, D75). */
+/**
+ * The learner's pinned version (spec §5.6, D75) and whether the role is settled — which it is,
+ * with nobody pressing anything, as soon as it has a name (D94).
+ */
 export function VersionPanel({
   userId,
   assignmentId,
@@ -23,9 +26,7 @@ export function VersionPanel({
   const locale = useLocale();
   const t = useTranslations('admin.users.version');
   const format = useFormatter();
-  const [moveState, moveAction, moving] = useActionState(moveAssignmentAction, initial);
-  const [roleState, roleAction, confirming] = useActionState(confirmRoleAction, initial);
-  const state = moveState.message || moveState.error ? moveState : roleState;
+  const [state, moveAction, moving] = useActionState(moveAssignmentAction, initial);
   const canMove = newest !== null && pinned?.n !== newest.n;
   return (
     <section
@@ -59,28 +60,17 @@ export function VersionPanel({
           <p className="text-sm text-ink-500">{t('moveHint')}</p>
         </form>
       )}
-      <p className="text-sm" data-testid="role-confirmation">
+      <p
+        className="text-sm"
+        data-testid="role-confirmation"
+        data-confirmed={roleConfirmedAt ? 'true' : 'false'}
+      >
         {roleConfirmedAt
           ? t('roleConfirmed', {
               date: format.dateTime(new Date(roleConfirmedAt), { dateStyle: 'medium' }),
             })
           : t('roleUnconfirmed')}
       </p>
-      {!roleConfirmedAt && pinned && (
-        <form action={roleAction}>
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="userId" value={userId} />
-          <input type="hidden" name="assignmentId" value={assignmentId} />
-          <button
-            type="submit"
-            disabled={confirming}
-            className="staff-btn-ghost"
-            data-testid="role-confirm"
-          >
-            {t('confirmRole')}
-          </button>
-        </form>
-      )}
       {state.error && (
         <p role="alert" className="text-sm text-bad-600" data-testid="version-error">
           {t.has(`errors.${state.error}`)

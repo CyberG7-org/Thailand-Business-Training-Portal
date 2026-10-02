@@ -55,7 +55,17 @@ describe('pinning (spec §5.6, D75)', () => {
     const active = (await getActiveAssignmentForUser(svc, team.learner.id))!;
     const pinned = await pinnedFactsFor(svc, active);
     expect(pinned?.version.version_no).toBe(1);
-    expect(pinned?.roleConfirmed).toBe(false);
+    // The company has one director: the role has its name and confirms itself, with no
+    // confirming person (D94).
+    expect(pinned?.roleConfirmed).toBe(true);
+    expect(pinned?.role).toMatchObject({
+      holder_name: ROLE.holder_name,
+      position: 'กรรมการ',
+      my_shares: 18000,
+    });
+    const settled = (await getActiveAssignmentForUser(svc, team.learner.id))!;
+    expect(settled.role_confirmed_at).not.toBeNull();
+    expect(settled.role_confirmed_by).toBeNull();
     expect(pinned?.snapshot.facts.company_name_th).toBe('บริษัท ครบถ้วน จำกัด');
     const { data } = await svc
       .from('user_dbd_assignments')
@@ -84,6 +94,10 @@ describe('pinning (spec §5.6, D75)', () => {
     const edited = (await getActiveAssignmentForUser(svc, team.learner.id))!;
     expect(edited.role_snapshot).toBeNull();
     expect(edited.role_confirmed_at).toBeNull();
+    // The next read settles it again, and what was typed for the position is not read (D94).
+    const again = await pinnedFactsFor(svc, edited);
+    expect(again?.roleConfirmed).toBe(true);
+    expect(again?.role?.position).toBe('กรรมการ');
     await confirmAssignmentRole(team.asManager, { assignmentId, actorId: team.manager.id });
   });
 

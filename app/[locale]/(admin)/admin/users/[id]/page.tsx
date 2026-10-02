@@ -147,7 +147,7 @@ export default async function UserDetailPage({
           assignmentId={active.id}
           pinned={pinned ? { n: pinned.version.version_no } : null}
           newest={newest}
-          roleConfirmedAt={active.role_confirmed_at}
+          roleConfirmedAt={pinned?.roleConfirmedAt ?? active.role_confirmed_at}
         />
       )}
       {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}

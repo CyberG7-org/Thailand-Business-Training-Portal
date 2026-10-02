@@ -14,12 +14,7 @@ import {
 } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
 import { dbdPeople, isDbdPerson } from '@/lib/domain/standard-role';
-import {
-  PinError,
-  confirmAssignmentRole,
-  evaluationInProgress,
-  moveAssignmentToVersion,
-} from '@/lib/db/pinning';
+import { PinError, evaluationInProgress, moveAssignmentToVersion } from '@/lib/db/pinning';
 import {
   contactFromForm,
   firstContactProblem,
@@ -223,7 +218,7 @@ export async function updateAssignmentRoleAction(
 }
 
 export type VersionActionState = {
-  message: 'moved' | 'role-confirmed' | null;
+  message: 'moved' | null;
   n: number | null;
   error: string | null;
 };
@@ -249,26 +244,6 @@ export async function moveAssignmentAction(
     });
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'moved', n: moved.to, error: null };
-  } catch (e) {
-    return { message: null, n: null, error: pinErrorKey(e) };
-  }
-}
-
-export async function confirmRoleAction(
-  _prev: VersionActionState,
-  formData: FormData,
-): Promise<VersionActionState> {
-  const locale = String(formData.get('locale') ?? 'th');
-  const userId = String(formData.get('userId') ?? '');
-  const assignmentId = String(formData.get('assignmentId') ?? '');
-  const staff = await requireManageable(locale, userId);
-  try {
-    await confirmAssignmentRole(await createSupabaseServerClient(), {
-      assignmentId,
-      actorId: staff.id,
-    });
-    revalidatePath(`/${locale}/admin/users/${userId}`);
-    return { message: 'role-confirmed', n: null, error: null };
   } catch (e) {
     return { message: null, n: null, error: pinErrorKey(e) };
   }
