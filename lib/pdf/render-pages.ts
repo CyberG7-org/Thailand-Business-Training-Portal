@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { createCanvas } from '@napi-rs/canvas';
 
 /**
@@ -20,14 +22,50 @@ export const RENDER_SCALE = 3;
  */
 export const MAX_PAGE_IMAGES = 16;
 
+/**
+ * Where pdf.js keeps the files it reads while drawing: the decoders for scanned pages (JBIG2,
+ * JPEG 2000), the standard fonts, the character maps and the colour profiles. It has no default
+ * for them outside a browser, and a scanned page without its decoder is drawn blank.
+ * `next.config.ts` puts these folders into the deployment (`outputFileTracingIncludes`).
+ */
+export function pdfjsDataUrls(): Record<
+  'wasmUrl' | 'standardFontDataUrl' | 'cMapUrl' | 'iccUrl',
+  string
+> | null {
+  const root = path.join(process.cwd(), 'node_modules', 'pdfjs-dist');
+  if (!existsSync(path.join(root, 'wasm'))) return null;
+  // pdf.js wants a directory ending in a forward slash, on Windows too.
+  const dir = (name: string) => path.join(root, name).replaceAll(path.sep, '/') + '/';
+  return {
+    wasmUrl: dir('wasm'),
+    standardFontDataUrl: dir('standard_fonts'),
+    cMapUrl: dir('cmaps'),
+    iccUrl: dir('iccs'),
+  };
+}
+
 /** Opens the PDF, hands it to `work`, and releases pdf.js's hold on it whatever happens. */
 async function withDocument<T>(
   pdf: Uint8Array,
   work: (doc: PdfDocument) => Promise<T>,
 ): Promise<T> {
-  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const [pdfjs, worker] = await Promise.all([
+    import('pdfjs-dist/legacy/build/pdf.mjs'),
+    import('pdfjs-dist/legacy/build/pdf.worker.mjs'),
+  ]);
+  // Outside a browser pdf.js runs its worker in this thread. It looks for it on the global
+  // first, and otherwise imports it by a path worked out at run time — which a deployment's
+  // file tracing cannot follow, so the worker is not there (seen on Vercel, 2026-10-02).
+  // Imported here by name, it is traced and found.
+  (globalThis as { pdfjsWorker?: unknown }).pdfjsWorker ??= worker;
   // pdf.js takes ownership of the bytes it is given, so it gets a copy.
-  const task = pdfjs.getDocument({ data: pdf.slice(), useSystemFonts: false, verbosity: 0 });
+  const task = pdfjs.getDocument({
+    data: pdf.slice(),
+    useSystemFonts: false,
+    verbosity: 0,
+    cMapPacked: true,
+    ...(pdfjsDataUrls() ?? {}),
+  });
   try {
     return await work(await task.promise);
   } finally {
