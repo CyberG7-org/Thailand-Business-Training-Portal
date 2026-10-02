@@ -88,10 +88,11 @@ export async function confirmAssignmentRole(
 ): Promise<RoleSnapshot> {
   const a = await activeAssignment(db, args.assignmentId);
   if (!a.training_version_id) throw new PinError('no_version');
-  if (!a.holder_name?.trim()) throw new PinError('role_missing');
   const version = await getVersion(db, a.training_version_id);
   if (!version) throw new PinError('no_version');
   const snapshot = buildRoleSnapshot(roleOf(a), readSnapshot(version));
+  // Nobody picked a name and the company has several directors (D94).
+  if (!snapshot.holder_name) throw new PinError('role_missing');
   const { error } = await db
     .from('user_dbd_assignments')
     .update({

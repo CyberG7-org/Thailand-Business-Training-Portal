@@ -27,10 +27,8 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '10');
 
   // Confirm the role of a shareholder: everything resolves.
-  await page.getByTestId('role-holder').fill('นางสาวกุลธิดา พลเยี่ยม');
-  await page.locator('input[name="position"]').fill('กรรมการ');
-  await page.getByTestId('role-form').getByRole('button', { name: 'บันทึก' }).click();
-  await expect(page.getByTestId('role-saved')).toBeVisible();
+  // The name is the company's only director, filled in with nobody typing (D94).
+  await expect(page.getByTestId('role-holder')).toHaveValue('นางสาวกุลธิดา พลเยี่ยม');
   await page.getByTestId('role-confirm').click();
   await expect(page.getByTestId('version-message')).toContainText('ยืนยันบทบาทแล้ว');
   await page.reload();

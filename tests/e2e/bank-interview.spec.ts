@@ -59,12 +59,20 @@ test('starter cards, interview answers and the learner role combine into a perso
   await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner }).click();
   await page.waitForURL(/\/th\/admin\/users\/[0-9a-f-]{36}$/);
+  // Nobody types it (D94): the company's only director is the learner, and the three other
+  // answers are the same for every learner.
   const role = page.getByTestId('role-form');
-  await role.getByTestId('role-holder').fill('นางสาวผู้เรียน ทดสอบ');
-  await role.locator('input[name="position"]').fill('กรรมการผู้จัดการ');
-  await role.locator('textarea[name="responsibilities"]').fill('ดูแลลูกค้าและอนุมัติการชำระเงิน');
+  await expect(role.getByTestId('role-holder')).toHaveValue('นางสาวผู้เรียน ทดสอบ');
+  await expect(role.getByTestId('role-holder')).toHaveAttribute('data-automatic', 'true');
+  await expect(role.getByTestId('role-position')).toHaveText('กรรมการ');
+  await expect(role.locator('input[name="position"]')).toHaveCount(0);
+  // Picking the other shareholder and back is still possible, from the documents only.
+  await role.getByTestId('role-holder').selectOption('นายอื่น ทดสอบ');
   await role.getByRole('button', { name: 'บันทึกบทบาท' }).click();
   await expect(page.getByTestId('role-saved')).toBeVisible();
+  await role.getByTestId('role-holder').selectOption('นางสาวผู้เรียน ทดสอบ');
+  await role.getByRole('button', { name: 'บันทึกบทบาท' }).click();
+  await expect(role.getByTestId('role-holder')).toHaveAttribute('data-automatic', 'false');
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
 
   // The learner reads the ownership card with their own numbers filled in.
@@ -82,7 +90,9 @@ test('starter cards, interview answers and the learner role combine into a perso
   );
   await expect(page.getByTestId('study-body')).toContainText('ค้าปลีก');
   await page.goto('/th/study/bank-interview-4-role');
-  await expect(page.getByTestId('study-body')).toContainText('กรรมการผู้จัดการ');
+  await expect(page.getByTestId('study-body')).toContainText('นางสาวผู้เรียน ทดสอบ');
+  await expect(page.getByTestId('study-body')).toContainText('กรรมการ');
+  await expect(page.getByTestId('study-body')).toContainText('ดูแลการดำเนินงานของบริษัท');
   // A fact nobody entered renders as a dash, never as a raw placeholder.
   await expect(page.getByTestId('study-body')).not.toContainText('{');
 });

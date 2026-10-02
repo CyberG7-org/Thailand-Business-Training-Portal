@@ -21,7 +21,7 @@ import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { formatDate } from '@/lib/domain/thai-date';
 import { AccountControls } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
-import type { Director } from '@/lib/domain/dbd-record';
+import { dbdPeople, withStandardRole } from '@/lib/domain/standard-role';
 import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
 import { AssignmentPanel } from './assignment-panel';
 import { ContactForm } from './contact-form';
@@ -66,16 +66,9 @@ export default async function UserDetailPage({
       }
     : null;
 
-  const people = active
-    ? [
-        ...((active.dbd_records.directors as unknown as Director[] | null) ?? []).map(
-          (d) => d.name_th,
-        ),
-        ...(
-          readStructuredData(active.dbd_records.structured_data).business?.shareholders ?? []
-        ).map((sh) => sh.name),
-      ].filter((name, i, all) => name && all.indexOf(name) === i)
-    : [];
+  // The learner's role (D94): a name from the DBD documents and three fixed answers.
+  const { directors, people } = dbdPeople(active?.dbd_records ?? null);
+  const role = active ? withStandardRole(active, { directors }) : null;
 
   // Assignment scope (spec §7.3) on the pinned version (D75): the company sheet as frozen, the
   // learner's role only once confirmed (plan decision 4). A record without a version yet is
@@ -139,16 +132,12 @@ export default async function UserDetailPage({
         />
       )}
       <AssignmentPanel userId={user.id} current={current} options={options} />
-      {active && (
+      {active && role && (
         <RoleForm
           userId={user.id}
           assignmentId={active.id}
-          role={{
-            holder_name: active.holder_name,
-            position: active.position,
-            responsibilities: active.responsibilities,
-            relationship_to_shareholders: active.relationship_to_shareholders,
-          }}
+          role={role}
+          picked={Boolean(active.holder_name?.trim())}
           people={people}
         />
       )}

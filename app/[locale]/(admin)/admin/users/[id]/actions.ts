@@ -13,6 +13,7 @@ import {
   updateAssignmentRole,
 } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
+import { dbdPeople, isDbdPerson } from '@/lib/domain/standard-role';
 import {
   PinError,
   confirmAssignmentRole,
@@ -182,12 +183,9 @@ export async function updateAssignmentRoleAction(
   const userId = String(formData.get('userId') ?? '');
   const assignmentId = String(formData.get('assignmentId') ?? '');
   await requireManageable(locale, userId);
-  const parsed = learnerRoleSchema.safeParse({
-    holder_name: formData.get('holder_name'),
-    position: formData.get('position'),
-    responsibilities: formData.get('responsibilities'),
-    relationship_to_shareholders: formData.get('relationship_to_shareholders'),
-  });
+  // Only the name is chosen; position, responsibilities and relationship are the same for
+  // every learner (D94). What was typed for them earlier stays stored.
+  const parsed = learnerRoleSchema.shape.holder_name.safeParse(formData.get('holder_name'));
   if (!parsed.success) {
     return { message: null, error: parsed.error.issues[0]?.message ?? 'Invalid' };
   }
@@ -195,14 +193,28 @@ export async function updateAssignmentRoleAction(
   const db = await createSupabaseServerClient();
   const { data: current } = await db
     .from('user_dbd_assignments')
-    .select('role_confirmed_at')
+    .select(
+      'role_confirmed_at, position, responsibilities, relationship_to_shareholders, dbd_records(directors, structured_data)',
+    )
     .eq('id', assignmentId)
     .maybeSingle();
-  if (current?.role_confirmed_at && (await evaluationInProgress(db, userId))) {
+  if (!current) return { message: null, error: 'not-found' };
+  // The name has to be one printed in the DBD documents (D94).
+  const record = Array.isArray(current.dbd_records) ? current.dbd_records[0] : current.dbd_records;
+  const { people } = dbdPeople(record ?? null);
+  if (parsed.data && !isDbdPerson(parsed.data, people)) {
+    return { message: null, error: 'name-not-in-dbd' };
+  }
+  if (current.role_confirmed_at && (await evaluationInProgress(db, userId))) {
     return { message: null, error: 'evaluation-in-progress' };
   }
   try {
-    await updateAssignmentRole(db, assignmentId, parsed.data);
+    await updateAssignmentRole(db, assignmentId, {
+      holder_name: parsed.data,
+      position: current.position,
+      responsibilities: current.responsibilities,
+      relationship_to_shareholders: current.relationship_to_shareholders,
+    });
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'role-saved', error: null };
   } catch (e) {

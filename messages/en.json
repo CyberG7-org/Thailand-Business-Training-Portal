@@ -847,14 +847,19 @@
     },
     "role": {
       "title": "The learner's role in the company",
-      "hint": "The bank asks \"how many shares do you hold?\", \"what is your position?\" — the portal needs to know who this learner is in the DBD documents.",
+      "hint": "The bank asks \"how many shares do you hold?\", \"what is your position?\". The name is taken from the DBD documents; the other answers are the same for every learner.",
       "holderName": "Name as in the DBD documents",
-      "holderHint": "Pick from the directors/shareholders or type it; used to match the learner's shareholding.",
+      "holderHint": "Has to be a name printed in the DBD documents. With one director it is filled in automatically; pick another person only if this learner is someone else.",
       "position": "Position in the company",
       "responsibilities": "Main responsibilities",
       "relationship": "Relationship to the other shareholders",
       "save": "Save role",
-      "saved": "Saved"
+      "saved": "Saved",
+      "choose": "Choose the person",
+      "automatic": "Filled in automatically: the company’s only director.",
+      "fixed": "The same for every learner",
+      "nameNotInDbd": "Choose a name that is printed in the DBD documents.",
+      "noPeople": "No director or shareholder has been read from the documents yet."
     },
     "managers": {
       "title": "Managers",

@@ -58,6 +58,7 @@ async function sourceFor(
   return {
     dbdRecordId: assignment.dbd_record_id,
     defaultHolderName:
+      pinned?.role?.holder_name?.trim() ||
       assignment.holder_name?.trim() ||
       profile?.display_name?.trim() ||
       directors[0]?.name_th?.trim() ||

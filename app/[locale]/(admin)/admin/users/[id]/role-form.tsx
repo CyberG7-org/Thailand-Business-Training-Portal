@@ -7,28 +7,42 @@ import { updateAssignmentRoleAction, type AccountActionState } from './actions';
 
 const initial: AccountActionState = { message: null, error: null };
 
+const FIXED = ['position', 'responsibilities', 'relationship_to_shareholders'] as const;
+const LABEL = {
+  position: 'position',
+  responsibilities: 'responsibilities',
+  relationship_to_shareholders: 'relationship',
+} as const;
+
 /**
- * The learner's own role in the assigned company (decision D39): which director/shareholder
- * they are, their position, duties and relationship — the facts behind "your shares", "your
- * position" questions the bank asks.
+ * The learner's own role in the assigned company (D39, D94): which person of the DBD documents
+ * they are — the facts behind the bank's "your shares" and "your name" questions — and the
+ * three answers that are the same for every learner, shown read-only. Only the name can be
+ * changed, and only to a name printed in the documents.
  */
 export function RoleForm({
   userId,
   assignmentId,
   role,
+  picked,
   people,
 }: {
   userId: string;
   assignmentId: string;
+  /** The role as the learner is taught it (`withStandardRole`). */
   role: LearnerRole;
-  /** Names printed in the DBD documents (directors ∪ shareholders) to pick the learner from. */
+  /** Whether a person chose the name; otherwise it is the company's only director, or none. */
+  picked: boolean;
+  /** Names printed in the DBD documents (directors, then shareholders) to pick the learner from. */
   people: string[];
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.role');
   const tv = useTranslations('admin.users.version');
   const [state, formAction, pending] = useActionState(updateAssignmentRoleAction, initial);
-  const inputClass = 'staff-input mt-1';
+  const name = role.holder_name ?? '';
+  // A name typed before D94 that is not in the documents is still shown, so it can be replaced.
+  const options = name && !people.includes(name) ? [name, ...people] : people;
   return (
     <form action={formAction} className="staff-card grid max-w-md gap-3" data-testid="role-form">
       <input type="hidden" name="locale" value={locale} />
@@ -38,47 +52,43 @@ export function RoleForm({
       <p className="text-xs text-ink-500">{t('hint')}</p>
       <label className="text-sm">
         {t('holderName')}
-        <input
+        <select
           name="holder_name"
-          list="dbd-people"
-          defaultValue={role.holder_name ?? ''}
-          className={inputClass}
+          key={name}
+          defaultValue={name}
+          className="staff-input mt-1"
           data-testid="role-holder"
-        />
-        <datalist id="dbd-people">
-          {people.map((name) => (
-            <option key={name} value={name} />
+          data-automatic={!picked && name ? 'true' : 'false'}
+        >
+          {!name && <option value="">{t('choose')}</option>}
+          {options.map((person) => (
+            <option key={person} value={person}>
+              {person}
+            </option>
           ))}
-        </datalist>
-        <span className="text-xs text-ink-500">{t('holderHint')}</span>
+        </select>
+        <span className="text-xs text-ink-500">
+          {people.length === 0 ? t('noPeople') : !picked && name ? t('automatic') : t('holderHint')}
+        </span>
       </label>
-      <label className="text-sm">
-        {t('position')}
-        <input name="position" defaultValue={role.position ?? ''} className={inputClass} />
-      </label>
-      <label className="text-sm">
-        {t('responsibilities')}
-        <textarea
-          name="responsibilities"
-          rows={2}
-          defaultValue={role.responsibilities ?? ''}
-          className={inputClass}
-        />
-      </label>
-      <label className="text-sm">
-        {t('relationship')}
-        <textarea
-          name="relationship_to_shareholders"
-          rows={2}
-          defaultValue={role.relationship_to_shareholders ?? ''}
-          className={inputClass}
-        />
-      </label>
+      <dl className="grid gap-2 text-sm" data-testid="role-fixed">
+        {FIXED.map((field) => (
+          <div key={field}>
+            <dt className="text-ink-500">{t(LABEL[field])}</dt>
+            <dd data-testid={`role-${field}`} className="text-ink-900">
+              {role[field]}
+            </dd>
+          </div>
+        ))}
+        <p className="text-xs text-ink-500">{t('fixed')}</p>
+      </dl>
       {state.error && (
         <p role="alert" className="text-sm text-bad-600">
           {state.error === 'evaluation-in-progress'
             ? tv('errors.evaluation-in-progress')
-            : state.error}
+            : state.error === 'name-not-in-dbd'
+              ? t('nameNotInDbd')
+              : state.error}
         </p>
       )}
       {state.message === 'role-saved' && (
@@ -86,7 +96,11 @@ export function RoleForm({
           {t('saved')}
         </p>
       )}
-      <button type="submit" disabled={pending} className="staff-btn justify-self-start">
+      <button
+        type="submit"
+        disabled={pending || people.length === 0}
+        className="staff-btn justify-self-start"
+      >
         {t('save')}
       </button>
     </form>

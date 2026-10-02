@@ -87,11 +87,19 @@ describe('pinning (spec §5.6, D75)', () => {
     await confirmAssignmentRole(team.asManager, { assignmentId, actorId: team.manager.id });
   });
 
-  it('refuses to confirm a role without a name', async () => {
+  it('confirms the only director when nobody picked a name, with the fixed answers (D94)', async () => {
     await updateAssignmentRole(team.asManager, assignmentId, { ...ROLE, holder_name: null });
-    await expect(
-      confirmAssignmentRole(team.asManager, { assignmentId, actorId: team.manager.id }),
-    ).rejects.toMatchObject({ code: 'role_missing' });
+    const snapshot = await confirmAssignmentRole(team.asManager, {
+      assignmentId,
+      actorId: team.manager.id,
+    });
+    expect(snapshot).toMatchObject({
+      holder_name: ROLE.holder_name,
+      position: 'กรรมการ',
+      responsibilities: 'ดูแลการดำเนินงานของบริษัท',
+      relationship_to_shareholders: 'เพื่อน',
+      my_shares: 18000,
+    });
     await updateAssignmentRole(team.asManager, assignmentId, ROLE);
     await confirmAssignmentRole(team.asManager, { assignmentId, actorId: team.manager.id });
   });

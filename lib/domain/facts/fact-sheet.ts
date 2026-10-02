@@ -14,6 +14,7 @@ import {
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
 import { withStandardAnswers } from '@/lib/domain/standard-answers';
+import { withStandardRole } from '@/lib/domain/standard-role';
 
 /** The status facts that select alternate wording (D73); the last is derived per assignment. */
 export const STATUS_FACTS = [...COMPANY_STATUS_FACTS, 'learner_is_shareholder'] as const;
@@ -97,7 +98,12 @@ export function buildFactSheet(input: {
   const directors = Array.isArray(input.record.directors)
     ? (input.record.directors as Director[])
     : [];
-  const holder = input.role?.holder_name?.trim() || null;
+  // Assignment scope: the name is one from the DBD, the position the same for every learner
+  // (D94). Company scope has no role at all.
+  const role = input.role
+    ? withStandardRole(input.role, { directors: directors.map((d) => d.name_th) })
+    : null;
+  const holder = role?.holder_name ?? null;
   const mine = myShareholding(business, holder);
   const category = input.structured.category;
   return {
@@ -136,7 +142,7 @@ export function buildFactSheet(input: {
     learner_is_shareholder: isShareholder(business, holder),
     business_category: category?.status === 'mapped' ? category.key : null,
     holder_name: holder,
-    position: input.role?.position ?? null,
+    position: role?.position ?? null,
     director_count: directors.length > 0 ? directors.length : null,
     shareholder_count: business.shareholders.length > 0 ? business.shareholders.length : null,
     my_shares: mine.shares,
