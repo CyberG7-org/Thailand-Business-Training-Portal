@@ -182,6 +182,19 @@ describe('name cards', () => {
       .update({ head_office_address: '1 ถนนตัวอย่าง' })
       .eq('id', recordId);
     await moveToNewest();
+
+    // A newer version that changes what the card prints makes a new card, though the holder,
+    // the phone and the record are the same (D96); the same facts keep the same card.
+    const before = await ensureNameCard(learner.id, fakeRenderer);
+    expect(before.card).not.toBeNull();
+    await svc
+      .from('dbd_records')
+      .update({ company_name_en: 'NAME CARD CO., LTD.' })
+      .eq('id', recordId);
+    await moveToNewest();
+    const after = await ensureNameCard(learner.id, fakeRenderer);
+    expect(after.card?.id).not.toBe(before.card!.id);
+    expect((await ensureNameCard(learner.id, fakeRenderer)).card?.id).toBe(after.card!.id);
   });
 
   it('queues the PDF for Telegram once per destination and the processor sends it as a document', async () => {

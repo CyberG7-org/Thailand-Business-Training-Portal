@@ -1,11 +1,12 @@
 import 'server-only';
+import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
 import type { Director } from '@/lib/domain/dbd-record';
 import {
-  NAME_CARD_TEMPLATE_VERSION,
   buildNameCardData,
   missingNameCardFields,
+  type NameCardData,
   type NameCardSource,
 } from '@/lib/domain/name-card';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
@@ -40,6 +41,16 @@ export class NameCardError extends Error {
 }
 
 const BUCKET = 'name-cards';
+
+/**
+ * A short digest of everything a card prints, layout included. It closes the PDF's file name,
+ * so a card is current exactly when the same digest comes out of today's facts — a training
+ * version that changes the company's address, email or products makes a new card even when the
+ * holder, phone and record are the same (D96).
+ */
+function fingerprintOf(data: NameCardData): string {
+  return createHash('sha256').update(JSON.stringify(data)).digest('hex').slice(0, 16);
+}
 const SIGNED_URL_SECONDS = 300;
 
 /** The holder's name on the card: the role (D95), the profile, a director. */
@@ -115,7 +126,7 @@ export async function generateNameCard(
 
   const data = buildNameCardData(source, phone, nameTh);
   const bytes = await renderer.renderNameCard(data);
-  const path = `${userId}/${Date.now()}-${data.templateVersion}.pdf`;
+  const path = `${userId}/${Date.now()}-${data.templateVersion}-${fingerprintOf(data)}.pdf`;
   const { error: uploadError } = await admin.storage
     .from(BUCKET)
     .upload(path, bytes, { contentType: 'application/pdf' });
@@ -146,7 +157,8 @@ export type EnsuredNameCard =
 /**
  * The learner's name card, made from what staff entered (D96): the holder's name from the
  * documents (D95), the phone given at Create learner, the company from its record. The learner
- * types nothing. A card made from the same name, phone, company and layout is kept; any change
+ * types nothing. A card that prints exactly what today's facts would (its fingerprint) is kept;
+ * any change — name, phone, layout, or a training version that changes the company's side —
  * makes a new one, so the card follows the record without anyone asking for it.
  */
 export async function ensureNameCard(
@@ -173,12 +185,12 @@ export async function ensureNameCard(
     if (!phone) throw new NameCardError('No phone given for the learner', 'no_phone');
     const name = found.defaultHolderName.trim();
     if (!name) throw new NameCardError('No holder name', 'no_name');
+    // Current when it was made for this company from exactly what would be printed today.
+    const printed = buildNameCardData(found.source, phone, name);
     const current =
       latest &&
       latest.dbd_record_id === found.dbdRecordId &&
-      latest.phone_number === phone &&
-      latest.holder_name === name &&
-      latest.template_version === NAME_CARD_TEMPLATE_VERSION;
+      latest.pdf_path.endsWith(`-${fingerprintOf(printed)}.pdf`);
     if (current) return { card: latest, blocked: null };
     const card = await generateNameCard(userId, { phone, holderNameTh: name }, renderer);
     return { card, blocked: null };
