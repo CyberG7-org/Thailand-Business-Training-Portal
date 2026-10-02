@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
 import type { ProgressionFacts } from '@/lib/domain/progression';
-import { isStudyComplete, type CardProgress } from '@/lib/domain/study-progress';
+import { isStudyComplete, type CardProgress, type StudyCard } from '@/lib/domain/study-progress';
 import { todayInBangkok, type ISODate } from '@/lib/domain/thai-date';
 import { getActiveAssignmentForUser, getLatestEligibility } from './assignments';
 import { IN_FILTER_CHUNK, allRows } from './chunks';
@@ -10,11 +10,27 @@ import type { Database } from './database.types';
 
 type Db = SupabaseClient<Database>;
 
-/** The cards a learner studies: every active one, as the study list shows them. */
-async function activeMaterialIds(db: Db): Promise<string[]> {
-  const { data, error } = await db.from('study_materials').select('id').eq('active', true);
+/** The cards a learner studies: every active one, as the study list shows them, with its languages. */
+async function activeCards(db: Db): Promise<StudyCard[]> {
+  const { data, error } = await db
+    .from('study_materials')
+    .select('id, study_material_localizations(language)')
+    .eq('active', true);
   if (error) throw error;
-  return data.map((m) => m.id);
+  return data.map((m) => ({
+    id: m.id,
+    languages: m.study_material_localizations.map((l) => l.language),
+  }));
+}
+
+/** The language a learner last chose; Thai when none is stored. */
+async function preferredLanguages(db: Db, userIds: string[]): Promise<Map<string, string>> {
+  const { data, error } = await db
+    .from('profiles')
+    .select('id, preferred_language')
+    .in('id', userIds);
+  if (error) throw error;
+  return new Map(data.map((p) => [p.id, p.preferred_language]));
 }
 
 /**
@@ -23,16 +39,24 @@ async function activeMaterialIds(db: Db): Promise<string[]> {
 export async function loadProgressionFacts(
   db: Db,
   userId: string,
-  options: { today?: ISODate } = {},
+  /** `language`: the one the learner is reading in; the one they last chose when absent. */
+  options: { today?: ISODate; language?: string } = {},
 ): Promise<ProgressionFacts> {
-  const [assignment, requireExamPassForInterview, requireExamPassForNameCard, tracking, materials] =
-    await Promise.all([
-      getActiveAssignmentForUser(db, userId),
-      getPolicy('require_exam_pass_for_interview'),
-      getPolicy('require_exam_pass_for_name_card'),
-      getPolicy('study_completion_tracking'),
-      activeMaterialIds(db),
-    ]);
+  const [
+    assignment,
+    requireExamPassForInterview,
+    requireExamPassForNameCard,
+    tracking,
+    cards,
+    language,
+  ] = await Promise.all([
+    getActiveAssignmentForUser(db, userId),
+    getPolicy('require_exam_pass_for_interview'),
+    getPolicy('require_exam_pass_for_name_card'),
+    getPolicy('study_completion_tracking'),
+    activeCards(db),
+    options.language ?? preferredLanguages(db, [userId]).then((m) => m.get(userId) ?? 'th'),
+  ]);
   const [snapshot, studyRows, quizRows, exam, cardRows, interviews, upcoming] = await Promise.all([
     assignment ? getLatestEligibility(db, userId, assignment.dbd_record_id) : null,
     db.from('study_progress').select('material_id, completed_at').eq('user_id', userId),
@@ -60,7 +84,7 @@ export async function loadProgressionFacts(
   return {
     hasActiveAssignment: assignment !== null,
     studyOpened: studyRows.data.length > 0,
-    studyComplete: isStudyComplete(materials, studyRows.data, tracking),
+    studyComplete: isStudyComplete(cards, studyRows.data, tracking, language),
     quizAttempts: quizRows.count ?? 0,
     examSubmitted: exam.submitted,
     examPassed: exam.passed,
@@ -107,7 +131,8 @@ export async function loadProgressionFactsForUsers(
     requireExamPassForNameCard,
     examPassRule,
     tracking,
-    materials,
+    studyCards,
+    languages,
     study,
     assignments,
     snapshots,
@@ -120,7 +145,9 @@ export async function loadProgressionFactsForUsers(
     getPolicy('require_exam_pass_for_name_card'),
     getPolicy('exam_pass_rule'),
     getPolicy('study_completion_tracking'),
-    activeMaterialIds(db),
+    activeCards(db),
+    // Staff see a learner's steps in the language that learner last chose.
+    preferredLanguages(db, userIds),
     // One row per learner and card: read a page at a time, never cut off at `max_rows`.
     allRows((from, to) =>
       db
@@ -197,7 +224,12 @@ export async function loadProgressionFactsForUsers(
     out.set(userId, {
       hasActiveAssignment: assignmentByUser.has(userId),
       studyOpened: progressByUser.has(userId),
-      studyComplete: isStudyComplete(materials, progressByUser.get(userId) ?? [], tracking),
+      studyComplete: isStudyComplete(
+        studyCards,
+        progressByUser.get(userId) ?? [],
+        tracking,
+        languages.get(userId) ?? 'th',
+      ),
       quizAttempts: quizCount.get(userId) ?? 0,
       examSubmitted: exams.length,
       examPassed,

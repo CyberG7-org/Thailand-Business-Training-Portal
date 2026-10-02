@@ -15,15 +15,28 @@ describe('isCardDone', () => {
 
 /** The study list's "all cards done" is what the steps call Done (the owner, 2026-10-02). */
 describe('isStudyComplete', () => {
+  const all = (id: string) => ({ id, languages: ['th', 'en', 'zh'] });
+
   it('is done once every card is, and not while one is left', () => {
-    expect(isStudyComplete(['a', 'b'], [opened('a'), opened('b')], 'viewed')).toBe(true);
-    expect(isStudyComplete(['a', 'b'], [opened('a')], 'viewed')).toBe(false);
-    expect(isStudyComplete(['a', 'b'], [completed('a'), opened('b')], 'completed')).toBe(false);
-    expect(isStudyComplete(['a', 'b'], [completed('a'), completed('b')], 'completed')).toBe(true);
+    const cards = [all('a'), all('b')];
+    expect(isStudyComplete(cards, [opened('a'), opened('b')], 'viewed', 'th')).toBe(true);
+    expect(isStudyComplete(cards, [opened('a')], 'viewed', 'th')).toBe(false);
+    expect(isStudyComplete(cards, [completed('a'), opened('b')], 'completed', 'th')).toBe(false);
+    expect(isStudyComplete(cards, [completed('a'), completed('b')], 'completed', 'th')).toBe(true);
   });
 
-  it('ignores marks on cards no longer studied, and is never done with nothing to study', () => {
-    expect(isStudyComplete(['a'], [opened('a'), opened('gone')], 'viewed')).toBe(true);
-    expect(isStudyComplete([], [opened('a')], 'viewed')).toBe(false);
+  it('does not wait for a card the learner cannot open in their language', () => {
+    // The seeded sample card has no Chinese: a Chinese reader can never open it.
+    const cards = [all('a'), { id: 'thai-only', languages: ['th', 'en'] }];
+    expect(isStudyComplete(cards, [opened('a')], 'viewed', 'zh')).toBe(true);
+    expect(isStudyComplete(cards, [opened('a')], 'viewed', 'th')).toBe(false);
+  });
+
+  it('ignores marks on cards no longer studied, and is never done with nothing to read', () => {
+    expect(isStudyComplete([all('a')], [opened('a'), opened('gone')], 'viewed', 'th')).toBe(true);
+    expect(isStudyComplete([], [opened('a')], 'viewed', 'th')).toBe(false);
+    expect(isStudyComplete([{ id: 'a', languages: ['th'] }], [opened('a')], 'viewed', 'zh')).toBe(
+      false,
+    );
   });
 });

@@ -305,8 +305,11 @@ export async function ensureStarterCards(): Promise<void> {
   await loadStarterCards(svc() as never, BANK_INTERVIEW_CARDS, await ownerId());
 }
 
-/** Marks every active card opened by the learner, as reading each one would. */
-export async function seedAllCardsViewed(loginId: string): Promise<void> {
+/**
+ * Marks every active card opened by the learner, as reading each one would; with `language`,
+ * only the cards written in it (a card without it cannot be opened in that language).
+ */
+export async function seedAllCardsViewed(loginId: string, language?: string): Promise<void> {
   const admin = svc();
   const { data: profile, error } = await admin
     .from('profiles')
@@ -316,11 +319,18 @@ export async function seedAllCardsViewed(loginId: string): Promise<void> {
   if (error) throw error;
   const { data: materials, error: materialsError } = await admin
     .from('study_materials')
-    .select('id')
+    .select('id, study_material_localizations(language)')
     .eq('active', true);
   if (materialsError) throw materialsError;
+  const readable = language
+    ? materials.filter((m) =>
+        (m.study_material_localizations as { language: string }[]).some(
+          (l) => l.language === language,
+        ),
+      )
+    : materials;
   const { error: progressError } = await admin.from('study_progress').upsert(
-    materials.map((m) => ({ user_id: profile.id, material_id: m.id })),
+    readable.map((m) => ({ user_id: profile.id, material_id: m.id })),
     { onConflict: 'user_id,material_id', ignoreDuplicates: true },
   );
   if (progressError) throw progressError;

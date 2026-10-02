@@ -39,7 +39,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
   const [mine, facts, lastExam, passMark, booking] = await Promise.all([
     getMyCompany(db, user.id),
-    loadProgressionFacts(db, user.id),
+    loadProgressionFacts(db, user.id, { language: locale }),
     latestSubmittedExam(db, user.id),
     getPolicy('exam_passing_mark_percent'),
     myUpcomingAppointment(user.id),

@@ -62,6 +62,18 @@ test('study is done once every card is opened', async ({ page }) => {
   );
 });
 
+test("a card not written in the reader's language is not waited for", async ({ page }) => {
+  const learner = await seedLearnerWithCompany('บริษัท อ่านภาษาจีน จำกัด', '2026-07-13');
+  // Every card that has Chinese is opened; the seeded sample has none, so it is not.
+  await seedAllCardsViewed(learner, 'zh');
+  await loginAs(page, learner, E2E_PASSWORD);
+  await page.goto('/zh/dashboard');
+  await expect(page.getByTestId('stage-study-status')).toHaveText('已完成');
+  // In Thai the sample can be opened, and it is not yet.
+  await page.goto('/th/dashboard');
+  await expect(page.getByTestId('stage-study-status')).toHaveText('กำลังดำเนินการ');
+});
+
 test('read-aloud is refused for content that is not approved for TTS', async ({ page }) => {
   const learner = await seedLearnerWithCompany('บริษัท ไม่มีเสียง จำกัด', '2026-07-13');
   await loginAs(page, learner, E2E_PASSWORD);
