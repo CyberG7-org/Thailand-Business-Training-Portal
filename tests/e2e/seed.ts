@@ -41,7 +41,8 @@ export async function seedLearnerWithCompany(
   companyNameTh: string,
   issuedOn: string | null,
   extra: Record<string, unknown> = {},
-  options: { version?: boolean } = {},
+  /** `phone`: the mobile a manager gives at Create learner (D80), which the name card prints. */
+  options: { version?: boolean; phone?: string } = {},
 ): Promise<string> {
   const admin = svc();
   const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
@@ -54,6 +55,13 @@ export async function seedLearnerWithCompany(
     app_metadata: { role: 'learner' },
   });
   if (error) throw error;
+  if (options.phone) {
+    const { error: phoneError } = await admin
+      .from('profiles')
+      .update({ phone: options.phone })
+      .eq('id', user.user.id);
+    if (phoneError) throw phoneError;
+  }
   const { data: record, error: recordError } = await admin
     .from('dbd_records')
     .insert({

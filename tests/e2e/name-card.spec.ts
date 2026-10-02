@@ -1,42 +1,59 @@
 import { expect, test } from '@playwright/test';
 import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany, setPolicy } from './seed';
+import { seedLearnerWithCompany } from './seed';
 
-test('learner creates a Thai name card from the company record, previews the PDF and queues it to Telegram', async ({
+const ADDRESS = { head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง' };
+
+/**
+ * The name card is made for the learner from what staff entered (D96): the name from the
+ * documents, the phone from Create learner, the company from its record. The learner only sees
+ * it and downloads it; the step is done before they open it.
+ */
+test("a learner's card is ready without typing: the step is done and the page shows the card", async ({
   page,
 }) => {
-  await setPolicy('telegram_admin_chat_ids', ['e2e-chat']);
-  const learner = await seedLearnerWithCompany('บริษัท นามบัตรอีทูอี จำกัด', '2026-07-13', {
-    head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง',
-  });
+  const learner = await seedLearnerWithCompany(
+    'บริษัท นามบัตรอีทูอี จำกัด',
+    '2026-07-13',
+    ADDRESS,
+    {
+      phone: '0812345678',
+    },
+  );
   await loginAs(page, learner, E2E_PASSWORD);
-  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เสร็จสิ้น');
   await page.getByTestId('stage-nameCard').getByRole('link', { name: 'เปิด' }).click();
   await expect(page).toHaveURL(/\/th\/name-card$/);
 
-  // Invalid phone is rejected before anything is rendered.
-  await page.locator('input[name="phone"]').fill('12345');
-  await page.getByTestId('generate-card').click();
-  await expect(page.getByTestId('name-card-error')).toContainText('เบอร์มือถือ');
-
-  await page.locator('input[name="phone"]').fill('+66 81 234 5678');
-  await page.getByTestId('generate-card').click();
-  await expect(page.getByTestId('card-preview')).toBeVisible();
+  const preview = page.getByTestId('card-preview');
+  await expect(preview).toBeVisible();
+  await expect(preview.getByTestId('card-meta')).toContainText('081-234-5678');
+  await expect(preview.getByTestId('card-meta')).toContainText('two-sided-v3');
   await expect(page.getByTestId('download-card')).toHaveAttribute('href', /name-cards/);
-  await expect(page.getByText('081-234-5678').first()).toBeVisible();
-
-  await page.getByTestId('send-card').click();
-  await expect(page.getByTestId('card-sent')).toContainText('1');
-
-  await page.goto('/th/dashboard');
-  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เสร็จสิ้น');
+  // Nothing to fill in and nothing to send: see it, download it.
+  await expect(page.getByRole('main').getByRole('textbox')).toHaveCount(0);
+  await expect(page.getByTestId('send-card')).toHaveCount(0);
 });
 
-test('a learner whose record lacks the address cannot generate a card', async ({ page }) => {
-  const learner = await seedLearnerWithCompany('บริษัท ไม่มีที่อยู่ จำกัด', '2026-07-13');
-  await loginAs(page, learner, E2E_PASSWORD);
+test('a card waits for the record and the phone, and says what is missing', async ({ page }) => {
+  const noAddress = await seedLearnerWithCompany(
+    'บริษัท ไม่มีที่อยู่ จำกัด',
+    '2026-07-13',
+    {},
+    {
+      phone: '0812345678',
+    },
+  );
+  await loginAs(page, noAddress, E2E_PASSWORD);
   await page.goto('/th/name-card');
   await expect(page.getByTestId('card-blocked')).toContainText('head_office_address');
-  await expect(page.getByTestId('generate-card')).toHaveCount(0);
+  await expect(page.getByTestId('card-preview')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  const noPhone = await seedLearnerWithCompany('บริษัท ไม่มีเบอร์ จำกัด', '2026-07-13', ADDRESS);
+  await loginAs(page, noPhone, E2E_PASSWORD);
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('พร้อมใช้งาน');
+  await page.goto('/th/name-card');
+  await expect(page.getByTestId('card-blocked')).toContainText('ยังไม่มีเบอร์มือถือของคุณ');
 });

@@ -2,10 +2,9 @@ import type { CSSProperties } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
 import { requireUser } from '@/lib/auth/session';
-import { createMyNameCardUrl, getMyLatestNameCard, nameCardReadiness } from '@/lib/db/name-cards';
-import { createSupabaseServerClient } from '@/lib/db/server';
+import { createMyNameCardUrl, ensureNameCard, type EnsuredNameCard } from '@/lib/db/name-cards';
 import { formatThaiMobile } from '@/lib/domain/phone';
-import { GenerateForm, SendForm } from './name-card-forms';
+import { ReactPdfRenderer } from '@/lib/integrations/pdf/name-card';
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 
@@ -23,46 +22,39 @@ function Blocked({ children }: { children: string }) {
   );
 }
 
+/** The reasons a card cannot be made that the learner is told; anything else reads as no company. */
+const SHOWN_REASONS = [
+  'no_assignment',
+  'exam_required',
+  'missing_fields',
+  'no_phone',
+  'no_name',
+] as const;
+type ShownReason = (typeof SHOWN_REASONS)[number];
+const reasonOf = (blocked: NonNullable<EnsuredNameCard['blocked']>): ShownReason =>
+  SHOWN_REASONS.find((r) => r === blocked.code) ?? 'no_assignment';
+
 /**
- * The name card (handoff, 06): the form card on the left, the preview card with the real PDF on
- * its stage and the actions in its footer on the right. A learner who cannot make a card yet
- * sees why instead of the form.
+ * The name card (handoff, 06; D96): made for the learner from what staff entered, so the page
+ * only shows it — the real PDF on its stage and the download in its footer. The learner types
+ * nothing; a card that cannot be made yet says why, for the manager to put right.
  */
 export default async function NameCardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const db = await createSupabaseServerClient();
-  const [readiness, card, { data: profile }] = await Promise.all([
-    nameCardReadiness(user.id),
-    getMyLatestNameCard(db, user.id),
-    // The phone the manager gave the learner (D80) fills the field until a card exists.
-    db.from('profiles').select('phone').eq('id', user.id).maybeSingle(),
+  const [{ card, blocked }, t] = await Promise.all([
+    ensureNameCard(user.id, new ReactPdfRenderer()),
+    getTranslations('nameCard'),
   ]);
-  const savedPhone = card?.phone_number ?? profile?.phone ?? null;
   const pdfUrl = card ? await createMyNameCardUrl(user.id, card.id) : null;
-  const t = await getTranslations('nameCard');
-  const examBlocked = readiness.examRequired && !readiness.examPassed;
-  const blocked = examBlocked || readiness.missingFields.length > 0;
 
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="nameCard">
-      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)] xl:items-start">
-        {blocked ? (
-          <div className="rise grid gap-3">
-            {examBlocked && <Blocked>{t('errors.exam_required')}</Blocked>}
-            {readiness.missingFields.length > 0 && (
-              <Blocked>
-                {t('errors.missing_fields', { fields: readiness.missingFields.join(', ') })}
-              </Blocked>
-            )}
-          </div>
-        ) : (
-          <GenerateForm
-            hasCard={card !== null}
-            defaultPhone={savedPhone ? formatThaiMobile(savedPhone) : ''}
-            defaultHolderTh={card?.holder_name ?? readiness.defaultHolderName}
-            defaultHolderEn={card?.holder_name_en ?? ''}
-          />
+      <div className="mx-auto grid max-w-[880px] gap-6">
+        {blocked && (
+          <Blocked>
+            {t(`errors.${reasonOf(blocked)}`, { fields: blocked.fields.join(', ') })}
+          </Blocked>
         )}
 
         {card && pdfUrl && (
@@ -113,7 +105,6 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
                 </svg>
                 {t('download')}
               </a>
-              <SendForm cardId={card.id} sentAt={card.telegram_sent_at} />
             </div>
           </section>
         )}

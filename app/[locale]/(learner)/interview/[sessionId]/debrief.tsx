@@ -31,7 +31,8 @@ const GHOST =
   'inline-flex min-h-12 items-center justify-center rounded-control border border-ink-300 px-5 text-base font-medium text-ink-700 transition-colors hover:bg-ink-50';
 
 /**
- * The verdict in the exam-result treatment, the officer's narrative, then every judged concept
+ * The verdict in the exam-result treatment — with, first of all, whether the learner can open
+ * the account or not — the officer's narrative, then every judged concept
  * with the correct value now — this is where the teaching happens (spec §4.4) — and the
  * transcript. The chrome follows the learner's language; the officer's words stay Thai.
  */
@@ -57,6 +58,8 @@ export async function Debrief({
   const t = await getTranslations('interview');
   const ready = verdict === 'ready';
   const tag = verdict ?? 'abandoned';
+  // What the learner came to find out, in plain words (Owner, 2026-10-02): can they open the
+  // account or not. The chip, the officer's narrative and the answers below explain why.
   const label = (concept: string) =>
     concept === 'juristic_id'
       ? t('concept.juristic_id')
@@ -109,6 +112,17 @@ export async function Debrief({
           >
             {t(`verdict.${tag}`)}
           </span>
+          <h2
+            data-testid="interview-outcome"
+            data-outcome={ready ? 'can_open' : 'cannot_open'}
+            className={
+              'mt-2 font-display text-[20px] leading-[1.45] font-semibold md:text-[22px] ' +
+              (ready ? 'text-brand-900' : 'text-warn-700')
+            }
+          >
+            {t(`outcome.${tag}.title`)}
+          </h2>
+          <p className="mt-1 text-base leading-[1.75] text-ink-900">{t(`outcome.${tag}.detail`)}</p>
           {closeReason && (
             <p data-testid="close-reason" className="mt-2 text-sm leading-[1.7] text-ink-700">
               {t(`closeReason.${closeReason}` as never)}

@@ -64,6 +64,11 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
 
   await answerUntilClosed(page, () => 'ไม่ทราบ');
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'not_ready');
+  await expect(page.getByTestId('interview-outcome')).toHaveAttribute(
+    'data-outcome',
+    'cannot_open',
+  );
+  await expect(page.getByTestId('interview-outcome')).toContainText('ยังเปิดบัญชีธนาคารไม่ได้');
   await expect(page.getByTestId('verdict-reason-company_name')).toHaveAttribute(
     'data-verdict',
     'evasive',
@@ -84,6 +89,9 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
   await answerUntilClosed(page, (c) => (c === 'company_name' ? company : (GOOD[c] ?? FALLBACK)));
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'ready');
+  // The result says in plain words what the learner came to find out.
+  await expect(page.getByTestId('interview-outcome')).toHaveAttribute('data-outcome', 'can_open');
+  await expect(page.getByTestId('interview-outcome')).toContainText('เปิดบัญชีธนาคารได้');
 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-interview-status')).toHaveText('เสร็จสิ้น');
@@ -115,6 +123,11 @@ test('the learner can end the interview early and is told to try again', async (
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
   await page.getByTestId('chat-end').click();
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'not_ready');
+  await expect(page.getByTestId('interview-outcome')).toHaveAttribute(
+    'data-outcome',
+    'cannot_open',
+  );
+  await expect(page.getByTestId('interview-outcome')).toContainText('ยังเปิดบัญชีธนาคารไม่ได้');
   await expect(page.getByTestId('close-reason')).toHaveText('คุณจบการสัมภาษณ์ก่อนครบทุกข้อ');
   await expect(page.getByRole('link', { name: 'ลองอีกครั้ง' })).toHaveAttribute(
     'href',
