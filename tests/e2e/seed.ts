@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
+import { MCQ_STARTER } from '@/lib/content/mcq-starter';
 import type { DbdRecordRow } from '@/lib/db/dbd-records';
+import { listVariants, loadStarterVariants, setVariantStatus } from '@/lib/db/mcq-bank';
 import { loadStarterCards } from '@/lib/db/study';
 import { activationArgs, readTrainingSheet } from '@/lib/db/training-sheet';
-import { E2E_PASSWORD } from './fixtures';
+import { manualCategory } from '@/lib/domain/business-category';
+import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 
 config({ path: '.env.local' });
 
@@ -375,8 +378,15 @@ export async function seedLocalizedStudyCard(
   return material.id;
 }
 
-/** A learner on a confirmed, complete company (every company-level concept resolvable). */
-export async function seedLearnerWithCompleteCompany(companyNameTh: string): Promise<string> {
+/**
+ * A learner on a confirmed, complete company (every company-level concept resolvable).
+ * `category: true` also gives the company its business category, which the Business Knowledge
+ * Quiz needs to offer other lines of business as wrong answers.
+ */
+export async function seedLearnerWithCompleteCompany(
+  companyNameTh: string,
+  options: { category?: boolean } = {},
+): Promise<string> {
   // Issued after registration (dbd_issue_not_before_registration).
   return seedLearnerWithCompany(companyNameTh, '2026-08-05', {
     company_name_en: 'COMPLETE CO., LTD.',
@@ -386,6 +396,9 @@ export async function seedLearnerWithCompleteCompany(companyNameTh: string): Pro
     signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',
     head_office_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
     structured_data: {
+      ...(options.category
+        ? { category: manualCategory('clothing_fashion', 'e2e', new Date().toISOString()) }
+        : {}),
       business: {
         shareholders: [
           { name: 'นางสาวกุลธิดา พลเยี่ยม', nationality: 'ไทย', shares: 18000, percent: null },
@@ -424,6 +437,73 @@ export async function seedLearnerWithCompleteCompany(companyNameTh: string): Pro
       },
     },
   });
+}
+
+/** A learner whose company the Business Knowledge Quiz can ask all 30 concepts of (D100). */
+export async function seedQuizReadyLearner(companyNameTh: string): Promise<string> {
+  return seedLearnerWithCompleteCompany(companyNameTh, { category: true });
+}
+
+const STARTER_KEYS = MCQ_STARTER.map((s) => s.key);
+
+/** The starter bank, every question approved: what a quiz needs to start. Safe to call again. */
+export async function seedApprovedBank(): Promise<void> {
+  const admin = svc();
+  const { data: owner } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', E2E_ADMIN.loginId)
+    .single();
+  if (!owner) throw new Error('no e2e admin to own the starter bank');
+  await loadStarterVariants(admin as never, MCQ_STARTER, owner.id);
+  for (const variant of await listVariants(admin as never)) {
+    if (STARTER_KEYS.includes(variant.key) && variant.status !== 'approved') {
+      await setVariantStatus(admin as never, variant.id, 'approved');
+    }
+  }
+}
+
+/** Puts starter questions back to draft, for the test that approves them from the screen. */
+export async function returnStartersToDraft(keys: string[]): Promise<void> {
+  const { error } = await svc()
+    .from('questions')
+    .update({ approval_status: 'draft' })
+    .in('question_key', keys);
+  if (error) throw error;
+}
+
+/**
+ * What only the server knows about an open attempt: for each question in the order shown, the
+ * concept it asks and the option that is correct. The page itself never carries it.
+ */
+export async function answerKeyOf(
+  attemptId: string,
+): Promise<{ conceptKey: string; correctKey: string }[]> {
+  const admin = svc();
+  const { data: answers, error } = await admin
+    .from('assessment_answers')
+    .select('id, position, concept_key')
+    .eq('attempt_id', attemptId)
+    .order('position');
+  if (error) throw error;
+  const { data: keys, error: keyError } = await admin
+    .from('assessment_answer_keys')
+    .select('answer_id, correct_key')
+    .in(
+      'answer_id',
+      answers.map((a) => a.id),
+    );
+  if (keyError) throw keyError;
+  const byAnswer = new Map(keys.map((k) => [k.answer_id, k.correct_key]));
+  return answers.map((a) => ({
+    conceptKey: a.concept_key ?? '',
+    correctKey: byAnswer.get(a.id) ?? '',
+  }));
+}
+
+/** The record a seeded learner is assigned to. */
+export async function recordIdOf(loginId: string): Promise<string> {
+  return (await learnerAndRecord(loginId)).recordId;
 }
 
 /** An unfinished quiz for the learner, which blocks a version move; returns its id. */

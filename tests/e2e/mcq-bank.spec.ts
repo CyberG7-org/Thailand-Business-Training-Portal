@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompleteCompany } from './seed';
+import { returnStartersToDraft, seedApprovedBank, seedLearnerWithCompleteCompany } from './seed';
 
 /** The bank, with the starter drafts in it; then one of them, through its concept. */
 async function openStarterVariant(page: Page, concept: string, key: string) {
@@ -56,11 +56,39 @@ test('the Owner loads the starter drafts, previews a variant in three languages 
     'data-covered',
     'true',
   );
-  // A concept with two cases is not covered by drafts.
+});
+
+test('the Owner approves every checked draft at once, and all 30 concepts are ready', async ({
+  page,
+}) => {
+  await seedApprovedBank();
+  // Both wordings of the learner's shareholding and one more, back to draft: a concept with
+  // two cases is not covered by drafts.
+  await returnStartersToDraft([
+    'mcq-learner-shareholding-1',
+    'mcq-learner-shareholding-2',
+    'mcq-otp-control-1',
+  ]);
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/th/admin/questions');
   await expect(page.getByTestId('concept-learner_shareholding')).toHaveAttribute(
     'data-covered',
     'false',
   );
+  await expect(page.getByTestId('bank-ready')).toHaveAttribute('data-ready', '28');
+
+  // One button, behind a confirm step that names the count.
+  const approve = page.getByTestId('approve-drafts');
+  await expect(approve).toContainText('3');
+  await approve.click();
+  await page.getByTestId('approve-drafts-confirm').click();
+  await expect(page.getByTestId('drafts-approved')).toContainText('3');
+  await expect(page.getByTestId('bank-ready')).toHaveAttribute('data-ready', '30');
+  await expect(page.getByTestId('concept-learner_shareholding')).toHaveAttribute(
+    'data-covered',
+    'true',
+  );
+  await expect(page.getByTestId('approve-drafts')).toHaveCount(0);
 });
 
 test('drawn places are different from each other and the same in every language', async ({
@@ -132,6 +160,7 @@ test('a new variant is refused until its options match their recipes, and nothin
 });
 
 test('checking a company lists what the bank can ask it', async ({ page }) => {
+  await seedApprovedBank();
   const company = `บริษัท ตรวจคลัง ${Date.now()} จำกัด`;
   await seedLearnerWithCompleteCompany(company);
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
@@ -146,8 +175,10 @@ test('checking a company lists what the bank can ask it', async ({ page }) => {
   const capital = page.getByTestId('check-registered_capital');
   await expect(capital).toHaveAttribute('data-state', 'usable');
   await expect(capital).toContainText('2,000,000 บาท');
-  // Nobody has written a variant for the first concept yet.
-  await expect(page.getByTestId('check-company_name')).toHaveAttribute('data-state', 'blocked');
+  // The company has no business category: a question that offers other lines of business as
+  // wrong answers cannot be asked of it.
+  await expect(page.getByTestId('check-company_name')).toHaveAttribute('data-state', 'usable');
+  await expect(page.getByTestId('check-actual_business')).toHaveAttribute('data-state', 'blocked');
   await expect(page.getByTestId('check-summary')).toBeVisible();
 });
 
