@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { applyExtractionToRecord, extractionToFormValues } from '@/lib/domain/extraction-merge';
+import {
+  applyExtractionToRecord,
+  extractionToFormValues,
+  restoresMarks,
+} from '@/lib/domain/extraction-merge';
 import { SAMPLE_EXTRACTION } from '@/lib/integrations/extraction/fake';
 
 describe('extractionToFormValues', () => {
@@ -55,6 +59,38 @@ describe('applyExtractionToRecord', () => {
     expect(applied).toContain('juristic_id');
     expect(applied).not.toContain('company_name_th');
     expect(rejected).toEqual([]);
+  });
+
+  it('replaces a stored value that is the new reading with Thai marks missing (D92)', () => {
+    const fresh = {
+      ...SAMPLE_EXTRACTION,
+      head_office_address: {
+        ...SAMPLE_EXTRACTION.head_office_address,
+        value: 'เลขที่ 194/3 หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา',
+      },
+      signing_authority: {
+        ...SAMPLE_EXTRACTION.signing_authority,
+        value: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',
+      },
+    };
+    const current = {
+      company_name_th: 'บริษัท ที่แอดมินพิมพ์ จำกัด',
+      juristic_id: '0105569000134',
+      // Read earlier by a reader that dropped the low marks.
+      head_office_address: 'เลขที่ 194/3 หมูที่ 2  ตำบลวังใหญ อำเภอเทพา จังหวัดสงขลา',
+      // Typed by a person: different words, not lost marks.
+      signing_authority: 'กรรมการสองคนลงลายมือชื่อร่วมกัน',
+    };
+    const { input, applied } = applyExtractionToRecord(fresh, current);
+    expect(input.head_office_address).toBe(
+      'เลขที่ 194/3 หมู่ที่ 2 ตำบลวังใหญ่ อำเภอเทพา จังหวัดสงขลา',
+    );
+    expect(applied).toContain('head_office_address');
+    expect(input.signing_authority).toBe('กรรมการสองคนลงลายมือชื่อร่วมกัน');
+    expect(input.company_name_th).toBe('บริษัท ที่แอดมินพิมพ์ จำกัด');
+    expect(restoresMarks('ผูถือหุน', 'ผู้ถือหุ้น')).toBe(true);
+    expect(restoresMarks('ผู้ถือหุ้น', 'ผู้ถือหุ้น')).toBe(false);
+    expect(restoresMarks(undefined, 'ผู้ถือหุ้น')).toBe(false);
   });
 
   it('takes dates as the certificate prints them (first real pack on staging: "9 เมษายน 2569")', () => {

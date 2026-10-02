@@ -6,7 +6,7 @@ import {
   type Provenance,
   type StructuredData,
 } from '@/lib/domain/dbd-profile';
-import { applyExtractionToRecord } from '@/lib/domain/extraction-merge';
+import { applyExtractionToRecord, restoresMarks } from '@/lib/domain/extraction-merge';
 import { DIRECT_READ_HARD_MAX_PAGES, planDirectRead } from '@/lib/domain/extraction-plan';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
@@ -247,9 +247,13 @@ async function directPass(
   const current = readStructuredData(extracted.structured_data);
   const currentBusiness = current.business ?? null;
   const business = extractedBusinessProfile(extraction);
+  // Filled when nothing was entered yet — or when what is stored is this reading with Thai
+  // marks missing (objectives, shareholder names), which an earlier reading dropped (D92).
   const businessFilled =
-    (currentBusiness === null || isBusinessProfileEmpty(currentBusiness)) &&
-    !isBusinessProfileEmpty(business);
+    !isBusinessProfileEmpty(business) &&
+    (currentBusiness === null ||
+      isBusinessProfileEmpty(currentBusiness) ||
+      restoresMarks(JSON.stringify(currentBusiness), JSON.stringify(business)));
   // Everything else in the column (interview answers, provenance written by the transcript
   // path) is kept; this pass only adds what it read.
   const structured: StructuredData = {

@@ -1,7 +1,7 @@
 // Not `server-only`: public reference tables read with the caller's own client, and the e2e seed
 // (plain Node) resolves a seeded address through it.
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { GeoLookup } from '@/lib/domain/geo/types';
+import type { GeoDistrict, GeoLookup, GeoProvince, GeoSubdistrict } from '@/lib/domain/geo/types';
 import type { GeoName, RenderContext } from '@/lib/domain/mcq/context';
 import type { Database } from './database.types';
 
@@ -9,54 +9,94 @@ type Db = SupabaseClient<Database>;
 
 /** The geography tables as a `GeoLookup`; any signed-in client or the service role may read them. */
 export function geoLookup(db: Db): GeoLookup {
+  const province = (r: {
+    id: number;
+    region_id: number;
+    name_th: string;
+    name_en: string;
+  }): GeoProvince => ({ id: r.id, regionId: r.region_id, nameTh: r.name_th, nameEn: r.name_en });
+  const district = (r: {
+    id: number;
+    province_id: number;
+    name_th: string;
+    name_en: string;
+    prefix_th: string;
+  }): GeoDistrict => ({
+    id: r.id,
+    provinceId: r.province_id,
+    nameTh: r.name_th,
+    nameEn: r.name_en,
+    prefixTh: r.prefix_th,
+  });
+  const subdistrict = (r: {
+    id: number;
+    district_id: number;
+    name_th: string;
+    name_en: string;
+    prefix_th: string;
+    postcode: string;
+  }): GeoSubdistrict => ({
+    id: r.id,
+    districtId: r.district_id,
+    nameTh: r.name_th,
+    nameEn: r.name_en,
+    prefixTh: r.prefix_th,
+    postcode: r.postcode,
+  });
+  const PROVINCE = 'id, region_id, name_th, name_en';
+  const DISTRICT = 'id, province_id, name_th, name_en, prefix_th';
+  const SUBDISTRICT = 'id, district_id, name_th, name_en, prefix_th, postcode';
   return {
     async provinceByName(nameTh) {
       const { data, error } = await db
         .from('geo_provinces')
-        .select('id, region_id, name_th, name_en')
+        .select(PROVINCE)
         .eq('name_th', nameTh)
         .maybeSingle();
       if (error) throw error;
-      return data
-        ? { id: data.id, regionId: data.region_id, nameTh: data.name_th, nameEn: data.name_en }
-        : null;
+      return data ? province(data) : null;
     },
     async districtByName(provinceId, nameTh) {
       const { data, error } = await db
         .from('geo_districts')
-        .select('id, province_id, name_th, name_en, prefix_th')
+        .select(DISTRICT)
         .eq('province_id', provinceId)
         .eq('name_th', nameTh)
         .maybeSingle();
       if (error) throw error;
-      return data
-        ? {
-            id: data.id,
-            provinceId: data.province_id,
-            nameTh: data.name_th,
-            nameEn: data.name_en,
-            prefixTh: data.prefix_th,
-          }
-        : null;
+      return data ? district(data) : null;
     },
     async subdistrictByName(districtId, nameTh) {
       const { data, error } = await db
         .from('geo_subdistricts')
-        .select('id, district_id, name_th, name_en, prefix_th, postcode')
+        .select(SUBDISTRICT)
         .eq('district_id', districtId)
         .eq('name_th', nameTh)
         .maybeSingle();
       if (error) throw error;
-      return data
-        ? {
-            id: data.id,
-            districtId: data.district_id,
-            nameTh: data.name_th,
-            nameEn: data.name_en,
-            prefixTh: data.prefix_th,
-            postcode: data.postcode,
-          }
-        : null;
+      return data ? subdistrict(data) : null;
+    },
+    // 77 provinces, and at most a few dozen places under any one parent.
+    async provinces() {
+      const { data, error } = await db.from('geo_provinces').select(PROVINCE);
+      if (error) throw error;
+      return data.map(province);
+    },
+    async districtsOf(provinceId) {
+      const { data, error } = await db
+        .from('geo_districts')
+        .select(DISTRICT)
+        .eq('province_id', provinceId);
+      if (error) throw error;
+      return data.map(district);
+    },
+    async subdistrictsOf(districtId) {
+      const { data, error } = await db
+        .from('geo_subdistricts')
+        .select(SUBDISTRICT)
+        .eq('district_id', districtId);
+      if (error) throw error;
+      return data.map(subdistrict);
     },
   };
 }
