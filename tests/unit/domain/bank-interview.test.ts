@@ -4,6 +4,7 @@ import {
   BANK_INTERVIEW_CONCEPTS,
   REQUIRED_INTERVIEW_FIELDS,
   interviewProfileSchema,
+  isShareholder,
   missingBusinessAnswers,
   myShareholding,
 } from '@/lib/domain/bank-interview';
@@ -70,6 +71,59 @@ describe('bank-interview concepts', () => {
       account_purpose: 'รับเงินลูกค้า',
       monthly_volume: null,
     });
+  });
+
+  it('finds the learner on the shareholder list when the documents differ by a mark (D98)', () => {
+    const business = {
+      objectives: [],
+      business_categories: [],
+      share_structure: {
+        total_shares: 20000,
+        par_value: 100,
+        paid_up_capital: null,
+        share_type: null,
+      },
+      shareholders: [
+        { name: 'นางสาวตัวอย่าง จันท์ทอง', nationality: 'ไทย', shares: 18000, percent: null },
+        { name: 'นายสมชาย ใจดี', nationality: 'ไทย', shares: 2000, percent: null },
+      ],
+      promoters: [],
+    };
+    // The certificate prints the surname without the mark the shareholder list prints.
+    expect(isShareholder(business, 'นางสาวตัวอย่าง จันททอง')).toBe(true);
+    expect(myShareholding(business, 'นางสาวตัวอย่าง จันททอง')).toEqual({
+      shares: 18000,
+      percent: 90,
+    });
+    // The other way round: the list lost the mark the certificate kept.
+    expect(isShareholder(business, 'นายสมชาย ใจดี์')).toBe(true);
+    // A different person is still a different person.
+    expect(isShareholder(business, 'นางสาวตัวอย่าง จันทร์ทอง')).toBe(false);
+    expect(myShareholding(business, 'นางสาวตัวอย่าง จันทร์ทอง')).toEqual({
+      shares: null,
+      percent: null,
+    });
+  });
+
+  it('does not guess between two holders whose names differ from the learner only by marks', () => {
+    const business = {
+      objectives: [],
+      business_categories: [],
+      share_structure: {
+        total_shares: 100,
+        par_value: 100,
+        paid_up_capital: null,
+        share_type: null,
+      },
+      shareholders: [
+        { name: 'นายตัวอย่าง จันท์ทอง', nationality: 'ไทย', shares: 60, percent: null },
+        { name: 'นายตัวอย่าง จันทท์อง', nationality: 'ไทย', shares: 40, percent: null },
+      ],
+      promoters: [],
+    };
+    expect(isShareholder(business, 'นายตัวอย่าง จันททอง')).toBe(false);
+    // The exact spelling still finds its own line.
+    expect(myShareholding(business, 'นายตัวอย่าง จันท์ทอง').shares).toBe(60);
   });
 });
 
