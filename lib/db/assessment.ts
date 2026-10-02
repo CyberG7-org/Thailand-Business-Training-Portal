@@ -19,6 +19,7 @@ import {
 import { createSupabaseAdminClient } from './admin';
 import { templateRecordFromSnapshot, type RoleSnapshot } from '@/lib/domain/facts/snapshot';
 import { getActiveAssignmentForUser } from './assignments';
+import { answerKeysFor } from './mcq-attempt';
 import { pinnedFactsFor } from './pinning';
 import { getVersion, readSnapshot } from './training-versions';
 import type { Database, Json } from './database.types';
@@ -36,6 +37,7 @@ export class AssessmentError extends Error {
       | 'no_assignment'
       | 'no_version'
       | 'no_questions'
+      | 'not_ready'
       | 'not_found'
       | 'not_in_progress'
       | 'already_answered'
@@ -237,6 +239,10 @@ async function templateRecordForAttempt(
  * The correct key and the explanation (placeholders filled in) come along for reviews (D51).
  * Grading is by option key, which every approved question mirrors across languages; a question
  * without that language falls back to the attempt's language, then to its snapshot.
+ *
+ * A question from the Owner's bank (an answer row with a concept, D99) was rendered in all three
+ * languages when the attempt started and is read back as it was. The result carries the correct
+ * key of every question: a caller showing an open attempt must leave out the unanswered ones.
  */
 export async function localizeAttemptAnswers(
   attempt: AttemptWithAnswers,
@@ -244,7 +250,12 @@ export async function localizeAttemptAnswers(
 ): Promise<Map<string, DisplayedQuestion>> {
   const admin = createSupabaseAdminClient();
   const languages = Array.from(new Set([locale, attempt.language as AppLocale]));
-  const [{ data: locs }, record] = await Promise.all([
+  const banked = attempt.assessment_answers.filter((a) => a.concept_key !== null);
+  const [keys, { data: locs }, record] = await Promise.all([
+    answerKeysFor(
+      admin,
+      banked.map((a) => a.id),
+    ),
     admin
       .from('question_localizations')
       .select('question_id, language, prompt, options, correct_key, explanation')
@@ -265,6 +276,15 @@ export async function localizeAttemptAnswers(
       correctKey: null,
       explanation: null,
     };
+    if (answer.concept_key !== null) {
+      const key = keys.get(answer.id);
+      const shown = key?.localized[locale] ?? key?.localized[attempt.language as AppLocale];
+      out.set(
+        answer.question_id,
+        key && shown ? { ...shown, correctKey: key.correctKey } : snapshot,
+      );
+      continue;
+    }
     const candidates = byQuestion.get(answer.question_id) ?? [];
     const loc =
       candidates.find((l) => l.language === locale) ??
@@ -381,7 +401,7 @@ export async function answerQuestion(args: {
 
   const { data: answer } = await admin
     .from('assessment_answers')
-    .select('id, selected_key, presented_option_order')
+    .select('id, selected_key, presented_option_order, concept_key')
     .eq('attempt_id', attempt.id)
     .eq('question_id', args.questionId)
     .maybeSingle();
@@ -390,6 +410,34 @@ export async function answerQuestion(args: {
     throw new AssessmentError('Already answered', 'already_answered');
   if (!answer.presented_option_order.includes(args.selectedKey)) {
     throw new AssessmentError('Unknown option', 'invalid_key');
+  }
+  const record = async (isCorrect: boolean) => {
+    // `selected_key is null` in the filter: of two answers sent at once, only the first is kept.
+    const { data: saved, error } = await admin
+      .from('assessment_answers')
+      .update({
+        selected_key: args.selectedKey,
+        is_correct: isCorrect,
+        answered_at: new Date().toISOString(),
+      })
+      .eq('id', answer.id)
+      .is('selected_key', null)
+      .select('id');
+    if (error) throw error;
+    if (saved.length === 0) throw new AssessmentError('Already answered', 'already_answered');
+  };
+
+  if (answer.concept_key !== null) {
+    // A question from the Owner's bank (D99): marked against the key frozen with the attempt.
+    const key = (await answerKeysFor(admin, [answer.id])).get(answer.id);
+    if (!key) throw new AssessmentError('Question text missing', 'not_found');
+    const shown =
+      key.localized[(args.locale ?? attempt.language) as AppLocale] ??
+      key.localized[attempt.language as AppLocale] ??
+      key.localized.th;
+    const isCorrect = key.correctKey === args.selectedKey;
+    await record(isCorrect);
+    return { isCorrect, correctKey: key.correctKey, explanation: shown.explanation };
   }
 
   const { data: locs } = await admin
@@ -410,15 +458,7 @@ export async function answerQuestion(args: {
         (args.locale ?? attempt.language) as AppLocale,
       )
     : null;
-  const { error } = await admin
-    .from('assessment_answers')
-    .update({
-      selected_key: args.selectedKey,
-      is_correct: isCorrect,
-      answered_at: new Date().toISOString(),
-    })
-    .eq('id', answer.id);
-  if (error) throw error;
+  await record(isCorrect);
   return { isCorrect, correctKey: loc.correct_key as OptionKey, explanation };
 }
 

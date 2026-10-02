@@ -14,27 +14,40 @@ export type ExamResultPayload = {
   attempt_no: number;
   score: number;
   max_score: number;
-  result: 'pass' | 'fail';
+  result: 'pass' | 'retest' | 'fail';
   passing_mark_percent: number;
+  /** Attempts judged by the rule of D71: the score that passes, and how many key facts were wrong. */
+  pass_score?: number;
+  critical_wrong?: number;
   submitted_on: ISODate;
 };
+
+const RESULT_TH = { pass: 'ผ่าน', retest: 'ทำใหม่อีกครั้ง', fail: 'ไม่ผ่าน' } as const;
+const RESULT_EN = { pass: 'PASS', retest: 'RETEST', fail: 'FAIL' } as const;
 
 export function examResultMessage(p: ExamResultPayload): { subject: string; text: string } {
   const pct = p.max_score > 0 ? Math.round((p.score / p.max_score) * 100) : 0;
   const who = p.display_name ? `${p.display_name} (${p.login_id})` : p.login_id;
-  const resultTh = p.result === 'pass' ? 'ผ่าน' : 'ไม่ผ่าน';
-  const resultEn = p.result === 'pass' ? 'PASS' : 'FAIL';
+  const resultTh = RESULT_TH[p.result];
+  const resultEn = RESULT_EN[p.result];
+  const ruled = p.pass_score !== undefined;
+  const markTh = ruled
+    ? `เกณฑ์ผ่าน ${p.pass_score}/${p.max_score} ข้อสำคัญที่ตอบผิด ${p.critical_wrong ?? 0} ข้อ`
+    : `เกณฑ์ผ่าน ${p.passing_mark_percent}%`;
+  const markEn = ruled
+    ? `pass at ${p.pass_score}/${p.max_score}, key facts wrong: ${p.critical_wrong ?? 0}`
+    : `passing mark ${p.passing_mark_percent}%`;
   return {
     subject: `[Business Knowledge Quiz ${resultEn}] ${who} — ${p.score}/${p.max_score} (${pct}%)`,
     text: [
       `ผลแบบทดสอบความรู้ธุรกิจ: ${resultTh} — ${who}`,
       `บริษัท: ${p.company_name_th ?? '-'}`,
-      `คะแนน: ${p.score}/${p.max_score} (${pct}%) เกณฑ์ผ่าน ${p.passing_mark_percent}% ครั้งที่ ${p.attempt_no}`,
+      `คะแนน: ${p.score}/${p.max_score} (${pct}%) ${markTh} ครั้งที่ ${p.attempt_no}`,
       `วันที่ส่ง: ${formatDate(p.submitted_on, 'th')}`,
       '',
       `Business Knowledge Quiz result: ${resultEn} — ${who}`,
       `Company: ${p.company_name_th ?? '-'}`,
-      `Score: ${p.score}/${p.max_score} (${pct}%), passing mark ${p.passing_mark_percent}%, attempt ${p.attempt_no}`,
+      `Score: ${p.score}/${p.max_score} (${pct}%), ${markEn}, attempt ${p.attempt_no}`,
       `Submitted: ${formatDate(p.submitted_on, 'en')}`,
     ].join('\n'),
   };
