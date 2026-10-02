@@ -63,12 +63,14 @@ export function CoveragePanel({
           {coverage.scope === 'company' ? t('introCompany') : t('introAssignment')}
         </p>
       )}
+      {/* In the narrow column a count that does not fit drops under its label, kept whole. */}
       <dl className="grid gap-2 text-sm tabular-nums">
         <div className="grid gap-1">
-          <div className="flex justify-between gap-3">
+          <div className="flex flex-wrap justify-between gap-x-3">
             <dt>{t('mcq')}</dt>
             <dd
               data-testid="coverage-mcq"
+              className="ml-auto whitespace-nowrap"
               data-ready={coverage.mcq.ready}
               data-total={coverage.mcq.total}
             >
@@ -78,10 +80,11 @@ export function CoveragePanel({
           <ReadyBar ready={coverage.mcq.ready} total={coverage.mcq.total} />
         </div>
         <div className="grid gap-1">
-          <div className="flex justify-between gap-3">
+          <div className="flex flex-wrap justify-between gap-x-3">
             <dt>{t('interview')}</dt>
             <dd
               data-testid="coverage-interview"
+              className="ml-auto whitespace-nowrap"
               data-ready={coverage.interview.ready}
               data-total={coverage.interview.total}
             >

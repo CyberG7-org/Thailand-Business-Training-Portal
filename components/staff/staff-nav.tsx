@@ -73,7 +73,7 @@ export function StaffNav({ role }: { role: Role }) {
     <nav
       data-testid="staff-nav"
       aria-label={t('title')}
-      className="min-w-0 rounded-card bg-white p-2 shadow-raised md:sticky md:top-6 md:self-start md:p-3"
+      className="min-w-0 rounded-card bg-white p-2 shadow-raised md:p-3"
     >
       <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-4 md:overflow-visible">
         {GROUPS.map((group) => {

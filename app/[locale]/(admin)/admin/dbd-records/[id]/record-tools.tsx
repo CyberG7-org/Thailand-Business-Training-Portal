@@ -13,7 +13,7 @@ import {
   type ToolState,
 } from '../actions';
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
-import { useOpenRecordTab } from './record-tabs';
+import { showRecordTab } from './record-tabs';
 
 const initial: ToolState = { ok: false, error: null };
 
@@ -278,7 +278,6 @@ export function StatusCard({
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
-  const openTab = useOpenRecordTab();
   const [recheckState, recheckAction, rechecking] = useActionState(recheckRecordAction, initial);
   const locked = status === 'confirmed';
 
@@ -351,7 +350,7 @@ export function StatusCard({
           {acceptance.blockers > 0 && (
             <button
               type="button"
-              onClick={() => openTab('exceptions')}
+              onClick={() => showRecordTab('exceptions')}
               className="staff-btn-ghost flex-1 text-brand-600"
             >
               {t('checks.openExceptions')}

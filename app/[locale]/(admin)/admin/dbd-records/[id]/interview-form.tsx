@@ -64,11 +64,15 @@ export function InterviewForm({
               <span data-testid={`label-${field}`} className="font-semibold text-ink-900">
                 {t(`interviewFields.${field}` as 'interviewFields.client_origin')}
               </span>
+              {/* Each box grows with its answer, so a long one reads whole without a scrollbar;
+                  an amount is one line. */}
               <textarea
                 name={`interview_${field}`}
                 rows={2}
                 defaultValue={answers[field] ?? ''}
-                className="staff-input mt-1"
+                className={`staff-input mt-1 field-sizing-content ${
+                  group.key === 'money' ? 'min-h-11' : ''
+                }`}
               />
             </label>
           ))}
