@@ -6,7 +6,7 @@ import {
   type Provenance,
   type StructuredData,
 } from '@/lib/domain/dbd-profile';
-import { applyExtractionToRecord, restoresMarks } from '@/lib/domain/extraction-merge';
+import { applyExtractionToRecord, restoreProfileMarks } from '@/lib/domain/extraction-merge';
 import { DIRECT_READ_HARD_MAX_PAGES, planDirectRead } from '@/lib/domain/extraction-plan';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { getVectorStore, type VectorStore } from '@/lib/integrations/vector';
@@ -247,18 +247,18 @@ async function directPass(
   const current = readStructuredData(extracted.structured_data);
   const currentBusiness = current.business ?? null;
   const business = extractedBusinessProfile(extraction);
-  // Filled when nothing was entered yet — or when what is stored is this reading with Thai
-  // marks missing (objectives, shareholder names), which an earlier reading dropped (D92).
   const businessFilled =
-    !isBusinessProfileEmpty(business) &&
-    (currentBusiness === null ||
-      isBusinessProfileEmpty(currentBusiness) ||
-      restoresMarks(JSON.stringify(currentBusiness), JSON.stringify(business)));
+    (currentBusiness === null || isBusinessProfileEmpty(currentBusiness)) &&
+    !isBusinessProfileEmpty(business);
+  // A profile that is already there keeps its rows; a row that is this reading with Thai marks
+  // missing gets them back (D92).
+  const keptBusiness =
+    currentBusiness === null ? undefined : restoreProfileMarks(currentBusiness, business);
   // Everything else in the column (interview answers, provenance written by the transcript
   // path) is kept; this pass only adds what it read.
   const structured: StructuredData = {
     ...current,
-    business: businessFilled ? business : (currentBusiness ?? undefined),
+    business: businessFilled ? business : keptBusiness,
     document_type: extraction.documents?.[0]?.document_type ?? current.document_type ?? null,
     provenance: { ...(current.provenance ?? {}), ...extractedProvenance(extraction) },
   };

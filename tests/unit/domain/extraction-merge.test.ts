@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   applyExtractionToRecord,
   extractionToFormValues,
+  restoreProfileMarks,
   restoresMarks,
 } from '@/lib/domain/extraction-merge';
 import { SAMPLE_EXTRACTION } from '@/lib/integrations/extraction/fake';
@@ -114,5 +115,69 @@ describe('applyExtractionToRecord', () => {
     expect(input.company_name_th).toBe('บริษัท ตัวอย่างการสกัด จำกัด');
     expect(rejected).toEqual(['juristic_id']);
     expect(applied).not.toContain('juristic_id');
+  });
+});
+
+describe('restoreProfileMarks (D92)', () => {
+  const share_structure = {
+    total_shares: 20000,
+    par_value: 100,
+    paid_up_capital: null,
+    share_type: null,
+  };
+  const stored = {
+    objectives: [
+      { no: 1, text: 'ซื้อ ขาย หุน และถือหุนในบริษัทอื่น' },
+      { no: 2, text: 'ประกอบกิจการค้าที่ผู้จัดการแก้ไขเอง' },
+    ],
+    business_categories: ['คาปลีก', 'บริการ'],
+    share_structure,
+    shareholders: [
+      { name: 'นายตัวอยาง ทดสอบ', nationality: 'ไทย', shares: 18000, percent: null },
+      { name: 'นางสาวสมหญิง ตัวอย่าง', nationality: 'ไทย', shares: 2000, percent: null },
+    ],
+    promoters: [{ name: 'นายสมพงษ ทดสอบ', nationality: 'ไทย' }],
+  };
+  const fresh = {
+    objectives: [
+      { no: 1, text: 'ซื้อ ขาย หุ้น และถือหุ้นในบริษัทอื่น' },
+      { no: 2, text: 'ประกอบกิจการค้าปลีกและค้าส่ง' },
+    ],
+    business_categories: ['ค้าปลีก', 'บริการที่ปรึกษา'],
+    share_structure: { ...share_structure, total_shares: 99 },
+    shareholders: [
+      { name: 'นายตัวอย่าง ทดสอบ', nationality: 'ไทย', shares: 1, percent: 50 },
+      // The two readings disagree on a letter here: nobody's to choose.
+      { name: 'นางสาวสมหญิง ตัวอย่าก', nationality: 'ไทย', shares: 2000, percent: null },
+    ],
+    promoters: [{ name: 'นายสมพงษ์ ทดสอบ', nationality: null }],
+  };
+
+  it('puts the marks back row by row and changes nothing else', () => {
+    const out = restoreProfileMarks(stored, fresh);
+    expect(out.objectives).toEqual([
+      { no: 1, text: 'ซื้อ ขาย หุ้น และถือหุ้นในบริษัทอื่น' },
+      { no: 2, text: 'ประกอบกิจการค้าที่ผู้จัดการแก้ไขเอง' },
+    ]);
+    expect(out.business_categories).toEqual(['ค้าปลีก', 'บริการ']);
+    expect(out.shareholders).toEqual([
+      { name: 'นายตัวอย่าง ทดสอบ', nationality: 'ไทย', shares: 18000, percent: null },
+      stored.shareholders[1],
+    ]);
+    expect(out.promoters).toEqual([{ name: 'นายสมพงษ์ ทดสอบ', nationality: 'ไทย' }]);
+    expect(out.share_structure).toEqual(share_structure);
+  });
+
+  it('returns the stored profile itself when no row lost a mark', () => {
+    expect(restoreProfileMarks(fresh, fresh)).toBe(fresh);
+    expect(
+      restoreProfileMarks(stored, {
+        ...fresh,
+        objectives: [],
+        shareholders: [],
+        promoters: [],
+        business_categories: [],
+      }),
+    ).toBe(stored);
   });
 });
