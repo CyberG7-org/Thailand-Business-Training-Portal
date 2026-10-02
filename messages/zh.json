@@ -206,6 +206,7 @@
       },
       "results": {
         "pass": "通过",
+        "retest": "需重测",
         "fail": "未通过",
         "in_progress": "进行中",
         "abandoned": "已中止"
@@ -604,7 +605,8 @@
           "confidence": "读取置信度 {confidence}%（第 {page} 页）。",
           "geo": "{issues}",
           "missing": "所需概念：{concepts}",
-          "category": "最接近 {candidate}，置信度 {confidence}%；请在类别面板选择或重新匹配。"
+          "category": "最接近 {candidate}，置信度 {confidence}%；请在类别面板选择或重新匹配。",
+          "render_failure": "商业知识测验没有可用于向该公司提问此概念的已批准题目，学员因此无法开始测验。请检查该信息是否已在记录中，以及题库是否有此概念的已批准题目；测验可以开始后，此提示会自动关闭。"
         },
         "confirmValue": "该值正确",
         "dismiss": "不适用",
@@ -738,16 +740,8 @@
           "label": "银行阶段开放的天数",
           "help": "从开放日起计算；留空 = 永不过期"
         },
-        "exam_passing_mark_percent": {
-          "label": "业务知识测验及格线（%）",
-          "help": "最低分数百分比"
-        },
         "quiz_question_count": {
           "label": "每次练习测验题数",
-          "help": "每次尝试"
-        },
-        "exam_question_count": {
-          "label": "每次业务知识测验题数",
           "help": "每次尝试"
         },
         "exam_max_attempts": {
@@ -809,6 +803,14 @@
         "training_review_confidence_percent": {
           "label": "培训信息：低于此置信度须人工确认（%）",
           "help": "低于此值的例外会阻止记录被接受，直到有人确认该值。"
+        },
+        "mcq_pass_score": {
+          "label": "商业知识测验：通过所需答对题数（共 30 题）",
+          "help": "九项公司关键信息中任何一项答错也视为未通过。仅适用于更改后开始的测验。"
+        },
+        "mcq_retest_score": {
+          "label": "商业知识测验：可重测的答对题数（共 30 题）",
+          "help": "从该分数到比通过分数少一题为“需重测”；低于该分数为“未通过”。"
         }
       }
     },
@@ -1283,17 +1285,28 @@
   },
   "exam": {
     "title": "业务知识测验",
-    "intro": "共 {count} 题。提交前不会显示答案对错。及格线：{passingMark}%。",
+    "intro": "检验您是否像银行提问时那样了解自己的公司。",
+    "about": {
+      "title": "测验说明",
+      "questions": "共 {count} 题：银行会就您的公司询问的每一项各一题。",
+      "marking": "选择答案后会立即显示对错，答案不可更改。",
+      "pass": "通过：答对 {pass} 题或以上，且 {critical} 项公司关键信息均未答错。",
+      "retest": "答对 {retest} 至 {below} 题：重新测验一次。",
+      "fail": "答对少于 {retest} 题，或答错公司关键信息：请先复习学习资料，再重新测验。"
+    },
     "start": "开始业务知识测验",
     "resume": "继续业务知识测验",
     "history": "历史记录",
     "attemptLine": "第 {no} 次：{score} / {max} — {result}",
     "noFeedbackNote": "答案会即时保存；结果仅在提交后显示。",
+    "feedbackNote": "选择后立即显示对错，且不可更改。全部作答后再提交。",
     "submit": "提交业务知识测验",
     "resultTitle": "业务知识测验结果",
     "pass": "通过",
     "fail": "未通过",
+    "retest": "需重新测验",
     "scoreLine": "得分：{score} / {max}（及格线 {passingMark}%）",
+    "scoreLineRule": "得分：{score} / {max}（答对 {pass} 题通过）",
     "resultNote": "标有 ✗ 的题目回答错误；绿色选项为正确答案，划线的选项是您的选择。",
     "errors": {
       "max_attempts": "您已用完允许的测验次数。",
@@ -1305,16 +1318,23 @@
       "already_answered": "此题已作答。",
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。",
-      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。"
+      "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。",
+      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。"
     },
     "meta": {
       "questions": "题数",
       "passingMark": "及格线",
+      "toPass": "通过标准",
       "attempt": "第几次"
     },
     "reviewHeading": "你的答案",
     "passedNext": "你已通过。银行准备面试现已开放。",
     "notPassedNext": "这次未通过。请查看下方答案，准备好后再试一次。",
+    "retestNext": "差一点：{max} 题答对 {score} 题。需答对 {pass} 题才能通过，请重新测验。",
+    "failNext": "本次未通过。请先复习学习资料，再重新测验。",
+    "failCriticalNext": "未通过：答错了公司关键信息。请先复习学习资料，再重新测验。",
+    "criticalWrong": "答错的关键信息：{list}",
+    "toStudy": "复习学习资料",
     "toInterview": "前往银行准备面试",
     "retake": "重新参加业务知识测验"
   },

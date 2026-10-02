@@ -206,6 +206,7 @@
       },
       "results": {
         "pass": "Pass",
+        "retest": "Retest",
         "fail": "Fail",
         "in_progress": "In progress",
         "abandoned": "Abandoned"
@@ -604,7 +605,8 @@
           "confidence": "Read with {confidence}% confidence (page {page}).",
           "geo": "{issues}",
           "missing": "Needed by: {concepts}",
-          "category": "Best match {candidate} at {confidence}%; choose or map again on the category panel."
+          "category": "Best match {candidate} at {confidence}%; choose or map again on the category panel.",
+          "render_failure": "The Business Knowledge Quiz has no approved question it can ask this company on this concept, so a learner could not start the quiz. Check that the fact is on the record and that the question bank has an approved question for it; the notice closes when a quiz starts."
         },
         "confirmValue": "The value is right",
         "dismiss": "Does not apply",
@@ -738,16 +740,8 @@
           "label": "Days the bank stage stays open",
           "help": "Counted from the opening date; blank = never expires"
         },
-        "exam_passing_mark_percent": {
-          "label": "Business Knowledge Quiz passing mark (%)",
-          "help": "Minimum score as a percentage"
-        },
         "quiz_question_count": {
           "label": "Questions per practice quiz",
-          "help": "Per attempt"
-        },
-        "exam_question_count": {
-          "label": "Questions per Business Knowledge Quiz",
           "help": "Per attempt"
         },
         "exam_max_attempts": {
@@ -809,6 +803,14 @@
         "training_review_confidence_percent": {
           "label": "Training facts: confidence below which a person must confirm (%)",
           "help": "Below this, the exception blocks acceptance of the record until a person confirms the value."
+        },
+        "mcq_pass_score": {
+          "label": "Business Knowledge Quiz: correct answers needed to pass (of 30)",
+          "help": "A learner also fails on any of the nine key company facts answered wrong. Applies to attempts started after the change."
+        },
+        "mcq_retest_score": {
+          "label": "Business Knowledge Quiz: correct answers for a retest (of 30)",
+          "help": "From this score up to one below the pass score the result is Retest; lower is Fail."
         }
       }
     },
@@ -1283,17 +1285,28 @@
   },
   "exam": {
     "title": "Business Knowledge Quiz",
-    "intro": "{count} questions. You will not see whether an answer is right until you submit. Passing mark: {passingMark}%.",
+    "intro": "Shows that you know your company the way the bank will ask about it.",
+    "about": {
+      "title": "How this quiz works",
+      "questions": "{count} questions: one for each thing the bank asks about your company.",
+      "marking": "Each answer is marked right or wrong as soon as you choose it. An answer cannot be changed.",
+      "pass": "Pass: {pass} or more correct, with none of the {critical} key company facts wrong.",
+      "retest": "{retest} to {below} correct: take the quiz again.",
+      "fail": "Fewer than {retest} correct, or a key company fact wrong: review the study material, then take the quiz again."
+    },
     "start": "Start the Business Knowledge Quiz",
     "resume": "Resume the Business Knowledge Quiz",
     "history": "Previous attempts",
     "attemptLine": "Attempt {no}: {score} / {max} — {result}",
     "noFeedbackNote": "Answers are saved as you go; results are shown only after you submit.",
+    "feedbackNote": "Each answer is marked as soon as you choose it and cannot be changed. Submit when every question is answered.",
     "submit": "Submit the Business Knowledge Quiz",
     "resultTitle": "Business Knowledge Quiz result",
     "pass": "Passed",
     "fail": "Not passed",
+    "retest": "Take it again",
     "scoreLine": "Score: {score} / {max} (passing mark {passingMark}%)",
+    "scoreLineRule": "Score: {score} / {max} (pass at {pass})",
     "resultNote": "Questions marked ✗ were answered incorrectly; the green option is the correct answer and the struck-through one is what you chose.",
     "errors": {
       "max_attempts": "You have used all allowed attempts.",
@@ -1305,16 +1318,23 @@
       "already_answered": "This question is already answered.",
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option.",
-      "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record."
+      "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record.",
+      "not_ready": "The quiz is not ready for your company yet. Your manager has been told."
     },
     "meta": {
       "questions": "Questions",
       "passingMark": "Passing mark",
+      "toPass": "To pass",
       "attempt": "Attempt"
     },
     "reviewHeading": "Your answers",
     "passedNext": "You passed. The Bank Readiness Interview is now open.",
     "notPassedNext": "Not passed this time. Review the answers below and try again when you are ready.",
+    "retestNext": "Close: {score} of {max}. You need {pass} to pass — take the quiz again.",
+    "failNext": "Not passed this time. Review the study material, then take the quiz again.",
+    "failCriticalNext": "Not passed: a key company fact was answered wrong. Review the study material, then take the quiz again.",
+    "criticalWrong": "Key facts answered wrong: {list}",
+    "toStudy": "Review the study material",
     "toInterview": "Go to the Bank Readiness Interview",
     "retake": "Retake the Business Knowledge Quiz"
   },

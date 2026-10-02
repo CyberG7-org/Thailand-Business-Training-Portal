@@ -382,11 +382,14 @@ export type AnswerFeedback = {
   isCorrect: boolean;
   correctKey: OptionKey;
   explanation: string | null;
+  /** A question of the Owner's bank (D100): its marking is shown at once, in the quiz too. */
+  fromBank: boolean;
 };
 
 /**
  * Records an answer; correctness is computed server-side from the stored key.
- * Returns feedback for the caller to reveal (quiz) or withhold (exam).
+ * Returns feedback for the caller to reveal (the practice round, and the Business Knowledge Quiz
+ * on a bank question) or withhold (an earlier quiz attempt, which shows nothing until submitted).
  */
 export async function answerQuestion(args: {
   userId: string;
@@ -437,7 +440,12 @@ export async function answerQuestion(args: {
       key.localized.th;
     const isCorrect = key.correctKey === args.selectedKey;
     await record(isCorrect);
-    return { isCorrect, correctKey: key.correctKey, explanation: shown.explanation };
+    return {
+      isCorrect,
+      correctKey: key.correctKey,
+      explanation: shown.explanation,
+      fromBank: true,
+    };
   }
 
   const { data: locs } = await admin
@@ -459,7 +467,7 @@ export async function answerQuestion(args: {
       )
     : null;
   await record(isCorrect);
-  return { isCorrect, correctKey: loc.correct_key as OptionKey, explanation };
+  return { isCorrect, correctKey: loc.correct_key as OptionKey, explanation, fromBank: false };
 }
 
 /** Scores and closes the attempt; every question must be answered. */

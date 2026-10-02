@@ -24,7 +24,11 @@ export async function startExamAction(_prev: StartState, formData: FormData): Pr
   redirect(`/${locale}/exam/${attemptId}`);
 }
 
-/** Exam answers are stored without revealing correctness (EXAM-002, AC-006). */
+/**
+ * A question of the Owner's bank is marked the moment it is answered: right or wrong, and when
+ * wrong the correct answer with its explanation (D100). An attempt from before the bank keeps
+ * its rule: nothing is revealed until it is submitted (EXAM-002, AC-006).
+ */
 export async function answerExamAction(
   _prev: AnswerState,
   formData: FormData,
@@ -35,9 +39,14 @@ export async function answerExamAction(
   const selectedKey = String(formData.get('selectedKey') ?? '');
   const user = await requireUser(locale);
   try {
-    await answerQuestion({ userId: user.id, attemptId, questionId, selectedKey });
-    // No feedback of any kind: the card marks itself answered from the key it sent.
-    return { feedback: null, selectedKey, error: null };
+    const feedback = await answerQuestion({
+      userId: user.id,
+      attemptId,
+      questionId,
+      selectedKey,
+      locale: locale as AppLocale,
+    });
+    return { feedback: feedback.fromBank ? feedback : null, selectedKey, error: null };
   } catch (e) {
     return { feedback: null, selectedKey: null, error: code(e) };
   }
