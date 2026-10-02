@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
 import { parsePageMarkers, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
+import { newPictureBudget, pagePictures } from './page-pictures';
 import { EXTRACTION_INSTRUCTIONS, dbdExtractionApiSchema, fromApiExtraction } from './schema';
 import { transcriptionModel, transcriptionPrompt } from './transcribe';
 import {
@@ -67,17 +68,38 @@ export class ClaudeDbdExtractor implements DbdExtractor {
     if (total > MAX_TOTAL_PDF_BYTES) {
       throw new ExtractionError('The uploaded documents exceed 30 MB in total', 'too_large');
     }
-    const content: Anthropic.ContentBlockParam[] = documents.flatMap((pdf, i) => [
-      { type: 'text' as const, text: `Document ${i + 1} of ${documents.length}:` },
-      {
-        type: 'document' as const,
-        source: {
-          type: 'base64' as const,
-          media_type: 'application/pdf' as const,
-          data: Buffer.from(pdf).toString('base64'),
+    const content: Anthropic.ContentBlockParam[] = [];
+    // One budget for the whole reading: the pages without readable text, as sharp pictures (D98).
+    const budget = newPictureBudget(total);
+    for (const [i, pdf] of documents.entries()) {
+      content.push(
+        { type: 'text', text: `Document ${i + 1} of ${documents.length}:` },
+        {
+          type: 'document',
+          source: {
+            type: 'base64',
+            media_type: 'application/pdf',
+            data: Buffer.from(pdf).toString('base64'),
+          },
         },
-      },
-    ]);
+      );
+      for (const picture of await pagePictures(pdf, budget)) {
+        content.push(
+          {
+            type: 'text',
+            text: `Page ${picture.page} of document ${i + 1}, as a sharp picture:`,
+          },
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: 'image/png',
+              data: Buffer.from(picture.png).toString('base64'),
+            },
+          },
+        );
+      }
+    }
     content.push({ type: 'text', text: EXTRACTION_INSTRUCTIONS });
 
     let response;
