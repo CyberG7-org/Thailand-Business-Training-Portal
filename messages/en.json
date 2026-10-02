@@ -147,19 +147,16 @@
         "move": "Move to version {n}",
         "moveHint": "From now on the learner studies and is evaluated on this version. Refused while a practice quiz, a Business Knowledge Quiz or a Bank Readiness Interview is in progress.",
         "roleConfirmed": "Role confirmed on {date}",
-        "roleUnconfirmed": "The role is not confirmed: the learner's own concepts do not count until it is.",
-        "confirmRole": "Confirm role",
+        "roleUnconfirmed": "The role has no name yet: pick the learner from the people in the DBD documents above. It is confirmed by itself once it has one.",
         "messages": {
-          "moved": "Moved to version {n}.",
-          "role-confirmed": "Role confirmed."
+          "moved": "Moved to version {n}."
         },
         "errors": {
           "evaluation-in-progress": "A practice quiz, a Business Knowledge Quiz or a Bank Readiness Interview is in progress; try again when it is finished.",
           "not-active": "That is not the company's current version.",
           "other-record": "That version belongs to another company.",
           "not-found": "Not found.",
-          "no-version": "The company has no version yet.",
-          "role-missing": "Write the learner's name as in the DBD documents first."
+          "no-version": "The company has no version yet."
         }
       },
       "tabLearner": "Learner details",
@@ -499,8 +496,8 @@
       },
       "coverage": {
         "title": "Evaluation readiness",
-        "introCompany": "Company-level concepts that can already be asked about this company: 29 of the Business Knowledge Quiz and 12 of the Bank Readiness Interview. Each learner's own concepts are checked on their page.",
-        "introAssignment": "Everything this learner will be asked: all 30 Business Knowledge Quiz concepts and all 13 Bank Readiness Interview concepts, their own included.",
+        "introCompany": "Company-level concepts that can already be asked about this company: 29 of the Business Knowledge Quiz and 10 of the Bank Readiness Interview. Each learner's own concepts are checked on their page.",
+        "introAssignment": "Everything this learner will be asked: all 30 Business Knowledge Quiz concepts and all 11 Bank Readiness Interview concepts, their own included.",
         "mcq": "Business Knowledge Quiz",
         "interview": "Bank Readiness Interview",
         "count": "{ready} of {total} ready",
@@ -558,7 +555,7 @@
         "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
         "none": "No version yet — it activates when nothing blocks it (see Exceptions).",
         "active": "Version {n} — active since {date}",
-        "complete": "Complete at company scope: every one of the 29 Business Knowledge Quiz and 12 Bank Readiness Interview concepts resolves.",
+        "complete": "Complete at company scope: every one of the 29 Business Knowledge Quiz and 10 Bank Readiness Interview concepts resolves.",
         "incomplete": "Not complete yet — still missing:",
         "behind": "{count, plural, =0 {Every learner is on this version.} one {# learner is on an older version.} other {# learners are on older versions.}}",
         "history": "History",
@@ -855,14 +852,19 @@
     },
     "role": {
       "title": "The learner's role in the company",
-      "hint": "The bank asks \"how many shares do you hold?\", \"what is your position?\" — the portal needs to know who this learner is in the DBD documents.",
+      "hint": "The bank asks \"how many shares do you hold?\", \"what is your position?\". The name is taken from the DBD documents; the other answers are the same for every learner.",
       "holderName": "Name as in the DBD documents",
-      "holderHint": "Pick from the directors/shareholders or type it; used to match the learner's shareholding.",
+      "holderHint": "Has to be a name printed in the DBD documents. With one director it is filled in automatically; pick another person only if this learner is someone else.",
       "position": "Position in the company",
       "responsibilities": "Main responsibilities",
       "relationship": "Relationship to the other shareholders",
       "save": "Save role",
-      "saved": "Saved"
+      "saved": "Saved",
+      "choose": "Choose the person",
+      "automatic": "Filled in automatically: the company’s only director.",
+      "fixed": "The same for every learner",
+      "nameNotInDbd": "Choose a name that is printed in the DBD documents.",
+      "noPeople": "No director or shareholder has been read from the documents yet."
     },
     "managers": {
       "title": "Managers",

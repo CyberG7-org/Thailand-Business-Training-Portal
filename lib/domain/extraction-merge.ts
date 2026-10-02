@@ -143,7 +143,7 @@ export function restoresMarks(stored: string | undefined, fresh: string): boolea
 /**
  * The stored business profile with the marks an earlier reading dropped put back from a new
  * one (D92), row by row: an objective's text, a shareholder's or a promoter's name, a category
- * label. A row is touched only when the new reading of the same row is the stored text with
+ * label, the share type. A row is touched only when the new reading of the same row is the stored text with
  * marks missing and nothing else different, so a row a person corrected, or one the two
  * readings disagree on, stays as it is. Returns the same object when nothing was restored.
  */
@@ -159,6 +159,13 @@ export function restoreProfileMarks(
   };
   const next: BusinessProfile = {
     ...stored,
+    share_structure: {
+      ...stored.share_structure,
+      share_type:
+        stored.share_structure.share_type === null
+          ? null
+          : pick(stored.share_structure.share_type, fresh.share_structure.share_type ?? undefined),
+    },
     objectives: stored.objectives.map((o, i) =>
       fresh.objectives[i]?.no === o.no ? { ...o, text: pick(o.text, fresh.objectives[i].text) } : o,
     ),

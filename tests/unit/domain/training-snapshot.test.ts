@@ -9,6 +9,7 @@ import {
   templateRecordFromRecord,
   templateRecordFromSnapshot,
 } from '@/lib/domain/facts/snapshot';
+import { FIXED_ROLE } from '@/lib/domain/standard-role';
 
 const record = {
   company_name_th: 'บริษัท ซินเนอร์จี แล็บ จำกัด',
@@ -93,7 +94,9 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
   it('derives the learner’s shareholding against the frozen sheet', () => {
     const s = buildTrainingSnapshot({ record, structured, address: null });
     expect(buildRoleSnapshot(role, s)).toEqual({
-      ...role,
+      holder_name: role.holder_name,
+      // The same for every learner, whatever was typed before (D95).
+      ...FIXED_ROLE,
       learner_is_shareholder: true,
       my_shares: 18_000,
       my_share_percent: 90,
@@ -101,6 +104,11 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
     expect(buildRoleSnapshot({ ...role, holder_name: 'นายภายนอก' }, s)).toMatchObject({
       learner_is_shareholder: false,
       my_shares: null,
+    });
+    // Nobody picked a name: the company's only director is the learner (D95).
+    expect(buildRoleSnapshot({ ...role, holder_name: null }, s)).toMatchObject({
+      holder_name: role.holder_name,
+      my_shares: 18_000,
     });
     expect(assignmentFacts(s, buildRoleSnapshot(role, s))).toMatchObject({
       holder_name: role.holder_name,

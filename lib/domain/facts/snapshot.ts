@@ -15,6 +15,7 @@ import {
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
 import { withStandardAnswers } from '@/lib/domain/standard-answers';
+import { withStandardRole } from '@/lib/domain/standard-role';
 import { buildFactSheet, type FactSheet, type RecordColumns } from './fact-sheet';
 
 /** The record columns a snapshot reads beyond the fact sheet's. */
@@ -109,13 +110,17 @@ function businessOf(snapshot: TrainingSnapshot) {
 
 export function buildRoleSnapshot(role: LearnerRole, snapshot: TrainingSnapshot): RoleSnapshot {
   const business = businessOf(snapshot);
-  const holder = role.holder_name?.trim() || null;
+  // The name is one from the DBD and the three answers are the same for every learner (D95).
+  const standard = withStandardRole(role, {
+    directors: snapshot.facts.directors.map((d) => d.name_th),
+  });
+  const holder = standard.holder_name;
   const mine = myShareholding(business, holder);
   return {
     holder_name: holder,
-    position: role.position,
-    responsibilities: role.responsibilities,
-    relationship_to_shareholders: role.relationship_to_shareholders,
+    position: standard.position,
+    responsibilities: standard.responsibilities,
+    relationship_to_shareholders: standard.relationship_to_shareholders,
     learner_is_shareholder: isShareholder(business, holder),
     my_shares: mine.shares,
     my_share_percent: mine.percent,
@@ -187,8 +192,13 @@ export function templateRecordFromSnapshot(
  */
 export function templateRecordFromRecord(
   record: SnapshotRecordColumns & { structured_data: unknown },
-  role: LearnerRole | null = null,
+  typedRole: LearnerRole | null = null,
 ): TemplateRecord {
+  const role = typedRole
+    ? withStandardRole(typedRole, {
+        directors: ((record.directors as Director[] | null) ?? []).map((d) => d.name_th),
+      })
+    : null;
   const structured = readStructuredData(record.structured_data);
   const business = structured.business ?? EMPTY_BUSINESS_PROFILE;
   // The same standard answers the fact sheet reads (D91).
