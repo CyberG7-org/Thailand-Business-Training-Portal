@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { MCQ_STARTER } from '@/lib/content/mcq-starter';
+import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
+import type { FactKey } from '@/lib/domain/facts/fact-sheet';
 import type { RenderContext } from '@/lib/domain/mcq/context';
-import { preflightVariant } from '@/lib/domain/mcq/preflight';
+import { placeholdersOf } from '@/lib/domain/mcq/grammar';
+import { checkBank, preflightVariant } from '@/lib/domain/mcq/preflight';
 import { renderVariant } from '@/lib/domain/mcq/render';
 import { SAMPLE_CONTEXT } from '@/lib/domain/mcq/sample';
-import { RECIPES } from '@/lib/domain/mcq/tokens';
+import { RECIPES, TOKENS } from '@/lib/domain/mcq/tokens';
 import { validateVariant } from '@/lib/domain/mcq/validate';
-import { OPTION_KEYS, type AppliesWhen } from '@/lib/domain/mcq/variant';
+import { OPTION_KEYS, type AppliesWhen, type Variant } from '@/lib/domain/mcq/variant';
 
 /** The sample company put into the status a variant is worded for. */
 function contextFor(when: AppliesWhen | null): RenderContext {
@@ -19,18 +22,47 @@ function contextFor(when: AppliesWhen | null): RenderContext {
   return { ...SAMPLE_CONTEXT, facts };
 }
 
+const approved = (): Variant[] =>
+  MCQ_STARTER.map((s) => ({ ...s, id: s.key, status: 'approved' as const }));
+
 describe('the starter drafts', () => {
-  it('holds ten drafts under unique keys, with every recipe of D77 among them', () => {
-    expect(MCQ_STARTER).toHaveLength(10);
-    expect(new Set(MCQ_STARTER.map((s) => s.key)).size).toBe(10);
+  it('have unique keys and use every recipe of D77', () => {
+    expect(new Set(MCQ_STARTER.map((s) => s.key)).size).toBe(MCQ_STARTER.length);
     const used = new Set(MCQ_STARTER.flatMap((s) => OPTION_KEYS.map((k) => s.optionRecipes[k])));
     expect([...used].sort()).toEqual([...RECIPES].sort());
+  });
+
+  it('give every one of the 30 concepts a question (D99)', () => {
+    expect(MCQ_CONCEPTS).toHaveLength(30);
+    for (const concept of MCQ_CONCEPTS) {
+      const own = MCQ_STARTER.filter((s) => s.conceptKey === concept.key);
+      expect(own.length, concept.key).toBeGreaterThan(0);
+    }
+    // The learner's shareholding is worded both ways: holding shares, and holding none.
+    const shareholding = MCQ_STARTER.filter((s) => s.conceptKey === 'learner_shareholding');
+    expect(shareholding.map((s) => s.appliesWhen?.value).sort()).toEqual([false, true]);
   });
 
   it('keeps every rule, in all three languages', () => {
     for (const starter of MCQ_STARTER) {
       expect(Object.keys(starter.texts).sort(), starter.key).toEqual(['en', 'th', 'zh']);
       expect(validateVariant(starter), starter.key).toEqual([]);
+      expect(starter.texts.th?.explanation, starter.key).toBeTruthy();
+    }
+  });
+
+  it('asks only about its own concept: a prompt names no other fact than the company name', () => {
+    for (const starter of MCQ_STARTER) {
+      const concept = MCQ_CONCEPTS.find((c) => c.key === starter.conceptKey)!;
+      const allowed: readonly FactKey[] = [...concept.facts, 'company_name_th'];
+      const prompt = starter.texts.th!.prompt;
+      expect(prompt, starter.key).not.toContain('(s)');
+      for (const p of placeholdersOf(prompt)) {
+        expect(
+          TOKENS[p.token].facts.every((f) => allowed.includes(f)),
+          `${starter.key}: ${p.raw}`,
+        ).toBe(true);
+      }
     }
   });
 
@@ -46,5 +78,28 @@ describe('the starter drafts', () => {
         expect(view.ok && new Set(view.rendered.options.map((o) => o.text)).size).toBe(4);
       }
     }
+  });
+
+  it('can ask the sample company all 30 concepts once approved', () => {
+    const checks = checkBank(approved(), SAMPLE_CONTEXT, 'seed');
+    expect(checks.filter((c) => c.variant === null).map((c) => c.conceptKey)).toEqual([]);
+  });
+
+  it('still asks a company with one shareholder, one sale a month and an unresolved district', () => {
+    const ctx: RenderContext = {
+      ...SAMPLE_CONTEXT,
+      facts: {
+        ...SAMPLE_CONTEXT.facts,
+        shareholders: SAMPLE_CONTEXT.facts.shareholders.slice(0, 1),
+        shareholder_count: 1,
+        monthly_transactions: 'ประมาณ 1 รายการต่อเดือน',
+      },
+      geo: { ...SAMPLE_CONTEXT.geo, district: null, districts: [] },
+    };
+    const checks = checkBank(approved(), ctx, 'seed');
+    const picked = (key: string) => checks.find((c) => c.conceptKey === key)?.variant?.key;
+    expect(picked('shareholder_count')).toBe('mcq-shareholder-count-2');
+    expect(picked('monthly_transactions')).toBe('mcq-monthly-transactions-2');
+    expect(picked('actual_business_location')).toBe('mcq-actual-business-location-2');
   });
 });
