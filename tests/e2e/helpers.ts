@@ -120,6 +120,20 @@ export async function selectCompany(page: Page, company: string) {
 }
 
 /**
+ * Presses "Assign learner" on a company (D93) and waits for the learner form. A press before the
+ * page has hydrated does nothing, so it presses again only while the companies tab still shows.
+ */
+export async function assignLearner(page: Page, recordId: string) {
+  const learnerTab = page.getByTestId('tab-learner');
+  await expect(async () => {
+    if ((await learnerTab.getAttribute('aria-selected')) !== 'true') {
+      await page.getByTestId(`assign-learner-${recordId}`).click({ timeout: 2_000 });
+    }
+    await expect(learnerTab).toHaveAttribute('aria-selected', 'true', { timeout: 3_000 });
+  }).toPass();
+}
+
+/**
  * Creates a learner on the Users page and returns their stored code, e.g. "t-a12-da42": the team's
  * code, a hyphen and the suggestion unless `suffix` is given (D69). `team` is required when the
  * caller is the admin.
@@ -171,7 +185,8 @@ export async function createConfirmedRecord(
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
   await fillBusinessAnswers(page);
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
-  return page.url().split('/').pop()!;
+  // The id alone: the record page keeps its tab in the address (`?tab=`).
+  return new URL(page.url()).pathname.split('/').pop()!;
 }
 
 /**

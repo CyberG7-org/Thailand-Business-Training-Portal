@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import {
+  assignLearner,
   createConfirmedRecord,
   createManager,
   fillLoginSuffix,
@@ -73,12 +74,7 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await page.goto('/th/admin/users');
   const row = page.getByTestId(`company-learner-${recordId}`);
   await expect(row).toHaveText('มอบหมายผู้เรียน');
-  await expect(async () => {
-    await page.getByTestId(`assign-learner-${recordId}`).click();
-    await expect(page.getByTestId('tab-learner')).toHaveAttribute('aria-selected', 'true', {
-      timeout: 1_000,
-    });
-  }).toPass();
+  await assignLearner(page, recordId);
   await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue(recordId);
   await expect(page.getByTestId('check-company')).toHaveAttribute('data-done', 'true');
 
@@ -172,12 +168,7 @@ test("the owner's Assign learner chooses the company's team too; a company takes
 
   // The owner opens the companies and assigns: the form arrives with the company and its team.
   await page.goto('/th/admin/users');
-  await expect(async () => {
-    await page.getByTestId(`assign-learner-${recordId}`).click();
-    await expect(page.getByTestId('tab-learner')).toHaveAttribute('aria-selected', 'true', {
-      timeout: 1_000,
-    });
-  }).toPass();
+  await assignLearner(page, recordId);
   await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue(recordId);
   await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
   await fillLoginSuffix(page);
