@@ -908,8 +908,8 @@
         "abandoned": "未完成"
       },
       "verdicts": {
-        "ready": "已准备好",
-        "not_ready": "尚未准备好"
+        "ready": "已准备好 — 可以开户",
+        "not_ready": "尚未准备好 — 暂时不能开户"
       },
       "assessment": {
         "correct": "正确",
@@ -1322,6 +1322,20 @@
       "ready": "已准备好",
       "not_ready": "尚未准备好",
       "abandoned": "未完成"
+    },
+    "outcome": {
+      "ready": {
+        "title": "面试结果：可以开立银行账户",
+        "detail": "您已准备好前往银行，现在可以预约。"
+      },
+      "not_ready": {
+        "title": "面试结果：暂时不能开立银行账户",
+        "detail": "请复习下方未答对的问题，然后重新面试。"
+      },
+      "abandoned": {
+        "title": "尚无结果：暂时不能开立银行账户",
+        "detail": "面试未完成，请从头重新面试。"
+      }
     },
     "chat": {
       "placeholder": "请用泰语输入回答…",
