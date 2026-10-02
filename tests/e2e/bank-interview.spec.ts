@@ -72,11 +72,19 @@ test('starter cards, interview answers and the learner role combine into a perso
   await expect(page.getByTestId('role-saved')).toBeVisible();
   await role.getByTestId('role-holder').selectOption('นางสาวผู้เรียน ทดสอบ');
   await role.getByRole('button', { name: 'บันทึกบทบาท' }).click();
+  // The first save already showed "saved" and turned "automatic" off, so neither says the second
+  // one landed: read it back from the server before moving on.
+  await expect(async () => {
+    await page.reload();
+    await expect(role.getByTestId('role-holder')).toHaveValue('นางสาวผู้เรียน ทดสอบ', {
+      timeout: 2_000,
+    });
+  }).toPass();
   await expect(role.getByTestId('role-holder')).toHaveAttribute('data-automatic', 'false');
 
-  // The learner reads the ownership card with their own numbers filled in. `switchTo` waits for
-  // nothing staff started: clicking sign-out here could queue behind the last save and leave the
-  // session in place, and the login page sends a signed-in visitor away.
+  // The learner reads the ownership card with their own numbers filled in. `switchTo` clears
+  // the session rather than racing a sign-out click, since the login page sends a signed-in
+  // visitor away.
   await switchTo(page, learner, E2E_PASSWORD);
   await page.goto('/th/study/bank-interview-2-ownership');
   const body = page.getByTestId('study-body');
