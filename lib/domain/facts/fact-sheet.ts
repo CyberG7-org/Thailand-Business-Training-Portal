@@ -99,7 +99,7 @@ export function buildFactSheet(input: {
     ? (input.record.directors as Director[])
     : [];
   // Assignment scope: the name is one from the DBD, the position the same for every learner
-  // (D94). Company scope has no role at all.
+  // (D95). Company scope has no role at all.
   const role = input.role
     ? withStandardRole(input.role, { directors: directors.map((d) => d.name_th) })
     : null;

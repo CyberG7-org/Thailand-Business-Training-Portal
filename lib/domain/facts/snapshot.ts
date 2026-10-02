@@ -110,7 +110,7 @@ function businessOf(snapshot: TrainingSnapshot) {
 
 export function buildRoleSnapshot(role: LearnerRole, snapshot: TrainingSnapshot): RoleSnapshot {
   const business = businessOf(snapshot);
-  // The name is one from the DBD and the three answers are the same for every learner (D94).
+  // The name is one from the DBD and the three answers are the same for every learner (D95).
   const standard = withStandardRole(role, {
     directors: snapshot.facts.directors.map((d) => d.name_th),
   });

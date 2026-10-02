@@ -15,7 +15,7 @@ const LABEL = {
 } as const;
 
 /**
- * The learner's own role in the assigned company (D39, D94): which person of the DBD documents
+ * The learner's own role in the assigned company (D39, D95): which person of the DBD documents
  * they are — the facts behind the bank's "your shares" and "your name" questions — and the
  * three answers that are the same for every learner, shown read-only. Only the name can be
  * changed, and only to a name printed in the documents.
@@ -41,7 +41,7 @@ export function RoleForm({
   const tv = useTranslations('admin.users.version');
   const [state, formAction, pending] = useActionState(updateAssignmentRoleAction, initial);
   const name = role.holder_name ?? '';
-  // A name typed before D94 that is not in the documents is still shown, so it can be replaced.
+  // A name typed before D95 that is not in the documents is still shown, so it can be replaced.
   const options = name && !people.includes(name) ? [name, ...people] : people;
   return (
     <form action={formAction} className="staff-card grid max-w-md gap-3" data-testid="role-form">

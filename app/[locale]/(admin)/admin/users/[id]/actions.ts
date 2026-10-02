@@ -179,7 +179,7 @@ export async function updateAssignmentRoleAction(
   const assignmentId = String(formData.get('assignmentId') ?? '');
   await requireManageable(locale, userId);
   // Only the name is chosen; position, responsibilities and relationship are the same for
-  // every learner (D94). What was typed for them earlier stays stored.
+  // every learner (D95). What was typed for them earlier stays stored.
   const parsed = learnerRoleSchema.shape.holder_name.safeParse(formData.get('holder_name'));
   if (!parsed.success) {
     return { message: null, error: parsed.error.issues[0]?.message ?? 'Invalid' };
@@ -194,7 +194,7 @@ export async function updateAssignmentRoleAction(
     .eq('id', assignmentId)
     .maybeSingle();
   if (!current) return { message: null, error: 'not-found' };
-  // The name has to be one printed in the DBD documents (D94).
+  // The name has to be one printed in the DBD documents (D95).
   const record = Array.isArray(current.dbd_records) ? current.dbd_records[0] : current.dbd_records;
   const { people } = dbdPeople(record ?? null);
   if (parsed.data && !isDbdPerson(parsed.data, people)) {

@@ -23,11 +23,11 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await expect(page.getByTestId('version-panel')).toHaveAttribute('data-pinned', '1');
   await expect(page.getByTestId('version-newest')).toContainText('ปัจจุบัน');
   // Complete company with one director: the role has its name and confirmed itself, so
-  // everything resolves with nobody pressing anything (D94).
+  // everything resolves with nobody pressing anything (D95).
   await expect(page.getByTestId('role-confirm')).toHaveCount(0);
   await expect(page.getByTestId('role-confirmation')).toHaveAttribute('data-confirmed', 'true');
 
-  // The name is the company's only director, filled in with nobody typing (D94).
+  // The name is the company's only director, filled in with nobody typing (D95).
   await expect(page.getByTestId('role-holder')).toHaveValue('นางสาวกุลธิดา พลเยี่ยม');
   await expect(page.getByTestId('coverage-mcq')).toHaveAttribute('data-ready', '30');
   await expect(page.getByTestId('coverage-interview')).toHaveAttribute('data-ready', '11');

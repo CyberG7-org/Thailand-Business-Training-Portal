@@ -8,7 +8,7 @@ const initial: VersionActionState = { message: null, n: null, error: null };
 
 /**
  * The learner's pinned version (spec §5.6, D75) and whether the role is settled — which it is,
- * with nobody pressing anything, as soon as it has a name (D94).
+ * with nobody pressing anything, as soon as it has a name (D95).
  */
 export function VersionPanel({
   userId,

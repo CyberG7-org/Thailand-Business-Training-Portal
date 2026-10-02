@@ -59,7 +59,7 @@ test('starter cards, interview answers and the learner role combine into a perso
   await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner }).click();
   await page.waitForURL(/\/th\/admin\/users\/[0-9a-f-]{36}$/);
-  // Nobody types it (D94): the company's only director is the learner, and the three other
+  // Nobody types it (D95): the company's only director is the learner, and the three other
   // answers are the same for every learner.
   const role = page.getByTestId('role-form');
   await expect(role.getByTestId('role-holder')).toHaveValue('นางสาวผู้เรียน ทดสอบ');

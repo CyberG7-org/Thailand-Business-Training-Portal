@@ -66,7 +66,7 @@ export default async function UserDetailPage({
       }
     : null;
 
-  // The learner's role (D94): a name from the DBD documents and three fixed answers.
+  // The learner's role (D95): a name from the DBD documents and three fixed answers.
   const { directors, people } = dbdPeople(active?.dbd_records ?? null);
   const role = active ? withStandardRole(active, { directors }) : null;
 

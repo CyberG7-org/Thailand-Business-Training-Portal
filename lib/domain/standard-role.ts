@@ -3,7 +3,7 @@ import { readStructuredData } from './dbd-profile';
 import type { Director } from './dbd-record';
 
 /**
- * The learner's role answers that are the same for every learner (Owner, 2026-10-02, D94):
+ * The learner's role answers that are the same for every learner (Owner, 2026-10-02, D95):
  * the learner is a director who oversees the operations and is a friend of the other
  * shareholders. Thai, as every fact is.
  */

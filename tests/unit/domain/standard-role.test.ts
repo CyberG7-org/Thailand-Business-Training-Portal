@@ -4,7 +4,7 @@ import { FIXED_ROLE, dbdPeople, isDbdPerson, withStandardRole } from '@/lib/doma
 const ONE = { directors: ['นางสาวกุลธิดา พลเยี่ยม'] };
 const TWO = { directors: ['นางสาวกุลธิดา พลเยี่ยม', 'นายสมชาย ใจดี'] };
 
-describe('withStandardRole (D94)', () => {
+describe('withStandardRole (D95)', () => {
   it('gives every learner the same position, responsibilities and relationship', () => {
     expect(FIXED_ROLE).toEqual({
       position: 'กรรมการ',

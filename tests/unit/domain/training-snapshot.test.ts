@@ -95,7 +95,7 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
     const s = buildTrainingSnapshot({ record, structured, address: null });
     expect(buildRoleSnapshot(role, s)).toEqual({
       holder_name: role.holder_name,
-      // The same for every learner, whatever was typed before (D94).
+      // The same for every learner, whatever was typed before (D95).
       ...FIXED_ROLE,
       learner_is_shareholder: true,
       my_shares: 18_000,
@@ -105,7 +105,7 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
       learner_is_shareholder: false,
       my_shares: null,
     });
-    // Nobody picked a name: the company's only director is the learner (D94).
+    // Nobody picked a name: the company's only director is the learner (D95).
     expect(buildRoleSnapshot({ ...role, holder_name: null }, s)).toMatchObject({
       holder_name: role.holder_name,
       my_shares: 18_000,
