@@ -186,7 +186,7 @@ export async function renderPages(pdf: Uint8Array, pages: number[]): Promise<Uin
 - [ ] **Step 1: Failing test**
 
 ```ts
-it('finds the learner on the shareholder list when the documents differ by a mark (D96)', () => {
+it('finds the learner on the shareholder list when the documents differ by a mark (D97)', () => {
   const business = {
     ...EMPTY_BUSINESS_PROFILE,
     shareholders: [
@@ -218,11 +218,11 @@ function holderNamed<T extends { name: string }>(holders: readonly T[], name: st
 }
 ```
 
-- [ ] **Step 3:** unit tests pass. Commit `fix(role): a name that differs from the shareholder list only by a mark is the same person (D96)`.
+- [ ] **Step 3:** unit tests pass. Commit `fix(role): a name that differs from the shareholder list only by a mark is the same person (D97)`.
 
 ### Task A4: Gate, docs, report
 
-- [ ] D96 in the decisions log; runbook row "a name on a record is wrong although the document prints it clearly → correct it by hand, or delete the record and upload the pack again; a re-read replaces only values that lost marks".
+- [ ] D97 in the decisions log; runbook row "a name on a record is wrong although the document prints it clearly → correct it by hand, or delete the record and upload the pack again; a re-read replaces only values that lost marks".
 - [ ] Full gate: format, lint, typecheck, unit, `db:reset` + integration, build, secrets, e2e as `--shard=1/2` and `--shard=2/2`.
 - [ ] Report; push and PR on the Owner's word. On the Vercel preview, `/api/health` must show `pdfRender: ok` before the merge.
 
@@ -366,7 +366,7 @@ No new component is needed: the question card already draws right, wrong and the
 
 ### Task B10: Docs, gate, report
 
-- [ ] D97 in the decisions log; P17 spec §8 marked implemented with the two simplifications (no review-required flag: the result page is the review; no grandfathering); UAT A20; runbook row "the quiz says it is not ready".
+- [ ] D98 in the decisions log; P17 spec §8 marked implemented with the two simplifications (no review-required flag: the result page is the review; no grandfathering); UAT A20; runbook row "the quiz says it is not ready".
 - [ ] Full gate as in A4. Report the six items; the migration needs a production push on the Owner's word; push, PR and merge on the Owner's word.
 
 ## Self-review
