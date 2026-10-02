@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MCQ_STARTER } from '@/lib/content/mcq-starter';
 import {
+  approveCheckedDrafts,
   getVariant,
   listVariants,
   loadStarterVariants,
@@ -10,6 +11,7 @@ import {
 import { contextForRecord, listRecordLearners, listVersionedCompanies } from '@/lib/db/mcq-context';
 import { validateRecord } from '@/lib/db/validation';
 import { manualCategory } from '@/lib/domain/business-category';
+import { bankCoverage } from '@/lib/domain/mcq/coverage';
 import { preflightVariant } from '@/lib/domain/mcq/preflight';
 import type { Variant, VariantDraft, VariantText } from '@/lib/domain/mcq/variant';
 import {
@@ -283,7 +285,7 @@ describe('the starter drafts in the bank', () => {
     expect(first.created).toEqual(keys);
     expect(first.skipped).toEqual([]);
     const loaded = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
-    expect(loaded).toHaveLength(10);
+    expect(loaded).toHaveLength(MCQ_STARTER.length);
     expect(loaded.every((v) => v.status === 'draft')).toBe(true);
     expect(loaded.every((v) => Object.keys(v.texts).length === 3)).toBe(true);
 
@@ -298,5 +300,44 @@ describe('the starter drafts in the bank', () => {
     const second = await loadStarterVariants(asOwner, MCQ_STARTER, owner.id);
     expect(second).toEqual({ created: [], skipped: keys });
     expect((await getVariant(asOwner, capital.id))!.texts.th!.prompt).toBe(prompt);
+  });
+
+  it('approves every checked draft at once, for the Owner only, and leaves a broken one (D99)', async () => {
+    // A draft that breaks a rule, written past the editor: its correct option is a varied one.
+    const broken = (await listVariants(asOwner)).find((v) => v.key === 'mcq-director-count-1')!;
+    await svc.from('questions').update({ correct_option_key: 'B' }).eq('id', broken.id);
+
+    const manager = await createTestUser('manager');
+    try {
+      await expect(approveCheckedDrafts(await clientFor(manager))).rejects.toBeTruthy();
+      const untouched = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
+      expect(untouched.every((v) => v.status === 'draft')).toBe(true);
+    } finally {
+      await deleteTestUser(manager.id);
+    }
+
+    const result = await approveCheckedDrafts(asOwner);
+    expect(result.skipped).toEqual(['mcq-director-count-1']);
+    expect(result.approved.sort()).toEqual(keys.filter((k) => k !== broken.key).sort());
+    const after = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
+    expect(after.find((v) => v.key === broken.key)?.status).toBe('draft');
+    expect(after.filter((v) => v.status === 'approved')).toHaveLength(keys.length - 1);
+    // Every concept but the broken one's can now be asked.
+    expect(bankCoverage(after).ready).toBe(29);
+
+    // The audit names the Owner on each approval.
+    const approvedId = after.find((v) => v.key === 'mcq-company-name-1')!.id;
+    const { data: audit } = await svc
+      .from('audit_logs')
+      .select('actor_id, after')
+      .eq('entity_type', 'questions')
+      .eq('entity_id', approvedId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    expect(audit?.[0]?.actor_id).toBe(owner.id);
+    expect((audit?.[0]?.after as { approval_status?: string }).approval_status).toBe('approved');
+
+    // Nothing left to approve the second time.
+    expect((await approveCheckedDrafts(asOwner)).approved).toEqual([]);
   });
 });

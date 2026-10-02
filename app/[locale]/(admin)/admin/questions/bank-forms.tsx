@@ -1,11 +1,13 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import type { VariantStatus } from '@/lib/domain/mcq/variant';
 import {
+  approveDraftsAction,
   loadStarterAction,
   setVariantStatusAction,
+  type ApproveDraftsState,
   type StarterState,
   type StatusState,
 } from './bank-actions';
@@ -40,6 +42,67 @@ export function StarterForm({ count }: { count: number }) {
       >
         {t('loadStarter', { count })}
       </button>
+    </form>
+  );
+}
+
+const approveInitial: ApproveDraftsState = { done: false, approved: 0, failed: false };
+
+/** One button for every draft that keeps the rules, behind a confirm step naming the count. */
+export function ApproveDraftsForm({ count }: { count: number }) {
+  const locale = useLocale();
+  const t = useTranslations('admin.bank');
+  const [state, formAction, pending] = useActionState(approveDraftsAction, approveInitial);
+  const [confirming, setConfirming] = useState(false);
+  // Nothing to approve and nothing to report: no card at all.
+  if (count === 0 && !state.done && !state.failed) return null;
+  return (
+    <form action={formAction} className="staff-card grid gap-2">
+      <input type="hidden" name="locale" value={locale} />
+      {state.failed && (
+        <p role="alert" className="text-sm text-bad-600">
+          {t('approveDraftsFailed')}
+        </p>
+      )}
+      {state.done && (
+        <p role="status" data-testid="drafts-approved" className="text-sm text-ok-600">
+          {t('approveDraftsDone', { count: state.approved })}
+        </p>
+      )}
+      {count > 0 && <p className="text-sm text-ink-700">{t('approveDraftsHint')}</p>}
+      {count > 0 && !confirming && (
+        <button
+          type="button"
+          data-testid="approve-drafts"
+          onClick={() => setConfirming(true)}
+          className="staff-btn-ok justify-self-start"
+        >
+          {t('approveDrafts', { count })}
+        </button>
+      )}
+      {count > 0 && confirming && (
+        <div className="grid gap-2">
+          <p className="text-sm font-medium text-ink-900">{t('approveDraftsConfirm', { count })}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={pending}
+              data-testid="approve-drafts-confirm"
+              className="staff-btn-ok"
+            >
+              {t('approveDraftsYes')}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setConfirming(false)}
+              className="staff-btn-ghost"
+            >
+              {t('approveDraftsCancel')}
+            </button>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

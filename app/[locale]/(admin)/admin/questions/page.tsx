@@ -2,12 +2,12 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import { MCQ_STARTER } from '@/lib/content/mcq-starter';
-import { listVariants } from '@/lib/db/mcq-bank';
+import { isCheckedDraft, listVariants } from '@/lib/db/mcq-bank';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptTitle, MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { bankCoverage } from '@/lib/domain/mcq/coverage';
 import type { AppliesWhen } from '@/lib/domain/mcq/variant';
-import { StarterForm } from './bank-forms';
+import { ApproveDraftsForm, StarterForm } from './bank-forms';
 
 /** The Owner's bank, concept first (P17d): thirty concepts and what each still lacks. */
 export default async function QuestionBankPage({
@@ -21,6 +21,7 @@ export default async function QuestionBankPage({
   const coverage = bankCoverage(variants);
   const held = new Set(variants.map((v) => v.key));
   const startersMissing = MCQ_STARTER.filter((s) => !held.has(s.key)).length;
+  const checkedDrafts = variants.filter(isCheckedDraft).length;
   const t = await getTranslations('admin.bank');
   const caseLabel = (when: AppliesWhen | null) =>
     when === null
@@ -58,6 +59,7 @@ export default async function QuestionBankPage({
         {t('ready', { ready: coverage.ready, total: coverage.total })}
       </p>
       {startersMissing > 0 && <StarterForm count={startersMissing} />}
+      <ApproveDraftsForm count={checkedDrafts} />
 
       <div className="staff-table-wrap">
         <table className="staff-table min-w-[46rem]">
