@@ -62,13 +62,17 @@ test('a learner is created inside a team, under a code typed after the team pref
 
 test('a taken code is flagged as it is typed and refused at create', async ({ page }) => {
   const company = `บริษัท รหัสซ้ำ ${Date.now()} จำกัด`;
+  // A company takes one learner (D93), so the second attempt studies another.
+  const other = `บริษัท รหัสซ้ำสอง ${Date.now()} จำกัด`;
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ทีมรหัสซ้ำ', MANAGER_PASSWORD);
-  await createConfirmedRecord(page, {
-    companyNameTh: company,
-    juristicId: '0105568233704',
-    issuedOn: '13/07/2569',
-  });
+  for (const name of [company, other]) {
+    await createConfirmedRecord(page, {
+      companyNameTh: name,
+      juristicId: '0105568233704',
+      issuedOn: '13/07/2569',
+    });
+  }
   await createLearner(page, { password: LEARNER_PASSWORD, company, team: code, suffix: 'QA07' });
 
   await page.goto('/th/admin/users?tab=learner');
@@ -94,7 +98,7 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
   await page.locator('input[name="displayName"]').fill('ผู้เรียนซ้ำ');
   await page.locator('input[name="phone"]').fill('0812345678');
   await page.locator('input[name="contactEmail"]').fill('dup@example.co.th');
-  await selectCompany(page, company);
+  await selectCompany(page, other);
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   await expect(page.getByTestId('create-user-error')).toHaveText(
     'รหัสนี้มีผู้ใช้แล้ว กรุณาเลือกรหัสอื่น',

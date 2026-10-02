@@ -108,6 +108,8 @@ export async function createManager(
  */
 export async function selectCompany(page: Page, company: string) {
   const option = page.locator('select[name="dbdRecordId"] option', { hasText: company });
+  // A taken or unconfirmed company is listed but not sent with the form (D93).
+  await expect(option).not.toHaveAttribute('disabled', '');
   const value = (await option.getAttribute('value'))!;
   await expect(async () => {
     await page.locator('select[name="dbdRecordId"]').selectOption(value);
