@@ -1,7 +1,14 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
-import { RENDER_SCALE, THIN_PAGE_CHARS, renderPages, thinPages } from '@/lib/pdf/render-pages';
+import nextConfig from '@/next.config';
+import {
+  RENDER_SCALE,
+  THIN_PAGE_CHARS,
+  pdfjsDataUrls,
+  renderPages,
+  thinPages,
+} from '@/lib/pdf/render-pages';
 
 const fixture = (name: string) => new Uint8Array(readFileSync(`tests/fixtures/${name}`));
 const PNG = [0x89, 0x50, 0x4e, 0x47];
@@ -32,6 +39,35 @@ describe('thinPages', () => {
     const thin = await thinPages(pdf);
     expect(thin.every((n) => n >= 1 && n <= 3)).toBe(true);
     expect(pdf).toEqual(before);
+  });
+});
+
+describe('what pdf.js opens at run time', () => {
+  it('is told where its decoders, fonts and maps are, and they are there', () => {
+    const urls = pdfjsDataUrls();
+    expect(urls).not.toBeNull();
+    for (const url of Object.values(urls!)) {
+      expect(url.endsWith('/')).toBe(true);
+      expect(existsSync(url), url).toBe(true);
+    }
+    expect(existsSync(urls!.wasmUrl + 'jbig2.wasm')).toBe(true);
+    expect(existsSync(urls!.wasmUrl + 'openjpeg.wasm')).toBe(true);
+  });
+
+  it('goes into the deployment: the worker and every folder above are traced by name', () => {
+    // A deployment only holds what file tracing finds. pdf.js opens these by a path worked out
+    // at run time, so each must be named in next.config.ts — the worker was missing on Vercel.
+    const config = nextConfig;
+    const patterns = config.outputFileTracingIncludes?.['/*'] ?? [];
+    // Through pnpm's store, never through the link beside it: Vercel refuses a package whose
+    // files sit in a linked folder.
+    expect(patterns.every((p) => p.startsWith('node_modules/.pnpm/'))).toBe(true);
+    const included = patterns.join('\n');
+    expect(included).toContain('node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
+    for (const folder of ['wasm', 'standard_fonts', 'cmaps', 'iccs']) {
+      expect(included).toContain(`node_modules/pdfjs-dist/${folder}/**`);
+    }
+    expect(config.serverExternalPackages).toEqual(['@napi-rs/canvas', 'pdfjs-dist']);
   });
 });
 

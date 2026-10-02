@@ -1454,7 +1454,7 @@
     "intro": "根据贵公司的记录和经理提供的信息为您制作。可预览并下载 PDF。",
     "preview": "预览",
     "download": "下载 PDF",
-    "meta": "模板 {version} · {phone}",
+    "meta": "手机 {phone}",
     "errors": {
       "no_assignment": "尚未为您分配公司。",
       "exam_required": "请先通过业务知识测验再领取名片。",

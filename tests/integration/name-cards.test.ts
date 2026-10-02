@@ -114,7 +114,7 @@ describe('name cards', () => {
     expect(card.phone_number).toBe('0812345678');
     expect(card.holder_name).toBe('สมชาย ทดสอบ');
     expect(card.holder_name_en).toBeNull();
-    expect(card.template_version).toBe('two-sided-v3');
+    expect(card.template_version).toBe('two-sided-v4');
     expect(card.pdf_path.startsWith(`${learner.id}/`)).toBe(true);
 
     expect((await getMyLatestNameCard(asLearner, learner.id))?.id).toBe(card.id);
@@ -138,7 +138,7 @@ describe('name cards', () => {
       phone_number: '0812345678',
       holder_name: 'สมชาย ทดสอบ',
       dbd_record_id: recordId,
-      template_version: 'two-sided-v3',
+      template_version: 'two-sided-v4',
     });
     expect((await ensureNameCard(learner.id, fakeRenderer)).card?.id).toBe(first.card!.id);
 
@@ -146,6 +146,17 @@ describe('name cards', () => {
     const second = await ensureNameCard(learner.id, fakeRenderer);
     expect(second.card?.id).not.toBe(first.card!.id);
     expect(second.card?.phone_number).toBe('0899999999');
+    // A website or Facebook page given later is printed too, on a new card (D99).
+    await svc
+      .from('profiles')
+      .update({
+        website: 'https://nametest.co.th',
+        facebook_page: 'https://www.facebook.com/nametest',
+      })
+      .eq('id', learner.id);
+    const third = await ensureNameCard(learner.id, fakeRenderer);
+    expect(third.card?.id).not.toBe(second.card!.id);
+    await svc.from('profiles').update({ website: null, facebook_page: null }).eq('id', learner.id);
     expect((await ensureNameCard(other.id, fakeRenderer)).blocked?.code).toBe('no_assignment');
   });
 

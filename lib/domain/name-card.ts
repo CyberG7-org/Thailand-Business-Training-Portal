@@ -2,10 +2,11 @@ import { formatThaiMobile } from './phone';
 
 /**
  * One two-sided design for every company (D24, D63). Bumped whenever the layout changes, which
- * also remakes every card already made (D96). v3: the back keeps the holder's Thai name, the
- * phone, the company email, the head office address and the products or services.
+ * also remakes every card already made (D96). v4 (D99): the back carries the holder's Thai name,
+ * the phone, the company email, the head office address, and the learner's website and
+ * Facebook page when given; no products and no version printed.
  */
-export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v3';
+export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v4';
 
 /**
  * The words every card carries, whatever the company (owner, 2026-09-28): a tagline on both
@@ -28,8 +29,10 @@ export type NameCardSource = {
   /** The company's contact and business answers, as the manager filled them (D58). */
   contact_email: string | null;
   nature_of_business: string | null;
-  products_services: string | null;
 };
+
+/** The learner's own addresses, as a manager gave them at Create learner (D80). */
+export type NameCardLinks = { website: string | null; facebookPage: string | null };
 
 export type NameCardData = {
   companyNameTh: string;
@@ -42,7 +45,10 @@ export type NameCardData = {
   email: string | null;
   juristicId: string | null;
   natureOfBusiness: string | null;
-  productsServices: string | null;
+  /** As printed: no scheme, no www. */
+  website: string | null;
+  /** As printed: the page name, or the address when it is not a plain page. */
+  facebookPage: string | null;
   templateVersion: string;
 };
 
@@ -103,12 +109,63 @@ export function companyInitials(nameEn: string | null, nameTh: string | null): s
   return firstGrapheme((nameTh ?? '').replace(THAI_LEGAL_PREFIX, '').trim());
 }
 
+/** A web address as a card prints it: no scheme, no `www.`, no trailing slash. */
+export function printedWebsite(url: string): string {
+  return url
+    .trim()
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '')
+    .replace(/\/$/, '');
+}
+
+/**
+ * A Facebook page as a card prints it: the page name people know it by (`facebook.com/thara`
+ * prints `thara`), or the address without its scheme when it is not a plain page.
+ */
+export function printedFacebookPage(url: string): string {
+  const bare = printedWebsite(url);
+  const page = bare.match(/^(?:m\.)?(?:facebook\.com|fb\.com|fb\.me)\/([^/?#]+)$/i)?.[1];
+  if (!page) return bare;
+  try {
+    return decodeURIComponent(page);
+  } catch {
+    return page;
+  }
+}
+
+/**
+ * The longest address a card prints, in characters: about two lines of the back's column. The
+ * form takes up to 300, which would run off the card, so a longer one is cut with an ellipsis.
+ */
+export const MAX_PRINTED_LINK = 80;
+
+const bounded = (text: string): string =>
+  text.length > MAX_PRINTED_LINK ? text.slice(0, MAX_PRINTED_LINK - 1) + '…' : text;
+
+/** The longest run of an address printed without a place to break. */
+const MAX_LINK_PIECE = 20;
+
+/**
+ * Where a printed address may break: after a slash, dot, hyphen, underscore, `?`, `&`, `=` or
+ * `#`, and inside any run longer than a few characters. Joined, the pieces are the address.
+ */
+export function urlPieces(text: string): string[] {
+  const pieces: string[] = [];
+  for (const part of text.match(/[^/.\-_?&=#]*[/.\-_?&=#]?/g) ?? []) {
+    for (let i = 0; i < part.length; i += MAX_LINK_PIECE) {
+      pieces.push(part.slice(i, i + MAX_LINK_PIECE));
+    }
+  }
+  return pieces;
+}
+
 /** Builds the render model; throws when required DBD data or the holder's name is missing. */
 export function buildNameCardData(
   source: NameCardSource,
   phoneNormalized: string,
   /** The holder's Thai name: the learner's name as the documents print it (D95). */
   holderNameTh: string,
+  links: NameCardLinks = { website: null, facebookPage: null },
 ): NameCardData {
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new Error(`Missing DBD fields: ${missing.join(', ')}`);
@@ -124,7 +181,10 @@ export function buildNameCardData(
     email: source.contact_email?.trim() || null,
     juristicId: source.juristic_id,
     natureOfBusiness: source.nature_of_business?.trim() || null,
-    productsServices: source.products_services?.trim() || null,
+    website: links.website?.trim() ? bounded(printedWebsite(links.website)) : null,
+    facebookPage: links.facebookPage?.trim()
+      ? bounded(printedFacebookPage(links.facebookPage))
+      : null,
     templateVersion: NAME_CARD_TEMPLATE_VERSION,
   };
 }
