@@ -1427,7 +1427,7 @@
     "intro": "Made for you from your company record and the details your manager gave. Preview it and download the PDF.",
     "preview": "Preview",
     "download": "Download PDF",
-    "meta": "Template {version} · {phone}",
+    "meta": "Mobile {phone}",
     "errors": {
       "no_assignment": "No company is assigned to you yet.",
       "exam_required": "Pass the Business Knowledge Quiz first to get your name card.",

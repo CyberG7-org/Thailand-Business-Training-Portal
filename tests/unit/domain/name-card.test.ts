@@ -5,6 +5,8 @@ import {
   buildNameCardData,
   companyInitials,
   missingNameCardFields,
+  printedFacebookPage,
+  printedWebsite,
   thaiWords,
   type NameCardSource,
 } from '@/lib/domain/name-card';
@@ -35,11 +37,13 @@ const source: NameCardSource = {
   juristic_id: '0105569000134',
   contact_email: 'contact@example.co.th',
   nature_of_business: 'ค้าปลีกอุปกรณ์ไฟฟ้า',
-  products_services: 'สายไฟและอุปกรณ์ติดตั้ง',
 };
 const holder = 'นายตัวอย่าง นามสมมติ';
 
-/** One two-sided design for every company (D63): the holder's name and phone, the record's the rest (D96). */
+/**
+ * One two-sided design for every company (D63): the holder's name and phone, the record's the
+ * rest (D96), and the learner's website and Facebook page when given (D99).
+ */
 describe('name card data', () => {
   it('builds the render model from the record and the holder', () => {
     const d = buildNameCardData(source, '0812345678', holder);
@@ -48,20 +52,29 @@ describe('name card data', () => {
     expect(d.phoneDisplay).toBe('081-234-5678');
     expect(d.email).toBe('contact@example.co.th');
     expect(d.natureOfBusiness).toBe('ค้าปลีกอุปกรณ์ไฟฟ้า');
-    expect(d.productsServices).toBe('สายไฟและอุปกรณ์ติดตั้ง');
+    expect(d.website).toBeNull();
+    expect(d.facebookPage).toBeNull();
     expect(d.templateVersion).toBe(NAME_CARD_TEMPLATE_VERSION);
-    expect(d.templateVersion).toBe('two-sided-v3');
+    expect(d.templateVersion).toBe('two-sided-v4');
+  });
+
+  it('prints the website and the Facebook page as people read them', () => {
+    const d = buildNameCardData(source, '0812345678', holder, {
+      website: 'https://www.thara-vanich.co.th',
+      facebookPage: 'https://www.facebook.com/tharavanich',
+    });
+    expect(d.website).toBe('thara-vanich.co.th');
+    expect(d.facebookPage).toBe('tharavanich');
   });
 
   it("keeps the company's English name and the business answers optional", () => {
     const d = buildNameCardData(
-      { ...source, company_name_en: null, nature_of_business: null, products_services: '  ' },
+      { ...source, company_name_en: null, nature_of_business: null },
       '0812345678',
       'สมชาย',
     );
     expect(d.companyNameEn).toBeNull();
     expect(d.natureOfBusiness).toBeNull();
-    expect(d.productsServices).toBeNull();
   });
 
   it('refuses to fabricate missing DBD fields or a nameless holder', () => {
@@ -72,6 +85,24 @@ describe('name card data', () => {
       buildNameCardData({ ...source, company_name_th: null }, '0812345678', holder),
     ).toThrow(/company_name_th/);
     expect(() => buildNameCardData(source, '0812345678', '  ')).toThrow(/holder/);
+  });
+});
+
+describe('printedWebsite and printedFacebookPage', () => {
+  it('drop the scheme, www. and a trailing slash', () => {
+    expect(printedWebsite('https://www.example.co.th/')).toBe('example.co.th');
+    expect(printedWebsite('http://shop.example.com/th')).toBe('shop.example.com/th');
+  });
+
+  it('print a page by its name, and any other Facebook address without its scheme', () => {
+    expect(printedFacebookPage('https://www.facebook.com/thara.vanich')).toBe('thara.vanich');
+    expect(printedFacebookPage('https://m.facebook.com/tharavanich/')).toBe('tharavanich');
+    expect(
+      printedFacebookPage('https://www.facebook.com/%E0%B8%98%E0%B8%B2%E0%B8%A3%E0%B8%B2'),
+    ).toBe('ธารา');
+    expect(printedFacebookPage('https://www.facebook.com/profile.php?id=1000')).toBe(
+      'facebook.com/profile.php?id=1000',
+    );
   });
 });
 

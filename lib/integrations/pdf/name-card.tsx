@@ -189,8 +189,6 @@ const s = StyleSheet.create({
   },
   factText: { fontSize: 5.8, lineHeight: 1.4 },
   factSub: { fontSize: 4.4, color: C.ink500, marginTop: 0.5 },
-  label: { fontSize: 4.4, color: C.ink500, letterSpacing: 0.5, marginBottom: 1.5 },
-  products: { fontSize: 5.6, lineHeight: 1.5 },
   watermark: {
     fontFamily: 'Display',
     fontWeight: 600,
@@ -198,10 +196,9 @@ const s = StyleSheet.create({
     color: C.brand50,
     lineHeight: 1,
   },
-  meta: { fontSize: 3.6, color: C.ink300 },
 });
 
-const ICONS: Record<'phone' | 'mail' | 'pin' | 'hash', string[]> = {
+const ICONS: Record<'phone' | 'mail' | 'pin' | 'globe' | 'facebook', string[]> = {
   phone: [
     'M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z',
   ],
@@ -210,7 +207,12 @@ const ICONS: Record<'phone' | 'mail' | 'pin' | 'hash', string[]> = {
     'M22 6l-10 7L2 6',
   ],
   pin: ['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z', 'M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'],
-  hash: ['M4 9h16', 'M4 15h16', 'M10 3L8 21', 'M16 3l-2 18'],
+  globe: [
+    'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20z',
+    'M2 12h20',
+    'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+  ],
+  facebook: ['M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z'],
 };
 
 function Dot({ icon }: { icon: keyof typeof ICONS }) {
@@ -294,7 +296,10 @@ function Front({ data }: { data: NameCardData }) {
   );
 }
 
-/** Back: the holder and how to reach the company. */
+/**
+ * Back: the holder and how to reach them (D99): phone, company email, head office address, and
+ * the learner's website and Facebook page when a manager gave them. Nothing else is printed.
+ */
 function Back({ data }: { data: NameCardData }) {
   return (
     <Page size={[W, H]} style={s.page} wrap={false}>
@@ -315,25 +320,15 @@ function Back({ data }: { data: NameCardData }) {
       <View style={[s.abs, { left: 12, top: 12, width: 170 }]}>
         <ThaiText style={s.holderTh}>{data.holderName}</ThaiText>
       </View>
-      <View style={[s.abs, { left: 12, top: 62, width: 150 }]}>
+      <View style={[s.abs, { left: 12, top: 52, width: 190 }]}>
         <Fact icon="phone">{data.phoneDisplay}</Fact>
         {data.email && <Fact icon="mail">{data.email}</Fact>}
         <Fact icon="pin" thai>
           {data.address}
         </Fact>
+        {data.website && <Fact icon="globe">{data.website}</Fact>}
+        {data.facebookPage && <Fact icon="facebook">{data.facebookPage}</Fact>}
       </View>
-      {data.productsServices && (
-        <View
-          style={[
-            s.abs,
-            { left: 172, top: 62, width: W - 172 - 12, maxHeight: 62, overflow: 'hidden' },
-          ]}
-        >
-          <T style={s.label}>สินค้า / บริการ · PRODUCTS / SERVICES</T>
-          <ThaiText style={s.products}>{data.productsServices}</ThaiText>
-        </View>
-      )}
-      <T style={[s.abs, s.meta, { left: 12, bottom: 5 }]}>{data.templateVersion}</T>
     </Page>
   );
 }

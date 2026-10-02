@@ -15,10 +15,13 @@ describe('name card PDF (spike S3)', () => {
         juristic_id: '0105569000134',
         contact_email: 'contact@example.co.th',
         nature_of_business: 'ค้าปลีกอุปกรณ์ไฟฟ้าสำหรับงานติดตั้ง',
-        products_services: 'สายไฟ ท่อร้อยสาย และอุปกรณ์ติดตั้ง',
       },
       '0812345678',
       'นางสาวตัวอย่าง ทดสอบ',
+      {
+        website: 'https://www.sample-card.co.th',
+        facebookPage: 'https://www.facebook.com/samplecard',
+      },
     );
     const bytes = await new ReactPdfRenderer().renderNameCard(data);
     expect(Buffer.from(bytes.slice(0, 5)).toString()).toBe('%PDF-');
@@ -39,15 +42,19 @@ describe('name card PDF (spike S3)', () => {
       '0105569000134',
       NAME_CARD_COPY.tagline.replace(/\s/g, ''),
       'นางสาวตัวอย่างทดสอบ',
-      'สายไฟ',
       'บริษัท',
+      // The learner's website and Facebook page, as people read them (D99).
+      'sample-card.co.th',
+      'samplecard',
     ]) {
       expect(squashed).toContain(expected);
     }
     expect(items.filter((item) => item.trimEnd().endsWith('-'))).toEqual([]);
-    // The back keeps the holder, the phone, the email, the address and the products (D96): the
-    // registration number is printed on the front only.
+    // The back keeps the holder, the phone, the email, the address and the learner's links
+    // (D96, D99): no registration number (on the front only), no products, no version.
     expect(squashed).not.toContain('CorporateRegistrationNo.');
+    expect(squashed).not.toContain('PRODUCTS');
+    expect(squashed).not.toContain('two-sided');
     expect(squashed).toContain('contact@example.co.th');
     // Words with sara am (ำ) keep every glyph; the viewer may give the vowel back as one
     // code point or two. Every Thai word on this card is its own text object.

@@ -8,6 +8,7 @@ import {
   buildNameCardData,
   missingNameCardFields,
   type NameCardData,
+  type NameCardLinks,
   type NameCardSource,
 } from '@/lib/domain/name-card';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
@@ -87,7 +88,6 @@ async function sourceFor(
           juristic_id: pinned.snapshot.facts.juristic_id,
           contact_email: pinned.snapshot.extras.contact_email,
           nature_of_business: pinned.snapshot.facts.nature_of_business,
-          products_services: pinned.snapshot.facts.products_services,
         }
       : {
           company_name_th: r.company_name_th,
@@ -96,13 +96,12 @@ async function sourceFor(
           juristic_id: r.juristic_id,
           contact_email: interview?.contact_email ?? null,
           nature_of_business: interview?.nature_of_business ?? null,
-          products_services: interview?.products_services ?? null,
         },
   };
 }
 
 /** Renders and stores a new card; never fabricates missing DBD data (BR-008). */
-export type NameCardInput = { phone: string; holderNameTh: string };
+export type NameCardInput = { phone: string; holderNameTh: string } & Partial<NameCardLinks>;
 
 export async function generateNameCard(
   userId: string,
@@ -125,7 +124,10 @@ export async function generateNameCard(
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new NameCardError('Missing DBD fields', 'missing_fields', missing);
 
-  const data = buildNameCardData(source, phone, nameTh);
+  const data = buildNameCardData(source, phone, nameTh, {
+    website: input.website ?? null,
+    facebookPage: input.facebookPage ?? null,
+  });
   const bytes = await renderer.renderNameCard(data);
   const path = `${userId}/${Date.now()}-${data.templateVersion}-${fingerprintOf(data)}.pdf`;
   const { error: uploadError } = await admin.storage
@@ -172,7 +174,7 @@ export async function ensureNameCard(
       getPolicy('require_exam_pass_for_name_card'),
       examPassedFor(userId),
       sourceFor(userId),
-      admin.from('profiles').select('phone').eq('id', userId).single(),
+      admin.from('profiles').select('phone, website, facebook_page').eq('id', userId).single(),
       getMyLatestNameCard(admin, userId),
     ]);
     if (requireExam && !exam.passed) {
@@ -187,13 +189,18 @@ export async function ensureNameCard(
     const name = found.defaultHolderName.trim();
     if (!name) throw new NameCardError('No holder name', 'no_name');
     // Current when it was made for this company from exactly what would be printed today.
-    const printed = buildNameCardData(found.source, phone, name);
+    // The learner's website and Facebook page, as a manager gave them (D99).
+    const links = {
+      website: profile?.website ?? null,
+      facebookPage: profile?.facebook_page ?? null,
+    };
+    const printed = buildNameCardData(found.source, phone, name, links);
     const current =
       latest &&
       latest.dbd_record_id === found.dbdRecordId &&
       latest.pdf_path.endsWith(`-${fingerprintOf(printed)}.pdf`);
     if (current) return { card: latest, blocked: null };
-    const card = await generateNameCard(userId, { phone, holderNameTh: name }, renderer);
+    const card = await generateNameCard(userId, { phone, holderNameTh: name, ...links }, renderer);
     return { card, blocked: null };
   } catch (e) {
     if (e instanceof NameCardError) {
