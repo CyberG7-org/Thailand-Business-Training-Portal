@@ -253,6 +253,7 @@ export function NewUserForm({
           <h3 className="text-base font-semibold text-ink-900">{t('learnerSection')}</h3>
           <label className="text-sm">
             <span className={label}>{t('name')}</span>
+            <span className="font-normal text-ink-500"> {t('contact.forCard')}</span>
             <input
               name="displayName"
               required

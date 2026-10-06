@@ -375,7 +375,7 @@
         "document": "Level 3 — DBD document metadata",
         "interview": "Level 4 — Bank interview answers (facts the DBD does not hold)",
         "answers": "Contact and business",
-        "answersIntro": "The four answers the DBD documents can't give. They're needed before the company can be used."
+        "answersIntro": "Answers the DBD documents do not hold: from the invoices, or the same for every company; nothing to type."
       },
       "documentTypes": {
         "certificate": "Certificate",
@@ -614,7 +614,7 @@
         "my_shares": "Learner's shares",
         "my_share_percent": "Learner's share percentage"
       },
-      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the four details were given.",
+      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the business nature was described.",
       "versions": {
         "title": "Training versions",
         "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
@@ -633,7 +633,7 @@
       "recheck": "Check again",
       "acceptance": {
         "accepted": "Accepted by {name}",
-        "acceptedAuto": "Accepted automatically: the reading was clean and the four details were there.",
+        "acceptedAuto": "Accepted automatically: the reading was clean and the business nature was there.",
         "waiting": "{count, plural, one {# exception} other {# exceptions}} blocking acceptance",
         "blocked": "Not accepted yet — settle the exceptions."
       },
@@ -1060,7 +1060,7 @@
       "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
     },
     "filePicker": {
-      "choose": "Choose PDF files",
+      "choose": "Choose files",
       "orDrop": "or drop them here"
     },
     "bank": {

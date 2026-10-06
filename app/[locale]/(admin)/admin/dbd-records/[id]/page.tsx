@@ -21,6 +21,7 @@ import { AddressPanel } from './address-panel';
 import { CategoryPanel } from './category-panel';
 import { ExceptionsPanel } from './exceptions-panel';
 import { LinksForm } from './links-form';
+import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
 import { summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
 import type { PackGroup } from '@/lib/domain/pack/sort';
 import { InterviewForm } from './interview-form';
@@ -130,12 +131,16 @@ export default async function DbdRecordPage({
   const confirmed = record.extraction_status === 'confirmed';
   // Level 4 asks five questions (D91); the rest are standard answers, shown as the sheet reads
   // them.
+  // The invoices' answers sit on top (D101), so the count and the standard answers see them.
+  const filled = withInvoiceAnswers(
+    withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+      address: address.full || record.head_office_address,
+    }),
+    structured.invoices,
+  );
   const answered = ASKED_INTERVIEW_FIELDS.filter(
-    (field) => String(structured.interview?.[field] ?? '').trim() !== '',
+    (field) => String(filled[field] ?? '').trim() !== '',
   ).length;
-  const filled = withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
-    address: address.full || record.head_office_address,
-  });
   const standardAnswers = Object.fromEntries(
     STANDARD_ANSWER_FIELDS.map((field) => [field, filled[field]]),
   ) as Record<StandardAnswerField, string | null>;
