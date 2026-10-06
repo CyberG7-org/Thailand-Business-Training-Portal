@@ -13,8 +13,7 @@ import { saveInterviewAnswersAction, type ToolState } from '../actions';
 const initial: ToolState = { ok: false, error: null };
 
 /** The questions still asked (D91), grouped as the bank groups them. */
-const GROUPS: { key: 'customers' | 'money'; fields: AskedInterviewField[] }[] = [
-  { key: 'customers', fields: ['client_origin', 'customer_profile', 'main_suppliers'] },
+const GROUPS: { key: 'money'; fields: AskedInterviewField[] }[] = [
   { key: 'money', fields: ['monthly_revenue', 'average_transaction'] },
 ];
 

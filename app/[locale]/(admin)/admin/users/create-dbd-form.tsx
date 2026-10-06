@@ -82,8 +82,8 @@ export function CreateDbdForm({
             ) : (
               <input
                 {...common}
-                type={field === 'contact_email' ? 'email' : 'tel'}
-                maxLength={field === 'contact_email' ? 320 : 200}
+                type={(field as string) === 'contact_email' ? 'email' : 'tel'}
+                maxLength={(field as string) === 'contact_email' ? 320 : 200}
                 autoComplete="off"
               />
             )}

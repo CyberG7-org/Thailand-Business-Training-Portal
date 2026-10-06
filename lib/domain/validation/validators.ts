@@ -4,6 +4,7 @@ import { EMPTY_BUSINESS_PROFILE, type StructuredData } from '@/lib/domain/dbd-pr
 import type { Director } from '@/lib/domain/dbd-record';
 import type { FactKey, FactSheet } from '@/lib/domain/facts/fact-sheet';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
+import { summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
 import { isValidJuristicId } from './juristic-id';
 
 export const EXCEPTION_KINDS = [
@@ -14,6 +15,8 @@ export const EXCEPTION_KINDS = [
   'geo_mismatch',
   'category_review',
   'render_failure',
+  'invoice_set_aside',
+  'few_invoices',
 ] as const;
 export type ExceptionKind = (typeof EXCEPTION_KINDS)[number];
 
@@ -259,6 +262,30 @@ export function validateFacts(input: ValidationInput): Finding[] {
     }
   }
   if (!record.issued_on) push('missing', 'issued_on', 'version', { concepts: [] }, 'missing');
+
+  // 8b. The invoices (D101): one left out of the arithmetic, or fewer than three in it. Neither
+  //     holds anything back; the record shows them beside the figures.
+  if (structured.invoices) {
+    const summary = summarizeInvoices(structured.invoices.rows);
+    for (const aside of summary?.setAside ?? []) {
+      push(
+        'invoice_set_aside',
+        `invoices.${aside.index}`,
+        'none',
+        { reason: aside.reason },
+        aside.reason,
+      );
+    }
+    if (summary?.few) {
+      push(
+        'few_invoices',
+        'invoices',
+        'none',
+        { usable: summary.invoices },
+        String(summary.invoices),
+      );
+    }
+  }
 
   // 9. The extraction's own confidence on the fields the sheet reads (plan decision 2).
   const provenance = structured.provenance ?? {};

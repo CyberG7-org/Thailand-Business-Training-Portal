@@ -61,7 +61,9 @@ export async function openPack(zip: File): Promise<OpenedPack> {
   const byPath = new Map(entries.map((e) => [e.path, e.bytes]));
   const files = sorted.documents.map((d) => ({
     group: d.group,
-    file: new File([byPath.get(d.path)!], baseName(d.path), { type: 'application/pdf' }),
+    file: new File([byPath.get(d.path)! as BlobPart], baseName(d.path), {
+      type: 'application/pdf',
+    }),
   }));
   const links = mergeLinks(
     sorted.linkFiles.map((f) => linksFromText(textOfLinkFile(f.path, byPath.get(f.path)!))),

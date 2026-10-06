@@ -6,6 +6,7 @@ import {
   settleCategory,
 } from './business-category';
 import { registeredAddressSchema, type RegisteredAddress } from './geo/resolve';
+import { invoiceReadSchema, type InvoiceRead } from './invoices/schema';
 
 /**
  * Level 2 of the three-level DBD model (decision D38): the business profile that comes from the
@@ -101,6 +102,8 @@ export type StructuredData = {
   address?: RegisteredAddress | null;
   /** The mapped business category (P17a, D73). */
   category?: CategoryAssignment | null;
+  /** The invoices as read (P18a, D101); every money figure is computed from these rows. */
+  invoices?: InvoiceRead | null;
 };
 
 /**
@@ -114,7 +117,9 @@ export function readStructuredData(raw: unknown): StructuredData {
   const interview = interviewProfileSchema.safeParse(data.interview ?? {});
   const address = registeredAddressSchema.safeParse(data.address);
   const category = categoryAssignmentSchema.safeParse(data.category);
+  const invoices = invoiceReadSchema.safeParse(data.invoices);
   return {
+    invoices: invoices.success ? invoices.data : null,
     business: business.success ? business.data : EMPTY_BUSINESS_PROFILE,
     interview: interview.success ? interview.data : interviewProfileSchema.parse({}),
     document_type: typeof data.document_type === 'string' ? data.document_type : null,

@@ -48,7 +48,7 @@ describe('opening a company zip in the browser (D101)', () => {
   });
 
   it('sorts the documents into files and finds both addresses', async () => {
-    const opened = await openPack(new File([exampleZip()], 'chaya sri trade.zip'));
+    const opened = await openPack(new File([exampleZip() as BlobPart], 'chaya sri trade.zip'));
     expect(opened.sorted.problem).toBeNull();
     expect(opened.files.map((f) => [f.group, f.file.name])).toEqual([
       ['pack', 'CHAYA SRI TRADE CO., LTD dbd.pdf'],

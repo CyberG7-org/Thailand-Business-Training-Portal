@@ -14,6 +14,8 @@ import {
 } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
+import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
+import { summarizeInvoices, type InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
 import { withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
 import { buildFactSheet, type FactSheet, type RecordColumns } from './fact-sheet';
@@ -47,6 +49,8 @@ export type TrainingExtras = {
   operations_status: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  /** The figures the invoices give (D101), for the record page and the interview's tolerance. */
+  invoice_summary: InvoiceSummary | null;
 };
 
 /** A training version's content (spec §5.6): the company-scope sheet and the extras. */
@@ -66,9 +70,12 @@ export function buildTrainingSnapshot(input: {
 }): TrainingSnapshot {
   const business = input.structured.business ?? EMPTY_BUSINESS_PROFILE;
   // The earlier answers follow the new ones when blank (D91), as the fact sheet's do.
-  const interview = withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
-    address: input.address?.full || input.record.head_office_address,
-  });
+  const interview = withInvoiceAnswers(
+    withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+      address: input.address?.full || input.record.head_office_address,
+    }),
+    input.structured.invoices,
+  );
   return {
     facts: buildFactSheet({
       record: input.record,
@@ -92,6 +99,9 @@ export function buildTrainingSnapshot(input: {
       operations_status: interview.operations_status,
       contact_email: interview.contact_email,
       contact_phone: interview.contact_phone,
+      invoice_summary: input.structured.invoices
+        ? summarizeInvoices(input.structured.invoices.rows)
+        : null,
     },
   };
 }

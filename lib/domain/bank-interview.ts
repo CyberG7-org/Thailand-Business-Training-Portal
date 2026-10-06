@@ -273,12 +273,7 @@ export const INTERVIEW_FIELDS = Object.keys(EMPTY_INTERVIEW_PROFILE) as (keyof I
  * says who the company is, but not how to reach it or what it actually sells, and the study cards
  * and the question bank are built on both.
  */
-export const REQUIRED_INTERVIEW_FIELDS = [
-  'contact_email',
-  'contact_phone',
-  'nature_of_business',
-  'products_services',
-] as const;
+export const REQUIRED_INTERVIEW_FIELDS = ['nature_of_business', 'products_services'] as const;
 export type RequiredInterviewField = (typeof REQUIRED_INTERVIEW_FIELDS)[number];
 
 /** Which of them are still blank, in the order the form shows them. */

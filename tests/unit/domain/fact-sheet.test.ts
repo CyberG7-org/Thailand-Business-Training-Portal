@@ -111,7 +111,7 @@ describe('buildFactSheet (spec §7.2)', () => {
     });
     expect(f.business_address).toBe(address.full);
     expect(f.account_purpose).toBe(FIXED_ANSWERS.account_purpose);
-    expect(f.main_clients).toBe('ร้านค้าปลีกในประเทศ');
+    expect(f.main_clients).toBe('ส่วนใหญ่เป็นลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย');
     expect(f.monthly_transactions).toBe('ประมาณ 30 รายการต่อเดือน');
     expect(f.business_purpose).toBe('จัดตั้งขึ้นเพื่อประกอบธุรกิจ ค้าส่งและค้าปลีกเสื้อผ้า');
   });

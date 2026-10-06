@@ -35,25 +35,23 @@ describe('firstAmount', () => {
 });
 
 describe('withStandardAnswers', () => {
-  it('asks five questions and fills ten, and no field is both', () => {
-    expect(ASKED_INTERVIEW_FIELDS).toEqual([
-      'client_origin',
-      'customer_profile',
-      'main_suppliers',
-      'monthly_revenue',
-      'average_transaction',
-    ]);
-    expect(STANDARD_ANSWER_FIELDS).toHaveLength(10);
+  it('asks two amounts and fills thirteen, and no field is both', () => {
+    expect(ASKED_INTERVIEW_FIELDS).toEqual(['monthly_revenue', 'average_transaction']);
+    expect(STANDARD_ANSWER_FIELDS).toHaveLength(13);
     for (const f of STANDARD_ANSWER_FIELDS) expect(ASKED_INTERVIEW_FIELDS).not.toContain(f);
   });
 
-  it('answers "main customers" with what kind of customers they are (quiz question 14)', () => {
+  it('answers the customers, where they come from and the suppliers the same for every company (D101)', () => {
     const p = withStandardAnswers(
       { ...typed, customer_profile: 'ร้านค้าปลีกในประเทศ', main_clients: 'คำตอบเดิม' },
       { address: ADDRESS },
     );
-    expect(p.main_clients).toBe('ร้านค้าปลีกในประเทศ');
-    expect(withStandardAnswers(typed, { address: ADDRESS }).main_clients).toBeNull();
+    expect(p.customer_profile).toBe(FIXED_ANSWERS.customer_profile);
+    expect(p.main_clients).toBe(FIXED_ANSWERS.customer_profile);
+    expect(p.client_origin).toBe(FIXED_ANSWERS.client_origin);
+    expect(p.main_suppliers).toBe(FIXED_ANSWERS.main_suppliers);
+    expect(p.clients_location).toBe(FIXED_ANSWERS.customer_profile);
+    expect(p.suppliers_location).toBe(FIXED_ANSWERS.main_suppliers);
   });
 
   it('fills the place of business, the fixed answers and the purpose', () => {
@@ -128,7 +126,7 @@ describe('withStandardAnswers', () => {
       { address: ADDRESS },
     );
     expect(p.monthly_volume).toBe('ประมาณ 300,000 บาท');
-    expect(p.clients_location).toBe('ร้านค้าปลีกในประเทศ');
+    expect(p.clients_location).toBe(FIXED_ANSWERS.customer_profile);
     expect(p.suppliers_location).toBe('กรุงเทพมหานครและสมุทรปราการ');
     expect(p.operations_status).toBe('เริ่มดำเนินธุรกิจแล้ว');
   });
