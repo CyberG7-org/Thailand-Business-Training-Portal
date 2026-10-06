@@ -26,6 +26,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.116.0
         version: 2.116.0
+      fflate:
+        specifier: ^0.8.3
+        version: 0.8.3
       mammoth:
         specifier: ^1.12.3
         version: 1.12.3
