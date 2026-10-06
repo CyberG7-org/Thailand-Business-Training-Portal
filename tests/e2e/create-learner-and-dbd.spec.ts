@@ -47,10 +47,8 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
 
   await page.getByTestId('create-dbd-files').setInputFiles('tests/fixtures/tiny.pdf');
-  await page.getByTestId('create-dbd-contact_email').fill('info@one-shot.co.th');
-  await page.getByTestId('create-dbd-contact_phone').fill('02-123-4567');
-  await page.getByTestId('create-dbd-nature_of_business').fill('ขายเสื้อผ้าออนไลน์');
-  await page.getByTestId('create-dbd-products_services').fill('เสื้อผ้าสตรีนำเข้า');
+  // No details to type (D101): what the company does is read from the pack.
+  await expect(page.locator('[data-testid^="create-dbd-contact"]')).toHaveCount(0);
   await page.getByTestId('create-dbd-submit').click();
   await expect(page.getByTestId('create-dbd-status')).toBeVisible();
 
@@ -84,8 +82,9 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await page.locator('input[name="displayName"]').fill('ผู้เรียนครบขั้นตอน');
   await page.locator('input[name="phone"]').fill('089-111-2222');
   await page.locator('input[name="contactEmail"]').fill('learner@one-shot.co.th');
-  await page.locator('input[name="website"]').fill('one-shot.co.th');
-  await page.locator('input[name="facebookPage"]').fill('oneshotshop');
+  // The company's addresses come from its zip now (D101): the learner form has no boxes for them.
+  await expect(page.locator('input[name="website"]')).toHaveCount(0);
+  await expect(page.locator('input[name="facebookPage"]')).toHaveCount(0);
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   const created = page.getByTestId('create-user-status');
   await expect(created).toBeVisible();
@@ -107,18 +106,22 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   const contact = page.getByTestId('contact-form');
   await expect(contact.locator('input[name="phone"]')).toHaveValue('0891112222');
   await expect(contact.locator('input[name="contactEmail"]')).toHaveValue('learner@one-shot.co.th');
-  await expect(contact.locator('input[name="website"]')).toHaveValue('https://one-shot.co.th');
-  await expect(contact.locator('input[name="facebookPage"]')).toHaveValue(
-    'https://www.facebook.com/oneshotshop',
-  );
+  await expect(contact.locator('input[name="website"]')).toHaveValue('');
+  await expect(contact.locator('input[name="facebookPage"]')).toHaveValue('');
 
-  // The manager keeps them up to date from the learner's page.
+  // The manager keeps them up to date from the learner's page, the learner's own addresses too
+  // (the card falls back to them when the record has none).
   await contact.locator('input[name="phone"]').fill('0823334444');
+  await contact.locator('input[name="website"]').fill('one-shot.co.th');
+  await contact.locator('input[name="facebookPage"]').fill('oneshotshop');
   await contact.getByRole('button', { name: 'บันทึกข้อมูลติดต่อ' }).click();
   await expect(page.getByTestId('contact-saved')).toBeVisible();
   await page.reload();
-  await expect(page.getByTestId('contact-form').locator('input[name="phone"]')).toHaveValue(
-    '0823334444',
+  const saved = page.getByTestId('contact-form');
+  await expect(saved.locator('input[name="phone"]')).toHaveValue('0823334444');
+  await expect(saved.locator('input[name="website"]')).toHaveValue('https://one-shot.co.th');
+  await expect(saved.locator('input[name="facebookPage"]')).toHaveValue(
+    'https://www.facebook.com/oneshotshop',
   );
 
   // The learner's name card was made from all this (D96): done before they open it, with the
@@ -129,33 +132,14 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await expect(page.getByTestId('card-meta')).toContainText('082-333-4444');
 });
 
-test('the four details are checked before anything is uploaded', async ({ page }) => {
-  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  const code = await createManager(page, 'ผู้จัดการลืมกรอก', MANAGER_PASSWORD);
-  await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
-  await page.goto('/th/admin/users?tab=companies&add=1');
-
-  await page.getByTestId('create-dbd-files').setInputFiles('tests/fixtures/tiny.pdf');
-  await page.getByTestId('create-dbd-contact_email').fill('info@forgot.co.th');
-  await page.getByTestId('create-dbd-contact_phone').fill('02-123-4567');
-  await page.getByTestId('create-dbd-nature_of_business').fill('ขายเสื้อผ้าออนไลน์');
-  // Past the browser's own check, the server still refuses an empty detail.
-  await page
-    .getByTestId('create-dbd-products_services')
-    .evaluate((el) => el.removeAttribute('required'));
-  await page.getByTestId('create-dbd-submit').click();
-  await expect(page.getByTestId('create-dbd-error')).toContainText('สินค้าหรือบริการที่จะขาย');
-  // Nothing was created.
-  await expect(page.getByTestId('companies')).toContainText('ยังไม่มีบริษัท');
-});
-
 test('a learner needs a Thai mobile and an email', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users?tab=learner');
   await expect(page.locator('input[name="phone"]')).toHaveAttribute('required', '');
   await expect(page.locator('input[name="contactEmail"]')).toHaveAttribute('required', '');
-  await expect(page.locator('input[name="website"]')).not.toHaveAttribute('required', '');
-  await expect(page.locator('input[name="facebookPage"]')).not.toHaveAttribute('required', '');
+  // The website and the Facebook page come from the company zip now (D101).
+  await expect(page.locator('input[name="website"]')).toHaveCount(0);
+  await expect(page.locator('input[name="facebookPage"]')).toHaveCount(0);
 });
 
 test("the owner's Assign learner chooses the company's team too; a company takes one learner", async ({

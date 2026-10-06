@@ -73,12 +73,15 @@ export const CONFIDENCE_FIELDS = [
   'objectives',
 ] as const;
 
-/** Missing facts that hold back acceptance — today's bar (D58); every other missing fact holds back the version. */
+/**
+ * Missing facts that hold back acceptance — today's bar (D58, D101); every other missing fact
+ * holds back the version. The products come from the invoices, which a pack may lack, so they
+ * hold back the version only.
+ */
 const ACCEPTANCE_FACTS: ReadonlySet<string> = new Set<FactKey | string>([
   'company_name_th',
   'juristic_id',
   'nature_of_business',
-  'products_services',
 ]);
 
 const TITLE = /^(นางสาว|นาง|นาย)\s*/;

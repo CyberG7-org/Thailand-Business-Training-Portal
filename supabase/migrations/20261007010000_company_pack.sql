@@ -36,15 +36,13 @@ alter table public.training_fact_exceptions add constraint training_fact_excepti
 
 -- 5. A record is accepted before its learner exists (D93), so it cannot owe the learner's email
 --    and phone, which the name card prints from the learner's own details (D80). It owes what the
---    company does and sells, which the reads now supply.
+--    company does, which the reads now supply; what it sells comes from the invoices and a pack
+--    without them is still accepted on its DBD facts.
 alter table public.dbd_records drop constraint dbd_confirmed_requires_business_answers;
 alter table public.dbd_records add constraint dbd_confirmed_requires_business_answers
   check (
     extraction_status <> 'confirmed'
-    or (
-      public.interview_answer(structured_data, 'nature_of_business') is not null
-      and public.interview_answer(structured_data, 'products_services') is not null
-    )
+    or public.interview_answer(structured_data, 'nature_of_business') is not null
   ) not valid;
 comment on constraint dbd_confirmed_requires_business_answers on public.dbd_records is
-  'A confirmed record carries what the company does and sells; the certificate holds neither, the reads do (P18a).';
+  'A confirmed record carries what the company does; the certificate does not say, the reads do (P18a).';

@@ -8,6 +8,8 @@ import {
   type AskedInterviewField,
   type StandardAnswerField,
 } from '@/lib/domain/standard-answers';
+import type { InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
+import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { saveInterviewAnswersAction, type ToolState } from '../actions';
 
 const initial: ToolState = { ok: false, error: null };
@@ -28,17 +30,54 @@ export function InterviewForm({
   recordId,
   answers,
   standard,
+  invoices,
 }: {
   recordId: string;
   answers: InterviewProfile;
   /** The standard answers as the fact sheet reads them (`withStandardAnswers`). */
   standard: Record<StandardAnswerField, string | null>;
+  /** The figures the invoices give (D101); null until invoices are read. */
+  invoices: InvoiceSummary | null;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const [state, formAction, pending] = useActionState(saveInterviewAnswersAction, initial);
   const section = 'grid gap-4 p-4 md:grid-cols-2 md:px-6 md:py-5';
   const heading = 'text-base font-semibold text-ink-900 md:col-span-2';
+  const baht = (n: number) => t('invoiceFigures.baht', { amount: n.toLocaleString('en-US') });
+  const figures: [string, string][] = invoices
+    ? [
+        ['monthlyRevenue', baht(invoices.monthlyRevenue)],
+        ['averagePerTransaction', baht(invoices.averagePerTransaction)],
+        ['transactionsPerMonth', invoices.transactionsPerMonth.toLocaleString('en-US')],
+        ['revenuePerDay', baht(invoices.revenuePerDay)],
+        [
+          'dailyRange',
+          t('invoiceFigures.range', {
+            low: invoices.dailyRange[0].toLocaleString('en-US'),
+            high: baht(invoices.dailyRange[1]),
+          }),
+        ],
+        ...(invoices.itemPriceRange
+          ? [
+              [
+                'itemPriceRange',
+                t('invoiceFigures.range', {
+                  low: invoices.itemPriceRange[0].toLocaleString('en-US'),
+                  high: baht(invoices.itemPriceRange[1]),
+                }),
+              ] as [string, string],
+            ]
+          : []),
+        [
+          'dates',
+          t('invoiceFigures.range', {
+            low: formatDate(invoices.dates[0], locale as Locale),
+            high: formatDate(invoices.dates[1], locale as Locale),
+          }),
+        ],
+      ]
+    : [];
 
   return (
     <form
@@ -53,33 +92,62 @@ export function InterviewForm({
         <p className="text-sm text-ink-500">{t('interviewHint')}</p>
       </div>
 
-      {GROUPS.map((group) => (
-        <section key={group.key} className={section}>
-          <h3 className={heading}>
-            {t(`interviewGroups.${group.key}` as 'interviewGroups.customers')}
-          </h3>
-          {group.fields.map((field) => (
-            <label key={field} className="text-sm">
-              <span data-testid={`label-${field}`} className="font-semibold text-ink-900">
-                {t(`interviewFields.${field}` as 'interviewFields.client_origin')}
-              </span>
-              {/* Each box grows with its answer, so a long one reads whole without a scrollbar;
-                  an amount is one line. */}
-              <textarea
-                name={`interview_${field}`}
-                rows={2}
-                defaultValue={answers[field] ?? ''}
-                className={`staff-input mt-1 field-sizing-content ${
-                  group.key === 'money' ? 'min-h-11' : ''
-                }`}
-              />
-            </label>
-          ))}
-          {group.key === 'money' && (
-            <p className="text-sm text-ink-500 md:col-span-2">{t('amountHint')}</p>
+      {invoices && (
+        <section className="grid gap-3 p-4 md:px-6 md:py-5" data-testid="invoice-figures">
+          <div>
+            <h3 className="text-base font-semibold text-ink-900">{t('invoiceFigures.title')}</h3>
+            <p className="text-sm text-ink-500">{t('invoiceFigures.hint')}</p>
+          </div>
+          <dl className="grid gap-x-6 gap-y-2 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            {figures.map(([key, value]) => (
+              <div key={key} className="grid gap-0.5 md:contents">
+                <dt className="text-ink-500">
+                  {t(`invoiceFigures.${key}` as 'invoiceFigures.monthlyRevenue')}
+                </dt>
+                <dd data-testid={`figure-${key}`} className="text-ink-900 tabular-nums">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="text-sm text-ink-500">
+            {t('invoiceFigures.used', { count: invoices.invoices })}
+          </p>
+          {invoices.few && (
+            <p className="staff-notice-info text-sm" data-testid="few-invoices">
+              {t('invoices.few', { count: invoices.invoices })}
+            </p>
           )}
         </section>
-      ))}
+      )}
+
+      {!invoices &&
+        GROUPS.map((group) => (
+          <section key={group.key} className={section}>
+            <h3 className={heading}>{t('interviewGroups.moneyTyped')}</h3>
+            <p className="text-sm text-ink-500 md:col-span-2">{t('invoices.none')}</p>
+            {group.fields.map((field) => (
+              <label key={field} className="text-sm">
+                <span data-testid={`label-${field}`} className="font-semibold text-ink-900">
+                  {t(`interviewFields.${field}` as 'interviewFields.client_origin')}
+                </span>
+                {/* Each box grows with its answer, so a long one reads whole without a scrollbar;
+                  an amount is one line. */}
+                <textarea
+                  name={`interview_${field}`}
+                  rows={2}
+                  defaultValue={answers[field] ?? ''}
+                  className={`staff-input mt-1 field-sizing-content ${
+                    group.key === 'money' ? 'min-h-11' : ''
+                  }`}
+                />
+              </label>
+            ))}
+            {group.key === 'money' && (
+              <p className="text-sm text-ink-500 md:col-span-2">{t('amountHint')}</p>
+            )}
+          </section>
+        ))}
 
       <details className="p-4 md:px-6" data-testid="legacy-answers">
         <summary className="min-h-11 cursor-pointer content-center text-sm font-semibold text-ink-700">
@@ -116,12 +184,19 @@ export function InterviewForm({
         </button>
       </div>
 
-      <section className="grid gap-3 p-4 md:px-6 md:py-5" data-testid="standard-answers">
+      <section
+        className="grid gap-3 p-4 md:px-6 md:py-5"
+        data-testid="standard-answers"
+        data-fixed-answers
+      >
         <div>
           <h3 className="text-base font-semibold text-ink-900">{t('standardAnswers.title')}</h3>
           <p className="text-sm text-ink-500">{t('standardAnswers.hint')}</p>
         </div>
-        <dl className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <dl
+          className="grid gap-x-6 gap-y-3 text-sm md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
+          data-testid="fixed-answers"
+        >
           {STANDARD_ANSWER_FIELDS.map((field) => (
             <div key={field} className="grid gap-0.5 md:contents">
               <dt className="text-ink-500">

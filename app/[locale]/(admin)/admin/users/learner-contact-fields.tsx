@@ -25,10 +25,13 @@ export function LearnerContactFields({
   const t = useTranslations('admin.users.contact');
   const label = strong ? 'font-semibold text-ink-900' : undefined;
   const optional = <span className="font-normal text-ink-500">{t('optional')}</span>;
+  // At Create learner (strong) the two required details say what they are for (D101).
+  const forCard = strong ? <span className="font-normal text-ink-500"> {t('forCard')}</span> : null;
   const fields: Record<ContactField, React.ReactNode> = {
     phone: (
       <label key="phone" className="text-sm">
         <span className={label}>{t('phone')}</span>
+        {forCard}
         <input
           name="phone"
           type="tel"
@@ -45,6 +48,7 @@ export function LearnerContactFields({
     contactEmail: (
       <label key="contactEmail" className="text-sm">
         <span className={label}>{t('contactEmail')}</span>
+        {forCard}
         <input
           name="contactEmail"
           type="email"

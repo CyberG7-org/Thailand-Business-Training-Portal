@@ -265,13 +265,6 @@ export function NewUserForm({
             <LearnerContactFields only={['phone', 'contactEmail']} strong />
           </div>
         </section>
-
-        <section className="grid gap-4 p-4 md:px-6 md:py-5">
-          <h3 className="text-base font-semibold text-ink-900">{t('nameCardSection')}</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <LearnerContactFields only={['website', 'facebookPage']} strong />
-          </div>
-        </section>
       </div>
 
       <aside className="grid gap-4 lg:sticky lg:top-6">

@@ -1,7 +1,7 @@
 /** Matches the `dbd-documents` bucket's `file_size_limit` (migration 0013). */
 export const MAX_DOCUMENT_BYTES = 30 * 1024 * 1024;
-/** A pack is a handful of PDFs (certificate, objectives sheet, บอจ.5, บอจ.2…). */
-export const MAX_DOCUMENT_FILES = 6;
+/** A company pack: the DBD documents, the invoices and the agreements (D101). */
+export const MAX_DOCUMENT_FILES = 40;
 
 export type DocumentFileMeta = { name: string; size: number; type: string };
 

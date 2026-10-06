@@ -124,6 +124,7 @@
         "title": "联系方式",
         "phone": "电话号码",
         "contactEmail": "电子邮箱",
+        "forCard": "（用于名片）",
         "website": "网站",
         "facebookPage": "Facebook主页",
         "optional": "（选填）",
@@ -234,9 +235,19 @@
     },
     "createDbd": {
       "title": "创建DBD",
-      "intro": "上传公司的DBD文件并填写下面四项信息。系统会在后台读取文件并建立索引（1–3分钟）；所有信息都找到后，公司将自动确认，并可立即分配给学员。",
-      "introNoReader": "上传公司的DBD文件并填写下面四项信息。此处未设置自动读取，请稍后打开公司页面填写并确认。",
-      "documents": "DBD文件（PDF）",
+      "intro": "上传公司 zip 文件（DBD 文件包、发票、合同，以及含 Facebook 主页和网站链接的文件），或只上传 DBD 的 PDF。系统会在后台读取全部内容（1–3 分钟）：DBD 信息，以及根据发票计算的财务数字。信息齐全后，公司会自动确认，并可分配给学员。",
+      "introNoReader": "上传公司 zip 文件或 DBD 的 PDF。此处未设置自动读取，请之后打开公司页面填写并确认。",
+      "documents": "公司 zip 文件，或 DBD 的 PDF",
+      "packPreview": {
+        "title": "在 {name} 中找到",
+        "pack": "DBD 文件包：{count} 个文件",
+        "invoices": "{count, plural, =0 {发票：无} other {发票：# 张}}",
+        "agreements": "{count, plural, =0 {合同：无} other {合同：# 份（仅保存，不读取）}}",
+        "facebook": "Facebook：{page}",
+        "website": "网站：{site}",
+        "none": "无",
+        "ignored": "未使用的其他文件：{count} 个"
+      },
       "submit": "创建并分析",
       "byHand": "或手动录入公司信息",
       "answersInvalid": "请检查以下信息：{fields}",
@@ -300,7 +311,12 @@
       "errors": {
         "no-file": "请选择 PDF 文件",
         "upload-failed": "文件上传失败（连接中断或不是 PDF），请重试。",
-        "invalid-file": "仅接受 30 MB 以内的 PDF 文件（最多 6 个）",
+        "invalid-file": "仅接受 30 MB 以内的 PDF 文件（最多 40 个）",
+        "no-document": "zip 文件中没有 PDF，请放入 DBD 文件包。",
+        "too-many-files": "zip 文件中的文档超过 40 个，请移除一部分。",
+        "file-too-large": "zip 中有文件超过 30 MB，请缩小后重试。",
+        "zip-too-large": "zip 文件总计超过 200 MB，请移除部分文件。",
+        "cannot-open": "无法打开此 zip 文件，请重新打包后再试。",
         "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。"
       },
       "fields": {
@@ -368,22 +384,69 @@
         "memorandum": "公司备忘录（บอจ.2）",
         "articles": "公司章程",
         "other": "其他",
+        "invoice": "发票",
+        "agreement": "合同",
         "unknown": "尚未分类"
+      },
+      "documentGroups": {
+        "pack": "DBD 文件包",
+        "invoice": "发票",
+        "agreement": "合同（仅保存，不读取）"
+      },
+      "invoices": {
+        "readAgain": "重新读取发票",
+        "queued": "系统正在后台读取发票（约 1–3 分钟），刷新页面查看数字。",
+        "failed": "发票读取失败（{reason}），请点击“重新读取发票”。",
+        "notRead": "尚未读取",
+        "row": "{date} · {total}",
+        "setAside": "请检查此发票：{reason}",
+        "reasons": {
+          "not_an_invoice": "不是发票",
+          "no_date": "未印日期",
+          "no_total": "未印总额",
+          "not_baht": "非泰铢",
+          "items_do_not_add_up": "各项金额之和与总额不符"
+        },
+        "few": "根据 {count} 张发票估算；多添加几张可使数字更稳定。",
+        "none": "尚无发票。请在“文件”标签页上传，系统会据此计算下方数字；在此之前可在此处填写两个金额。"
+      },
+      "invoiceFigures": {
+        "title": "来自发票",
+        "hint": "按系统所有者的规则从发票计算得出。如需更改数字，请添加或删除发票并重新读取；此处无需填写。",
+        "monthlyRevenue": "月收入",
+        "averagePerTransaction": "平均每笔金额",
+        "transactionsPerMonth": "每月交易笔数",
+        "revenuePerDay": "每日收入",
+        "dailyRange": "最低与最高单日",
+        "itemPriceRange": "最低与最高单价",
+        "dates": "涵盖日期",
+        "used": "使用了 {count} 张发票",
+        "baht": "{amount} 泰铢",
+        "range": "{low} – {high}"
+      },
+      "links": {
+        "title": "公司网络地址",
+        "hint": "读取自 zip 中的链接文件，并印在名片上。如有需要可在此修改。",
+        "website": "网站",
+        "facebookPage": "Facebook 主页",
+        "save": "保存地址",
+        "saved": "已保存",
+        "invalid": "请输入网站地址（example.co.th）和 Facebook 主页名称或链接。"
       },
       "objectivesHint": "每行一条，可带序号，如 \"1. 经营…\"",
       "onePerLine": "每行一项",
       "shareholdersHint": "每行一人：姓名 | 国籍 | 股数",
       "promotersHint": "每行一人：姓名 | 国籍",
-      "documents": "已上传的 DBD 文件",
+      "documents": "已上传的文件",
       "removeDocument": "删除",
       "sourceDocument": "来自 {name}",
       "sourcePage": "第 {page} 页",
-      "fileHint": "PDF，每个文件最大 30 MB",
+      "fileHint": "一个公司 zip 文件（DBD 文件包、发票、合同、链接文件）或多个 PDF；每个文件不超过 30 MB，总计不超过 40 个文件、200 MB",
       "interviewHint": "仅需填写任何文件都无法回答的问题。银行会问的其他问题已在下方自动填好，无需输入。",
       "amountHint": "请用数字填写金额，例如 300,000。每月交易笔数由这两个金额计算得出。",
       "standardAnswers": {
         "title": "自动填写",
-        "hint": "学员将学习这些答案。它们来自 DBD 文件、上面的回答，或对所有公司都相同。",
+        "hint": "学员将学习这些答案。它们来自 DBD、来自发票，或对每家公司都相同；无需填写。",
         "pending": "填写其依据的答案后自动生成"
       },
       "interviewFields": {
@@ -453,6 +516,7 @@
         "bank": "银行的其他问题",
         "customers": "客户与供应商",
         "money": "资金与交易",
+        "moneyTyped": "资金与交易（手动填写，尚无发票）",
         "legacy": "以前的答案"
       },
       "team": "团队",

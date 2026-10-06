@@ -218,7 +218,7 @@ describe('validateFacts (spec §5.5)', () => {
     ]);
   });
 
-  it('tiers missing facts: the certificate facts and the two answers block acceptance, the rest the version', () => {
+  it('tiers missing facts: the certificate facts and the business nature block acceptance, the rest the version', () => {
     const f = run({
       record: { juristic_id: null, issued_on: null },
       structured: {
@@ -237,7 +237,7 @@ describe('validateFacts (spec §5.5)', () => {
       'missing:issued_on:version',
       'missing:juristic_id:acceptance',
       'missing:monthly_revenue:version',
-      'missing:products_services:acceptance',
+      'missing:products_services:version',
     ]);
     expect(f.find((x) => x.field === 'monthly_revenue')!.detail).toMatchObject({
       concepts: ['monthly_revenue'],

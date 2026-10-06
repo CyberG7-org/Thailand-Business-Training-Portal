@@ -20,6 +20,9 @@ import { DbdRecordForm } from '../dbd-record-form';
 import { AddressPanel } from './address-panel';
 import { CategoryPanel } from './category-panel';
 import { ExceptionsPanel } from './exceptions-panel';
+import { LinksForm } from './links-form';
+import { summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
+import type { PackGroup } from '@/lib/domain/pack/sort';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
 import { loadRecord } from './record-data';
@@ -65,6 +68,35 @@ export default async function DbdRecordPage({
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+  // The invoices job (D101), beside the pack's.
+  const { data: invoicesJob } = await db
+    .from('index_jobs')
+    .select('status, last_error')
+    .eq('record_id', id)
+    .eq('kind', 'invoices')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const invoiceReading: ReadingState | null =
+    invoicesJob?.status === 'queued' || invoicesJob?.status === 'running'
+      ? { status: invoicesJob.status, error: null }
+      : invoicesJob?.status === 'failed'
+        ? { status: 'failed', error: invoicesJob.last_error }
+        : null;
+  // The invoice documents in upload order carry the rows of the read, by index.
+  const invoiceDocuments = documents.filter((d) => d.group === 'invoice');
+  const invoiceRows = structured.invoices?.rows ?? [];
+  const invoiceSummary = structured.invoices ? summarizeInvoices(invoiceRows) : null;
+  const invoiceOf = (documentId: string) => {
+    const position = invoiceDocuments.findIndex((d) => d.id === documentId);
+    const row = invoiceRows.find((r) => r.index === position + 1);
+    if (!structured.invoices || !row) return null;
+    return {
+      date: row.issue_date,
+      total: row.grand_total,
+      setAside: invoiceSummary?.setAside.find((s) => s.index === row.index)?.reason ?? null,
+    };
+  };
   let reading: ReadingState | null = null;
   if (extractJob?.status === 'queued' || extractJob?.status === 'running') {
     reading = { status: extractJob.status, error: null };
@@ -196,6 +228,7 @@ export default async function DbdRecordPage({
               recordId={record.id}
               answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
               standard={standardAnswers}
+              invoices={invoiceSummary}
             />
           ),
           documents: (
@@ -225,6 +258,8 @@ export default async function DbdRecordPage({
                 documents={documents.map((d) => ({
                   id: d.id,
                   name: d.original_name,
+                  group: d.group as PackGroup,
+                  invoice: d.group === 'invoice' ? invoiceOf(d.id) : null,
                   type: d.document_type,
                   sizeBytes: d.size_bytes,
                   pageCount: d.page_count,
@@ -233,7 +268,13 @@ export default async function DbdRecordPage({
                   indexError: d.index_error,
                 }))}
                 reading={reading}
+                invoiceReading={invoiceReading}
                 extractionAvailable={getDbdExtractor() !== null}
+              />
+              <LinksForm
+                recordId={record.id}
+                website={record.website}
+                facebookPage={record.facebook_page}
               />
               <AskDocuments recordId={record.id} />
             </>
