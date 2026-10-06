@@ -20,6 +20,8 @@ import { getInterviewProvider, type InterviewProvider } from '@/lib/integrations
 import { createSupabaseAdminClient } from './admin';
 import type { TemplateRecord } from '@/lib/domain/assessment/template';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
+import { invoiceFacts } from '@/lib/domain/invoices/answers';
+import type { InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
 import { toTemplateRecord } from './assessment';
 import { pinnedFactsFor } from './pinning';
 import { getActiveAssignmentForUser } from './assignments';
@@ -78,8 +80,14 @@ export function interviewFacts(record: DbdRecordRow, role: LearnerRole | null): 
   return factsFromTemplate(toTemplateRecord(record, role));
 }
 
-/** The same display strings from any template record — a version's or the live row's. */
-export function factsFromTemplate(t: TemplateRecord): FactSheet {
+/**
+ * The same display strings from any template record — a version's or the live row's — plus the
+ * invoices' ranges when the version has them (D101).
+ */
+export function factsFromTemplate(
+  t: TemplateRecord,
+  invoices: InvoiceSummary | null = null,
+): FactSheet {
   const text = (v: unknown): string | null =>
     v === null || v === undefined || v === ''
       ? null
@@ -123,6 +131,7 @@ export function factsFromTemplate(t: TemplateRecord): FactSheet {
     my_relationship: text(t.my_relationship),
     my_shares: text(t.my_shares),
     my_share_percent: text(t.my_share_percent),
+    ...invoiceFacts(invoices),
   };
 }
 
@@ -187,7 +196,10 @@ async function factsFor(userId: string) {
   if (!pinned) throw new InterviewError('No training version yet', 'no_version');
   return {
     assignment,
-    facts: factsFromTemplate(templateRecordFromSnapshot(pinned.snapshot, pinned.role)),
+    facts: factsFromTemplate(
+      templateRecordFromSnapshot(pinned.snapshot, pinned.role),
+      pinned.snapshot.extras.invoice_summary,
+    ),
   };
 }
 

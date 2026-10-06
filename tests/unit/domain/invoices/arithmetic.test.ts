@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
-import { invoiceAnswers, withInvoiceAnswers } from '@/lib/domain/invoices/answers';
+import { invoiceAnswers, invoiceFacts, withInvoiceAnswers } from '@/lib/domain/invoices/answers';
 import { checkInvoice, summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
 import type { InvoiceRow } from '@/lib/domain/invoices/schema';
 
@@ -164,5 +164,20 @@ describe('what the record is taught from the invoices (D101)', () => {
     const kept = withInvoiceAnswers(typed, { ...read, rows: bare });
     expect(kept.products_services).toBe('ชุดเดรส');
     expect(kept.customer_examples).toBeNull();
+  });
+});
+
+describe('the ranges the officer grades against (D101)', () => {
+  it('states a day’s takings and an item’s price as ranges, in Thai', () => {
+    expect(invoiceFacts(summarizeInvoices(EXAMPLE))).toEqual({
+      revenue_per_day: 'ประมาณ 21,380 บาท',
+      revenue_per_day_range: 'ระหว่าง 11,500 ถึง 53,000 บาท',
+      transactions_per_month: 'ประมาณ 30 รายการ',
+      item_price_range: 'ระหว่าง 10 ถึง 2,500 บาท',
+    });
+  });
+
+  it('adds nothing when there are no invoices', () => {
+    expect(invoiceFacts(null)).toEqual({});
   });
 });

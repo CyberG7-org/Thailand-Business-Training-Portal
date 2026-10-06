@@ -34,6 +34,51 @@ describe('FakeInterview', () => {
     expect(turn.say).not.toContain('0105568233704');
   });
 
+  it('grades an amount with the Owner’s tolerance: within 20%, or inside the range (D101)', async () => {
+    const officer = new FakeInterview();
+    const money = { ...facts, monthly_volume: 'ประมาณ 641,400 บาท' };
+    const plan = buildPlan(money);
+    const cursor = plan.items.findIndex((i) => i.concept === 'monthly_volume');
+    expect(cursor).toBeGreaterThan(0);
+    const at = { ...plan, cursor };
+    const near = await officer.turn({
+      ...base,
+      facts: money,
+      plan: at,
+      learnerMessage: 'ประมาณ 700,000 บาทครับ',
+    });
+    expect(near.assessment?.verdict).toBe('correct');
+    const far = await officer.turn({
+      ...base,
+      facts: money,
+      plan: at,
+      learnerMessage: 'ประมาณ 900,000 บาทครับ',
+    });
+    expect(far.assessment?.verdict).toBe('wrong');
+
+    const ranged = { ...facts, monthly_volume: 'ระหว่าง 11,500 ถึง 53,000 บาท' };
+    const rangedPlan = { ...buildPlan(ranged), cursor };
+    const inside = await officer.turn({
+      ...base,
+      facts: ranged,
+      plan: rangedPlan,
+      learnerMessage: '20,000 บาท',
+    });
+    expect(inside.assessment?.verdict).toBe('correct');
+    const outside = await officer.turn({
+      ...base,
+      facts: ranged,
+      plan: rangedPlan,
+      learnerMessage: '60,000 บาท',
+    });
+    expect(outside.assessment?.verdict).toBe('wrong');
+
+    // An ID number is not an amount: one digit off is wrong, not close enough.
+    const id = { ...plan, cursor: plan.items.findIndex((i) => i.concept === 'juristic_id') };
+    const off = await officer.turn({ ...base, plan: id, learnerMessage: '0105568233705' });
+    expect(off.assessment?.verdict).toBe('wrong');
+  });
+
   it('marks "ไม่ทราบ" evasive, asks again once, then moves on', async () => {
     const officer = new FakeInterview();
     const plan = buildPlan(facts);

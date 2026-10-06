@@ -75,6 +75,24 @@ export function invoiceAnswers(
 }
 
 /**
+ * The facts the officer holds beside the answers (D101): a day's takings and an item's price,
+ * as ranges, so a probing question about either is graded against the invoices.
+ */
+export function invoiceFacts(
+  summary: InvoiceSummary | null | undefined,
+): Record<string, string | null> {
+  if (!summary) return {};
+  const range = ([low, high]: readonly [number, number]) =>
+    `ระหว่าง ${low.toLocaleString('en-US')} ถึง ${baht(high)}`;
+  return {
+    revenue_per_day: `ประมาณ ${baht(summary.revenuePerDay)}`,
+    revenue_per_day_range: range(summary.dailyRange),
+    transactions_per_month: `ประมาณ ${summary.transactionsPerMonth.toLocaleString('en-US')} รายการ`,
+    item_price_range: summary.itemPriceRange ? range(summary.itemPriceRange) : null,
+  };
+}
+
+/**
  * The profile with the invoices' answers on top (D91 pattern: derived always wins, nothing is
  * stored as prose). Unchanged when the record has no usable invoice, so a record from before
  * the pack keeps what was typed.
