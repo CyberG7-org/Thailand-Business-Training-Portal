@@ -21,7 +21,7 @@ import {
 } from '@/lib/integrations/extraction/types';
 import type { Database, Json } from './database.types';
 import { enqueueTranscriptJob } from './dbd-index';
-import { getDbdRecord, listDbdDocuments, updateDbdRecord, type DbdRecordRow } from './dbd-records';
+import { getDbdRecord, listPackDocuments, updateDbdRecord, type DbdRecordRow } from './dbd-records';
 import { recordToFormValues } from './record-form-values';
 
 type Db = SupabaseClient<Database>;
@@ -50,7 +50,8 @@ export async function runExtraction(
   if (record.extraction_status === 'confirmed') {
     throw new ExtractionError('Confirmed records cannot be re-extracted', 'not_allowed');
   }
-  const documents = await listDbdDocuments(db, recordId);
+  // The DBD documents alone (D101): the invoices have a read of their own, the agreements none.
+  const documents = await listPackDocuments(db, recordId);
   if (documents.length === 0) {
     throw new ExtractionError('Upload the certificate PDF first', 'no_document');
   }
@@ -211,7 +212,7 @@ async function scheduleTranscriptFill(
   options: { rereadFacts: boolean },
 ): Promise<ExtractAndApplyResult['transcripts']> {
   const maxPages = directReadMaxPages();
-  const oversized = (await listDbdDocuments(db, recordId)).filter(
+  const oversized = (await listPackDocuments(db, recordId)).filter(
     (d) => d.page_count !== null && d.page_count > maxPages,
   );
   if (oversized.length === 0) return 'none';

@@ -139,7 +139,7 @@ describe('a confirmed record carries the company contact and what it sells', () 
     if (error) throw error;
   }
 
-  it('takes the four in one complete save, not two halves', async () => {
+  it('takes the two answers in one complete save, not two halves', async () => {
     const answers = {
       contact_email: 'info@example.co.th',
       contact_phone: '02-123-4567',
@@ -159,13 +159,13 @@ describe('a confirmed record carries the company contact and what it sells', () 
       .select()
       .single();
 
-    // Writing only the business half of a confirmed record leaves the row failing the check,
-    // so a manager filling a grandfathered record has to save all four together.
+    // Writing only one of the two answers of a confirmed record leaves the row failing the
+    // check (D101: the record owes what it does and sells; the contact is the learner's).
     const { error: half } = await svc
       .from('dbd_records')
       .update({
         structured_data: {
-          interview: { nature_of_business: 'ผลิตสื่อ', products_services: 'บริการคอนเทนต์' },
+          interview: { products_services: 'บริการคอนเทนต์' },
         } as never,
       })
       .eq('id', own!.id);

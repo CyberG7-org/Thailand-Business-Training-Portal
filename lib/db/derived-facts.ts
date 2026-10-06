@@ -12,7 +12,12 @@ import {
 import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
 import { normalizeThai } from '@/lib/domain/thai-text';
 import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
+import { createHash } from 'node:crypto';
 import { getCategoryMapper } from '@/lib/integrations/category-map';
+import { getDbdExtractor } from '@/lib/integrations/extraction';
+import type { DbdExtractor } from '@/lib/integrations/extraction/types';
+import { productsOf } from '@/lib/domain/invoices/answers';
+import { EMPTY_BUSINESS_PROFILE } from '@/lib/domain/dbd-profile';
 import type { CategoryMapper } from '@/lib/integrations/category-map/types';
 import { listBusinessCategories } from './business-categories';
 import type { Database, Json } from './database.types';
@@ -23,10 +28,26 @@ type Db = SupabaseClient<Database>;
 
 export type DerivedFactsDeps = {
   mapper: CategoryMapper | null;
+  /** Writes one line for the kind of business from the objectives and the items sold (D101). */
+  describe?: DbdExtractor['describeBusiness'] | null;
   now?: () => Date;
 };
 
-const defaultDeps = (): DerivedFactsDeps => ({ mapper: getCategoryMapper() });
+const defaultDeps = (): DerivedFactsDeps => {
+  const extractor = getDbdExtractor();
+  return {
+    mapper: getCategoryMapper(),
+    describe: extractor ? (input) => extractor.describeBusiness(input) : null,
+  };
+};
+
+/** What the description rests on; a change of either side describes the business again. */
+function describeHash(objectives: string[], items: string[]): string | null {
+  if (objectives.length === 0 && items.length === 0) return null;
+  return createHash('sha1')
+    .update(JSON.stringify([objectives, items]))
+    .digest('hex');
+}
 
 /** How often a person's explicit choice is retried against edits landing meanwhile. */
 const CAS_ATTEMPTS = 3;
@@ -77,7 +98,7 @@ export async function refreshDerivedFacts(
   db: Db,
   recordId: string,
   deps: DerivedFactsDeps = defaultDeps(),
-  options: { remapCategory?: boolean; attempts?: number } = {},
+  options: { remapCategory?: boolean; describe?: boolean; attempts?: number } = {},
 ): Promise<StructuredDataUpdate> {
   // The printed address with the marks a reader dropped put back (D92), when a resolution did.
   let repaired: string | null = null;
@@ -102,7 +123,35 @@ export async function refreshDerivedFacts(
       // form, the name card and the questions all show the address as it is printed.
       repaired = address.full !== printed ? address.full : null;
 
-      const interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
+      // The kind of business, written from the objectives and what the invoices show was sold
+      // (D101): always once invoices are there, otherwise only for a record whose nature nobody
+      // wrote — a nature typed before the pack stays. What was sold becomes the products.
+      let interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
+      let described = stored.described ?? null;
+      const rows = stored.invoices?.rows ?? [];
+      const items = (productsOf(rows) ?? '').split(' ').filter(Boolean);
+      const objectives = (stored.business ?? EMPTY_BUSINESS_PROFILE).objectives.map((o) => o.text);
+      const basis = describeHash(objectives, items);
+      const wanted =
+        deps.describe &&
+        basis !== null &&
+        described?.hash !== basis &&
+        (options.describe || items.length > 0 || !interview.nature_of_business?.trim());
+      if (wanted) {
+        try {
+          const written = await deps.describe!({ objectives, items });
+          interview = {
+            ...interview,
+            nature_of_business: written.nature.trim() || interview.nature_of_business,
+            products_services: productsOf(rows) ?? interview.products_services,
+          };
+          described = { hash: basis, confidence: written.confidence, at };
+          changed = true;
+        } catch (e) {
+          console.error('describe business', recordId, e);
+        }
+      }
+
       const hash = categoryInputHash(interview.nature_of_business, interview.products_services);
       let category = stored.category ?? null;
       if (options.remapCategory || needsRemap(category, hash)) {
@@ -113,7 +162,7 @@ export async function refreshDerivedFacts(
         changed = true;
       }
 
-      return changed ? { ...stored, address, category } : null;
+      return changed ? { ...stored, interview, described, address, category } : null;
     },
     options.attempts ?? 1,
     () => (repaired === null ? {} : { head_office_address: repaired }),

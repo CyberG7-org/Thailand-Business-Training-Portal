@@ -128,6 +128,7 @@ export async function enqueueExtractJob(
     .from('dbd_documents')
     .select('id')
     .eq('record_id', recordId)
+    .eq('group', 'pack')
     .order('position')
     .limit(1)
     .maybeSingle();
@@ -249,9 +250,16 @@ export type ExtractRunner = (input: {
   documentId: string;
 }) => Promise<{ status: 'done' | 'skipped' | 'failed'; error?: string }>;
 
+/** Reads a record's invoices into rows (D101); a `failed` status closes the job for good. */
+export type InvoicesRunner = (input: {
+  recordId: string;
+}) => Promise<{ status: 'done' | 'failed'; error?: string }>;
+
 export type IndexWorkerDeps = {
   extractor: DbdExtractor | null;
   vector: VectorStore | null;
+  /** Reads a record's invoices; without it, invoices jobs are closed unread. */
+  invoices?: InvoicesRunner;
   /** Stop claiming new slices after this much work; at least one slice per claimed job. */
   budgetMs?: number;
   slicePages?: number;
@@ -282,6 +290,8 @@ export type IndexRunSummary = {
   transcripts: number;
   /** Direct reads that finished (or had nothing to do). */
   extractions: number;
+  /** Invoice reads that finished (D101). */
+  invoices: number;
 };
 
 async function downloadFromStorage(admin: Db, path: string): Promise<Uint8Array> {
@@ -511,6 +521,7 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     released: 0,
     transcripts: 0,
     extractions: 0,
+    invoices: 0,
   };
 
   while (now() - started < budgetMs || summary.claimed === 0) {
@@ -521,13 +532,14 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
     summary.claimed++;
     const isTranscript = job.kind === 'transcript';
     const isExtract = job.kind === 'extract';
+    const isInvoices = job.kind === 'invoices';
 
     // The claim counts an expired `running` lease as a failed attempt (the run was killed before
     // it could report); the worker's own catch counts the rest. Both meet the same ceiling.
     if (job.attempts >= MAX_INDEX_ATTEMPTS) {
       const message = 'worker died repeatedly (lease expired)';
       await setJob(admin, job.id, { status: 'failed', locked_until: null, last_error: message });
-      if (!isTranscript && !isExtract) {
+      if (!isTranscript && !isExtract && !isInvoices) {
         await setDocument(admin, job.document_id, { index_status: 'failed', index_error: message });
       }
       summary.failed++;
@@ -556,6 +568,36 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
         } else {
           await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
           summary.extractions++;
+          await settleReading(deps, job.record_id);
+        }
+      } catch (e) {
+        await failAttempt(admin, job, e instanceof Error ? e.message : String(e), now, summary);
+      }
+      continue;
+    }
+
+    if (isInvoices) {
+      if (!deps.invoices || !deps.extractor) {
+        await setJob(admin, job.id, {
+          status: 'done',
+          locked_until: null,
+          last_error: 'no provider',
+        });
+        summary.skipped++;
+        continue;
+      }
+      try {
+        const run = await deps.invoices({ recordId: job.record_id });
+        if (run.status === 'failed') {
+          await setJob(admin, job.id, {
+            status: 'failed',
+            locked_until: null,
+            last_error: run.error ?? 'failed',
+          });
+          summary.failed++;
+        } else {
+          await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
+          summary.invoices++;
           await settleReading(deps, job.record_id);
         }
       } catch (e) {
