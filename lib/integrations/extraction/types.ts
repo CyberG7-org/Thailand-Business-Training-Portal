@@ -1,4 +1,5 @@
 import type { Director } from '@/lib/domain/dbd-record';
+import type { InvoiceRow } from '@/lib/domain/invoices/schema';
 import type { Slice, TranscribedPage } from '@/lib/domain/rag/transcript';
 import type { DbdExtractionOutput } from './schema';
 import type { DocumentType, SweepResult } from './transcript-schema';
@@ -55,6 +56,13 @@ export interface DbdExtractor {
   extractFacts(passages: TranscriptPassage[]): Promise<DbdExtraction>;
   /** Level 2 list rows printed on a batch of consecutive pages of one document. */
   sweep(pages: TranscribedPage[], documentType: DocumentType): Promise<SweepResult>;
+  /** The record's invoice documents, in order, each copied into a row (D101); never computed. */
+  readInvoices(documents: Uint8Array[]): Promise<InvoiceRow[]>;
+  /** One Thai line for the kind of business, from the objectives and what the invoices show was sold. */
+  describeBusiness(input: {
+    objectives: string[];
+    items: string[];
+  }): Promise<{ nature: string; confidence: number }>;
 }
 
 /** A transcript passage handed to the facts call, labelled for provenance. */

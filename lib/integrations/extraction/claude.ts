@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
 import { parsePageMarkers, type Slice, type TranscribedPage } from '@/lib/domain/rag/transcript';
+import { describeBusinessWithClaude, readInvoicesWithClaude } from './invoices';
 import { newPictureBudget, pagePictures } from './page-pictures';
 import { EXTRACTION_INSTRUCTIONS, dbdExtractionApiSchema, fromApiExtraction } from './schema';
 import { transcriptionModel, transcriptionPrompt } from './transcribe';
@@ -123,6 +124,22 @@ export class ClaudeDbdExtractor implements DbdExtractor {
       throw new ExtractionError('The model did not return a valid extraction', 'invalid_output');
     }
     return fromApiExtraction(response.parsed_output) as DbdExtraction;
+  }
+
+  async readInvoices(documents: Uint8Array[]) {
+    try {
+      return await readInvoicesWithClaude(this.client, documents);
+    } catch (error) {
+      throw error instanceof ExtractionError ? error : toExtractionError(error);
+    }
+  }
+
+  async describeBusiness(input: { objectives: string[]; items: string[] }) {
+    try {
+      return await describeBusinessWithClaude(this.client, input);
+    } catch (error) {
+      throw error instanceof ExtractionError ? error : toExtractionError(error);
+    }
   }
 
   async transcribe(slice: Uint8Array, range: Slice): Promise<TranscribedPage[]> {

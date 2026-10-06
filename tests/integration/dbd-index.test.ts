@@ -55,6 +55,12 @@ function transcriberWith(pages: (range: Slice) => TranscribedPage[]): DbdExtract
     async extractFacts(passages) {
       return new FakeDbdExtractor().extractFacts(passages);
     },
+    async readInvoices(documents) {
+      return new FakeDbdExtractor().readInvoices(documents);
+    },
+    async describeBusiness(input) {
+      return new FakeDbdExtractor().describeBusiness(input);
+    },
     async sweep(batch, type) {
       return new FakeDbdExtractor().sweep(batch, type);
     },

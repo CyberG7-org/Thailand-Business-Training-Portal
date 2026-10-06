@@ -42,6 +42,8 @@ function fakeWith(overrides: Partial<DbdExtractor>): DbdExtractor {
     classify: (text) => fake.classify(text),
     extractFacts: (passages) => fake.extractFacts(passages),
     sweep: (pages, type) => fake.sweep(pages, type),
+    readInvoices: (docs) => fake.readInvoices(docs),
+    describeBusiness: (input) => fake.describeBusiness(input),
     ...overrides,
   };
 }

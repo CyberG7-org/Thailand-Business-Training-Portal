@@ -15,5 +15,7 @@ export function withThaiNormalization(inner: DbdExtractor): DbdExtractor {
     classify: (firstPageText) => inner.classify(firstPageText),
     extractFacts: async (passages) => normalizeThaiDeep(await inner.extractFacts(passages)),
     sweep: async (pages, documentType) => normalizeThaiDeep(await inner.sweep(pages, documentType)),
+    readInvoices: async (documents) => normalizeThaiDeep(await inner.readInvoices(documents)),
+    describeBusiness: async (input) => normalizeThaiDeep(await inner.describeBusiness(input)),
   };
 }
