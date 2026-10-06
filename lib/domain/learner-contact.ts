@@ -6,7 +6,7 @@ import { normalizeThaiMobile } from './phone';
  * Stored with its scheme so a screen can link it; anything that is not a host with a dot is
  * refused rather than guessed at.
  */
-function toWebAddress(input: string): string | null {
+export function toWebAddress(input: string): string | null {
   const withScheme = /^https?:\/\//i.test(input) ? input : `https://${input}`;
   try {
     const url = new URL(withScheme);
@@ -21,7 +21,7 @@ function toWebAddress(input: string): string | null {
  * `thara.vanich`), which becomes the facebook.com address. A name may contain dots, so only
  * something that names a scheme or a Facebook host is read as an address.
  */
-function toFacebookPage(input: string): string | null {
+export function toFacebookPage(input: string): string | null {
   if (
     /^https?:\/\//i.test(input) ||
     /^(www\.|m\.)?(facebook\.com|fb\.com|fb\.me)(\/|$)/i.test(input)
