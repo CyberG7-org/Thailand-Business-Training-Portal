@@ -141,11 +141,17 @@ test('manager row actions are buttons a thumb can hit', async ({ page }) => {
   }
 });
 
-test('the team filter stays on one row on a laptop', async ({ page }) => {
+test('the appointment learner picker stays on one row on a laptop', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const code = await createManager(page, 'ผู้จัดการปฏิทินแล็ปท็อป', MANAGER_PASSWORD);
+  await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/th/admin/appointments');
-  const select = await page.getByTestId('team-filter').boundingBox();
-  const button = await page.locator('form:has(#team-filter) button').boundingBox();
-  expect(select && button && Math.abs(select.y - button.y)).toBeLessThan(2);
+  const select = await page.getByTestId('appointment-learner').boundingBox();
+  const button = await page
+    .locator('form:has([data-testid="appointment-learner"]) button')
+    .boundingBox();
+  expect(
+    select && button && Math.abs(select.y + select.height - (button.y + button.height)),
+  ).toBeLessThan(2);
 });

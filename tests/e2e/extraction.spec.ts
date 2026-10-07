@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { fillBusinessAnswers, loginAs, openManualRecordForm, openRecordTab } from './helpers';
+import { loginAs, openManualRecordForm, openRecordTab } from './helpers';
 
 const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
 
 // The dev server runs without ANTHROPIC_API_KEY, so the fake extractor answers.
-test('uploading a certificate creates the record and fills its fields in the background; admin reviews and confirms', async ({
+test('uploading a complete certificate fills and confirms the record in the background', async ({
   page,
   request,
 }) => {
@@ -23,15 +23,16 @@ test('uploading a certificate creates the record and fills its fields in the bac
   await page.reload();
   await expect(page.getByTestId('reading-status')).toHaveCount(0);
 
-  // The record now carries the values read from the document, with their provenance.
+  // The record now carries the values read from the document. A clean pack is accepted at once,
+  // so review-only suggestion badges disappear and the certificate facts become read-only.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
   await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
-  await expect(page.getByTestId('suggestion-issued_on')).toContainText('90%');
-  await expect(page.getByTestId('suggestion-head_office_address')).toContainText('ความมั่นใจต่ำ');
-  await expect(page.getByTestId('record-status')).toHaveText('extracted');
+  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
+  await expect(page.getByTestId('confirmed-automatically')).toBeVisible();
+  await expect(page.locator('input[name="juristic_id"]')).toHaveAttribute('readonly', '');
 
-  // Level 2 arrived in the business profile, Level 3 classified the document and kept provenance.
+  // Level 2 arrived in the business profile and Level 3 classified the document.
   await expect(page.locator('input[name="province"]')).toHaveValue('ร้อยเอ็ด');
   const business = page.getByTestId('business-profile');
   await expect(business.locator('textarea[name="objectives_text"]')).toHaveValue(
@@ -41,26 +42,9 @@ test('uploading a certificate creates the record and fills its fields in the bac
     /นางสาวตัวอย่าง ทดสอบ \| ไทย \| 19998/,
   );
   await expect(business.locator('input[name="total_shares"]')).toHaveValue('20000');
-  await expect(page.getByTestId('provenance-shareholders')).toContainText('90%');
   await expect(page.getByTestId('document-list').getByTestId('document-type')).toHaveText(
     'หนังสือรับรอง',
   );
-  await expect(page.getByTestId('suggestion-juristic_id')).toContainText('หน้า 1');
-
-  // Level 2 is editable like everything else.
-  await openRecordTab(page, 'details');
-  await business.locator('textarea[name="promoters_text"]').fill('นายแก้ไข ทดสอบ | ไทย');
-  await page.getByRole('button', { name: 'บันทึก', exact: true }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'บันทึกแล้ว' })).toBeVisible();
-  await expect(business.locator('textarea[name="promoters_text"]')).toHaveValue(
-    'นายแก้ไข ทดสอบ | ไทย',
-  );
-
-  // The certificate cannot say how to reach the company or what it sells: the manager does.
-  await fillBusinessAnswers(page);
-  // The answers save validates the record, and a clean one is accepted at once (P17c).
-  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
-  await expect(page.locator('input[name="juristic_id"]')).toHaveAttribute('readonly', '');
 });
 
 test('uploading on an existing record fills only the empty fields', async ({ page, request }) => {
@@ -81,5 +65,6 @@ test('uploading on an existing record fills only the empty fields', async ({ pag
     'บริษัท ชื่อที่พิมพ์เอง จำกัด',
   );
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
-  await expect(page.getByTestId('extract-button')).toBeEnabled();
+  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
+  await expect(page.getByTestId('extract-button')).toHaveCount(0);
 });

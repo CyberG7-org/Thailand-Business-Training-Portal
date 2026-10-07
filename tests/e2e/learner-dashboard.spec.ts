@@ -3,7 +3,7 @@ import { E2E_ADMIN, E2E_LEARNER, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
-test('a learner sees their company and the interview locked behind the exam, the appointment behind the interview', async ({
+test('a learner sees their company with the interview and appointment locked behind the exam', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท แดชบอร์ด จำกัด', '2099-01-01');
@@ -16,7 +16,7 @@ test('a learner sees their company and the interview locked behind the exam, the
   );
   await expect(page.getByTestId('stage-appointment-status')).toHaveText('ล็อก');
   await expect(page.getByTestId('stage-appointment')).toContainText(
-    'ต้องผ่านการสัมภาษณ์ความพร้อมกับธนาคารก่อน',
+    'ต้องผ่านแบบทดสอบความรู้ธุรกิจก่อน',
   );
   // Five steps (the owner, 2026-10-01): the practice round is not one of them.
   await expect(page.getByTestId('stage-quiz')).toHaveCount(0);

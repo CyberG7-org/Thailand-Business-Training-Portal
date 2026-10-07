@@ -88,15 +88,20 @@ test('a record reads its address, maps its category, and shows what is still mis
     'จัดตั้งขึ้นเพื่อประกอบธุรกิจ',
   );
 
-  // The kind of customers answers "main customers"; the two amounts give the transactions.
-  await page.locator('textarea[name="interview_customer_profile"]').fill('ร้านค้าปลีกในประเทศ');
+  // Customer type is a fixed bank answer (D101); the two manager-entered amounts give the
+  // transaction count.
+  await expect(page.getByTestId('standard-customer_profile')).toContainText(
+    'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+  );
   await page.locator('textarea[name="interview_monthly_revenue"]').fill('ประมาณ 300,000 บาท');
   await page.locator('textarea[name="interview_average_transaction"]').fill('10,000 บาท');
   await page.getByTestId('save-interview').click();
   await expect(page.getByTestId('interview-saved')).toBeVisible();
   await page.reload();
   await openRecordTab(page, 'interview');
-  await expect(page.getByTestId('standard-main_clients')).toHaveText('ร้านค้าปลีกในประเทศ');
+  await expect(page.getByTestId('standard-main_clients')).toContainText(
+    'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+  );
   await expect(page.getByTestId('standard-monthly_transactions')).toHaveText(
     'ประมาณ 30 รายการต่อเดือน',
   );

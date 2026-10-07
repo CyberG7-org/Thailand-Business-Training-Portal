@@ -29,17 +29,19 @@ test('the record lists what blocks acceptance, and accepts itself the moment it 
   await page.getByRole('button', { name: 'บันทึก' }).click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
 
-  // The certificate fact and the four answers are listed as blocking acceptance, in Thai.
+  // Only the identity and business nature block acceptance; contact details and products can be
+  // absent from a company pack (D101).
   const blocking = page.getByTestId('exceptions-acceptance');
   await expect(blocking).toContainText('เลขทะเบียนนิติบุคคล');
-  await expect(blocking).toContainText('อีเมลของบริษัท');
-  await expect(blocking).toContainText('สินค้าหรือบริการ');
+  await expect(blocking).toContainText('ธุรกิจทำอะไร');
+  await expect(blocking).not.toContainText('อีเมลของบริษัท');
+  await expect(blocking).not.toContainText('สินค้าหรือบริการ');
   await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 
   // The answers alone are not enough: the registration number is still missing.
   await fillBusinessAnswers(page);
   await expect(blocking).toContainText('เลขทะเบียนนิติบุคคล');
-  await expect(blocking).not.toContainText('อีเมลของบริษัท');
+  await expect(blocking).not.toContainText('ธุรกิจทำอะไร');
 
   // A number with a wrong check digit is an exception of its own, not accepted.
   await page.locator('input[name="juristic_id"]').fill('0105568233705');
