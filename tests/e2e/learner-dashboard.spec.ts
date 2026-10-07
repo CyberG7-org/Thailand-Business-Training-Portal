@@ -3,7 +3,7 @@ import { E2E_ADMIN, E2E_LEARNER, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
-test('a learner sees their company with the interview and appointment locked behind the exam', async ({
+test('a learner sees their company with the interview locked and no appointment stage', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท แดชบอร์ด จำกัด', '2099-01-01');
@@ -14,11 +14,8 @@ test('a learner sees their company with the interview and appointment locked beh
   await expect(page.getByTestId('stage-interview')).toContainText(
     'ต้องผ่านแบบทดสอบความรู้ธุรกิจก่อน',
   );
-  await expect(page.getByTestId('stage-appointment-status')).toHaveText('ล็อก');
-  await expect(page.getByTestId('stage-appointment')).toContainText(
-    'ต้องผ่านแบบทดสอบความรู้ธุรกิจก่อน',
-  );
-  // Five steps (the owner, 2026-10-01): the practice round is not one of them.
+  await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
+  // The dashboard contains the four learner-owned stages; practice and booking stay elsewhere.
   await expect(page.getByTestId('stage-quiz')).toHaveCount(0);
   await expect(page.getByTestId('stage-study-status')).toHaveText('พร้อมใช้งาน');
   await expect(page.getByTestId('stage-nameCard-status')).toHaveText('พร้อมใช้งาน');
@@ -30,7 +27,7 @@ test('a learner whose certificate has no issue date still sees the pending reaso
   const loginId = await seedLearnerWithCompany('บริษัท ไม่มีวันที่ จำกัด', null);
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page.getByTestId('company-name')).toHaveText('บริษัท ไม่มีวันที่ จำกัด');
-  await expect(page.getByTestId('stage-appointment-status')).toHaveText('ล็อก');
+  await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
 });
 
 test('a learner with no assignment sees the no-company message and every stage locked', async ({
@@ -38,10 +35,11 @@ test('a learner with no assignment sees the no-company message and every stage l
 }) => {
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
   await expect(page.getByTestId('no-company')).toBeVisible();
-  // The learner's five steps (the practice round is not one of them).
-  for (const stage of ['study', 'nameCard', 'exam', 'interview', 'appointment']) {
+  // Only the four learner-owned stages appear; manager-owned booking is not in this dashboard.
+  for (const stage of ['study', 'nameCard', 'exam', 'interview']) {
     await expect(page.getByTestId(`stage-${stage}-status`)).toHaveText('ล็อก');
   }
+  await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
 });
 
 test('the admin sees each learner on the Learner Record, with or without a company', async ({

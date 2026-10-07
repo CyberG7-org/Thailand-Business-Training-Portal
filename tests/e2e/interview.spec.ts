@@ -97,7 +97,7 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-interview-status')).toHaveText('เสร็จสิ้น');
-  await expect(page.getByTestId('stage-appointment-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
 
   // The staff side: the newest session of this learner is the ready one, with its transcript
   // and the officer's per-answer assessments.

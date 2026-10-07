@@ -87,4 +87,27 @@ describe('name card PDF (spike S3)', () => {
     expect(squashed).toContain('sample-card.co.th/collections/');
     expect(squashed).toContain('…');
   });
+
+  it('omits the website row completely when the company pack has no website', async () => {
+    const data = buildNameCardData(
+      {
+        company_name_th: 'บริษัท ไม่มีเว็บไซต์ จำกัด',
+        company_name_en: 'NO WEBSITE CO., LTD.',
+        head_office_address: '99/9 หมู่ 1 ตำบลตัวอย่าง อำเภอตัวอย่าง จังหวัดตัวอย่าง 10110',
+        juristic_id: '0105569000134',
+        contact_email: 'contact@example.co.th',
+        nature_of_business: 'ค้าปลีกอาหาร',
+      },
+      '0812345678',
+      'นางสาวตัวอย่าง ทดสอบ',
+      { website: null, facebookPage: 'https://www.facebook.com/nowebsite' },
+    );
+
+    expect(data.website).toBeNull();
+    const bytes = await new ReactPdfRenderer().renderNameCard(data);
+    expect(await countPages(bytes)).toBe(2);
+    const squashed = (await pdfTextItems(bytes)).flat().join('').replace(/\s/g, '');
+    expect(squashed).toContain('nowebsite');
+    expect(squashed).not.toContain('undefined');
+  });
 });
