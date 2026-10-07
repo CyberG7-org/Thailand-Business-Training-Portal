@@ -152,12 +152,13 @@ export async function myUpcomingAppointment(
   now: Date = new Date(),
 ): Promise<MyAppointment | null> {
   const admin = createSupabaseAdminClient();
+  const startOfToday = bangkokDateTime(todayInBangkok(now), 0);
   const { data, error } = await admin
     .from('appointments')
     .select('*')
     .eq('user_id', userId)
     .eq('status', 'booked')
-    .gte('starts_at', now.toISOString())
+    .gte('starts_at', startOfToday)
     .order('starts_at')
     .limit(1)
     .maybeSingle();

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
+import { bangkokDateTime } from '@/lib/domain/appointments/slots';
 import type { ProgressionFacts } from '@/lib/domain/progression';
 import { isStudyComplete, type CardProgress, type StudyCard } from '@/lib/domain/study-progress';
 import { todayInBangkok, type ISODate } from '@/lib/domain/thai-date';
@@ -42,6 +43,7 @@ export async function loadProgressionFacts(
   /** `language`: the one the learner is reading in; the one they last chose when absent. */
   options: { today?: ISODate; language?: string } = {},
 ): Promise<ProgressionFacts> {
+  const today = options.today ?? todayInBangkok();
   const [
     assignment,
     requireExamPassForInterview,
@@ -74,7 +76,7 @@ export async function loadProgressionFacts(
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'booked')
-      .gte('starts_at', new Date().toISOString()),
+      .gte('starts_at', bangkokDateTime(today, 0)),
   ]);
   if (studyRows.error) throw studyRows.error;
   if (interviews.error) throw interviews.error;
@@ -92,7 +94,7 @@ export async function loadProgressionFacts(
     eligibility: snapshot
       ? { availableFrom: snapshot.available_from, expiresAt: snapshot.expires_at }
       : null,
-    today: options.today ?? todayInBangkok(),
+    today,
     interviewSessions: sessions.length,
     // Ready is one-way (spec §3): the first session that ended ready settles it.
     interviewReady: sessions.some((s) => s.verdict === 'ready'),
@@ -180,7 +182,7 @@ export async function loadProgressionFactsForUsers(
       .select('user_id')
       .in('user_id', userIds)
       .eq('status', 'booked')
-      .gte('starts_at', new Date().toISOString()),
+      .gte('starts_at', bangkokDateTime(todayInBangkok(), 0)),
   ]);
   for (const r of [assignments, snapshots, attempts, cards, interviews, bookings]) {
     if (r.error) throw r.error;

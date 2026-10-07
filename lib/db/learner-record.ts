@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getPolicy } from '@/lib/config/policy';
+import { bangkokDateTime } from '@/lib/domain/appointments/slots';
 import {
   chatbotResult,
   mcqResult,
@@ -7,6 +8,7 @@ import {
   type McqResult,
 } from '@/lib/domain/learner-record';
 import { allRows } from './chunks';
+import { todayInBangkok } from '@/lib/domain/thai-date';
 import type { Database } from './database.types';
 
 type Db = SupabaseClient<Database>;
@@ -31,7 +33,7 @@ export type LearnerRecordRow = {
  * learners' ids, which is what made the old list refuse a few hundred learners ("URI too long").
  */
 export async function loadLearnerRecords(db: Db): Promise<LearnerRecordRow[]> {
-  const now = new Date().toISOString();
+  const today = bangkokDateTime(todayInBangkok(), 0);
   // Each list is read in full, a page at a time (allRows), so a long one is never cut off at
   // the API's row limit; every query is ordered on a unique column for stable pages.
   const [learners, assignments, exams, sessions, bookings, rule] = await Promise.all([
@@ -69,7 +71,7 @@ export async function loadLearnerRecords(db: Db): Promise<LearnerRecordRow[]> {
         .from('appointments')
         .select('user_id, starts_at')
         .eq('status', 'booked')
-        .gte('starts_at', now)
+        .gte('starts_at', today)
         .order('starts_at')
         .order('id')
         .range(from, to),

@@ -41,10 +41,8 @@
       "tag": "DBD 记录"
     },
     "appointment": {
-      "pending": "无法计算可预约日期：缺少证书签发日期。",
-      "available": "现在可以预约。",
-      "lockedUntil": "可自 {date} 起预约",
-      "booked": "已预约：{date} {time} 与 {manager}"
+      "available": "您的经理将预约日期。",
+      "booked": "已预约：{date} 与 {manager}"
     },
     "hero": {
       "kicker": "银行身份验证准备"
@@ -197,6 +195,12 @@
       "toCreate": "创建学员与DBD",
       "empty": "暂无学员。",
       "backToRecord": "← 学员记录",
+      "appointment": {
+        "book": "预约日期",
+        "change": "更改日期",
+        "needsQuiz": "测验尚未通过",
+        "needsInterview": "面试尚未准备就绪"
+      },
       "columns": {
         "loginId": "登录ID",
         "company": "公司名称",
@@ -988,7 +992,19 @@
     },
     "appointments": {
       "title": "银行预约",
-      "intro": "团队学员即将到来的预约，按日期排列；封锁你无法出席的时段。",
+      "intro": "经理为已通过业务知识测验和银行准备面试的学员选择银行日期。",
+      "bookingTitle": "为学员预约",
+      "bookingIntro": "选择已准备好的学员，然后选择或更改日期；无需选择时段。",
+      "chooseLearner": "学员",
+      "choose": "选择学员",
+      "showCalendar": "显示日历",
+      "needsQuiz": "请先通过业务知识测验",
+      "needsInterview": "请先通过银行准备面试",
+      "ownerReadOnly": "只有负责该学员的经理可以预约日期。所有者可在此查看和取消预约。",
+      "upcoming": "已预约日期",
+      "prevMonth": "上个月",
+      "nextMonth": "下个月",
+      "saved": "预约日期已保存",
       "empty": "尚无预约",
       "day": "日期",
       "time": "时间",
@@ -1481,7 +1497,11 @@
   },
   "appointment": {
     "title": "银行预约",
-    "intro": "选择你与经理前往银行的日期和时间。除银行假日外每天开放，每个时段一人。",
+    "intro": "通过业务知识测验和银行准备面试后，您的经理将预约日期。",
+    "waiting": {
+      "title": "您的经理将预约",
+      "detail": "此页面无需选择日期。经理选择银行日期后，日期会显示在这里。"
+    },
     "week": "{date} 当周",
     "prevWeek": "上一周",
     "nextWeek": "下一周",
@@ -1497,8 +1517,8 @@
     },
     "booked": {
       "title": "你的预约",
-      "line": "{date} {time} 与 {manager}",
-      "adminCalendar": "管理员",
+      "line": "{date} 与{manager}",
+      "manager": "您的经理",
       "cancel": "取消预约",
       "cancelHint": "最迟可在时段前 {hours} 小时取消"
     },

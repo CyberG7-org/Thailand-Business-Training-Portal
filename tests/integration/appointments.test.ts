@@ -181,4 +181,15 @@ describe('manager-booked date-only appointments (D102)', () => {
       cancelAppointment({ id: otherTeam.manager.id, role: 'manager' }, booking.id),
     ).rejects.toBeInstanceOf(AppointmentError);
   });
+
+  it('keeps a date-only appointment visible for the whole selected day', async () => {
+    const evening = new Date(`${today}T18:00:00+07:00`);
+    const booking = await bookAppointmentForManager(
+      team.manager.id,
+      team.learner.id,
+      today,
+      evening,
+    );
+    expect((await myUpcomingAppointment(team.learner.id, evening))?.id).toBe(booking.id);
+  });
 });

@@ -1,4 +1,4 @@
-import { isBankStageOpen, type EligibilityWindow } from './eligibility';
+import type { EligibilityWindow } from './eligibility';
 import type { ISODate } from './thai-date';
 
 /** PRD §8 states plus UNASSIGNED, with the interview and appointment states of P16. */
@@ -65,15 +65,11 @@ function interviewGate(f: ProgressionFacts): StageInfo {
   return { status: 'available' };
 }
 
-/** The appointment needs a ready learner and an open eligibility window (BR-002). */
+/** D102: a manager may choose a date once the learner passed both evaluations. */
 function appointmentGate(f: ProgressionFacts): StageInfo {
   if (!f.hasActiveAssignment) return { status: 'locked', reason: 'no_assignment' };
+  if (!f.examPassed) return { status: 'locked', reason: 'exam_required' };
   if (!f.interviewReady) return { status: 'locked', reason: 'interview_required' };
-  if (!f.eligibility) return { status: 'pending', reason: 'missing_issue_date' };
-  if (f.today < f.eligibility.availableFrom) {
-    return { status: 'locked', reason: 'before_available_from' };
-  }
-  if (!isBankStageOpen(f.eligibility, f.today)) return { status: 'locked', reason: 'expired' };
   if (f.appointmentBooked) return { status: 'done' };
   return { status: 'available' };
 }
@@ -83,12 +79,7 @@ export function deriveProgression(f: ProgressionFacts): ProgressionState {
   if (!f.hasActiveAssignment) return 'UNASSIGNED';
   if (f.appointmentBooked) return 'APPOINTMENT_BOOKED';
   if (f.interviewReady) {
-    const gate = appointmentGate(f);
-    if (gate.status === 'available') return 'BANK_ELIGIBLE';
-    if (gate.reason === 'before_available_from' || gate.reason === 'missing_issue_date') {
-      return 'WAITING_BANK_ELIGIBILITY';
-    }
-    return 'INTERVIEW_READY';
+    return f.examPassed ? 'BANK_ELIGIBLE' : 'INTERVIEW_READY';
   }
   if (f.interviewSessions > 0) return 'INTERVIEW_STARTED';
   if (f.examPassed) return 'EXAM_PASSED';
