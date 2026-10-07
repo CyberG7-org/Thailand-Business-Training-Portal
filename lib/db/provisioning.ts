@@ -279,6 +279,25 @@ export async function createLearnerAccount(
   return created;
 }
 
+/** Deletes a learner only when the actor is the owner or the learner's own manager. */
+export async function deleteLearnerAccount(actorId: string, learnerId: string): Promise<void> {
+  const admin = createSupabaseAdminClient();
+  const [{ data: actor, error: actorError }, { data: learner, error: learnerError }] =
+    await Promise.all([
+      admin.from('profiles').select('id, role').eq('id', actorId).maybeSingle(),
+      admin.from('profiles').select('id, role, manager_id').eq('id', learnerId).maybeSingle(),
+    ]);
+  if (actorError) throw actorError;
+  if (learnerError) throw learnerError;
+  const allowed =
+    learner?.role === 'learner' &&
+    (actor?.role === 'admin' || (actor?.role === 'manager' && learner.manager_id === actor.id));
+  if (!allowed) throw new Error('Learner not found');
+
+  const { error } = await admin.auth.admin.deleteUser(learner.id);
+  if (error) throw error;
+}
+
 export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {
   if (newPassword.length < 10) {
     throw new ProvisioningError('Password must be at least 10 characters', 'invalid');

@@ -270,6 +270,27 @@ export async function seedTeamLearner(
     .update({ manager_id: managerId })
     .eq('login_id', loginId);
   if (error) throw error;
+  // `seedLearnerWithCompany` creates a standalone fixture and uses the learner as confirmer. Once
+  // it becomes a manager-owned team fixture, mirror production: the manager owns and confirmed it.
+  const admin = svc();
+  const { data: profile, error: profileError } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  if (profileError) throw profileError;
+  const { data: assignment, error: assignmentError } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile.id)
+    .eq('active', true)
+    .single();
+  if (assignmentError) throw assignmentError;
+  const { error: ownerError } = await admin
+    .from('dbd_records')
+    .update({ created_by: managerId, confirmed_by: managerId })
+    .eq('id', assignment.dbd_record_id);
+  if (ownerError) throw ownerError;
   await seedPassedExam(loginId);
   await seedReadyInterview(loginId);
   return loginId;

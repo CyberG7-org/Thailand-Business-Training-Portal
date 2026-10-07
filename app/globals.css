@@ -404,6 +404,7 @@
   }
   .staff-table-wrap {
     overflow-x: auto;
+    contain: paint;
     background: var(--color-white);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-raised);

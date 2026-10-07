@@ -271,3 +271,33 @@ export async function removeDbdDocument(
     .eq('id', recordId);
   if (updError) throw updError;
 }
+
+/**
+ * Removes an owned company and every stored source file. Database-owned training and assignment
+ * rows cascade with the record, leaving the learner account available for a new company.
+ */
+export async function deleteDbdRecord(
+  db: Db,
+  recordId: string,
+  vector: VectorStore | null = getVectorStore(),
+): Promise<boolean> {
+  const { data: record, error } = await db
+    .from('dbd_records')
+    .select('id')
+    .eq('id', recordId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!record) return false;
+
+  for (const document of await listDbdDocuments(db, recordId)) {
+    await removeDbdDocument(db, recordId, document.id, vector);
+  }
+  const { data: deleted, error: deleteError } = await db
+    .from('dbd_records')
+    .delete()
+    .eq('id', recordId)
+    .select('id')
+    .maybeSingle();
+  if (deleteError) throw deleteError;
+  return deleted !== null;
+}

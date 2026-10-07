@@ -49,6 +49,8 @@ test('the interview is locked before the exam and open after it', async ({ page 
 test('a learner who evades is not ready, retries with good answers, and becomes ready for good', async ({
   page,
 }) => {
+  // This scenario completes two full interviews and then verifies the staff transcript.
+  test.slow();
   const company = 'บริษัท สัมภาษณ์อีทูอี จำกัด';
   const loginId = await seedLearnerWithCompany(company, '2026-07-13');
   await seedPassedExam(loginId);

@@ -7,6 +7,8 @@ import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { ResultTag } from './result-tag';
+import { DeleteIconForm } from '../delete-icon-form';
+import { deleteLearnerAction } from '../users/actions';
 
 /**
  * Learner Record (D82): one row per learner the caller can see — who, their company and its DBD
@@ -49,6 +51,9 @@ export default async function LearnerRecordPage({
                 <th>{t('columns.mcq')}</th>
                 <th>{t('columns.chatbot')}</th>
                 <th>{t('columns.appointment')}</th>
+                <th>
+                  <span className="sr-only">{t('columns.actions')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -70,7 +75,13 @@ export default async function LearnerRecordPage({
                           {r.company.nameTh ?? '—'}
                         </Link>
                       ) : (
-                        '—'
+                        <Link
+                          href={{ pathname: '/admin/users', query: { add: '1' } }}
+                          className="staff-btn-ghost px-4 whitespace-nowrap text-brand-600"
+                          data-testid={`ready-to-assign-${r.loginId}`}
+                        >
+                          {t('readyToAssign')}
+                        </Link>
                       )}
                     </td>
                     <td data-testid={`issued-${r.loginId}`} className="whitespace-nowrap">
@@ -107,6 +118,17 @@ export default async function LearnerRecordPage({
                       ) : (
                         '—'
                       )}
+                    </td>
+                    <td className="align-middle">
+                      <DeleteIconForm
+                        action={deleteLearnerAction}
+                        id={r.id}
+                        label={t('deleteLearner')}
+                        confirmation={t('deleteLearnerConfirm', {
+                          loginId: displayLoginId(r.loginId),
+                        })}
+                        testId={`delete-learner-${r.loginId}`}
+                      />
                     </td>
                   </tr>
                 );

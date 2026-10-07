@@ -4,6 +4,8 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import type { CompanyStatus } from '@/lib/domain/auto-confirm';
+import { DeleteIconForm } from '../delete-icon-form';
+import { deleteCompanyAction } from './actions';
 import { CreateDbdForm } from './create-dbd-form';
 
 /** One company as the tab lists it, prepared on the server (RLS has narrowed the rows). */
@@ -97,7 +99,7 @@ export function CompaniesPanel({
           {t('noMatch', { query })}
         </p>
       ) : (
-        <div className="overflow-x-auto border-t border-ink-100">
+        <div className="overflow-x-auto border-t border-ink-100 [contain:paint]">
           <table className="staff-table">
             <thead>
               <tr>
@@ -107,6 +109,9 @@ export function CompaniesPanel({
                 <th>{t('columns.issuedOn')}</th>
                 <th>{t('columns.status')}</th>
                 <th className="md:pr-6">{t('columns.learner')}</th>
+                <th>
+                  <span className="sr-only">{t('columns.actions')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -168,6 +173,15 @@ export function CompaniesPanel({
                           {t('learnerAfterConfirm')}
                         </span>
                       )}
+                    </td>
+                    <td className="align-middle">
+                      <DeleteIconForm
+                        action={deleteCompanyAction}
+                        id={r.id}
+                        label={t('deleteCompany')}
+                        confirmation={t('deleteCompanyConfirm', { name: r.name ?? t('unnamed') })}
+                        testId={`delete-company-${r.id}`}
+                      />
                     </td>
                   </tr>
                 );

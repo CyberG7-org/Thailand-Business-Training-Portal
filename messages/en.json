@@ -194,6 +194,9 @@
       "intro": "Every learner your team is training: their company, Business Knowledge Quiz and Bank Readiness Interview results, and appointment. To add a learner, go to",
       "toCreate": "Create learner & DBD",
       "empty": "No learners yet.",
+      "readyToAssign": "Ready to Assign",
+      "deleteLearner": "Delete learner",
+      "deleteLearnerConfirm": "Delete learner {loginId}? Their account and training history will be permanently removed.",
       "backToRecord": "← Learner Record",
       "appointment": {
         "book": "Book date",
@@ -207,7 +210,8 @@
         "issuedOn": "DBD issued date",
         "mcq": "Business Knowledge Quiz",
         "chatbot": "Bank Readiness Interview",
-        "appointment": "Appointment"
+        "appointment": "Appointment",
+        "actions": "Actions"
       },
       "results": {
         "pass": "Pass",
@@ -279,9 +283,12 @@
         "issuedOn": "Certificate issued",
         "team": "Team",
         "status": "Status",
-        "learner": "Learner"
+        "learner": "Learner",
+        "actions": "Actions"
       },
       "assignLearner": "Assign learner",
+      "deleteCompany": "Delete company",
+      "deleteCompanyConfirm": "Delete {name}? The learner account will remain and become ready for another company.",
       "learnerOtherTeam": "Another team's learner",
       "learnerAfterConfirm": "Once confirmed"
     },

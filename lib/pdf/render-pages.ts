@@ -53,7 +53,10 @@ export function pdfjsDataUrls(): Record<
   const root = pdfjsRoot();
   if (!root) return null;
   // pdf.js wants a directory ending in a forward slash, on Windows too.
-  const dir = (name: string) => path.join(root, name).replaceAll(path.sep, '/') + '/';
+  // These folders are explicitly traced in next.config.ts. This lookup only selects their
+  // installed pnpm location at runtime, so Turbopack must not trace the dynamic path again.
+  const dir = (name: string) =>
+    path.join(/* turbopackIgnore: true */ root, name).replaceAll(path.sep, '/') + '/';
   return {
     wasmUrl: dir('wasm'),
     standardFontDataUrl: dir('standard_fonts'),
