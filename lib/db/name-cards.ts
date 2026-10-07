@@ -197,10 +197,10 @@ export async function ensureNameCard(
     const name = found.defaultHolderName.trim();
     if (!name) throw new NameCardError('No holder name', 'no_name');
     // Current when it was made for this company from exactly what would be printed today.
-    // The learner's website and Facebook page, as a manager gave them (D99).
+    // Company-pack links take precedence, exactly as generateNameCard renders them (D101).
     const links = {
-      website: profile?.website ?? null,
-      facebookPage: profile?.facebook_page ?? null,
+      website: found.links.website ?? profile?.website ?? null,
+      facebookPage: found.links.facebookPage ?? profile?.facebook_page ?? null,
     };
     const printed = buildNameCardData(found.source, phone, name, links);
     const current =

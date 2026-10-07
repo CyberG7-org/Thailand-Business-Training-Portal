@@ -100,5 +100,5 @@
 - [x] Add a ZIP test matching `chaya sri trade.zip`: 1 pack PDF, 5 invoices, 5 agreements, a Facebook `.doc`, and no website file; assert `website: null` and no validation problem.
 - [x] Run the focused ZIP test. It was already GREEN, confirming that D101 handles the website-optional pack without production changes.
 - [x] Record the manager-calendar design decision in `.21st/design.json` and D102 in the decision log; update operations and UAT steps.
-- [x] Run typecheck, lint, all unit tests, focused appointment integration tests, and focused Playwright appointment/company-pack tests. The full integration run reached 53 passing files but its persistent local MCQ starter data made two unrelated suites fail; see the handoff notes.
+- [x] Run typecheck, lint, all unit tests, focused appointment/invoice/name-card integration tests, and focused Playwright appointment/company-pack tests. The final full integration run reached 52 passing files, while three unrelated MCQ/exam suites failed because persistent local attempts prevent their shared starter keys from being deleted; see the handoff notes.
 - [x] Commit the durable documentation and regressions.

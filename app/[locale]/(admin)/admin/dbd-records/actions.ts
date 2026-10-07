@@ -30,6 +30,7 @@ import {
   refreshDerivedFacts,
   remapBusinessCategory,
   setBusinessCategory,
+  updateStructuredData,
 } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
@@ -284,6 +285,8 @@ export type PrepareUploadsResult =
   { ok: true; id: string; uploads: PreparedUpload[] } | { ok: false; error: string };
 
 const packGroupSchema = z.enum(['pack', 'invoice', 'agreement']);
+const isConfirmedSupplement = (status: string, groups: readonly PackGroup[]) =>
+  status !== 'confirmed' || groups.every((group) => group !== 'pack');
 /** The addresses as the browser read them; anything that is not an address is dropped. */
 const packLinksSchema = z.object({
   website: z
@@ -316,6 +319,14 @@ export async function prepareUploadsAction(input: {
   try {
     const id =
       input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, undefined, teamOf(admin))).id;
+    if (input.id) {
+      const record = await getDbdRecord(db, id);
+      if (!record) return { ok: false, error: 'not-found' };
+      const groups = input.files.map((file) => packGroupSchema.parse(file.group ?? 'pack'));
+      if (!isConfirmedSupplement(record.extraction_status, groups)) {
+        return { ok: false, error: 'invalid-file' };
+      }
+    }
     const uploads: PreparedUpload[] = [];
     for (const file of input.files.filter((f) => f.size > 0)) {
       const path = newDocumentPath(id);
@@ -346,6 +357,13 @@ export async function registerUploadsAction(input: {
   await requireStaff(locale);
   const db = await createSupabaseServerClient();
   try {
+    const record = await getDbdRecord(db, id);
+    if (!record) return { ok: false, error: 'not-found' };
+    const groups = input.uploads.map((upload) => packGroupSchema.parse(upload.group ?? 'pack'));
+    if (!isConfirmedSupplement(record.extraction_status, groups)) {
+      await db.storage.from('dbd-documents').remove(input.uploads.map((upload) => upload.path));
+      return { ok: false, error: 'invalid-file' };
+    }
     for (const upload of input.uploads) {
       await registerDbdDocument(db, id, {
         path: upload.path,
@@ -367,7 +385,9 @@ export async function registerUploadsAction(input: {
   } catch (e) {
     return { ok: false, error: e instanceof DocumentUploadError ? e.code : errorMessage(e) };
   }
-  const outcome = await queueReading(db, id);
+  const outcome = input.uploads.some((u) => (u.group ?? 'pack') === 'pack')
+    ? await queueReading(db, id)
+    : { extraction: 'skipped' as const, applied: [] };
   // The invoices have a read of their own (D101); a queueing failure never undoes the upload.
   if (input.uploads.some((u) => u.group === 'invoice') && getDbdExtractor()) {
     await enqueueInvoicesJob(db, id).catch((e) => console.error('invoices job', id, e));
@@ -464,7 +484,9 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
   await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
-  if (!record || record.extraction_status === 'confirmed') return;
+  if (!record) return;
+  const document = (await listDbdDocuments(db, id)).find((doc) => doc.id === documentId);
+  if (!document || (record.extraction_status === 'confirmed' && document.group === 'pack')) return;
   let unavailable = false;
   try {
     await removeDbdDocument(db, id, documentId);
@@ -472,6 +494,22 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
     // The store refused to drop the vectors, so the row was kept (no orphans); tell the admin.
     if (!(e instanceof VectorError)) throw e;
     unavailable = true;
+  }
+  if (!unavailable && document.group === 'invoice') {
+    const remaining = (await listDbdDocuments(db, id)).filter((doc) => doc.group === 'invoice');
+    if (remaining.length > 0 && getDbdExtractor()) {
+      await enqueueInvoicesJob(db, id);
+    } else if (remaining.length === 0) {
+      await updateStructuredData(db, id, (stored) => {
+        const withoutInvoices = { ...stored };
+        delete withoutInvoices.invoices;
+        return withoutInvoices;
+      });
+      await refreshDerivedFacts(db, id, undefined, { describe: true }).catch((error) =>
+        console.error('derived facts after removing invoices', id, error),
+      );
+      await validateAfterChange(id, null);
+    }
   }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   if (unavailable)

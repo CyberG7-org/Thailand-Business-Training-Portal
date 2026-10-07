@@ -51,6 +51,21 @@ describe('opening a company zip in the browser (D101)', () => {
     await expect(unpackZip(new Uint8Array([1, 2, 3, 4]))).rejects.toBeInstanceOf(PackZipError);
   });
 
+  it('rejects archive entry and expanded-byte bombs before keeping their contents', async () => {
+    const threeEntries = zipSync({
+      'one.bin': strToU8('1'),
+      'two.bin': strToU8('2'),
+      'three.bin': strToU8('3'),
+    });
+    await expect(unpackZip(threeEntries, { maxEntries: 2 })).rejects.toMatchObject({
+      code: 'too-many-files',
+    });
+    const compressedLargeEntry = zipSync({ 'ignored.bin': new Uint8Array(64) });
+    await expect(unpackZip(compressedLargeEntry, { maxExpandedBytes: 32 })).rejects.toMatchObject({
+      code: 'zip-too-large',
+    });
+  });
+
   it('reads the text of a .doc, a .docx and a plain file', () => {
     expect(textOfLinkFile('a/fb.doc', utf16('x https://www.facebook.com/one y'))).toContain(
       'https://www.facebook.com/one',

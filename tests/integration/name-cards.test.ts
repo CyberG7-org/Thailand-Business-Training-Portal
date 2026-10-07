@@ -157,6 +157,22 @@ describe('name cards', () => {
     const third = await ensureNameCard(learner.id, fakeRenderer);
     expect(third.card?.id).not.toBe(second.card!.id);
     await svc.from('profiles').update({ website: null, facebook_page: null }).eq('id', learner.id);
+
+    // Links read from the company zip are fingerprinted from the same values the PDF prints.
+    await svc
+      .from('dbd_records')
+      .update({ facebook_page: 'https://www.facebook.com/company-pack' })
+      .eq('id', recordId);
+    const fromCompany = await ensureNameCard(learner.id, fakeRenderer);
+    expect(fromCompany.card?.id).not.toBe(third.card!.id);
+    expect((await ensureNameCard(learner.id, fakeRenderer)).card?.id).toBe(fromCompany.card!.id);
+    await svc
+      .from('dbd_records')
+      .update({ facebook_page: 'https://www.facebook.com/company-pack-new' })
+      .eq('id', recordId);
+    const changedCompanyLink = await ensureNameCard(learner.id, fakeRenderer);
+    expect(changedCompanyLink.card?.id).not.toBe(fromCompany.card!.id);
+
     expect((await ensureNameCard(other.id, fakeRenderer)).blocked?.code).toBe('no_assignment');
   });
 

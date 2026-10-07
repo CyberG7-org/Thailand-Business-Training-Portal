@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react';
 import { uploadDocumentToSignedUrl } from '@/lib/db/browser-storage';
 import { checkDocumentFiles } from '@/lib/domain/document-upload';
 import type { PackLinks } from '@/lib/domain/pack/links';
-import type { PackGroup, PackProblem } from '@/lib/domain/pack/sort';
+import { classifyPackPath, type PackGroup, type PackProblem } from '@/lib/domain/pack/sort';
 import { PackZipError, openPack, type OpenedPack } from '@/lib/pack/unzip';
 import { prepareUploadsAction, registerUploadsAction, type ToolState } from './actions';
 
@@ -117,7 +117,13 @@ export function useDirectUpload(options: { locale: string; id: string | null; re
         files = pack.files;
         links = pack.links;
       } else {
-        files = chosen.map((file) => ({ group: 'pack' as const, file }));
+        files = chosen.map((file) => {
+          const classified = classifyPackPath(file.name);
+          return {
+            group: classified === 'invoice' || classified === 'agreement' ? classified : 'pack',
+            file,
+          };
+        });
       }
       const problem = checkDocumentFiles(files.map((f) => f.file));
       if (problem) {

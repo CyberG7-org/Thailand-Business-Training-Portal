@@ -1,6 +1,15 @@
 import { strFromU8, unzip, unzipSync } from 'fflate';
 import { linksFromText, mergeLinks, type PackLinks } from '@/lib/domain/pack/links';
-import { baseName, sortPackEntries, type PackGroup, type SortedPack } from '@/lib/domain/pack/sort';
+import {
+  MAX_LINK_FILE_BYTES,
+  MAX_PACK_BYTES,
+  baseName,
+  classifyPackPath,
+  sortPackEntries,
+  type PackGroup,
+  type PackProblem,
+  type SortedPack,
+} from '@/lib/domain/pack/sort';
 
 /**
  * The company zip, opened where it was picked — in the browser — so that each document travels
@@ -8,7 +17,7 @@ import { baseName, sortPackEntries, type PackGroup, type SortedPack } from '@/li
  * 2026-10-06 §2, D101). No Node imports: this runs in the page.
  */
 export class PackZipError extends Error {
-  constructor(public readonly code: 'cannot-open') {
+  constructor(public readonly code: PackProblem | 'cannot-open') {
     super(code);
     this.name = 'PackZipError';
   }
@@ -18,15 +27,56 @@ export type PackFile = { group: PackGroup; file: File };
 export type OpenedPack = { sorted: SortedPack; files: PackFile[]; links: PackLinks };
 
 /** Every entry of a zip with its bytes; a zip that cannot be opened throws. */
-export function unpackZip(bytes: Uint8Array): Promise<{ path: string; bytes: Uint8Array }[]> {
+type UnpackLimits = { maxExpandedBytes?: number; maxEntries?: number };
+const MAX_ARCHIVE_ENTRIES = 200;
+
+export function unpackZip(
+  bytes: Uint8Array,
+  limits: UnpackLimits = {},
+): Promise<{ path: string; size: number; bytes: Uint8Array }[]> {
+  const maxExpandedBytes = limits.maxExpandedBytes ?? MAX_PACK_BYTES;
+  const maxEntries = limits.maxEntries ?? MAX_ARCHIVE_ENTRIES;
+  if (bytes.byteLength > MAX_PACK_BYTES) {
+    return Promise.reject(new PackZipError('zip-too-large'));
+  }
   return new Promise((resolve, reject) => {
-    unzip(bytes, (error, files) => {
-      if (error) {
-        reject(new PackZipError('cannot-open'));
-        return;
-      }
-      resolve(Object.entries(files).map(([path, data]) => ({ path, bytes: data })));
-    });
+    let expandedBytes = 0;
+    let entries = 0;
+    let problem: PackProblem | null = null;
+    const metadata: { path: string; size: number }[] = [];
+    unzip(
+      bytes,
+      {
+        filter(info) {
+          if (info.name.endsWith('/')) return false;
+          entries += 1;
+          expandedBytes += info.originalSize;
+          metadata.push({ path: info.name, size: info.originalSize });
+          if (entries > maxEntries) problem = 'too-many-files';
+          if (expandedBytes > maxExpandedBytes) problem = 'zip-too-large';
+          if (problem) return false;
+          const kind = classifyPackPath(info.name);
+          return kind !== null && !(kind === 'link' && info.originalSize > MAX_LINK_FILE_BYTES);
+        },
+      },
+      (error, files) => {
+        if (error) {
+          reject(new PackZipError('cannot-open'));
+          return;
+        }
+        if (problem) {
+          reject(new PackZipError(problem));
+          return;
+        }
+        resolve(
+          metadata.map(({ path, size }) => ({
+            path,
+            size,
+            bytes: files[path] ?? new Uint8Array(),
+          })),
+        );
+      },
+    );
   });
 }
 
@@ -56,8 +106,9 @@ export function textOfLinkFile(path: string, bytes: Uint8Array): string {
 
 /** The zip a manager picked: its documents sorted and wrapped as files, and its addresses. */
 export async function openPack(zip: File): Promise<OpenedPack> {
+  if (zip.size > MAX_PACK_BYTES) throw new PackZipError('zip-too-large');
   const entries = await unpackZip(new Uint8Array(await zip.arrayBuffer()));
-  const sorted = sortPackEntries(entries.map((e) => ({ path: e.path, size: e.bytes.byteLength })));
+  const sorted = sortPackEntries(entries.map((e) => ({ path: e.path, size: e.size })));
   const byPath = new Map(entries.map((e) => [e.path, e.bytes]));
   const files = sorted.documents.map((d) => ({
     group: d.group,

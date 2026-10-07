@@ -46,19 +46,24 @@ export type InvoiceSummary = {
   setAside: { index: number; reason: SetAside }[];
 };
 
+/** Rejection reasons exist even when no invoice is usable and therefore no summary can be made. */
+export function invoiceSetAsides(
+  rows: readonly InvoiceRow[],
+): { index: number; reason: SetAside }[] {
+  return rows.flatMap((row) => {
+    const reason = checkInvoice(row);
+    return reason ? [{ index: row.index, reason }] : [];
+  });
+}
+
 /**
  * The Owner's rule (spec 2026-10-06 §5.3): whole baht; two invoices on one day are one day and
  * two transactions; only dates with an invoice count as days; a month is thirty of them.
  * Null when no invoice can be used.
  */
 export function summarizeInvoices(rows: readonly InvoiceRow[]): InvoiceSummary | null {
-  const setAside: InvoiceSummary['setAside'] = [];
-  const usable: InvoiceRow[] = [];
-  for (const row of rows) {
-    const reason = checkInvoice(row);
-    if (reason) setAside.push({ index: row.index, reason });
-    else usable.push(row);
-  }
+  const setAside = invoiceSetAsides(rows);
+  const usable = rows.filter((row) => checkInvoice(row) === null);
   if (usable.length === 0) return null;
 
   const total = usable.reduce((n, r) => n + r.grand_total!, 0);

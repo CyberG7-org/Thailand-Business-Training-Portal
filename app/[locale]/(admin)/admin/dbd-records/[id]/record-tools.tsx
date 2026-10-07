@@ -89,7 +89,7 @@ const INDEX_TONE: Partial<Record<IndexStatus, string>> = {
 /**
  * The Documents tab's card: every uploaded file with what kind it is and how far its indexing
  * got, a way to add more (they are read in the background, D46), and "Read the documents again".
- * A confirmed company keeps its documents but takes no new reading.
+ * A confirmed company keeps its DBD pack locked while invoices and agreements remain maintainable.
  */
 const GROUPS: PackGroup[] = ['pack', 'invoice', 'agreement'];
 
@@ -288,36 +288,36 @@ export function DocumentsCard({
         )}
       </div>
 
-      {!locked && (
-        <div className="grid gap-3 p-4 md:px-6 md:py-5">
-          {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              submitUpload(e.currentTarget);
-            }}
-            className="grid gap-3"
-          >
-            <PdfFilePicker
-              name="document"
-              label={t('addDocuments')}
-              hint={extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
-              strongLabel
-              onChosen={inspect}
-              preview={preview && <PackPreviewCard preview={preview} />}
-            />
-            {uploadState.error && (
-              <p role="alert" className="text-sm text-bad-600">
-                {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
-              </p>
-            )}
-            <FillOutcome state={uploadState} />
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={uploading} className="staff-btn">
-                {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
-              </button>
-            </div>
-          </form>
+      <div className="grid gap-3 p-4 md:px-6 md:py-5">
+        {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitUpload(e.currentTarget);
+          }}
+          className="grid gap-3"
+        >
+          <PdfFilePicker
+            name="document"
+            label={t('addDocuments')}
+            hint={extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
+            strongLabel
+            onChosen={inspect}
+            preview={preview && <PackPreviewCard preview={preview} />}
+          />
+          {uploadState.error && (
+            <p role="alert" className="text-sm text-bad-600">
+              {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
+            </p>
+          )}
+          <FillOutcome state={uploadState} />
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" disabled={uploading} className="staff-btn">
+              {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
+            </button>
+          </div>
+        </form>
+        {!locked && (
           <form action={extractAction} className="grid gap-2 border-t border-ink-100 pt-3">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="id" value={id} />
@@ -337,8 +337,8 @@ export function DocumentsCard({
             )}
             <FillOutcome state={extractState} />
           </form>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }

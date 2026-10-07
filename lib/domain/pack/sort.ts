@@ -33,7 +33,7 @@ const LINK = /\.(doc|docx|txt|url|html?)$/i;
 /** Apple's resource forks and dot files: never part of a pack. */
 const JUNK = /(^|\/)(__MACOSX\/|\.)/;
 
-function groupOf(path: string): PackGroup | 'link' | null {
+export function classifyPackPath(path: string): PackGroup | 'link' | null {
   if (JUNK.test(path) || path.endsWith('/')) return null;
   if (PDF.test(path)) {
     if (INVOICE_FOLDER.test(path) || INVOICE_NAME.test(path)) return 'invoice';
@@ -49,7 +49,7 @@ export function sortPackEntries(entries: readonly PackEntry[]): SortedPack {
   const linkFiles: PackEntry[] = [];
   const ignored: string[] = [];
   for (const entry of entries) {
-    const group = groupOf(entry.path);
+    const group = classifyPackPath(entry.path);
     if (group === null) ignored.push(entry.path);
     else if (group === 'link') {
       if (entry.size <= MAX_LINK_FILE_BYTES) linkFiles.push(entry);

@@ -24,6 +24,18 @@ function companyZip(name: string): { name: string; mimeType: string; buffer: Buf
   return { name: `${name}.zip`, mimeType: 'application/zip', buffer: Buffer.from(bytes) };
 }
 
+function supplementZip(name: string): { name: string; mimeType: string; buffer: Buffer } {
+  const bytes = zipSync({
+    [`${name}/invoice/invoice 4.pdf`]: new Uint8Array(pdf),
+    [`${name}/agreement/agreement (2).pdf`]: new Uint8Array(pdf),
+  });
+  return {
+    name: `${name}-supplement.zip`,
+    mimeType: 'application/zip',
+    buffer: Buffer.from(bytes),
+  };
+}
+
 test('a manager uploads one zip: the browser sorts it, the reads fill the record, the invoices give the figures', async ({
   page,
   request,
@@ -76,6 +88,20 @@ test('a manager uploads one zip: the browser sorts it, the reads fill the record
   await expect(page.getByTestId('record-links').locator('input[name="website"]')).toHaveValue(
     'https://www.chayasri.co.th',
   );
+
+  // Confirmation locks the DBD pack, but invoices and agreements can still be maintained.
+  await documents.locator('input[name="document"]').setInputFiles(supplementZip(zipName));
+  await expect(documents.getByTestId('pack-preview')).toHaveAttribute('data-pack', '0');
+  await expect(documents.getByTestId('pack-preview')).toHaveAttribute('data-invoices', '1');
+  await documents.getByRole('button', { name: 'อัปโหลดและกรอกอัตโนมัติ' }).click();
+  await expect(documents.getByTestId('documents-invoice').locator('li')).toHaveCount(4);
+  await expect(documents.getByTestId('documents-agreement').locator('li')).toHaveCount(2);
+  await documents
+    .getByTestId('documents-invoice')
+    .getByRole('button', { name: 'ลบ' })
+    .first()
+    .click();
+  await expect(documents.getByTestId('documents-invoice').locator('li')).toHaveCount(3);
 
   await openRecordTab(page, 'interview');
   const figures = page.getByTestId('invoice-figures');

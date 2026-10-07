@@ -22,7 +22,7 @@ import { CategoryPanel } from './category-panel';
 import { ExceptionsPanel } from './exceptions-panel';
 import { LinksForm } from './links-form';
 import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
-import { summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
+import { invoiceSetAsides, summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
 import type { PackGroup } from '@/lib/domain/pack/sort';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
@@ -88,6 +88,7 @@ export default async function DbdRecordPage({
   const invoiceDocuments = documents.filter((d) => d.group === 'invoice');
   const invoiceRows = structured.invoices?.rows ?? [];
   const invoiceSummary = structured.invoices ? summarizeInvoices(invoiceRows) : null;
+  const invoiceSetAside = invoiceSetAsides(invoiceRows);
   const invoiceOf = (documentId: string) => {
     const position = invoiceDocuments.findIndex((d) => d.id === documentId);
     const row = invoiceRows.find((r) => r.index === position + 1);
@@ -95,7 +96,7 @@ export default async function DbdRecordPage({
     return {
       date: row.issue_date,
       total: row.grand_total,
-      setAside: invoiceSummary?.setAside.find((s) => s.index === row.index)?.reason ?? null,
+      setAside: invoiceSetAside.find((s) => s.index === row.index)?.reason ?? null,
     };
   };
   let reading: ReadingState | null = null;

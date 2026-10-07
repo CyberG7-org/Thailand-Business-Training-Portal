@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { invoiceAnswers, invoiceFacts, withInvoiceAnswers } from '@/lib/domain/invoices/answers';
-import { checkInvoice, summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
+import {
+  checkInvoice,
+  invoiceSetAsides,
+  summarizeInvoices,
+} from '@/lib/domain/invoices/arithmetic';
 import type { InvoiceRow } from '@/lib/domain/invoices/schema';
 
 const item = (name: string, quantity: number, unit_price: number) => ({
@@ -125,6 +129,15 @@ describe('the money figures from the invoices (D101)', () => {
     expect(s.few).toBe(true);
     expect(s.total).toBe(71400);
     expect(summarizeInvoices([{ ...EXAMPLE[0], grand_total: null }])).toBeNull();
+    expect(
+      invoiceSetAsides([
+        { ...EXAMPLE[0], currency: 'USD' },
+        { ...EXAMPLE[1], is_invoice: false },
+      ]),
+    ).toEqual([
+      { index: 1, reason: 'not_baht' },
+      { index: 2, reason: 'not_an_invoice' },
+    ]);
     expect(summarizeInvoices([])).toBeNull();
   });
 });

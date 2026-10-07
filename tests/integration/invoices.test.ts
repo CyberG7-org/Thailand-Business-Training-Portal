@@ -168,6 +168,23 @@ describe('the invoices of a company pack (D101)', () => {
     ).toEqual([]);
   });
 
+  it('keeps every rejection reason when none of the invoices can be used', async () => {
+    const allUsd: DbdExtractor = {
+      ...fake,
+      readInvoices: async (documents) =>
+        (await fake.readInvoices(documents)).map((row) => ({ ...row, currency: 'USD' })),
+    } as DbdExtractor;
+    await runInvoiceRead(svc, team.recordId, allUsd);
+    const open = await listOpenExceptions(svc, team.recordId);
+    expect(open.filter((e) => e.kind === 'invoice_set_aside')).toHaveLength(3);
+    expect(
+      open
+        .filter((e) => e.kind === 'invoice_set_aside')
+        .every((e) => (e.detail as { reason?: string } | null)?.reason === 'not_baht'),
+    ).toBe(true);
+    await runInvoiceRead(svc, team.recordId, fake);
+  });
+
   it('a confirmed record gets a new training version when a read changes its figures', async () => {
     await confirmRecord(team.recordId, team.manager.id);
     await completeRecord(team.recordId);

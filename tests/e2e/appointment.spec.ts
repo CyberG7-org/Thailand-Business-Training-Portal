@@ -4,7 +4,9 @@ import { loginAs, switchTo } from './helpers';
 import { seedManager, seedTeamLearner } from './seed';
 
 async function selectLearner(page: import('@playwright/test').Page, loginId: string) {
-  const option = page.locator('[data-testid="appointment-learner"] option').filter({ hasText: loginId });
+  const option = page
+    .locator('[data-testid="appointment-learner"] option')
+    .filter({ hasText: loginId });
   await page.getByTestId('appointment-learner').selectOption((await option.getAttribute('value'))!);
 }
 
@@ -23,6 +25,7 @@ test('the owning manager books and replaces a ready learner date; the learner on
   await page.goto('/th/admin/appointments');
   await selectLearner(page, learner);
   await page.getByRole('button', { name: 'แสดงปฏิทิน' }).click();
+  await page.getByTestId('month-next').click();
   const first = page.locator('[data-testid^="appointment-date-"]:not([disabled])').nth(5);
   const firstTestId = await first.getAttribute('data-testid');
   await first.click();

@@ -4,7 +4,7 @@ import { EMPTY_BUSINESS_PROFILE, type StructuredData } from '@/lib/domain/dbd-pr
 import type { Director } from '@/lib/domain/dbd-record';
 import type { FactKey, FactSheet } from '@/lib/domain/facts/fact-sheet';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
-import { summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
+import { invoiceSetAsides, summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
 import { isValidJuristicId } from './juristic-id';
 
 export const EXCEPTION_KINDS = [
@@ -270,7 +270,7 @@ export function validateFacts(input: ValidationInput): Finding[] {
   //     holds anything back; the record shows them beside the figures.
   if (structured.invoices) {
     const summary = summarizeInvoices(structured.invoices.rows);
-    for (const aside of summary?.setAside ?? []) {
+    for (const aside of invoiceSetAsides(structured.invoices.rows)) {
       push(
         'invoice_set_aside',
         `invoices.${aside.index}`,
