@@ -10,8 +10,9 @@ import {
   type SlotConfig,
   type Window,
 } from '@/lib/domain/appointments/slots';
+import { appointmentDateTime } from '@/lib/domain/appointments/month';
 import { stageStatuses, type StageInfo } from '@/lib/domain/progression';
-import { addCalendarDays, type ISODate } from '@/lib/domain/thai-date';
+import { addCalendarDays, isISODate, todayInBangkok, type ISODate } from '@/lib/domain/thai-date';
 import { createSupabaseAdminClient } from './admin';
 import { getActiveAssignmentForUser } from './assignments';
 import type { Database } from './database.types';
@@ -242,6 +243,82 @@ export async function bookAppointment(
     throw new AppointmentError('Already booked', 'already_booked');
   }
   return data;
+}
+
+/**
+ * P18c / D102: the owning manager chooses a calendar date for a learner who passed both the
+ * Business Knowledge Quiz and the readiness interview. There is no slot, holiday, notice-period,
+ * or DBD+45-day gate. Picking another date updates the same booked row.
+ */
+export async function bookAppointmentForManager(
+  managerId: string,
+  learnerId: string,
+  date: ISODate,
+  now: Date = new Date(),
+): Promise<AppointmentRow> {
+  if (!isISODate(date) || date < todayInBangkok(now)) {
+    throw new AppointmentError('The date is not available', 'slot_unavailable');
+  }
+  const admin = createSupabaseAdminClient();
+  const { data: learner, error: learnerError } = await admin
+    .from('profiles')
+    .select('id, role, status, manager_id')
+    .eq('id', learnerId)
+    .maybeSingle();
+  if (learnerError) throw learnerError;
+  if (!learner || learner.role !== 'learner' || learner.manager_id !== managerId) {
+    throw new AppointmentError('Another team', 'forbidden');
+  }
+  const facts = await loadProgressionFacts(admin, learnerId, { today: todayInBangkok(now) });
+  if (!facts.hasActiveAssignment || !facts.examPassed || !facts.interviewReady) {
+    throw new AppointmentError('The appointment is not open', 'not_open');
+  }
+  const assignment = await getActiveAssignmentForUser(admin, learnerId);
+  if (!assignment) throw new AppointmentError('No assignment', 'not_open');
+  const { startsAt, endsAt } = appointmentDateTime(date);
+  const values = {
+    team_id: managerId,
+    dbd_record_id: assignment.dbd_record_id,
+    starts_at: startsAt,
+    ends_at: endsAt,
+  };
+  const { data: existing, error: existingError } = await admin
+    .from('appointments')
+    .select('id')
+    .eq('user_id', learnerId)
+    .eq('status', 'booked')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) {
+    const { data, error } = await admin
+      .from('appointments')
+      .update(values)
+      .eq('id', existing.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+  const inserted = await admin
+    .from('appointments')
+    .insert({ user_id: learnerId, status: 'booked', ...values })
+    .select()
+    .single();
+  if (!inserted.error) return inserted.data;
+  if (inserted.error.code !== '23505') throw inserted.error;
+  // Two first bookings can race. The unique learner index picks the row; the later request
+  // replaces that row's date so the invariant remains one booking and the last choice wins.
+  const { data: held, error: heldError } = await admin
+    .from('appointments')
+    .update(values)
+    .eq('user_id', learnerId)
+    .eq('status', 'booked')
+    .select()
+    .single();
+  if (heldError) throw heldError;
+  return held;
 }
 
 /** The learner until noticeHours before; a manager for their team any time; the admin any time. */
