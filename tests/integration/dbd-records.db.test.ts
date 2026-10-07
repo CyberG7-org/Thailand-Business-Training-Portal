@@ -139,7 +139,7 @@ describe('a confirmed record carries the company contact and what it sells', () 
     if (error) throw error;
   }
 
-  it('takes the four in one complete save, not two halves', async () => {
+  it('takes the two answers in one complete save, not two halves', async () => {
     const answers = {
       contact_email: 'info@example.co.th',
       contact_phone: '02-123-4567',
@@ -159,13 +159,13 @@ describe('a confirmed record carries the company contact and what it sells', () 
       .select()
       .single();
 
-    // Writing only the business half of a confirmed record leaves the row failing the check,
-    // so a manager filling a grandfathered record has to save all four together.
+    // Writing only one of the two answers of a confirmed record leaves the row failing the
+    // check (D101: the record owes what it does and sells; the contact is the learner's).
     const { error: half } = await svc
       .from('dbd_records')
       .update({
         structured_data: {
-          interview: { nature_of_business: 'ผลิตสื่อ', products_services: 'บริการคอนเทนต์' },
+          interview: { products_services: 'บริการคอนเทนต์' },
         } as never,
       })
       .eq('id', own!.id);
@@ -184,14 +184,14 @@ describe('a confirmed record carries the company contact and what it sells', () 
     await svc.from('dbd_records').delete().eq('id', own!.id);
   });
 
-  it('refuses while an answer is blank, and allows it once all four are in', async () => {
+  it('refuses while the business nature is blank, and allows it once it is in', async () => {
     expect(await confirm()).toContain('dbd_confirmed_requires_business_answers');
 
     await answer({
       contact_email: 'info@example.co.th',
       contact_phone: '02-123-4567',
-      nature_of_business: 'ขายเสื้อผ้าออนไลน์',
-      products_services: '   ',
+      nature_of_business: '   ',
+      products_services: 'เสื้อผ้าสตรีนำเข้า',
     });
     expect(await confirm()).toContain('dbd_confirmed_requires_business_answers');
 

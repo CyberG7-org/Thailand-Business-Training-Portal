@@ -218,7 +218,7 @@ describe('validateFacts (spec §5.5)', () => {
     ]);
   });
 
-  it('tiers missing facts: the certificate facts and the four answers block acceptance, the rest the version', () => {
+  it('tiers missing facts: the certificate facts and the business nature block acceptance, the rest the version', () => {
     const f = run({
       record: { juristic_id: null, issued_on: null },
       structured: {
@@ -232,12 +232,12 @@ describe('validateFacts (spec §5.5)', () => {
         },
       },
     });
+    // The learner's phone is the learner's (D80), never the record's to owe (D101).
     expect(keys(f)).toEqual([
-      'missing:contact_phone:acceptance',
       'missing:issued_on:version',
       'missing:juristic_id:acceptance',
       'missing:monthly_revenue:version',
-      'missing:products_services:acceptance',
+      'missing:products_services:version',
     ]);
     expect(f.find((x) => x.field === 'monthly_revenue')!.detail).toMatchObject({
       concepts: ['monthly_revenue'],
@@ -251,8 +251,8 @@ describe('validateFacts (spec §5.5)', () => {
       );
     // An amount: not transactions per month or the basis of the revenue figure as well.
     expect(missing({ monthly_revenue: null })).toEqual(['missing:monthly_revenue:version']);
-    // The kind of customers: not the main customers answered from it.
-    expect(missing({ customer_profile: null })).toEqual(['missing:customer_profile:version']);
+    // The kind of customers is fixed for every company (D101): never missing.
+    expect(missing({ customer_profile: null })).toEqual([]);
     // What the business does: not the purpose built from it.
     expect(missing({ nature_of_business: null })).toEqual([
       'missing:nature_of_business:acceptance',

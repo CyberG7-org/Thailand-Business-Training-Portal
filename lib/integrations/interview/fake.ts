@@ -21,6 +21,33 @@ function norm(s: string): string {
     .toLowerCase();
 }
 
+const AMOUNT = /\d[\d,]*(?:\.\d+)?/g;
+const TOLERANCE = 0.2;
+
+/** The figures in a sentence; a count such as "5 ใบ" is below the floor and ignored. */
+function amountsIn(s: string): number[] {
+  return (s.match(AMOUNT) ?? [])
+    .map((m) => Number(m.replace(/,/g, '')))
+    .filter((n) => Number.isFinite(n) && n >= 10);
+}
+
+/**
+ * The Owner's tolerance for an amount (D101): within 20% of the expected figure, or inside the
+ * expected range. Only a money fact is graded this way, so an ID number is never close enough.
+ */
+export function amountMatches(answer: string, expected: string): boolean {
+  if (!/บาท/.test(expected)) return false;
+  const given = amountsIn(answer);
+  const wanted = amountsIn(expected);
+  if (given.length === 0 || wanted.length === 0) return false;
+  if (wanted.length >= 2 && /ระหว่าง|ถึง|–/.test(expected)) {
+    const low = Math.min(...wanted);
+    const high = Math.max(...wanted);
+    return given.some((a) => a >= low && a <= high);
+  }
+  return given.some((a) => wanted.some((e) => Math.abs(a - e) <= e * TOLERANCE));
+}
+
 /**
  * The deterministic officer for the suites: asks the plan's Thai questions in order, judges an
  * answer by whether it carries the record's value, asks once more, and closes when the plan ends
@@ -46,13 +73,15 @@ export class FakeInterview implements InterviewProvider {
     if (input.pastedDetected) verdict = 'pasted';
     else {
       const answer = norm(message);
-      const expected = item.expected.split(' / ').map(norm);
-      const matches = expected.some(
-        (e) =>
-          e.length > 0 &&
-          (answer.includes(e) ||
-            (e.includes(answer) && answer.length >= Math.ceil(e.length * 0.6))),
-      );
+      const parts = item.expected.split(' / ');
+      const expected = parts.map(norm);
+      const matches =
+        expected.some(
+          (e) =>
+            e.length > 0 &&
+            (answer.includes(e) ||
+              (e.includes(answer) && answer.length >= Math.ceil(e.length * 0.6))),
+        ) || parts.some((e) => amountMatches(message, e));
       if (matches) verdict = 'correct';
       else if (message.trim().length < 3 || EVASIVE.test(message)) verdict = 'evasive';
       else verdict = 'wrong';

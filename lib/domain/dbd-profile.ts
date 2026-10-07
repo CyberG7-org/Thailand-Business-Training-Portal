@@ -6,6 +6,7 @@ import {
   settleCategory,
 } from './business-category';
 import { registeredAddressSchema, type RegisteredAddress } from './geo/resolve';
+import { invoiceReadSchema, type InvoiceRead } from './invoices/schema';
 
 /**
  * Level 2 of the three-level DBD model (decision D38): the business profile that comes from the
@@ -91,6 +92,8 @@ export type Provenance = Record<
   { confidence: number; source_page: number | null; source_document: number | null }
 >;
 
+const describedSchema = z.object({ hash: z.string(), confidence: z.number(), at: z.string() });
+
 export type StructuredData = {
   business?: BusinessProfile;
   /** Bank-interview answers the DBD cannot supply (decision D39). */
@@ -101,6 +104,10 @@ export type StructuredData = {
   address?: RegisteredAddress | null;
   /** The mapped business category (P17a, D73). */
   category?: CategoryAssignment | null;
+  /** The invoices as read (P18a, D101); every money figure is computed from these rows. */
+  invoices?: InvoiceRead | null;
+  /** What the business description rests on (D101): a hash of objectives and items, and the reader's confidence. */
+  described?: { hash: string; confidence: number; at: string } | null;
 };
 
 /**
@@ -114,7 +121,11 @@ export function readStructuredData(raw: unknown): StructuredData {
   const interview = interviewProfileSchema.safeParse(data.interview ?? {});
   const address = registeredAddressSchema.safeParse(data.address);
   const category = categoryAssignmentSchema.safeParse(data.category);
+  const invoices = invoiceReadSchema.safeParse(data.invoices);
+  const described = describedSchema.safeParse(data.described);
   return {
+    invoices: invoices.success ? invoices.data : null,
+    described: described.success ? described.data : null,
     business: business.success ? business.data : EMPTY_BUSINESS_PROFILE,
     interview: interview.success ? interview.data : interviewProfileSchema.parse({}),
     document_type: typeof data.document_type === 'string' ? data.document_type : null,

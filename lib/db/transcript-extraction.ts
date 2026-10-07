@@ -121,9 +121,9 @@ export async function fillRecordFromTranscripts(
   const record = await getDbdRecord(db, recordId);
   if (!record) return skip('not_found');
   if (record.extraction_status === 'confirmed') return skip('confirmed');
-  const documents = (await listDbdDocuments(db, recordId)).filter(
-    (d) => d.index_status === 'ready',
-  );
+  const documents = (await listDbdDocuments(db, recordId))
+    .filter((d) => d.group === 'pack')
+    .filter((d) => d.index_status === 'ready');
   if (documents.length === 0) return skip('no_ready_documents');
 
   // ---- particulars by retrieval ---------------------------------------------------------------

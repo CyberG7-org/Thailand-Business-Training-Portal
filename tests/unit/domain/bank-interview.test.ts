@@ -160,8 +160,8 @@ describe('the four answers the manager owes after uploading a pack', () => {
       ...REQUIRED_INTERVIEW_FIELDS,
     ]);
     expect(missingBusinessAnswers(interviewProfileSchema.parse(filled))).toEqual([]);
-    const partial = interviewProfileSchema.parse({ ...filled, products_services: null });
-    expect(missingBusinessAnswers(partial)).toEqual(['products_services']);
+    const partial = interviewProfileSchema.parse({ ...filled, nature_of_business: null });
+    expect(missingBusinessAnswers(partial)).toEqual(['nature_of_business']);
   });
 
   it('teaches and tests what the company does, but never its contact details', () => {

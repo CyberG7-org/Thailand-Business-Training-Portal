@@ -44,7 +44,7 @@ describe('stageStatuses', () => {
     expect(s.exam.status).toBe('available');
     expect(s.nameCard.status).toBe('available');
     expect(s.interview).toEqual({ status: 'locked', reason: 'exam_required' });
-    expect(s.appointment).toEqual({ status: 'locked', reason: 'interview_required' });
+    expect(s.appointment).toEqual({ status: 'locked', reason: 'exam_required' });
   });
 
   it('calls study in progress once a card is opened, and done once every card is', () => {
@@ -70,34 +70,25 @@ describe('stageStatuses', () => {
     ).toEqual({ status: 'done' });
   });
 
-  it('holds the appointment until the learner is ready, then until the eligibility date', () => {
+  it('holds the appointment until both the quiz and interview are passed, without a date window', () => {
     const ready = { ...passed, interviewSessions: 1, interviewReady: true };
+    expect(stageStatuses({ ...base, interviewReady: true }).appointment).toEqual({
+      status: 'locked',
+      reason: 'exam_required',
+    });
     expect(stageStatuses(passed).appointment).toEqual({
       status: 'locked',
       reason: 'interview_required',
     });
-    expect(stageStatuses(ready).appointment).toEqual({
-      status: 'locked',
-      reason: 'before_available_from',
+    expect(stageStatuses(ready).appointment).toEqual({ status: 'available' });
+    expect(stageStatuses({ ...ready, appointmentBooked: true }).appointment).toEqual({
+      status: 'done',
     });
-    expect(stageStatuses({ ...ready, today: '2026-10-27' }).appointment.status).toBe('available');
-    expect(
-      stageStatuses({ ...ready, today: '2026-10-27', appointmentBooked: true }).appointment,
-    ).toEqual({ status: 'done' });
   });
 
-  it('reports a pending appointment when the issue date is missing', () => {
+  it('does not require an issue date or eligibility window', () => {
     const s = stageStatuses({ ...passed, interviewReady: true, eligibility: null });
-    expect(s.appointment).toEqual({ status: 'pending', reason: 'missing_issue_date' });
-  });
-
-  it('locks the appointment once the access window has expired', () => {
-    const s = stageStatuses({
-      ...passed,
-      interviewReady: true,
-      eligibility: { availableFrom: '2026-08-01', expiresAt: '2026-09-01' },
-    });
-    expect(s.appointment).toEqual({ status: 'locked', reason: 'expired' });
+    expect(s.appointment).toEqual({ status: 'available' });
   });
 });
 
@@ -110,7 +101,7 @@ describe('deriveProgression', () => {
     expect(deriveProgression(passed)).toBe('EXAM_PASSED');
     expect(deriveProgression({ ...passed, interviewSessions: 1 })).toBe('INTERVIEW_STARTED');
     expect(deriveProgression({ ...passed, interviewSessions: 1, interviewReady: true })).toBe(
-      'WAITING_BANK_ELIGIBILITY',
+      'BANK_ELIGIBLE',
     );
     expect(deriveProgression({ ...passed, interviewReady: true, today: '2026-10-27' })).toBe(
       'BANK_ELIGIBLE',
@@ -125,13 +116,13 @@ describe('deriveProgression', () => {
     ).toBe('APPOINTMENT_BOOKED');
   });
 
-  it('reports INTERVIEW_READY when the window has expired', () => {
+  it('stays bank eligible even when an old eligibility window expired', () => {
     expect(
       deriveProgression({
         ...passed,
         interviewReady: true,
         eligibility: { availableFrom: '2026-08-01', expiresAt: '2026-09-01' },
       }),
-    ).toBe('INTERVIEW_READY');
+    ).toBe('BANK_ELIGIBLE');
   });
 });

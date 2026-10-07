@@ -1,14 +1,16 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { FileIcon, UploadIcon } from '@/components/icons';
 
 /**
- * A visible place to put PDF documents: a dashed box with a "Choose PDF files" button that also
- * takes files dropped on it, and the chosen files listed with their sizes. The browser's own
- * file input stays underneath (reachable by keyboard, still `required`, still posted by name);
- * only its "Choose Files / No file chosen" look is replaced. A form reset empties the list.
+ * A visible place to put the company's documents: a dashed box with a "Choose files" button that
+ * also takes files dropped on it, and the chosen files listed with their sizes. The browser's
+ * own file input stays underneath (reachable by keyboard, still `required`, still posted by
+ * name); only its "Choose Files / No file chosen" look is replaced. A form reset empties the
+ * list. Takes PDFs, or one company zip (D101), which `onChosen` lets the form open and describe
+ * in the `preview` slot.
  */
 /** KB under a megabyte, so a small scan never reads as 0.0 MB. */
 const sizeLabel = (bytes: number) =>
@@ -16,18 +18,30 @@ const sizeLabel = (bytes: number) =>
     ? `${Math.max(1, Math.round(bytes / 1024))} KB`
     : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
+const accepted = (f: File) =>
+  f.type === 'application/pdf' ||
+  f.type === 'application/zip' ||
+  f.type === 'application/x-zip-compressed' ||
+  /\.(pdf|zip)$/i.test(f.name);
+
 export function PdfFilePicker({
   name,
   label,
   hint,
   testId,
   strongLabel = false,
+  onChosen,
+  preview,
 }: {
   name: string;
   label: string;
   hint: string;
   testId?: string;
   strongLabel?: boolean;
+  /** The files just chosen or dropped, for the form to look into. */
+  onChosen?: (files: File[]) => void;
+  /** What the form found in a chosen zip, shown under the list. */
+  preview?: ReactNode;
 }) {
   const t = useTranslations('admin.filePicker');
   const id = useId();
@@ -44,13 +58,18 @@ export function PdfFilePicker({
     return () => form.removeEventListener('reset', clear);
   }, []);
 
+  const choose = (chosen: File[]) => {
+    setFiles(chosen);
+    onChosen?.(chosen);
+  };
+
   const take = (dropped: FileList) => {
-    const pdfs = [...dropped].filter((f) => f.type === 'application/pdf');
-    if (pdfs.length === 0 || !input.current) return;
+    const usable = [...dropped].filter(accepted);
+    if (usable.length === 0 || !input.current) return;
     const transfer = new DataTransfer();
-    for (const f of pdfs) transfer.items.add(f);
+    for (const f of usable) transfer.items.add(f);
     input.current.files = transfer.files;
-    setFiles(pdfs);
+    choose(usable);
   };
 
   return (
@@ -84,11 +103,11 @@ export function PdfFilePicker({
           id={id}
           name={name}
           type="file"
-          accept="application/pdf"
+          accept=".zip,.pdf,application/zip,application/x-zip-compressed,application/pdf"
           multiple
           required
           data-testid={testId}
-          onChange={(e) => setFiles([...(e.target.files ?? [])])}
+          onChange={(e) => choose([...(e.target.files ?? [])])}
           className="sr-only"
         />
       </label>
@@ -110,6 +129,7 @@ export function PdfFilePicker({
           ))}
         </ul>
       )}
+      {preview}
       <span className="mt-1 block text-ink-500">{hint}</span>
     </div>
   );

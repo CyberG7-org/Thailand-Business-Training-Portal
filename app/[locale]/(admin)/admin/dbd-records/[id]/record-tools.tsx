@@ -12,7 +12,11 @@ import {
   retryIndexAction,
   type ToolState,
 } from '../actions';
+import { PackPreviewCard } from '../pack-preview';
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
+import { readInvoicesAgainAction } from '../actions';
+import type { PackGroup } from '@/lib/domain/pack/sort';
+import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { showRecordTab } from './record-tabs';
 
 const initial: ToolState = { ok: false, error: null };
@@ -31,6 +35,9 @@ export type { IndexStatus };
 export type DocumentSummary = {
   id: string;
   name: string;
+  group: PackGroup;
+  /** What the invoice read made of it (D101); null before the read. */
+  invoice: { date: string | null; total: number | null; setAside: string | null } | null;
   type: string | null;
   sizeBytes: number;
   pageCount: number | null;
@@ -82,19 +89,24 @@ const INDEX_TONE: Partial<Record<IndexStatus, string>> = {
 /**
  * The Documents tab's card: every uploaded file with what kind it is and how far its indexing
  * got, a way to add more (they are read in the background, D46), and "Read the documents again".
- * A confirmed company keeps its documents but takes no new reading.
+ * A confirmed company keeps its DBD pack locked while invoices and agreements remain maintainable.
  */
+const GROUPS: PackGroup[] = ['pack', 'invoice', 'agreement'];
+
 export function DocumentsCard({
   id,
   status,
   documents,
   reading,
+  invoiceReading,
   extractionAvailable,
 }: {
   id: string;
   status: string;
   documents: DocumentSummary[];
   reading: ReadingState | null;
+  /** The invoices job's state (D101), beside the pack's. */
+  invoiceReading: ReadingState | null;
   extractionAvailable: boolean;
 }) {
   const locale = useLocale();
@@ -104,6 +116,8 @@ export function DocumentsCard({
     state: uploadState,
     pending: uploading,
     submit: submitUpload,
+    inspect,
+    preview,
   } = useDirectUpload({ locale, id, redirect: false });
   const [extractState, extractAction, extracting] = useActionState(extractDocumentAction, initial);
   const uploadErrorKey = UPLOAD_ERROR_KEYS.find((k) => k === uploadState.error);
@@ -114,7 +128,7 @@ export function DocumentsCard({
     type ? t(`documentTypes.${type}` as 'documentTypes.certificate') : t('documentTypes.unknown');
 
   return (
-    <section className="staff-card divide-y divide-ink-100 p-0 md:p-0">
+    <section className="staff-card divide-y divide-ink-100 p-0 md:p-0" data-testid="documents-card">
       <div className="grid gap-3 p-4 md:px-6 md:py-5">
         <div>
           <h2 className="text-base font-semibold text-ink-900">{t('documents')}</h2>
@@ -123,66 +137,136 @@ export function DocumentsCard({
         {documents.length === 0 ? (
           <p className="text-sm text-ink-700">{t('documentMissing')}</p>
         ) : (
-          <ul className="grid gap-2 text-sm" data-testid="document-list">
-            {documents.map((doc) => (
-              <li
-                key={doc.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-ink-100 px-3 py-2"
-              >
-                <span className="flex min-w-0 flex-1 items-center gap-2">
-                  <span className="shrink-0 text-brand-600">
-                    <FileIcon />
-                  </span>
-                  <span className="truncate font-medium text-ink-900">{doc.name}</span>
-                </span>
-                <span className="staff-tag" data-testid="document-type">
-                  {typeLabel(doc.type)}
-                </span>
-                <span className="text-ink-500 tabular-nums">
-                  {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
-                </span>
-                <span
-                  data-testid="index-status"
-                  data-status={doc.indexStatus}
-                  title={doc.indexError ?? undefined}
-                  className={`staff-tag ${INDEX_TONE[doc.indexStatus] ?? ''}`}
-                >
-                  {t(`index.status.${doc.indexStatus}` as 'index.status.ready', {
-                    done: doc.indexedPages,
-                    total: doc.pageCount ?? 0,
-                  })}
-                </span>
-                {canRequestIndex(doc.indexStatus) && (
-                  <form action={retryIndexAction}>
+          <div className="grid gap-4" data-testid="document-list">
+            {GROUPS.filter((group) => documents.some((d) => d.group === group)).map((group) => (
+              <div key={group} className="grid gap-2" data-testid={`documents-${group}`}>
+                <h3 className="text-sm font-semibold text-ink-700">
+                  {t(`documentGroups.${group}`)}
+                </h3>
+                <ul className="grid gap-2 text-sm">
+                  {documents
+                    .filter((d) => d.group === group)
+                    .map((doc) => (
+                      <li
+                        key={doc.id}
+                        className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-control border border-ink-100 px-3 py-2"
+                      >
+                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                          <span className="shrink-0 text-brand-600">
+                            <FileIcon />
+                          </span>
+                          <span className="truncate font-medium text-ink-900">{doc.name}</span>
+                        </span>
+                        {group === 'pack' && (
+                          <span className="staff-tag" data-testid="document-type">
+                            {typeLabel(doc.type)}
+                          </span>
+                        )}
+                        {group === 'invoice' && (
+                          <span
+                            className={
+                              doc.invoice?.setAside ? 'staff-tag text-warn-700' : 'staff-tag'
+                            }
+                            data-testid="invoice-row"
+                            data-set-aside={doc.invoice?.setAside ?? undefined}
+                          >
+                            {!doc.invoice
+                              ? t('invoices.notRead')
+                              : doc.invoice.setAside
+                                ? t('invoices.setAside', {
+                                    reason: t(
+                                      `invoices.reasons.${doc.invoice.setAside}` as 'invoices.reasons.no_date',
+                                    ),
+                                  })
+                                : t('invoices.row', {
+                                    date: doc.invoice.date
+                                      ? formatDate(doc.invoice.date, locale as Locale)
+                                      : '—',
+                                    total: (doc.invoice.total ?? 0).toLocaleString('en-US'),
+                                  })}
+                          </span>
+                        )}
+                        <span className="text-ink-500 tabular-nums">
+                          {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
+                        </span>
+                        {group !== 'agreement' && (
+                          <span
+                            data-testid="index-status"
+                            data-status={doc.indexStatus}
+                            title={doc.indexError ?? undefined}
+                            className={`staff-tag ${INDEX_TONE[doc.indexStatus] ?? ''}`}
+                          >
+                            {t(`index.status.${doc.indexStatus}` as 'index.status.ready', {
+                              done: doc.indexedPages,
+                              total: doc.pageCount ?? 0,
+                            })}
+                          </span>
+                        )}
+                        {group !== 'agreement' && canRequestIndex(doc.indexStatus) && (
+                          <form action={retryIndexAction}>
+                            <input type="hidden" name="locale" value={locale} />
+                            <input type="hidden" name="id" value={id} />
+                            <input type="hidden" name="documentId" value={doc.id} />
+                            <button
+                              type="submit"
+                              className="staff-btn-ghost staff-btn-sm"
+                              data-testid="reindex-button"
+                            >
+                              {doc.indexStatus === 'failed'
+                                ? t('index.retry')
+                                : doc.indexStatus === 'ready'
+                                  ? t('index.reindex')
+                                  : t('index.start')}
+                            </button>
+                          </form>
+                        )}
+                        {(!locked || group !== 'pack') && (
+                          <form action={removeDocumentAction}>
+                            <input type="hidden" name="locale" value={locale} />
+                            <input type="hidden" name="id" value={id} />
+                            <input type="hidden" name="documentId" value={doc.id} />
+                            <button
+                              type="submit"
+                              className="staff-btn-ghost staff-btn-sm text-bad-600"
+                            >
+                              {t('removeDocument')}
+                            </button>
+                          </form>
+                        )}
+                      </li>
+                    ))}
+                </ul>
+                {group === 'invoice' && extractionAvailable && (
+                  <form
+                    action={readInvoicesAgainAction}
+                    className="flex flex-wrap items-center gap-3"
+                  >
                     <input type="hidden" name="locale" value={locale} />
                     <input type="hidden" name="id" value={id} />
-                    <input type="hidden" name="documentId" value={doc.id} />
                     <button
                       type="submit"
                       className="staff-btn-ghost staff-btn-sm"
-                      data-testid="reindex-button"
+                      data-testid="read-invoices"
                     >
-                      {doc.indexStatus === 'failed'
-                        ? t('index.retry')
-                        : doc.indexStatus === 'ready'
-                          ? t('index.reindex')
-                          : t('index.start')}
+                      {t('invoices.readAgain')}
                     </button>
+                    {invoiceReading && (
+                      <p
+                        role={invoiceReading.status === 'failed' ? 'alert' : 'status'}
+                        data-testid="invoice-reading-status"
+                        data-state={invoiceReading.status}
+                        className="text-sm text-ink-700"
+                      >
+                        {invoiceReading.status === 'failed'
+                          ? t('invoices.failed', { reason: invoiceReading.error ?? '' })
+                          : t('invoices.queued')}
+                      </p>
+                    )}
                   </form>
                 )}
-                {!locked && (
-                  <form action={removeDocumentAction}>
-                    <input type="hidden" name="locale" value={locale} />
-                    <input type="hidden" name="id" value={id} />
-                    <input type="hidden" name="documentId" value={doc.id} />
-                    <button type="submit" className="staff-btn-ghost staff-btn-sm text-bad-600">
-                      {t('removeDocument')}
-                    </button>
-                  </form>
-                )}
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
         {reading && (
           <p
@@ -204,34 +288,36 @@ export function DocumentsCard({
         )}
       </div>
 
-      {!locked && (
-        <div className="grid gap-3 p-4 md:px-6 md:py-5">
-          {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              submitUpload(e.currentTarget);
-            }}
-            className="grid gap-3"
-          >
-            <PdfFilePicker
-              name="document"
-              label={t('addDocuments')}
-              hint={extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
-              strongLabel
-            />
-            {uploadState.error && (
-              <p role="alert" className="text-sm text-bad-600">
-                {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
-              </p>
-            )}
-            <FillOutcome state={uploadState} />
-            <div className="flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={uploading} className="staff-btn">
-                {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
-              </button>
-            </div>
-          </form>
+      <div className="grid gap-3 p-4 md:px-6 md:py-5">
+        {/* The files go from the browser straight to the bucket (see useDirectUpload). */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submitUpload(e.currentTarget);
+          }}
+          className="grid gap-3"
+        >
+          <PdfFilePicker
+            name="document"
+            label={t('addDocuments')}
+            hint={extractionAvailable ? t('uploadFillsHint') : t('extractionNotConfigured')}
+            strongLabel
+            onChosen={inspect}
+            preview={preview && <PackPreviewCard preview={preview} />}
+          />
+          {uploadState.error && (
+            <p role="alert" className="text-sm text-bad-600">
+              {uploadErrorKey ? t(`errors.${uploadErrorKey}`) : uploadState.error}
+            </p>
+          )}
+          <FillOutcome state={uploadState} />
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="submit" disabled={uploading} className="staff-btn">
+              {uploading ? t('uploadingAndReading') : t('uploadAndFill')}
+            </button>
+          </div>
+        </form>
+        {!locked && (
           <form action={extractAction} className="grid gap-2 border-t border-ink-100 pt-3">
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="id" value={id} />
@@ -251,8 +337,8 @@ export function DocumentsCard({
             )}
             <FillOutcome state={extractState} />
           </form>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }

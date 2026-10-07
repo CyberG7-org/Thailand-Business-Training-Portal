@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DbdRecordInput } from '@/lib/domain/dbd-record';
 import { MAX_DOCUMENT_BYTES } from '@/lib/domain/document-upload';
+import type { PackGroup } from '@/lib/domain/pack/sort';
 import { type StructuredData } from '@/lib/domain/dbd-profile';
 import { getVectorStore, resolveVectorProvider, type VectorStore } from '@/lib/integrations/vector';
 import { countPages } from '@/lib/pdf/slice';
@@ -41,7 +42,7 @@ export async function readingStatesOf(
       .from('index_jobs')
       .select('record_id, status, created_at')
       .in('record_id', chunk)
-      .in('kind', ['extract', 'transcript'])
+      .in('kind', ['extract', 'transcript', 'invoices'])
       .order('created_at', { ascending: false });
     if (error) throw error;
     return data ?? [];
@@ -160,9 +161,11 @@ export async function uploadDbdDocument(
 export async function registerDbdDocument(
   db: Db,
   id: string,
-  input: { path: string; originalName: string },
+  input: { path: string; originalName: string; group?: PackGroup },
 ): Promise<string> {
   const { path } = input;
+  // The zip's sort (D101): the pack is read whole, an invoice into rows, an agreement not at all.
+  const group: PackGroup = input.group ?? 'pack';
   if (!path.startsWith(`${id}/`) || path.includes('..')) {
     throw new DocumentUploadError('The upload does not belong to this record', 'invalid-file');
   }
@@ -188,7 +191,7 @@ export async function registerDbdDocument(
   } catch {
     pageCount = null;
   }
-  const indexing = resolveVectorProvider() !== 'off';
+  const indexing = resolveVectorProvider() !== 'off' && group !== 'agreement';
   const { data: doc, error: docError } = await db
     .from('dbd_documents')
     .insert({
@@ -197,6 +200,8 @@ export async function registerDbdDocument(
       original_name: input.originalName,
       size_bytes: bytes.byteLength,
       position,
+      group,
+      document_type: group === 'pack' ? null : group,
       uploaded_by: auth.user?.id ?? null,
       page_count: pageCount,
       index_status: pageCount === null ? 'failed' : indexing ? 'queued' : 'skipped',
@@ -226,6 +231,16 @@ export async function listDbdDocuments(db: Db, recordId: string): Promise<DbdDoc
     .order('position');
   if (error) throw error;
   return data ?? [];
+}
+
+/** The DBD documents: what the reader reads whole and the transcripts fill from. */
+export async function listPackDocuments(db: Db, recordId: string): Promise<DbdDocumentRow[]> {
+  return (await listDbdDocuments(db, recordId)).filter((d) => d.group === 'pack');
+}
+
+/** The invoices, in upload order: what the invoice read copies into rows (D101). */
+export async function listInvoiceDocuments(db: Db, recordId: string): Promise<DbdDocumentRow[]> {
+  return (await listDbdDocuments(db, recordId)).filter((d) => d.group === 'invoice');
 }
 
 /** Removes one source document (file + row); `document_path` moves to the next one if needed. */

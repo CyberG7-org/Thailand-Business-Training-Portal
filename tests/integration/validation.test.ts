@@ -46,7 +46,9 @@ describe('validateRecord (spec §5.5–5.6, D74)', () => {
     expect(result.version).toBe('blocked');
     const list = await open(team.recordId);
     expect(list).toContain('missing:juristic_id:acceptance');
-    expect(list).toContain('missing:contact_email:acceptance');
+    // The learner's contact is the learner's (D80), never the record's to owe (D101).
+    expect(list).not.toContain('missing:contact_email:acceptance');
+    expect(list).toContain('missing:nature_of_business:acceptance');
     expect(list).toContain('missing:registered_on:version');
     expect((await record(team.recordId)).extraction_status).not.toBe('confirmed');
   });

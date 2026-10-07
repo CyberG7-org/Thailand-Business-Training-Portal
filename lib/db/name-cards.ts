@@ -56,18 +56,25 @@ function fingerprintOf(data: NameCardData): string {
 const SIGNED_URL_SECONDS = 300;
 
 /** The holder's name on the card: the role (D95), the profile, a director. */
-async function sourceFor(
-  userId: string,
-): Promise<{ source: NameCardSource; dbdRecordId: string; defaultHolderName: string }> {
+async function sourceFor(userId: string): Promise<{
+  source: NameCardSource;
+  dbdRecordId: string;
+  defaultHolderName: string;
+  /** The company's addresses from its zip (D101); the learner's own are the fallback. */
+  links: NameCardLinks;
+}> {
   const admin = createSupabaseAdminClient();
   const assignment = await getActiveAssignmentForUser(admin, userId);
   if (!assignment) throw new NameCardError('No active assignment', 'no_assignment');
   const pinned = await pinnedFactsFor(admin, assignment);
   const { data: profile } = await admin
     .from('profiles')
-    .select('display_name')
+    .select('display_name, contact_email')
     .eq('id', userId)
     .single();
+  // The company email the card prints: the record's when a manager typed one, otherwise the
+  // learner's own, which is what the card is for (D80, D101).
+  const email = (recordEmail: string | null) => recordEmail || profile?.contact_email || null;
   const r = assignment.dbd_records;
   const interview = readStructuredData(r.structured_data).interview;
   const directors = (r.directors as unknown as Director[] | null) ?? [];
@@ -86,7 +93,7 @@ async function sourceFor(
           company_name_en: pinned.snapshot.facts.company_name_en,
           head_office_address: pinned.snapshot.extras.head_office_address,
           juristic_id: pinned.snapshot.facts.juristic_id,
-          contact_email: pinned.snapshot.extras.contact_email,
+          contact_email: email(pinned.snapshot.extras.contact_email),
           nature_of_business: pinned.snapshot.facts.nature_of_business,
         }
       : {
@@ -94,9 +101,10 @@ async function sourceFor(
           company_name_en: r.company_name_en,
           head_office_address: r.head_office_address,
           juristic_id: r.juristic_id,
-          contact_email: interview?.contact_email ?? null,
+          contact_email: email(interview?.contact_email ?? null),
           nature_of_business: interview?.nature_of_business ?? null,
         },
+    links: { website: r.website ?? null, facebookPage: r.facebook_page ?? null },
   };
 }
 
@@ -120,13 +128,13 @@ export async function generateNameCard(
   ]);
   if (requireExam && !exam.passed) throw new NameCardError('Exam pass required', 'exam_required');
 
-  const { source, dbdRecordId } = await sourceFor(userId);
+  const { source, dbdRecordId, links } = await sourceFor(userId);
   const missing = missingNameCardFields(source);
   if (missing.length > 0) throw new NameCardError('Missing DBD fields', 'missing_fields', missing);
 
   const data = buildNameCardData(source, phone, nameTh, {
-    website: input.website ?? null,
-    facebookPage: input.facebookPage ?? null,
+    website: links.website ?? input.website ?? null,
+    facebookPage: links.facebookPage ?? input.facebookPage ?? null,
   });
   const bytes = await renderer.renderNameCard(data);
   const path = `${userId}/${Date.now()}-${data.templateVersion}-${fingerprintOf(data)}.pdf`;
@@ -189,10 +197,10 @@ export async function ensureNameCard(
     const name = found.defaultHolderName.trim();
     if (!name) throw new NameCardError('No holder name', 'no_name');
     // Current when it was made for this company from exactly what would be printed today.
-    // The learner's website and Facebook page, as a manager gave them (D99).
+    // Company-pack links take precedence, exactly as generateNameCard renders them (D101).
     const links = {
-      website: profile?.website ?? null,
-      facebookPage: profile?.facebook_page ?? null,
+      website: found.links.website ?? profile?.website ?? null,
+      facebookPage: found.links.facebookPage ?? profile?.facebook_page ?? null,
     };
     const printed = buildNameCardData(found.source, phone, name, links);
     const current =

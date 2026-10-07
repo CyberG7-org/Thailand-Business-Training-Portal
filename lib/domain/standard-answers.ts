@@ -2,20 +2,17 @@
 import type { InterviewProfile } from './bank-interview';
 
 /**
- * The Level 4 questions a manager is still asked (D91): the ones no document, no other answer
- * and no fixed wording can supply. Shown in this order.
+ * The Level 4 questions a manager may still type (D91, D101): the two amounts, and only for a
+ * record that has no invoices — with invoices the figures are computed from them.
  */
-export const ASKED_INTERVIEW_FIELDS = [
-  'client_origin',
-  'customer_profile',
-  'main_suppliers',
-  'monthly_revenue',
-  'average_transaction',
-] as const;
+export const ASKED_INTERVIEW_FIELDS = ['monthly_revenue', 'average_transaction'] as const;
 export type AskedInterviewField = (typeof ASKED_INTERVIEW_FIELDS)[number];
 
 /** The Level 4 answers nobody types any more, in the order the record lists them. */
 export const STANDARD_ANSWER_FIELDS = [
+  'client_origin',
+  'customer_profile',
+  'main_suppliers',
   'main_clients',
   'business_purpose',
   'business_address',
@@ -29,8 +26,13 @@ export const STANDARD_ANSWER_FIELDS = [
 ] as const;
 export type StandardAnswerField = (typeof STANDARD_ANSWER_FIELDS)[number];
 
-/** The same answer for every company (Owner, 2026-10-01). Thai, as every fact is. */
+/** The same answer for every company (Owner, 2026-10-01 and 2026-10-06). Thai, as every fact is. */
 export const FIXED_ANSWERS = {
+  client_origin:
+    'หาลูกค้าผ่านช่องทางออนไลน์ ได้แก่ Facebook, TikTok และเว็บไซต์ รวมถึงการแนะนำจากลูกค้าเดิมและลูกค้าที่เข้ามาที่ร้าน',
+  customer_profile: 'ส่วนใหญ่เป็นลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+  main_suppliers:
+    'ผู้ค้าส่งและผู้ผลิตในประเทศไทยเป็นหลัก และมีสินค้าบางส่วนที่สั่งจากผู้จำหน่ายในต่างประเทศ',
   account_purpose:
     'เพื่อใช้ทำธุรกรรมทางการเงินของบริษัท รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
   promptpay_qr_purpose:
@@ -99,8 +101,8 @@ export function withStandardAnswers(
     has_existing_customers: 'yes',
     has_completed_transactions: 'yes',
     has_regular_suppliers: 'yes',
-    // "Who are the main customers?" is the kind of customers the manager described.
-    main_clients: profile.customer_profile?.trim() || null,
+    // "Who are the main customers?" is the kind of customers: fixed for every company (D101).
+    main_clients: FIXED_ANSWERS.customer_profile,
     business_purpose: nature ? `จัดตั้งขึ้นเพื่อประกอบธุรกิจ ${nature}` : null,
     business_address: context.address?.trim() || null,
     monthly_transactions: perMonth !== null ? `ประมาณ ${show(perMonth)} รายการต่อเดือน` : null,
@@ -112,8 +114,8 @@ export function withStandardAnswers(
       average !== null ? `${PAYMENT} เฉลี่ยรายการละประมาณ ${show(average)} บาท` : PAYMENT,
     ...FIXED_ANSWERS,
     monthly_volume: profile.monthly_volume ?? profile.monthly_revenue,
-    clients_location: profile.clients_location ?? profile.customer_profile,
-    suppliers_location: profile.suppliers_location ?? profile.main_suppliers,
+    clients_location: profile.clients_location ?? FIXED_ANSWERS.customer_profile,
+    suppliers_location: profile.suppliers_location ?? FIXED_ANSWERS.main_suppliers,
     operations_status: profile.operations_status ?? OPERATING,
   };
 }

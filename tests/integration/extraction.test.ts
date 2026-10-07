@@ -37,6 +37,12 @@ const failing: DbdExtractor = {
   async classify() {
     throw new ExtractionError('boom', 'provider');
   },
+  async readInvoices() {
+    throw new ExtractionError('boom', 'provider');
+  },
+  async describeBusiness() {
+    throw new ExtractionError('boom', 'provider');
+  },
   async extractFacts() {
     throw new ExtractionError('boom', 'provider');
   },

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
@@ -21,10 +22,15 @@ import {
   enqueueIndexJob,
   type AskResult,
 } from '@/lib/db/dbd-index';
+import { enqueueInvoicesJob } from '@/lib/db/invoices';
+import { toFacebookPage, toWebAddress } from '@/lib/domain/learner-contact';
+import type { PackLinks } from '@/lib/domain/pack/links';
+import type { PackGroup } from '@/lib/domain/pack/sort';
 import {
   refreshDerivedFacts,
   remapBusinessCategory,
   setBusinessCategory,
+  updateStructuredData,
 } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
@@ -35,14 +41,7 @@ import {
 } from '@/lib/db/validation';
 import { answerFromPassages } from '@/lib/integrations/rag/answer';
 import { VectorError, getVectorStore } from '@/lib/integrations/vector';
-import {
-  INTERVIEW_FIELDS,
-  REQUIRED_INTERVIEW_FIELDS,
-  interviewProfileSchema,
-  missingBusinessAnswers,
-  type InterviewProfile,
-  type RequiredInterviewField,
-} from '@/lib/domain/bank-interview';
+import { INTERVIEW_FIELDS, interviewProfileSchema } from '@/lib/domain/bank-interview';
 import { checkDocumentFiles, type DocumentFileMeta } from '@/lib/domain/document-upload';
 import { canRequestIndex, type IndexStatus } from '@/lib/domain/rag/index-status';
 import {
@@ -285,28 +284,22 @@ export type PreparedUpload = { path: string; token: string };
 export type PrepareUploadsResult =
   { ok: true; id: string; uploads: PreparedUpload[] } | { ok: false; error: string };
 
-/**
- * The four details a manager gives with a new pack (D80). Checked before the record exists, so
- * the "Create DBD" form never leaves a record without them: `answers:<fields>` names what is
- * missing or not valid, in form order.
- */
-function parseNewRecordAnswers(
-  answers: Partial<Record<RequiredInterviewField, string>>,
-): { ok: true; interview: InterviewProfile } | { ok: false; error: string } {
-  const bad: string[] = [];
-  const raw: Record<string, unknown> = {};
-  for (const field of REQUIRED_INTERVIEW_FIELDS) {
-    raw[field] = answers[field] ?? '';
-    if (!interviewProfileSchema.shape[field].safeParse(raw[field]).success) bad.push(field);
-  }
-  const interview = interviewProfileSchema.safeParse(raw);
-  if (!interview.success || bad.length > 0) {
-    return { ok: false, error: `answers:${bad.join(',')}` };
-  }
-  const missing = missingBusinessAnswers(interview.data);
-  if (missing.length > 0) return { ok: false, error: `answers:${missing.join(',')}` };
-  return { ok: true, interview: interview.data };
-}
+const packGroupSchema = z.enum(['pack', 'invoice', 'agreement']);
+const isConfirmedSupplement = (status: string, groups: readonly PackGroup[]) =>
+  status !== 'confirmed' || groups.every((group) => group !== 'pack');
+/** The addresses as the browser read them; anything that is not an address is dropped. */
+const packLinksSchema = z.object({
+  website: z
+    .string()
+    .max(300)
+    .nullish()
+    .transform((v) => (v ? toWebAddress(v) : null)),
+  facebook: z
+    .string()
+    .max(300)
+    .nullish()
+    .transform((v) => (v ? toFacebookPage(v) : null)),
+});
 
 /**
  * Step 1 of a browser-direct upload: validates what the admin picked (names, sizes, types only —
@@ -317,22 +310,23 @@ function parseNewRecordAnswers(
 export async function prepareUploadsAction(input: {
   locale: string;
   id: string | null;
-  files: DocumentFileMeta[];
-  answers?: Partial<Record<RequiredInterviewField, string>>;
+  files: (DocumentFileMeta & { group?: PackGroup })[];
 }): Promise<PrepareUploadsResult> {
   const admin = await requireStaff(input.locale);
   const problem = checkDocumentFiles(input.files);
   if (problem) return { ok: false, error: problem };
-  let structured: { interview: InterviewProfile } | undefined;
-  if (input.id === null && input.answers) {
-    const parsed = parseNewRecordAnswers(input.answers);
-    if (!parsed.ok) return parsed;
-    structured = { interview: parsed.interview };
-  }
   const db = await createSupabaseServerClient();
   try {
     const id =
-      input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, structured, teamOf(admin))).id;
+      input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, undefined, teamOf(admin))).id;
+    if (input.id) {
+      const record = await getDbdRecord(db, id);
+      if (!record) return { ok: false, error: 'not-found' };
+      const groups = input.files.map((file) => packGroupSchema.parse(file.group ?? 'pack'));
+      if (!isConfirmedSupplement(record.extraction_status, groups)) {
+        return { ok: false, error: 'invalid-file' };
+      }
+    }
     const uploads: PreparedUpload[] = [];
     for (const file of input.files.filter((f) => f.size > 0)) {
       const path = newDocumentPath(id);
@@ -354,20 +348,50 @@ export async function prepareUploadsAction(input: {
 export async function registerUploadsAction(input: {
   locale: string;
   id: string;
-  uploads: { path: string; name: string }[];
+  uploads: { path: string; name: string; group?: PackGroup }[];
+  /** The company's addresses, read in the browser from the zip's link files (D101). */
+  links?: PackLinks;
   redirect?: boolean;
 }): Promise<ToolState & { redirectTo?: string }> {
   const { locale, id } = input;
   await requireStaff(locale);
   const db = await createSupabaseServerClient();
   try {
+    const record = await getDbdRecord(db, id);
+    if (!record) return { ok: false, error: 'not-found' };
+    const groups = input.uploads.map((upload) => packGroupSchema.parse(upload.group ?? 'pack'));
+    if (!isConfirmedSupplement(record.extraction_status, groups)) {
+      await db.storage.from('dbd-documents').remove(input.uploads.map((upload) => upload.path));
+      return { ok: false, error: 'invalid-file' };
+    }
     for (const upload of input.uploads) {
-      await registerDbdDocument(db, id, { path: upload.path, originalName: upload.name });
+      await registerDbdDocument(db, id, {
+        path: upload.path,
+        originalName: upload.name,
+        group: packGroupSchema.parse(upload.group ?? 'pack'),
+      });
+    }
+    const links = packLinksSchema.parse(input.links ?? {});
+    if (links.website || links.facebook) {
+      const { error } = await db
+        .from('dbd_records')
+        .update({
+          ...(links.website ? { website: links.website } : {}),
+          ...(links.facebook ? { facebook_page: links.facebook } : {}),
+        })
+        .eq('id', id);
+      if (error) throw error;
     }
   } catch (e) {
     return { ok: false, error: e instanceof DocumentUploadError ? e.code : errorMessage(e) };
   }
-  const outcome = await queueReading(db, id);
+  const outcome = input.uploads.some((u) => (u.group ?? 'pack') === 'pack')
+    ? await queueReading(db, id)
+    : { extraction: 'skipped' as const, applied: [] };
+  // The invoices have a read of their own (D101); a queueing failure never undoes the upload.
+  if (input.uploads.some((u) => u.group === 'invoice') && getDbdExtractor()) {
+    await enqueueInvoicesJob(db, id).catch((e) => console.error('invoices job', id, e));
+  }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   if (input.redirect) {
     const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
@@ -423,6 +447,36 @@ export async function extractDocumentAction(
   return { ok: true, error: null, ...outcome };
 }
 
+/** The company's website and Facebook page (D101): what the zip gave, corrected by hand. */
+export async function saveLinksAction(_prev: ToolState, formData: FormData): Promise<ToolState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  await requireStaff(locale);
+  const website = String(formData.get('website') ?? '').trim();
+  const facebook = String(formData.get('facebook_page') ?? '').trim();
+  const links = {
+    website: website ? toWebAddress(website) : null,
+    facebook_page: facebook ? toFacebookPage(facebook) : null,
+  };
+  if ((website && !links.website) || (facebook && !links.facebook_page)) {
+    return { ok: false, error: 'invalid' };
+  }
+  const db = await createSupabaseServerClient();
+  const { error } = await db.from('dbd_records').update(links).eq('id', id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+  return { ok: true, error: null };
+}
+
+/** Queues the invoice read again (D101): after invoices were added or removed, or a failure. */
+export async function readInvoicesAgainAction(formData: FormData): Promise<void> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const id = String(formData.get('id') ?? '');
+  await requireStaff(locale);
+  await enqueueInvoicesJob(await createSupabaseServerClient(), id);
+  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+}
+
 export async function removeDocumentAction(formData: FormData): Promise<void> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
@@ -430,7 +484,9 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
   await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const record = await getDbdRecord(db, id);
-  if (!record || record.extraction_status === 'confirmed') return;
+  if (!record) return;
+  const document = (await listDbdDocuments(db, id)).find((doc) => doc.id === documentId);
+  if (!document || (record.extraction_status === 'confirmed' && document.group === 'pack')) return;
   let unavailable = false;
   try {
     await removeDbdDocument(db, id, documentId);
@@ -438,6 +494,22 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
     // The store refused to drop the vectors, so the row was kept (no orphans); tell the admin.
     if (!(e instanceof VectorError)) throw e;
     unavailable = true;
+  }
+  if (!unavailable && document.group === 'invoice') {
+    const remaining = (await listDbdDocuments(db, id)).filter((doc) => doc.group === 'invoice');
+    if (remaining.length > 0 && getDbdExtractor()) {
+      await enqueueInvoicesJob(db, id);
+    } else if (remaining.length === 0) {
+      await updateStructuredData(db, id, (stored) => {
+        const withoutInvoices = { ...stored };
+        delete withoutInvoices.invoices;
+        return withoutInvoices;
+      });
+      await refreshDerivedFacts(db, id, undefined, { describe: true }).catch((error) =>
+        console.error('derived facts after removing invoices', id, error),
+      );
+      await validateAfterChange(id, null);
+    }
   }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   if (unavailable)

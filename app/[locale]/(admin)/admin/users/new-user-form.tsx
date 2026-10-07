@@ -253,6 +253,7 @@ export function NewUserForm({
           <h3 className="text-base font-semibold text-ink-900">{t('learnerSection')}</h3>
           <label className="text-sm">
             <span className={label}>{t('name')}</span>
+            <span className="font-normal text-ink-500"> {t('contact.forCard')}</span>
             <input
               name="displayName"
               required
@@ -263,13 +264,6 @@ export function NewUserForm({
           </label>
           <div className="grid gap-4 md:grid-cols-2">
             <LearnerContactFields only={['phone', 'contactEmail']} strong />
-          </div>
-        </section>
-
-        <section className="grid gap-4 p-4 md:px-6 md:py-5">
-          <h3 className="text-base font-semibold text-ink-900">{t('nameCardSection')}</h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            <LearnerContactFields only={['website', 'facebookPage']} strong />
           </div>
         </section>
       </div>

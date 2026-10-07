@@ -55,6 +55,17 @@ describe('ClaudeInterview', () => {
     expect(params.messages.at(-1)?.role).toBe('user');
   });
 
+  it('tells the officer the Owner’s tolerance for an amount (D101)', async () => {
+    const { client, calls } = stub({
+      say: 'สวัสดีค่ะ',
+      assessment: null,
+      next: { concept: 'company_name' },
+    });
+    await new ClaudeInterview(client).turn({ ...base, plan: buildPlan(facts) });
+    const params = calls[0] as Params;
+    expect(params.system[0].text).toContain('20%');
+  });
+
   it('keeps the messages alternating: the transcript, then the answer with the state', async () => {
     const { client, calls } = stub({
       say: 'รับทราบค่ะ',

@@ -1,5 +1,6 @@
 import type { Slice, TranscribedPage } from '@/lib/domain/rag/transcript';
 import { EMPTY_SWEEP, type DocumentType, type SweepResult } from './transcript-schema';
+import type { InvoiceRow } from '@/lib/domain/invoices/schema';
 import type { DbdExtraction, DbdExtractor, TranscriptPassage } from './types';
 
 const at = (page: number | null, doc: number | null = 1) => ({
@@ -185,8 +186,92 @@ export function fakeClassify(text: string): DocumentType {
   return 'other';
 }
 
+const fakeItem = (name: string, quantity: number, unit_price: number) => ({
+  name,
+  quantity,
+  unit_price,
+  amount: quantity * unit_price,
+});
+
+/**
+ * The Owner's worked example (spec 2026-10-06 §5.3): five invoices on five days, 106,900 baht in
+ * all, a pen at 10 and a table at 2,500. Fictional customers. The fake hands back one row per
+ * document it is given, cycling through these.
+ */
+export const FAKE_INVOICES: InvoiceRow[] = [
+  {
+    index: 1,
+    is_invoice: true,
+    issue_date: '2026-09-15',
+    invoice_no: 'INV-001',
+    currency: 'THB',
+    grand_total: 53000,
+    buyer_kind: 'company',
+    buyer_name_if_company: 'บริษัท ลูกค้าตัวอย่างหนึ่ง จำกัด',
+    items: [fakeItem('โต๊ะทำงาน', 20, 2500), fakeItem('ปากกา', 300, 10)],
+  },
+  {
+    index: 2,
+    is_invoice: true,
+    issue_date: '2026-09-16',
+    invoice_no: 'INV-002',
+    currency: 'THB',
+    grand_total: 11500,
+    buyer_kind: 'person',
+    buyer_name_if_company: null,
+    items: [fakeItem('เก้าอี้', 10, 1150)],
+  },
+  {
+    index: 3,
+    is_invoice: true,
+    issue_date: '2026-09-17',
+    invoice_no: 'INV-003',
+    currency: 'THB',
+    grand_total: 18400,
+    buyer_kind: 'company',
+    buyer_name_if_company: 'บริษัท ลูกค้าตัวอย่างสอง จำกัด',
+    items: [fakeItem('กระดาษ A4', 80, 230)],
+  },
+  {
+    index: 4,
+    is_invoice: true,
+    issue_date: '2026-09-18',
+    invoice_no: 'INV-004',
+    currency: 'THB',
+    grand_total: 12500,
+    buyer_kind: 'person',
+    buyer_name_if_company: null,
+    items: [fakeItem('ปากกา', 50, 10), fakeItem('แฟ้ม', 100, 120)],
+  },
+  {
+    index: 5,
+    is_invoice: true,
+    issue_date: '2026-09-19',
+    invoice_no: 'INV-005',
+    currency: 'THB',
+    grand_total: 11500,
+    buyer_kind: 'company',
+    buyer_name_if_company: 'บริษัท ลูกค้าตัวอย่างหนึ่ง จำกัด',
+    items: [fakeItem('เก้าอี้', 10, 1150)],
+  },
+];
+
+export const FAKE_NATURE = 'ค้าส่งและค้าปลีกเครื่องเขียนและเฟอร์นิเจอร์สำนักงาน';
+
 export class FakeDbdExtractor implements DbdExtractor {
   readonly name = 'fake';
+
+  async readInvoices(documents: Uint8Array[]): Promise<InvoiceRow[]> {
+    return documents.map((_, i) => ({
+      ...structuredClone(FAKE_INVOICES[i % FAKE_INVOICES.length]),
+      index: i + 1,
+    }));
+  }
+
+  async describeBusiness(input: { objectives: string[]; items: string[] }) {
+    return { nature: FAKE_NATURE, confidence: input.items.length > 0 ? 0.9 : 0.6 };
+  }
+
   constructor(private readonly result: DbdExtraction = SAMPLE_EXTRACTION) {}
   async extract(documents: Uint8Array[]): Promise<DbdExtraction> {
     const result = structuredClone(this.result);

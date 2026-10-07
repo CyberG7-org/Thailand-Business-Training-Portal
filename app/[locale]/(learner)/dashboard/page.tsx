@@ -11,7 +11,7 @@ import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { pinnedFactsFor } from '@/lib/db/pinning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
-import { bangkokDateOf, bangkokTimeLabel } from '@/lib/domain/appointments/slots';
+import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
@@ -55,21 +55,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
   const detailFor = (key: StageKey, info: StageInfo): string | null => {
     if (key === 'appointment') {
-      // The booked card (spec §5.3): date, time and the manager's name.
+      // D102: the manager chooses a date; the learner never sees or chooses a time slot.
       if (info.status === 'done' && booking) {
         return t('appointment.booked', {
           date: formatDate(bangkokDateOf(booking.starts_at), loc),
-          time: bangkokTimeLabel(booking.starts_at),
-          manager: booking.managerName ?? ta('booked.adminCalendar'),
+          manager: booking.managerName ?? ta('booked.manager'),
         });
       }
-      if (info.reason === 'before_available_from' && facts.eligibility) {
-        return t('appointment.lockedUntil', {
-          date: formatDate(facts.eligibility.availableFrom, loc),
-        });
-      }
-      if (info.reason === 'missing_issue_date') return t('appointment.pending');
-      if (info.status === 'available') return t('appointment.available');
+      if (info.status === 'available') return ta('waiting.detail');
     }
     if (info.reason) return ts(`reasons.${info.reason}`);
     return null;

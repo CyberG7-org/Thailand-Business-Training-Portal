@@ -41,10 +41,8 @@
       "tag": "DBD record"
     },
     "appointment": {
-      "pending": "Eligibility date pending — the certificate issue date is missing.",
-      "available": "You can book now.",
-      "lockedUntil": "Bookable from {date}",
-      "booked": "Booked: {date} at {time} with {manager}"
+      "available": "Your manager will book the date.",
+      "booked": "Booked: {date} with {manager}"
     },
     "hero": {
       "kicker": "Bank verification preparation"
@@ -124,6 +122,7 @@
         "title": "Contact details",
         "phone": "Phone number",
         "contactEmail": "Email",
+        "forCard": "(for the name card)",
         "website": "Website",
         "facebookPage": "Facebook page",
         "optional": "(optional)",
@@ -196,6 +195,12 @@
       "toCreate": "Create learner & DBD",
       "empty": "No learners yet.",
       "backToRecord": "← Learner Record",
+      "appointment": {
+        "book": "Book date",
+        "change": "Change date",
+        "needsQuiz": "Quiz not passed",
+        "needsInterview": "Interview not ready"
+      },
       "columns": {
         "loginId": "Login ID",
         "company": "Company name",
@@ -234,9 +239,19 @@
     },
     "createDbd": {
       "title": "Create DBD",
-      "intro": "Upload the company’s DBD documents and give the four details below. The documents are read and indexed in the background (1–3 minutes); when every fact is found, the company confirms itself and can be given to a learner.",
-      "introNoReader": "Upload the company’s DBD documents and give the four details below. Automatic reading is not set up here, so open the company afterwards to fill it in and confirm it.",
-      "documents": "DBD documents (PDF)",
+      "intro": "Upload the company zip — the DBD pack, the invoices, the agreements and the files with its Facebook page and website — or the DBD PDFs alone. Everything is read in the background (1–3 minutes): the DBD facts, and the money figures from the invoices. When every fact is found, the company confirms itself and can be given to a learner.",
+      "introNoReader": "Upload the company zip or the DBD PDFs. Automatic reading is not set up here, so open the company afterwards to fill it in and confirm it.",
+      "documents": "Company zip, or DBD PDFs",
+      "packPreview": {
+        "title": "Found in {name}",
+        "pack": "{count, plural, one {DBD pack: # file} other {DBD pack: # files}}",
+        "invoices": "{count, plural, =0 {Invoices: none} one {Invoices: #} other {Invoices: #}}",
+        "agreements": "{count, plural, =0 {Agreements: none} one {Agreements: # (stored, not read)} other {Agreements: # (stored, not read)}}",
+        "facebook": "Facebook: {page}",
+        "website": "Website: {site}",
+        "none": "none",
+        "ignored": "{count, plural, one {# other file left out} other {# other files left out}}"
+      },
       "submit": "Create and analyse",
       "byHand": "Enter a company by hand instead",
       "answersInvalid": "Check these details: {fields}",
@@ -300,7 +315,12 @@
       "errors": {
         "no-file": "Choose a PDF file",
         "upload-failed": "The file could not be uploaded (connection lost or not a PDF). Please try again.",
-        "invalid-file": "Only PDF files up to 30 MB are accepted (6 files at most)",
+        "invalid-file": "Only PDF files up to 30 MB are accepted (40 files at most)",
+        "no-document": "The zip holds no PDF. Put the DBD pack in it.",
+        "too-many-files": "The zip holds more than 40 documents. Take some out.",
+        "file-too-large": "A file in the zip is over 30 MB. Reduce it and try again.",
+        "zip-too-large": "The zip is over 200 MB in all. Take some files out.",
+        "cannot-open": "This zip cannot be opened. Make it again and try once more.",
         "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below)."
       },
       "fields": {
@@ -359,7 +379,7 @@
         "document": "Level 3 — DBD document metadata",
         "interview": "Level 4 — Bank interview answers (facts the DBD does not hold)",
         "answers": "Contact and business",
-        "answersIntro": "The four answers the DBD documents can't give. They're needed before the company can be used."
+        "answersIntro": "Answers the DBD documents do not hold: from the invoices, or the same for every company; nothing to type."
       },
       "documentTypes": {
         "certificate": "Certificate",
@@ -368,22 +388,69 @@
         "memorandum": "Memorandum (Bor.Or.Jor.2)",
         "articles": "Articles of association",
         "other": "Other",
+        "invoice": "Invoice",
+        "agreement": "Agreement",
         "unknown": "Not classified yet"
+      },
+      "documentGroups": {
+        "pack": "DBD pack",
+        "invoice": "Invoices",
+        "agreement": "Agreements (stored, not read)"
+      },
+      "invoices": {
+        "readAgain": "Read the invoices again",
+        "queued": "The invoices are being read in the background (about 1–3 minutes); reload the page to see the figures.",
+        "failed": "The invoices could not be read ({reason}). Click \"Read the invoices again\".",
+        "notRead": "not read yet",
+        "row": "{date} · {total}",
+        "setAside": "Check this invoice: {reason}",
+        "reasons": {
+          "not_an_invoice": "not an invoice",
+          "no_date": "no date printed",
+          "no_total": "no total printed",
+          "not_baht": "not in baht",
+          "items_do_not_add_up": "the items do not add up to the total"
+        },
+        "few": "{count, plural, one {Estimated from # invoice} other {Estimated from # invoices}}; add more for a steadier figure.",
+        "none": "No invoices yet. Upload them on the Documents tab and the figures below are worked out from them; until then the two amounts can be typed here."
+      },
+      "invoiceFigures": {
+        "title": "From the invoices",
+        "hint": "Worked out from the invoices by the Owner's rule. To change a figure, add or remove invoices and read them again; nothing here is typed.",
+        "monthlyRevenue": "Monthly revenue",
+        "averagePerTransaction": "Average per transaction",
+        "transactionsPerMonth": "Transactions per month",
+        "revenuePerDay": "Revenue per day",
+        "dailyRange": "Lowest and highest day",
+        "itemPriceRange": "Cheapest and dearest item",
+        "dates": "Dates covered",
+        "used": "{count, plural, one {# invoice used} other {# invoices used}}",
+        "baht": "{amount} baht",
+        "range": "{low} – {high}"
+      },
+      "links": {
+        "title": "Company addresses",
+        "hint": "Read from the zip's link files; the name card prints them. Correct them here if needed.",
+        "website": "Website",
+        "facebookPage": "Facebook page",
+        "save": "Save addresses",
+        "saved": "Saved",
+        "invalid": "Enter a web address (example.co.th) and a Facebook page name or link."
       },
       "objectivesHint": "One objective per line; a leading number is kept, e.g. \"1. To operate…\"",
       "onePerLine": "One per line",
       "shareholdersHint": "One per line: name | nationality | shares",
       "promotersHint": "One per line: name | nationality",
-      "documents": "Uploaded DBD documents",
+      "documents": "Uploaded documents",
       "removeDocument": "Remove",
       "sourceDocument": "from {name}",
       "sourcePage": "page {page}",
-      "fileHint": "PDF, up to 30 MB per file",
+      "fileHint": "One company zip (DBD pack, invoices, agreements, link files) or PDFs; up to 30 MB per file, 40 files and 200 MB in all",
       "interviewHint": "Only what no document can answer. Everything else the bank asks is filled in below without anyone typing it.",
       "amountHint": "Write the amount in digits, for example 300,000. Transactions per month are worked out from the two amounts.",
       "standardAnswers": {
         "title": "Filled automatically",
-        "hint": "The learner is taught these answers. They come from the DBD, from the answers above, or are the same for every company.",
+        "hint": "The learner is taught these answers. They come from the DBD, from the invoices, or are the same for every company; nobody types them.",
         "pending": "Fills in once the answer it is worked out from is written"
       },
       "interviewFields": {
@@ -453,6 +520,7 @@
         "bank": "The bank's other questions",
         "customers": "Customers and suppliers",
         "money": "Money and transactions",
+        "moneyTyped": "Money and transactions (typed, no invoices yet)",
         "legacy": "Earlier answers"
       },
       "team": "Team",
@@ -550,7 +618,7 @@
         "my_shares": "Learner's shares",
         "my_share_percent": "Learner's share percentage"
       },
-      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the four details were given.",
+      "confirmedAutomatically": "Confirmed automatically: every fact was read from the documents and the business nature was described.",
       "versions": {
         "title": "Training versions",
         "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
@@ -569,7 +637,7 @@
       "recheck": "Check again",
       "acceptance": {
         "accepted": "Accepted by {name}",
-        "acceptedAuto": "Accepted automatically: the reading was clean and the four details were there.",
+        "acceptedAuto": "Accepted automatically: the reading was clean and the business nature was there.",
         "waiting": "{count, plural, one {# exception} other {# exceptions}} blocking acceptance",
         "blocked": "Not accepted yet — settle the exceptions."
       },
@@ -924,7 +992,19 @@
     },
     "appointments": {
       "title": "Bank appointments",
-      "intro": "Your team's upcoming appointments by day; block the hours you cannot take.",
+      "intro": "Managers choose one bank date for each learner who passed the quiz and readiness interview.",
+      "bookingTitle": "Book for a learner",
+      "bookingIntro": "Choose a ready learner, then pick or replace their date. There are no time slots.",
+      "chooseLearner": "Learner",
+      "choose": "Choose a learner",
+      "showCalendar": "Show calendar",
+      "needsQuiz": "Pass the Business Knowledge Quiz first",
+      "needsInterview": "Pass the Bank Readiness Interview first",
+      "ownerReadOnly": "Only an owning manager books a learner's date. The Owner can review and cancel appointments here.",
+      "upcoming": "Booked dates",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "saved": "Appointment date saved",
       "empty": "No appointments yet",
       "day": "Day",
       "time": "Time",
@@ -996,7 +1076,7 @@
       "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
     },
     "filePicker": {
-      "choose": "Choose PDF files",
+      "choose": "Choose files",
       "orDrop": "or drop them here"
     },
     "bank": {
@@ -1417,7 +1497,11 @@
   },
   "appointment": {
     "title": "Bank appointment",
-    "intro": "Pick the day and time you will go to the bank with your manager. Open every day except bank holidays, one person per slot.",
+    "intro": "Your manager books the date after you pass the Business Knowledge Quiz and Bank Readiness Interview.",
+    "waiting": {
+      "title": "Your manager will book the appointment",
+      "detail": "There is nothing to choose here. Your manager will select the bank date and it will appear on this page."
+    },
     "week": "Week of {date}",
     "prevWeek": "Previous week",
     "nextWeek": "Next week",
@@ -1433,8 +1517,8 @@
     },
     "booked": {
       "title": "Your appointment",
-      "line": "{date} at {time} with {manager}",
-      "adminCalendar": "the administrator",
+      "line": "{date} with {manager}",
+      "manager": "your manager",
       "cancel": "Cancel the appointment",
       "cancelHint": "You can cancel until {hours} hours before"
     },

@@ -13,6 +13,7 @@ import {
 } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
+import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
 import { withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
 
@@ -92,9 +93,13 @@ export function buildFactSheet(input: {
   const business = input.structured.business ?? EMPTY_BUSINESS_PROFILE;
   // What the learner is taught: the manager's answers to the questions still asked, and the
   // standard answer to every other Level 4 question (D91).
-  const p = withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
-    address: input.address?.full || input.record.head_office_address || null,
-  });
+  // The invoices' figures win over anything typed (D101), as a standard answer does (D91).
+  const p = withInvoiceAnswers(
+    withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
+      address: input.address?.full || input.record.head_office_address || null,
+    }),
+    input.structured.invoices,
+  );
   const directors = Array.isArray(input.record.directors)
     ? (input.record.directors as Director[])
     : [];

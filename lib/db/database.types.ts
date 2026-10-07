@@ -492,6 +492,7 @@ export type Database = {
       dbd_documents: {
         Row: {
           document_type: string | null
+          group: string
           id: string
           index_error: string | null
           index_status: string
@@ -507,6 +508,7 @@ export type Database = {
         }
         Insert: {
           document_type?: string | null
+          group?: string
           id?: string
           index_error?: string | null
           index_status?: string
@@ -522,6 +524,7 @@ export type Database = {
         }
         Update: {
           document_type?: string | null
+          group?: string
           id?: string
           index_error?: string | null
           index_status?: string
@@ -599,6 +602,7 @@ export type Database = {
           document_ref: string | null
           extraction_raw: Json | null
           extraction_status: string
+          facebook_page: string | null
           head_office_address: string | null
           id: string
           issued_on: string | null
@@ -613,6 +617,7 @@ export type Database = {
           structured_data: Json
           team_id: string | null
           updated_at: string
+          website: string | null
         }
         Insert: {
           certificate_no?: string | null
@@ -628,6 +633,7 @@ export type Database = {
           document_ref?: string | null
           extraction_raw?: Json | null
           extraction_status?: string
+          facebook_page?: string | null
           head_office_address?: string | null
           id?: string
           issued_on?: string | null
@@ -642,6 +648,7 @@ export type Database = {
           structured_data?: Json
           team_id?: string | null
           updated_at?: string
+          website?: string | null
         }
         Update: {
           certificate_no?: string | null
@@ -657,6 +664,7 @@ export type Database = {
           document_ref?: string | null
           extraction_raw?: Json | null
           extraction_status?: string
+          facebook_page?: string | null
           head_office_address?: string | null
           id?: string
           issued_on?: string | null
@@ -671,6 +679,7 @@ export type Database = {
           structured_data?: Json
           team_id?: string | null
           updated_at?: string
+          website?: string | null
         }
         Relationships: [
           {
