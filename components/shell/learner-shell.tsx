@@ -57,11 +57,12 @@ export async function LearnerShell({
     <>
       <div
         className={
-          'band rounded-b-[28px] px-4 pt-4 pb-8 md:rounded-b-[36px] md:px-6 md:pb-10' +
+          'band px-4 pt-4 md:rounded-b-[36px] md:px-6 md:pb-10 ' +
+          (home ? 'dashboard-home-band rounded-b-[24px] pb-4' : 'rounded-b-[28px] pb-8') +
           (tone === 'gold' ? ' band-gold' : '')
         }
       >
-        <ShellHeader user={user} />
+        <ShellHeader user={user} compact={home} />
         {!home && (
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
             <BackPill home="/dashboard" label={back?.label ?? t('back')} href={back?.href} />
@@ -83,7 +84,7 @@ export async function LearnerShell({
         )}
         {bandFooter}
       </div>
-      <main className="px-4 py-6 md:px-12 md:py-7">
+      <main className={home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'}>
         {home ? (
           children
         ) : (

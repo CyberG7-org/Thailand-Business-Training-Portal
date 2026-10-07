@@ -39,10 +39,12 @@ export function LanguageToggle({
   label,
   className = '',
   tone = 'default',
+  compact = false,
 }: {
   label: string;
   className?: string;
   tone?: keyof typeof TRACK;
+  compact?: boolean;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -76,7 +78,7 @@ export function LanguageToggle({
             disabled={pending}
             onClick={() => choose(code)}
             data-testid={`lang-${code}`}
-            className={`grid min-h-11 place-items-center rounded-control px-3.5 transition-colors disabled:opacity-60 ${
+            className={`grid place-items-center rounded-control whitespace-nowrap transition-colors disabled:opacity-60 ${compact ? 'min-h-10 px-2.5' : 'min-h-11 px-3.5'} ${
               active ? 'bg-brand-700 font-semibold text-white' : IDLE[tone]
             }`}
           >

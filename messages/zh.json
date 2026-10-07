@@ -25,19 +25,36 @@
   "dashboard": {
     "title": "首页",
     "welcome": "欢迎，{name}",
+    "accountLabel": "学员账户",
+    "mobileIntro": "请按顺序完成培训。",
+    "actionHints": {
+      "study": "了解您的公司",
+      "nameCard": "查看并下载名片",
+      "exam": "测试您的知识",
+      "interview": "练习银行面试"
+    },
     "noCompany": "尚未为您分配公司，请联系管理员。",
     "company": {
       "title": "您的公司",
       "name": "公司",
       "juristicId": "法人注册号",
       "registeredCapital": "注册资本",
+      "registeredDate": "注册日期",
       "baht": "泰铢",
       "address": "总部",
       "directors": "董事",
       "issuedOn": "证书签发日期",
       "openCertificate": "打开证书（PDF）",
+      "viewRecord": "查看公司资料",
       "natureOfBusiness": "公司业务",
       "productsServices": "产品/服务",
+      "shareholders": "股东",
+      "shares": "股",
+      "businessObjectives": "业务目标",
+      "businessActivities": "业务活动（共 {count} 项）",
+      "itemCount": "{count} 项",
+      "website": "网站",
+      "facebook": "Facebook",
       "tag": "DBD 记录"
     },
     "appointment": {
@@ -1543,7 +1560,11 @@
   "nameCard": {
     "title": "名片",
     "intro": "根据贵公司的记录和经理提供的信息为您制作。可预览并下载 PDF。",
-    "preview": "预览",
+    "preview": "名片预览",
+    "previewHint": "正反面以更大尺寸同时显示。选择任一面即可全尺寸打开。",
+    "front": "正面",
+    "back": "背面",
+    "openSide": "全尺寸打开",
     "download": "下载 PDF",
     "meta": "手机 {phone}",
     "errors": {

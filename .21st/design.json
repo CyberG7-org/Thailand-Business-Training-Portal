@@ -163,6 +163,26 @@
       "date": "2026-10-07",
       "decision": "The manager appointment control uses the portal's existing staff form, card, button, and brand-token patterns in a responsive 42-cell month calendar with no time slots.",
       "reason": "The 21st.dev catalog search was unavailable (HTTP 401); the existing primitives satisfy the required accessibility, responsive behavior, and visual consistency."
+    },
+    {
+      "date": "2026-10-07",
+      "decision": "The learner name-card preview uses a proof-sheet layout: enlarged front and back pages side by side on desktop and stacked on mobile, with explicit side labels.",
+      "reason": "Showing both sides removes PDF paging ambiguity and improves legibility. The 21st.dev catalog search was unavailable (HTTP 401), so the layout follows the portal's existing brand tokens and card primitives."
+    },
+    {
+      "date": "2026-10-07",
+      "decision": "The learner dashboard is task-first on phones: a compact identity header, four-step progress strip, four direct action cards, and an essential company summary; the richer desktop view remains intact.",
+      "reason": "Learners primarily use phones. Short labels and full-card tap targets reduce reading and navigation effort, while manager-owned appointment booking is removed from learner actions. The 21st.dev catalog search was unavailable (HTTP 401), so the selected screenshots and existing portal tokens guided the implementation."
+    },
+    {
+      "date": "2026-10-07",
+      "decision": "The modern task-first learner dashboard is preserved, while the company section becomes a vertically scrollable set of complete DBD fact cards on mobile.",
+      "reason": "The phone viewport can scroll, and learners need the complete company record for study. Website and Facebook cards are conditional so absent links do not leave empty rows or icons."
+    },
+    {
+      "date": "2026-10-07",
+      "decision": "The learner dashboard contains four learner-owned stages only: study, name card, quiz, and readiness interview. Bank appointment is absent from learner progress and actions at every breakpoint.",
+      "reason": "Appointment booking is manager-owned. Removing it from learner navigation prevents a misleading fifth step while preserving the manager workflow and the learner's read-only appointment route."
     }
   ],
   "evidence": [

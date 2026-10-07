@@ -359,6 +359,14 @@
       linear-gradient(165deg, var(--color-brand-900) 0%, var(--color-brand-700) 100%);
   }
 
+  @media (max-width: 767px) {
+    .dashboard-home-band {
+      background: var(--color-brand-50);
+      color: var(--color-ink-900);
+      border-bottom: 1px solid var(--color-brand-100);
+    }
+  }
+
   /* The staff area (admin and manager screens): the learner portal's tokens, denser. Pages
      render inside `main.staff`; the classes below are the shared patterns every page uses —
      titles, cards, tables that scroll sideways on a phone, solid inputs, buttons, tags and

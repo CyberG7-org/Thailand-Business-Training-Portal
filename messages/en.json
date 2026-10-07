@@ -25,19 +25,36 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {name}",
+    "accountLabel": "Learner account",
+    "mobileIntro": "Complete your training in order.",
+    "actionHints": {
+      "study": "Learn about your company",
+      "nameCard": "View and download your card",
+      "exam": "Test your knowledge",
+      "interview": "Practise for the bank interview"
+    },
     "noCompany": "No company has been assigned to you yet. Please contact your administrator.",
     "company": {
       "title": "Your company",
       "name": "Company",
       "juristicId": "Juristic person ID",
       "registeredCapital": "Registered capital",
+      "registeredDate": "Registered date",
       "baht": "THB",
       "address": "Head office",
       "directors": "Directors",
       "issuedOn": "Certificate issued on",
       "openCertificate": "Open certificate (PDF)",
+      "viewRecord": "View company record",
       "natureOfBusiness": "What the business does",
       "productsServices": "Products / services",
+      "shareholders": "Shareholders",
+      "shares": "shares",
+      "businessObjectives": "Business objectives",
+      "businessActivities": "Business activities ({count} items)",
+      "itemCount": "{count} items",
+      "website": "Website",
+      "facebook": "Facebook",
       "tag": "DBD record"
     },
     "appointment": {
@@ -1543,7 +1560,11 @@
   "nameCard": {
     "title": "Name card",
     "intro": "Made for you from your company record and the details your manager gave. Preview it and download the PDF.",
-    "preview": "Preview",
+    "preview": "Name card preview",
+    "previewHint": "Front and back are shown together at a larger size. Select either side to open it full size.",
+    "front": "Front",
+    "back": "Back",
+    "openSide": "Open full-size",
     "download": "Download PDF",
     "meta": "Mobile {phone}",
     "errors": {

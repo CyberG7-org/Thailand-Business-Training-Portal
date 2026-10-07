@@ -23,8 +23,16 @@ test('the name card page shows the card on its stage with the download', async (
 
   const preview = page.getByTestId('card-preview');
   await expect(preview).toBeVisible();
-  await expect(preview.getByRole('heading', { name: 'ตัวอย่าง' })).toBeVisible();
-  await expect(preview.getByTestId('card-stage').locator('iframe')).toHaveCount(1);
+  await expect(preview.getByRole('heading', { name: 'ตัวอย่างนามบัตร' })).toBeVisible();
+  await expect(preview.getByTestId('card-stage').locator('img')).toHaveCount(2);
+  await expect(preview.getByTestId('card-front').getByRole('link')).toHaveAttribute(
+    'href',
+    /#page=1&/,
+  );
+  await expect(preview.getByTestId('card-back').getByRole('link')).toHaveAttribute(
+    'href',
+    /#page=2&/,
+  );
   await expect(preview.getByTestId('download-card')).toHaveAttribute('href', /name-cards/);
   await expect(page.getByTestId('card-blocked')).toHaveCount(0);
 });
