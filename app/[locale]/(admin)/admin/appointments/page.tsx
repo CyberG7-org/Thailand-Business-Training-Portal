@@ -37,7 +37,7 @@ export default async function AppointmentsPage({
   ]);
   const selected =
     staff.role === 'manager' && query.learner
-      ? learners.find((learner) => learner.id === query.learner) ?? null
+      ? (learners.find((learner) => learner.id === query.learner) ?? null)
       : null;
   const selectedReady = selected?.mcq === 'pass' && selected.chatbot === 'pass';
   const selectedDate = selected?.appointmentAt ? bangkokDateOf(selected.appointmentAt) : null;
@@ -52,7 +52,9 @@ export default async function AppointmentsPage({
       {staff.role === 'manager' ? (
         <section className="grid gap-4">
           <div>
-            <h2 className="font-display text-xl font-semibold text-brand-900">{t('bookingTitle')}</h2>
+            <h2 className="font-display text-xl font-semibold text-brand-900">
+              {t('bookingTitle')}
+            </h2>
             <p className="mt-1 text-sm text-ink-700">{t('bookingIntro')}</p>
           </div>
           <form method="get" className="flex flex-wrap items-end gap-2">
@@ -80,7 +82,9 @@ export default async function AppointmentsPage({
               </select>
             </label>
             <input type="hidden" name="month" value={month} />
-            <button type="submit" className="staff-btn-primary">{t('showCalendar')}</button>
+            <button type="submit" className="staff-btn-primary">
+              {t('showCalendar')}
+            </button>
           </form>
           {selected && !selectedReady && (
             <p className="rounded-control bg-warn-50 px-4 py-3 text-sm font-medium text-warn-700">

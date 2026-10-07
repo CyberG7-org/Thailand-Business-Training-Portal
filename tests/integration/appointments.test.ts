@@ -91,7 +91,9 @@ describe('manager-booked date-only appointments (D102)', () => {
     await assign(examOnly.id, team.recordId);
     await passExam(examOnly.id, team.recordId);
 
-    interviewOnly = await createTestLearnerIn(team.manager, { displayName: 'ผ่านสัมภาษณ์เท่านั้น' });
+    interviewOnly = await createTestLearnerIn(team.manager, {
+      displayName: 'ผ่านสัมภาษณ์เท่านั้น',
+    });
     await assign(interviewOnly.id, team.recordId);
     await passInterview(interviewOnly.id, team.recordId);
   });
@@ -119,20 +121,12 @@ describe('manager-booked date-only appointments (D102)', () => {
       bookAppointmentForManager(team.manager.id, interviewOnly.id, firstDate),
     ).rejects.toMatchObject({ code: 'not_open' });
     await expect(
-      bookAppointmentForManager(
-        team.manager.id,
-        team.learner.id,
-        addCalendarDays(today, -1),
-      ),
+      bookAppointmentForManager(team.manager.id, team.learner.id, addCalendarDays(today, -1)),
     ).rejects.toMatchObject({ code: 'slot_unavailable' });
   });
 
   it('books a date and replaces the same row when the manager chooses another', async () => {
-    const first = await bookAppointmentForManager(
-      team.manager.id,
-      team.learner.id,
-      firstDate,
-    );
+    const first = await bookAppointmentForManager(team.manager.id, team.learner.id, firstDate);
     expect(first.team_id).toBe(team.manager.id);
     expect(bangkokDateOf(first.starts_at)).toBe(firstDate);
 
@@ -156,7 +150,9 @@ describe('manager-booked date-only appointments (D102)', () => {
     );
     expect(results.every((result) => result.status === 'fulfilled')).toBe(true);
     expect(await bookedCount(team.learner.id)).toBe(1);
-    expect(dates).toContain(bangkokDateOf((await myUpcomingAppointment(team.learner.id))!.starts_at));
+    expect(dates).toContain(
+      bangkokDateOf((await myUpcomingAppointment(team.learner.id))!.starts_at),
+    );
   });
 
   it('is visible to the learner and the owning manager and can be cancelled by that manager', async () => {
@@ -172,11 +168,7 @@ describe('manager-booked date-only appointments (D102)', () => {
   });
 
   it('still rejects cancellation by a manager from another team', async () => {
-    const booking = await bookAppointmentForManager(
-      team.manager.id,
-      team.learner.id,
-      firstDate,
-    );
+    const booking = await bookAppointmentForManager(team.manager.id, team.learner.id, firstDate);
     await expect(
       cancelAppointment({ id: otherTeam.manager.id, role: 'manager' }, booking.id),
     ).rejects.toBeInstanceOf(AppointmentError);

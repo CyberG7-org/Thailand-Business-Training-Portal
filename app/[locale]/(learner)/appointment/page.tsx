@@ -7,11 +7,7 @@ import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { formatDate } from '@/lib/domain/thai-date';
 
 /** D102: the manager owns booking; the learner only sees the selected date or the waiting note. */
-export default async function AppointmentPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+export default async function AppointmentPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
   const t = await getTranslations('appointment');

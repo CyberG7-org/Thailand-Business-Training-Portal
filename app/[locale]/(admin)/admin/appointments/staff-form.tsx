@@ -36,7 +36,11 @@ export function StaffForm({
         </p>
       )}
       {state.ok && successTestId && (
-        <p data-testid={successTestId} role="status" className="mt-2 text-sm font-medium text-ok-600">
+        <p
+          data-testid={successTestId}
+          role="status"
+          className="mt-2 text-sm font-medium text-ok-600"
+        >
           {ts('saved')}
         </p>
       )}

@@ -34,23 +34,45 @@ export async function MonthCalendar({
       new Date(Date.UTC(2026, 0, 4 + index)),
     ),
   );
-  const query = (nextMonth: string) => ({ pathname: '/admin/appointments' as const, query: { learner: learnerId, month: nextMonth } });
+  const query = (nextMonth: string) => ({
+    pathname: '/admin/appointments' as const,
+    query: { learner: learnerId, month: nextMonth },
+  });
 
   return (
-    <section data-testid="appointment-month" className="grid gap-4 rounded-card bg-white p-4 shadow-raised md:p-6">
+    <section
+      data-testid="appointment-month"
+      className="grid gap-4 rounded-card bg-white p-4 shadow-raised md:p-6"
+    >
       <div className="flex items-center justify-between gap-3">
-        <Link data-testid="month-prev" href={query(shiftMonth(month, -1))} className="staff-btn-ghost staff-btn-sm">
+        <Link
+          data-testid="month-prev"
+          href={query(shiftMonth(month, -1))}
+          className="staff-btn-ghost staff-btn-sm"
+        >
           ‹ {t('prevMonth')}
         </Link>
         <h2 className="text-center font-display text-lg font-semibold text-brand-900">{title}</h2>
-        <Link data-testid="month-next" href={query(shiftMonth(month, 1))} className="staff-btn-ghost staff-btn-sm">
+        <Link
+          data-testid="month-next"
+          href={query(shiftMonth(month, 1))}
+          className="staff-btn-ghost staff-btn-sm"
+        >
           {t('nextMonth')} ›
         </Link>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs font-medium text-ink-500">
-        {weekdays.map((weekday) => <div key={weekday} className="py-1">{weekday}</div>)}
+        {weekdays.map((weekday) => (
+          <div key={weekday} className="py-1">
+            {weekday}
+          </div>
+        ))}
       </div>
-      <StaffForm action={bookForLearnerAction} testId="appointment-date-form" successTestId="appointment-saved">
+      <StaffForm
+        action={bookForLearnerAction}
+        testId="appointment-date-form"
+        successTestId="appointment-saved"
+      >
         <input type="hidden" name="learnerId" value={learnerId} />
         <div className="grid grid-cols-7 gap-1.5">
           {monthGrid(month).map((date, index) => (
@@ -65,7 +87,7 @@ export async function MonthCalendar({
                   aria-current={date === today ? 'date' : undefined}
                   aria-pressed={date === selectedDate}
                   title={formatDate(date, locale)}
-                  className="min-h-11 w-full rounded-control border border-ink-100 bg-white px-1 text-sm font-medium tabular-nums text-ink-900 transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-300 aria-pressed:border-brand-600 aria-pressed:bg-brand-600 aria-pressed:text-white"
+                  className="min-h-11 w-full rounded-control border border-ink-100 bg-white px-1 text-sm font-medium text-ink-900 tabular-nums transition-colors hover:border-brand-600 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-300 aria-pressed:border-brand-600 aria-pressed:bg-brand-600 aria-pressed:text-white"
                 >
                   {Number(date.slice(-2))}
                 </button>

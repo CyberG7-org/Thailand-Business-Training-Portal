@@ -57,7 +57,7 @@ Generated from project sources at 2026-10-07T02:15:50.384Z.
 
 - `--font-display`: `var(--font-trirong), 'Trirong', serif` (app/globals.css)
 - `--font-body`: `var(--font-plex-thai), 'IBM Plex Sans Thai', ui-sans-serif, system-ui, 'Segoe UI',
-  'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif` (app/globals.css)
+'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif` (app/globals.css)
 
 ### Radius
 

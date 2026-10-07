@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  appointmentDateTime,
-  monthGrid,
-  shiftMonth,
-} from '@/lib/domain/appointments/month';
+import { appointmentDateTime, monthGrid, shiftMonth } from '@/lib/domain/appointments/month';
 
 describe('the manager appointment month (D102)', () => {
   it('lays a month into a Sunday-first six-week grid', () => {
