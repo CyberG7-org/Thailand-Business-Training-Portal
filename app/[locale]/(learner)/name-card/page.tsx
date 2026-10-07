@@ -69,10 +69,7 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
     getTranslations('nameCard'),
   ]);
   const [pdfUrl, pictures] = card
-    ? await Promise.all([
-        createMyNameCardUrl(user.id, card.id),
-        previewPictures(card.pdf_path),
-      ])
+    ? await Promise.all([createMyNameCardUrl(user.id, card.id), previewPictures(card.pdf_path)])
     : [null, null];
   const previewUrl = (page: 1 | 2) =>
     `${pdfUrl}#page=${page}&zoom=page-width&view=FitH&toolbar=0&navpanes=0&scrollbar=0`;

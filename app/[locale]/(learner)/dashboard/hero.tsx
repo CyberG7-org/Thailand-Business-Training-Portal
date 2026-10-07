@@ -58,10 +58,7 @@ export function Hero({
           <span className="hidden md:inline">{line}</span>
         </p>
         {(primary || secondary) && (
-          <div
-            className="rise mt-5 hidden flex-wrap gap-3 md:mt-6 md:flex"
-            style={rise('240ms')}
-          >
+          <div className="rise mt-5 hidden flex-wrap gap-3 md:mt-6 md:flex" style={rise('240ms')}>
             {primary && (
               <Link
                 href={primary.href}
