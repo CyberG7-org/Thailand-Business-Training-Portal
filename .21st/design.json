@@ -1,0 +1,199 @@
+{
+  "version": 1,
+  "project": {
+    "name": "thailand-training-portal",
+    "productType": null,
+    "stack": ["nextjs", "react", "tailwind-v4"]
+  },
+  "sources": {
+    "tokens": ["app/globals.css"],
+    "components": [],
+    "assets": ["public/images", "assets"],
+    "instructions": ["AGENTS.md", "CLAUDE.md"]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "--color-brand-900": {
+        "value": "#0c1a3a",
+        "source": "app/globals.css"
+      },
+      "--color-brand-700": {
+        "value": "#1c3470",
+        "source": "app/globals.css"
+      },
+      "--color-brand-600": {
+        "value": "#2458c6",
+        "source": "app/globals.css"
+      },
+      "--color-brand-100": {
+        "value": "#dbe5f8",
+        "source": "app/globals.css"
+      },
+      "--color-brand-50": {
+        "value": "#eef3fc",
+        "source": "app/globals.css"
+      },
+      "--color-gold-500": {
+        "value": "#c8963e",
+        "source": "app/globals.css"
+      },
+      "--color-gold-100": {
+        "value": "#f6ecd6",
+        "source": "app/globals.css"
+      },
+      "--color-gold-300": {
+        "value": "#e3bd72",
+        "source": "app/globals.css"
+      },
+      "--color-gold-600": {
+        "value": "#a87a2a",
+        "source": "app/globals.css"
+      },
+      "--color-gold-700": {
+        "value": "#6e4c10",
+        "source": "app/globals.css"
+      },
+      "--color-ok-600": {
+        "value": "#1f7a4d",
+        "source": "app/globals.css"
+      },
+      "--color-ok-50": {
+        "value": "#e8f5ee",
+        "source": "app/globals.css"
+      },
+      "--color-warn-600": {
+        "value": "#a15c07",
+        "source": "app/globals.css"
+      },
+      "--color-warn-50": {
+        "value": "#fdf3e3",
+        "source": "app/globals.css"
+      },
+      "--color-warn-700": {
+        "value": "#8a4f06",
+        "source": "app/globals.css"
+      },
+      "--color-bad-600": {
+        "value": "#b42318",
+        "source": "app/globals.css"
+      },
+      "--color-bad-50": {
+        "value": "#fdecea",
+        "source": "app/globals.css"
+      },
+      "--color-ink-900": {
+        "value": "#111827",
+        "source": "app/globals.css"
+      },
+      "--color-ink-700": {
+        "value": "#374151",
+        "source": "app/globals.css"
+      },
+      "--color-ink-500": {
+        "value": "#5b6472",
+        "source": "app/globals.css"
+      },
+      "--color-ink-300": {
+        "value": "#cbd2dc",
+        "source": "app/globals.css"
+      },
+      "--color-ink-100": {
+        "value": "#e7eaef",
+        "source": "app/globals.css"
+      },
+      "--color-ink-50": {
+        "value": "#f6f7f9",
+        "source": "app/globals.css"
+      },
+      "--color-canvas": {
+        "value": "#e6edf8",
+        "source": "app/globals.css"
+      }
+    },
+    "typography": {
+      "--font-display": {
+        "value": "var(--font-trirong), 'Trirong', serif",
+        "source": "app/globals.css"
+      },
+      "--font-body": {
+        "value": "var(--font-plex-thai), 'IBM Plex Sans Thai', ui-sans-serif, system-ui, 'Segoe UI',\n    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+        "source": "app/globals.css"
+      }
+    },
+    "spacing": {},
+    "radius": {
+      "--radius-control": {
+        "value": "8px",
+        "source": "app/globals.css"
+      },
+      "--radius-card": {
+        "value": "16px",
+        "source": "app/globals.css"
+      },
+      "--radius-sheet": {
+        "value": "24px",
+        "source": "app/globals.css"
+      }
+    },
+    "shadows": {
+      "--shadow-glass": {
+        "value": "0 1px 0 rgb(255 255 255 / 0.6) inset, 0 8px 24px rgb(15 31 61 / 0.08)",
+        "source": "app/globals.css"
+      },
+      "--shadow-raised": {
+        "value": "0 2px 6px rgb(15 31 61 / 0.08), 0 12px 32px rgb(15 31 61 / 0.1)",
+        "source": "app/globals.css"
+      }
+    },
+    "motion": {},
+    "density": "unknown"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [
+    {
+      "date": "2026-10-07",
+      "decision": "The manager appointment control uses the portal's existing staff form, card, button, and brand-token patterns in a responsive 42-cell month calendar with no time slots.",
+      "reason": "The 21st.dev catalog search was unavailable (HTTP 401); the existing primitives satisfy the required accessibility, responsive behavior, and visual consistency."
+    }
+  ],
+  "evidence": [
+    {
+      "fact": "design.colorMode:light",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "design.tokens",
+      "source": "app/globals.css"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "AGENTS.md"
+    },
+    {
+      "fact": "project.instructions",
+      "source": "CLAUDE.md"
+    },
+    {
+      "fact": "project.stack:nextjs",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-10-07T02:15:50.384Z"
+}

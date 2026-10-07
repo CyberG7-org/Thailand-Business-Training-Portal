@@ -25,6 +25,21 @@ function exampleZip(): Uint8Array {
   });
 }
 
+/** The supplied pack's exact shape: five invoices and agreements, Facebook, no website. */
+function facebookOnlyPack(): Uint8Array {
+  const entries: Record<string, Uint8Array> = {
+    'chaya sri trade/CHAYA SRI TRADE CO., LTD dbd.pdf': pdf,
+    'chaya sri trade/chaya sri trade fb.doc': utf16(
+      'Facebook \u0000 https://www.facebook.com/Chayasritrade/ \u0000',
+    ),
+  };
+  for (let n = 1; n <= 5; n += 1) {
+    entries[`chaya sri trade/invoice/invoice ${n}.pdf`] = pdf;
+    entries[`chaya sri trade/agreement/agreement (${n}).pdf`] = pdf;
+  }
+  return zipSync(entries);
+}
+
 describe('opening a company zip in the browser (D101)', () => {
   it('lists every entry with its bytes', async () => {
     const entries = await unpackZip(exampleZip());
@@ -63,5 +78,19 @@ describe('opening a company zip in the browser (D101)', () => {
       website: 'https://www.chayasri.co.th',
     });
     expect(opened.sorted.ignored).toEqual(['__MACOSX/chaya sri trade/._dbd.pdf']);
+  });
+
+  it('accepts the supplied shape when Facebook exists and the website is absent', async () => {
+    const opened = await openPack(
+      new File([facebookOnlyPack() as BlobPart], 'chaya sri trade.zip'),
+    );
+    expect(opened.sorted.problem).toBeNull();
+    expect(opened.files.filter((file) => file.group === 'pack')).toHaveLength(1);
+    expect(opened.files.filter((file) => file.group === 'invoice')).toHaveLength(5);
+    expect(opened.files.filter((file) => file.group === 'agreement')).toHaveLength(5);
+    expect(opened.links).toEqual({
+      facebook: 'https://www.facebook.com/Chayasritrade',
+      website: null,
+    });
   });
 });

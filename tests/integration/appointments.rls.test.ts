@@ -3,7 +3,7 @@ import { adminClient, clientFor, deleteTeam, seedTeam, type Team } from './helpe
 
 const svc = adminClient();
 
-/** Spec §7: a booking is the learner's, their manager's and the admin's; blocks are the staff's. */
+/** D102: a booking is the learner's, their manager's and the admin's; writes use the service layer. */
 describe('appointments under RLS', () => {
   let a: Team;
   let b: Team;
@@ -92,16 +92,31 @@ describe('appointments under RLS', () => {
     expect(blockError?.code).toBe('42501');
   });
 
-  it('holds one booking per slot per team, and lets another team use the same time', async () => {
-    const clash = await svc.from('appointments').insert({
-      user_id: a.manager.id,
+  it('holds one booked date per learner and lets learners share a date', async () => {
+    const sameLearner = await svc.from('appointments').insert({
+      user_id: a.learner.id,
       team_id: a.manager.id,
       dbd_record_id: a.recordId,
-      starts_at: '2026-11-09T02:00:00Z',
-      ends_at: '2026-11-09T03:00:00Z',
+      starts_at: '2026-11-12T05:00:00Z',
+      ends_at: '2026-11-12T06:00:00Z',
       status: 'booked',
     });
-    expect(clash.error?.code).toBe('23505');
+    expect(sameLearner.error?.code).toBe('23505');
+
+    const sameDate = await svc
+      .from('appointments')
+      .insert({
+        user_id: a.manager.id,
+        team_id: a.manager.id,
+        dbd_record_id: a.recordId,
+        starts_at: '2026-11-09T05:00:00Z',
+        ends_at: '2026-11-09T06:00:00Z',
+        status: 'booked',
+      })
+      .select('id')
+      .single();
+    expect(sameDate.error).toBeNull();
+
     const other = await svc
       .from('appointments')
       .insert({
@@ -115,6 +130,7 @@ describe('appointments under RLS', () => {
       .select('id')
       .single();
     expect(other.error).toBeNull();
+    await svc.from('appointments').delete().eq('id', sameDate.data!.id);
     await svc.from('appointments').delete().eq('id', other.data!.id);
   });
 });

@@ -1,6 +1,7 @@
 # The company pack — design (P18a)
 
-Date 2026-10-06. Status: for the Owner's review.
+Date 2026-10-06. Status: implemented on `feat/company-pack` (D101); §17 lists what changed
+between this spec and the build.
 
 ## 1. What the Owner asked
 
@@ -300,3 +301,20 @@ screen. One appointment per learner, replaceable; the learner and the manager se
 1. The Thai wording of the three fixed answers (§6.3).
 2. The "dates with an invoice" rule (§5.3).
 3. That a private buyer's name is never used (§11).
+
+## 17. Planning corrections (as built)
+
+- The record no longer owes the learner's contact. The manager types the learner's name, mobile
+  and email on *Create learner*, marked *(for the name card)*; the record holds the company's
+  website and Facebook page only (§3). The card's email is the record's when a manager typed one,
+  otherwise the learner's own.
+- Acceptance waits for the business nature alone (the DB constraint and
+  `REQUIRED_INTERVIEW_FIELDS`). The products come from the invoice items, which a pack may lack,
+  so a missing product list holds back the version, not acceptance (§8).
+- Agreements are stored and listed, never read or indexed; the website and the Facebook page are
+  stored, never read (option A in planning).
+- The interview facts carry the day and item ranges beside the answers, and both graders accept an
+  amount within 20% of the figure or inside the range (§10).
+- The e2e fixture zip holds 1 pack, 3 invoices and 1 agreement; the learner's money card is
+  covered by the fact-sheet unit tests, and it says *estimated from N invoices* rather than
+  linking an invoice (§13).
