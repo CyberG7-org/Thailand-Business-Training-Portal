@@ -6,8 +6,9 @@ import { requireStaff } from '@/lib/auth/session';
 import { assignDbdRecord, learnersOfRecords } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
+import { deleteDbdRecord } from '@/lib/db/dbd-records';
 import { refreshNameCardAfter } from '@/lib/db/name-cards';
-import { createLearnerAccount } from '@/lib/db/provisioning';
+import { createLearnerAccount, deleteLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
   contactFromForm,
@@ -23,6 +24,46 @@ export type CreateUserState = {
   /** Thai name of the company the new learner was assigned to. */
   company: string | null;
 };
+
+export type DeleteState = { error: string | null };
+
+export async function deleteCompanyAction(
+  _prev: DeleteState,
+  formData: FormData,
+): Promise<DeleteState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  await requireStaff(locale);
+  const recordId = String(formData.get('id') ?? '');
+  if (!recordId) return { error: 'Missing company' };
+  try {
+    const deleted = await deleteDbdRecord(await createSupabaseServerClient(), recordId);
+    if (!deleted) return { error: 'Company not found' };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+  revalidatePath(`/${locale}/admin/users`);
+  revalidatePath(`/${locale}/admin/learners`);
+  return { error: null };
+}
+
+export async function deleteLearnerAction(
+  _prev: DeleteState,
+  formData: FormData,
+): Promise<DeleteState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  const staff = await requireStaff(locale);
+  const learnerId = String(formData.get('id') ?? '');
+  if (!learnerId) return { error: 'Missing learner' };
+  try {
+    await deleteLearnerAccount(staff.id, learnerId);
+    await recordAccountAction(staff.id, 'delete', learnerId);
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : String(error) };
+  }
+  revalidatePath(`/${locale}/admin/users`);
+  revalidatePath(`/${locale}/admin/learners`);
+  return { error: null };
+}
 
 /**
  * Creates a learner and assigns the chosen (confirmed) DBD record in one step: the learner's

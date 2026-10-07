@@ -106,6 +106,7 @@ export function CreateLearnerTabs({
         id="create-panel-companies"
         aria-labelledby="create-tab-companies"
         hidden={tab !== 'companies'}
+        className="min-w-0"
       >
         <CompaniesPanel
           rows={rows}
@@ -126,6 +127,7 @@ export function CreateLearnerTabs({
         id="create-panel-learner"
         aria-labelledby="create-tab-learner"
         hidden={tab !== 'learner'}
+        className="min-w-0"
       >
         <NewUserForm
           companies={companies}

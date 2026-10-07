@@ -55,5 +55,9 @@ test('the admin sees each learner on the Learner Record, with or without a compa
   // Nothing taken yet: no result and nothing to open.
   await expect(page.getByTestId(`mcq-${assigned}`)).toHaveText('—');
   await expect(page.getByTestId(`chatbot-${assigned}`)).toHaveText('—');
-  await expect(page.getByTestId(`company-${E2E_LEARNER.loginId}`)).toHaveText('—');
+  await expect(
+    page.getByTestId(`company-${E2E_LEARNER.loginId}`).getByRole('link', {
+      name: 'พร้อมมอบหมาย',
+    }),
+  ).toBeVisible();
 });

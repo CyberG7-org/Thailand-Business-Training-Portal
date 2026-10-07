@@ -194,6 +194,9 @@
       "intro": "您团队正在培训的所有学员：公司、业务知识测验与银行准备面试结果以及预约。如需添加学员，请前往",
       "toCreate": "创建学员与DBD",
       "empty": "暂无学员。",
+      "readyToAssign": "可分配公司",
+      "deleteLearner": "删除学员",
+      "deleteLearnerConfirm": "确定删除学员 {loginId} 吗？其账户和培训记录将被永久删除。",
       "backToRecord": "← 学员记录",
       "appointment": {
         "book": "预约日期",
@@ -207,7 +210,8 @@
         "issuedOn": "DBD签发日期",
         "mcq": "业务知识测验",
         "chatbot": "银行准备面试",
-        "appointment": "预约"
+        "appointment": "预约",
+        "actions": "操作"
       },
       "results": {
         "pass": "通过",
@@ -279,9 +283,12 @@
         "issuedOn": "证书签发日期",
         "team": "团队",
         "status": "状态",
-        "learner": "学员"
+        "learner": "学员",
+        "actions": "操作"
       },
       "assignLearner": "分配学员",
+      "deleteCompany": "删除公司",
+      "deleteCompanyConfirm": "确定删除 {name} 吗？学员账户将保留，并可分配给其他公司。",
       "learnerOtherTeam": "其他团队的学员",
       "learnerAfterConfirm": "确认后可分配"
     },
