@@ -13,17 +13,21 @@ import { displayLoginId } from '@/lib/domain/login-id';
 export async function ShellHeader({
   user,
   compact = false,
+  variant = 'default',
 }: {
   user: CurrentUser | null;
   compact?: boolean;
+  variant?: 'default' | 'study';
 }) {
   const [t, td] = await Promise.all([getTranslations('app'), getTranslations('dashboard')]);
   const name = t('name');
   const thaiName = t('nameThai');
+  const study = variant === 'study';
   return (
     <header
       data-testid="shell-header"
-      className={`glass flex items-center rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)] ${compact ? 'gap-2 md:gap-x-5' : 'flex-wrap gap-x-5 gap-y-2'}`}
+      data-variant={variant}
+      className={`${study ? 'md:glass flex items-center gap-3 text-ink-900 md:rounded-card md:py-2.5 md:pr-2 md:pl-3 md:shadow-[0_8px_24px_rgb(12_26_58/0.18)]' : 'glass flex items-center rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]'} ${compact ? 'gap-2 md:gap-x-5' : study ? '' : 'flex-wrap gap-x-5 gap-y-2'}`}
     >
       <Link
         href="/dashboard"
@@ -40,11 +44,13 @@ export async function ShellHeader({
         )}
         <span
           aria-hidden="true"
-          className={`size-10 shrink-0 place-items-center rounded-[10px] bg-brand-900 font-display text-base font-semibold text-gold-100 shadow-[inset_0_0_0_1px_rgb(200_150_62/0.6)] ${compact ? 'hidden md:grid' : 'grid'}`}
+          className={`size-10 shrink-0 place-items-center rounded-[10px] bg-brand-900 font-display text-base font-semibold text-gold-100 shadow-[inset_0_0_0_1px_rgb(200_150_62/0.75)] ${compact && !study ? 'hidden md:grid' : 'grid'}`}
         >
           BT
         </span>
-        <span className={`${compact ? 'flex' : 'hidden sm:flex'} min-w-0 flex-col leading-[1.35]`}>
+        <span
+          className={`${study ? 'hidden md:flex' : compact ? 'flex' : 'hidden sm:flex'} min-w-0 flex-col leading-[1.35]`}
+        >
           <span className="truncate text-sm font-semibold text-brand-900 md:font-display md:text-[17px]">
             <span className="md:hidden">
               {user?.displayName ?? (user ? displayLoginId(user.loginId) : name)}
@@ -57,21 +63,27 @@ export async function ShellHeader({
           )}
         </span>
       </Link>
-      <LanguageToggle label={t('language')} compact={compact} />
+      <LanguageToggle
+        label={t('language')}
+        compact={compact || study}
+        className={study ? 'shadow-[0_2px_8px_rgb(12_26_58/0.12)]' : ''}
+      />
       {user && (
         <div
-          className={`flex items-center border-l border-brand-700/20 ${compact ? 'pl-1 md:gap-2.5 md:pl-4' : 'gap-2.5 pl-4'}`}
+          className={`flex items-center ${study ? 'md:border-l md:border-brand-700/20 md:pl-4' : 'border-l border-brand-700/20'} ${compact ? 'pl-1 md:gap-2.5 md:pl-4' : study ? 'gap-0 md:gap-2.5' : 'gap-2.5 pl-4'}`}
         >
           <span
             aria-hidden="true"
-            className={`size-9 shrink-0 place-items-center rounded-full bg-gold-100 text-sm font-semibold text-brand-900 ${compact ? 'hidden md:grid' : 'grid'}`}
+            className={`size-9 shrink-0 place-items-center rounded-full bg-gold-100 text-sm font-semibold text-brand-900 ${compact && !study ? 'hidden md:grid' : 'grid'}`}
           >
             {initialsOf(user.displayName, user.loginId)}
           </span>
           <span className="hidden text-sm font-medium md:inline">
             {user.displayName ?? displayLoginId(user.loginId)}
           </span>
-          <SignOutButton compact={compact} />
+          <span className={study ? 'hidden md:block' : ''}>
+            <SignOutButton compact={compact} />
+          </span>
         </div>
       )}
     </header>

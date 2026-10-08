@@ -4,9 +4,8 @@ import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
 /**
- * The study list from the design handoff (01): numbered rows, the first card not yet done marked
- * "continue here", and a side card with the count done, one segment per card and a button to
- * the next card. Opening a card counts under the default "viewed" tracking, so the list moves on.
+ * The mobile-first study list: progress first, four fixed stage tabs and compact lesson rows.
+ * Opening a card counts under the default "viewed" tracking, so the next Continue action moves on.
  */
 test('the study list shows progress, points at the next card, and moves on when a card is done', async ({
   page,
@@ -21,9 +20,11 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(page.getByTestId('study-summary')).toContainText(`0 จาก ${total}`);
   await expect(page.getByTestId('study-segments').locator('[data-state]')).toHaveCount(total);
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
-  await expect(rows.first()).toContainText('เริ่มต่อที่นี่');
+  await expect(
+    page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
+  ).toHaveCount(4);
   await expect(rows.first()).toContainText(`1/${total}`);
-  await expect(page.getByTestId('study-continue')).toHaveText('อ่านต่อบทเรียนที่ 1');
+  await expect(page.getByTestId('study-continue')).toHaveText('เรียนต่อ');
 
   await page.getByTestId('study-continue').click();
   await expect(page).toHaveURL(/\/th\/study\/[^/]+$/);
@@ -32,7 +33,7 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(page.getByTestId('study-segments').locator('[data-state="done"]')).toHaveCount(1);
   await expect(rows.nth(1)).toHaveAttribute('data-current', 'true');
   await expect(rows.first()).not.toHaveAttribute('data-current', 'true');
-  await expect(page.getByTestId('study-continue')).toHaveText('อ่านต่อบทเรียนที่ 2');
+  await expect(page.getByTestId('study-continue')).toHaveText('เรียนต่อ');
 });
 
 test('the study list fits a phone', async ({ page }) => {
@@ -41,6 +42,8 @@ test('the study list fits a phone', async ({ page }) => {
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/study');
   await expect(page.getByTestId('study-continue')).toBeVisible();
+  await expect(page.getByTestId('nav-back')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

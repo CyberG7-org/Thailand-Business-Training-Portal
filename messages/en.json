@@ -1350,8 +1350,42 @@
     "intro": "{count} cards on what the bank will ask, each filled with your own company's facts.",
     "continue": "Continue with card {n}",
     "continueHere": "continue here",
+    "continueShort": "Continue",
+    "review": "Review",
+    "openLesson": "Open",
+    "tabs": {
+      "label": "Training stages",
+      "study": "Study",
+      "exam": "Quiz",
+      "interview": "Readiness",
+      "nameCard": "Name card"
+    },
+    "lessons": {
+      "identity": {
+        "title": "Company identity",
+        "description": "Company name, registration date and key details"
+      },
+      "ownership": {
+        "title": "Capital and shareholders",
+        "description": "Registered capital and ownership structure"
+      },
+      "business": {
+        "title": "Business operations",
+        "description": "Business type and actual operations"
+      },
+      "role": {
+        "title": "Your role",
+        "description": "Your duties and responsibilities in the company"
+      },
+      "answers": {
+        "title": "Answer confidently",
+        "description": "How to answer the bank's questions"
+      }
+    },
     "summary": {
-      "ofTotal": "{done} of {total}"
+      "ofTotal": "{done} of {total}",
+      "ready": "Ready for the next step",
+      "remaining": "{count} lessons remaining"
     },
     "allDone": "All cards done",
     "cardOf": "Card {n} of {total}",

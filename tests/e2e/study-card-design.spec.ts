@@ -4,9 +4,9 @@ import { loginAs } from './helpers';
 import { seedLearnerWithCompany, seedStudyCard, setPolicy } from './seed';
 
 /**
- * The study card from the design handoff (02): the band says which card this is, the back pill
- * leads to the list, the article's footer leads to the next card (and, under "completed"
- * tracking, marks the card done), and the table stacks on a phone.
+ * The study card says where it sits in the course without a competing back control. Its footer
+ * leads to the next card (and, under "completed" tracking, marks the card done), and the table
+ * becomes readable question-and-answer cards on a phone.
  */
 test('a card shows its place in the list, leads to the next card, and the list records the read', async ({
   page,
@@ -22,8 +22,7 @@ test('a card shows its place in the list, leads to the next card, and the list r
   await expect(segments).toContainText(`บทเรียนที่ 1 จาก ${total}`);
   await expect(segments.locator('[data-state]')).toHaveCount(total);
   await expect(segments.locator('[data-state]').first()).toHaveAttribute('data-state', 'current');
-  await expect(page.getByTestId('nav-back')).toHaveText(/เอกสารเรียนรู้/);
-  await expect(page.getByTestId('nav-back')).toHaveAttribute('href', '/th/study');
+  await expect(page.getByTestId('nav-back')).toHaveCount(0);
 
   const next = page.getByTestId('study-next');
   await expect(next).toContainText('บทเรียนที่ 2:');

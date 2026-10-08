@@ -1350,8 +1350,42 @@
     "intro": "{count} 张关于银行会问什么的学习卡片，每张都基于贵公司的真实信息。",
     "continue": "继续第 {n} 张卡片",
     "continueHere": "从这里继续",
+    "continueShort": "继续学习",
+    "review": "复习",
+    "openLesson": "打开",
+    "tabs": {
+      "label": "培训阶段",
+      "study": "学习",
+      "exam": "测验",
+      "interview": "准备度",
+      "nameCard": "名片"
+    },
+    "lessons": {
+      "identity": {
+        "title": "公司身份",
+        "description": "公司名称、注册日期和基本资料"
+      },
+      "ownership": {
+        "title": "资本与股东",
+        "description": "注册资本和股权结构"
+      },
+      "business": {
+        "title": "业务与经营",
+        "description": "业务类型和实际经营情况"
+      },
+      "role": {
+        "title": "您的角色",
+        "description": "您在公司的职责和责任"
+      },
+      "answers": {
+        "title": "自信回答",
+        "description": "回答银行问题的方法"
+      }
+    },
     "summary": {
-      "ofTotal": "{total} 张中的 {done} 张"
+      "ofTotal": "{total} 张中的 {done} 张",
+      "ready": "可以进入下一阶段",
+      "remaining": "还剩 {count} 课"
     },
     "allDone": "所有卡片已完成",
     "cardOf": "第 {n} 张，共 {total} 张",

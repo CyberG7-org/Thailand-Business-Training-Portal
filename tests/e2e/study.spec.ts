@@ -37,7 +37,7 @@ test('a learner reads a card in three languages, progress is recorded, Thai read
   await expect(page.getByTestId('read-aloud')).not.toHaveAttribute('data-status', 'error');
 
   await page.goto('/th/study');
-  await expect(page.getByTestId(`study-state-${key}`)).toHaveText('เปิดดูแล้ว');
+  await expect(page.getByTestId(`study-state-${key}`)).toHaveText('เรียนจบแล้ว');
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-study-status')).toHaveText('กำลังดำเนินการ');
 

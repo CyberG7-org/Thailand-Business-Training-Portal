@@ -85,11 +85,9 @@ export default async function StudyMaterialPage({
   if (index < 0) notFound();
   const material = materials[index];
   const localization = pickLocalization(material, loc);
-  const back = { href: '/study', label: t('title') };
-
   if (!localization) {
     return (
-      <LearnerShell title={t('title')} step="study" back={back}>
+      <LearnerShell title={t('title')} step="study" hideBack hideMobileNav headerVariant="study">
         <section className="rounded-card bg-white px-6 py-5 shadow-raised">
           <p data-testid="study-not-available" className="text-sm text-ink-700">
             {t('notAvailable')}
@@ -166,13 +164,15 @@ export default async function StudyMaterialPage({
   return (
     <LearnerShell
       step="study"
-      back={back}
+      hideBack
+      hideMobileNav
+      headerVariant="study"
       subBarRight={<CardSegments label={t('cardOf', { n: index + 1, total })} states={states} />}
       hero={
         <>
           <h1
             data-testid="study-title"
-            className="mt-6 max-w-[820px] font-display text-[26px] leading-[1.35] font-medium text-white md:text-[32px]"
+            className="mt-6 max-w-4xl font-display text-[26px] leading-[1.35] font-medium text-white md:text-[32px]"
           >
             {localization.title}
           </h1>
@@ -221,43 +221,40 @@ export default async function StudyMaterialPage({
                 {t('pdfMissing')}
               </p>
             ))}
-          <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-ink-100 pt-6">
-            {completionTracking === 'completed' ? (
-              <form action={markCompletedAction}>
-                <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="materialId" value={material.id} />
-                <input type="hidden" name="contentKey" value={material.content_key} />
-                {mine?.completed_at ? (
-                  <p
-                    data-testid="study-completed"
-                    className="inline-flex min-h-11 items-center gap-2 rounded-control bg-ok-50 px-3.5 text-sm font-medium text-ok-600"
-                  >
-                    <CheckIcon size={16} />
-                    {t('completed')}
-                  </p>
-                ) : (
-                  <button
-                    type="submit"
-                    className="inline-flex min-h-12 items-center gap-2 rounded-control bg-brand-600 px-6 text-base font-semibold text-white transition-colors hover:bg-brand-700"
-                  >
-                    <CheckIcon size={16} />
-                    {t('markCompleted')}
-                  </button>
-                )}
-              </form>
-            ) : (
-              <Link href="/study" className={footerLink}>
-                <span aria-hidden="true">←</span>
-                {t('title')}
-              </Link>
-            )}
-            {next && (
-              <Link data-testid="study-next" href={'/study/' + next.key} className={footerLink}>
-                {t('nextCard', { n: next.index, title: next.title })}
-                <ArrowIcon />
-              </Link>
-            )}
-          </footer>
+          {(completionTracking === 'completed' || next) && (
+            <footer className="mt-8 flex flex-wrap items-center justify-end gap-4 border-t border-ink-100 pt-6">
+              {completionTracking === 'completed' ? (
+                <form action={markCompletedAction}>
+                  <input type="hidden" name="locale" value={locale} />
+                  <input type="hidden" name="materialId" value={material.id} />
+                  <input type="hidden" name="contentKey" value={material.content_key} />
+                  {mine?.completed_at ? (
+                    <p
+                      data-testid="study-completed"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-control bg-ok-50 px-3.5 text-sm font-medium text-ok-600"
+                    >
+                      <CheckIcon size={16} />
+                      {t('completed')}
+                    </p>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="inline-flex min-h-12 items-center gap-2 rounded-control bg-brand-600 px-6 text-base font-semibold text-white transition-colors hover:bg-brand-700"
+                    >
+                      <CheckIcon size={16} />
+                      {t('markCompleted')}
+                    </button>
+                  )}
+                </form>
+              ) : null}
+              {next && (
+                <Link data-testid="study-next" href={'/study/' + next.key} className={footerLink}>
+                  {t('nextCard', { n: next.index, title: next.title })}
+                  <ArrowIcon />
+                </Link>
+              )}
+            </footer>
+          )}
         </article>
 
         {evidence.length > 0 && (

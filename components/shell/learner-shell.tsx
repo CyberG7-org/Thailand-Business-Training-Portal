@@ -28,6 +28,11 @@ export async function LearnerShell({
   hero,
   bandFooter,
   tone = 'blue',
+  hideBack = false,
+  hideSubBar = false,
+  hideMobileNav = false,
+  headerVariant = 'default',
+  mainClassName = '',
   children,
 }: {
   /** The page title in the band; the dashboard passes `hero` instead. */
@@ -49,6 +54,14 @@ export async function LearnerShell({
   bandFooter?: ReactNode;
   /** The band's colour: gold for an earned moment (a passed exam). */
   tone?: 'blue' | 'gold';
+  /** Remove the history control while retaining progress on the right. */
+  hideBack?: boolean;
+  /** Remove the entire row between the header and title. */
+  hideSubBar?: boolean;
+  /** Keep the desktop sidebar but replace the phone strip with page-owned navigation. */
+  hideMobileNav?: boolean;
+  headerVariant?: 'default' | 'study';
+  mainClassName?: string;
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
@@ -62,10 +75,14 @@ export async function LearnerShell({
           (tone === 'gold' ? ' band-gold' : '')
         }
       >
-        <ShellHeader user={user} compact={home} />
-        {!home && (
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-            <BackPill home="/dashboard" label={back?.label ?? t('back')} href={back?.href} />
+        <ShellHeader user={user} compact={home} variant={headerVariant} />
+        {!home && !hideSubBar && (
+          <div
+            className={`mt-8 flex flex-wrap items-center gap-4 ${hideBack ? 'justify-end' : 'justify-between'}`}
+          >
+            {!hideBack && (
+              <BackPill home="/dashboard" label={back?.label ?? t('back')} href={back?.href} />
+            )}
             {subBarRight ?? (step && <StepSegments current={step} statuses={statuses} />)}
           </div>
         )}
@@ -84,12 +101,14 @@ export async function LearnerShell({
         )}
         {bandFooter}
       </div>
-      <main className={home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'}>
+      <main
+        className={`${home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'} ${mainClassName}`}
+      >
         {home ? (
           children
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-6">
-            <LearnerNav current={step} statuses={statuses} />
+            <LearnerNav current={step} statuses={statuses} hideOnMobile={hideMobileNav} />
             <div className="min-w-0">{children}</div>
           </div>
         )}
