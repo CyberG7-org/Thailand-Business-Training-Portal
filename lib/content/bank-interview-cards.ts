@@ -1,75 +1,73 @@
 import type { AppLocale } from '@/i18n/routing';
 import type { ConceptGroup } from '@/lib/domain/bank-interview';
 
-/**
- * Starter study cards built on the bank-interview concepts (decision D39). Placeholders render
- * with each learner's own company facts (lenient: a missing fact shows as "—"). Admins load them
- * once from Admin → Study content and edit freely afterwards.
- */
 export type StarterCard = {
   contentKey: string;
   sortOrder: number;
-  /** The bank-interview concept group the card teaches (null for advice cards). */
   conceptGroup: ConceptGroup | null;
   localizations: Record<AppLocale, { title: string; body: string }>;
 };
 
+/**
+ * Five direct cheat sheets covering every assessed concept. The optional customer channel text
+ * is rendered by locale, so a company without a website never gets an empty website label.
+ */
 export const BANK_INTERVIEW_CARDS: StarterCard[] = [
   {
     contentKey: 'bank-interview-1-identity',
     sortOrder: 10,
     conceptGroup: 'identity',
     localizations: {
-      th: {
-        title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (1/5): ตัวตนของบริษัท',
-        body: `เจ้าหน้าที่ธนาคารจะเริ่มด้วยคำถามพื้นฐานเกี่ยวกับบริษัทของคุณ ตอบให้ตรงกับ **หนังสือรับรอง** ทุกครั้ง
-
-| คำถามที่ธนาคารถาม | คำตอบของคุณ (จากหนังสือรับรอง) |
-|---|---|
-| บริษัทชื่ออะไร | **{company_name_th}** ({company_name_en}) |
-| บริษัทจดทะเบียนเมื่อใด | {registered_on} |
-| บริษัทมีกรรมการกี่คน | {directors_count} คน — {directors} |
-| บริษัทจดทะเบียนที่ไหน / ที่อยู่จดทะเบียน | {head_office_address} (จังหวัด{province}) |
-| เลขทะเบียนนิติบุคคล | {juristic_id} |
-
-**เคล็ดลับ**
-- พูดชื่อบริษัทเต็ม ๆ ตามที่จดทะเบียน ทั้งภาษาไทยและอังกฤษถ้าถูกถาม
-- วันที่จดทะเบียนตอบเป็นวัน/เดือน/ปี พ.ศ. ก็ได้ แต่ต้องเป็นวันเดียวกับในหนังสือรับรอง
-- ที่อยู่จดทะเบียนอาจต่างจากที่ทำงานจริง — ธนาคารถามทั้งสองอย่าง (ดูการ์ดที่ 3)`,
-      },
       en: {
-        title: "What the bank will ask (1/5): the company's identity",
-        body: `The bank officer starts with basic questions about your company. Answer exactly as the **certificate** says.
+        title: 'Company identity and directors (1/5)',
+        body: `Learn these facts exactly as they appear in the company documents.
 
-| The bank asks | Your answer (from the certificate) |
+| What to remember | Your company answer |
 |---|---|
-| What is the company's name? | **{company_name_th}** ({company_name_en}) |
-| When was the company incorporated? | {registered_on} |
-| How many directors does it have? | {directors_count} — {directors} |
-| Where is it registered / registered address? | {head_office_address} (province: {province}) |
-| Juristic person registration number | {juristic_id} |
+| Full registered name | **{company_name_th}** ({company_name_en}) |
+| 13-digit registration number | {juristic_id} |
+| Registration date | {registered_on} |
+| Registered address | {head_office_address} |
+| Directors | {directors_count} — {directors} |
+| Who can sign for the company | {signing_authority} |
 
-**Tips**
-- Say the full registered name, Thai and English if asked.
-- The incorporation date may be given in the Buddhist calendar, but it must be the date on the certificate.
-- The registered address can differ from where you actually work — the bank asks about both (see card 3).`,
+**The bank may ask:** What is the full registered name? What are the registration number and date? Where is the company registered? Who are the directors and who can sign?
+
+**Remember:** use the full name and exact numbers from the documents. The registered address can differ from the real place of business.`,
+      },
+      th: {
+        title: 'ข้อมูลบริษัทและกรรมการ (1/5)',
+        body: `จำข้อมูลต่อไปนี้ให้ตรงกับเอกสารบริษัท
+
+| สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
+|---|---|
+| ชื่อเต็มที่จดทะเบียน | **{company_name_th}** ({company_name_en}) |
+| เลขทะเบียน 13 หลัก | {juristic_id} |
+| วันที่จดทะเบียน | {registered_on} |
+| ที่อยู่จดทะเบียน | {head_office_address} |
+| กรรมการ | {directors_count} คน — {directors} |
+| ผู้มีอำนาจลงนาม | {signing_authority} |
+
+**ธนาคารอาจถาม:** ชื่อเต็ม เลขทะเบียน วันที่จดทะเบียน ที่อยู่ กรรมการ และผู้มีอำนาจลงนามคืออะไร
+
+**จำไว้:** ชื่อและตัวเลขต้องตรงเอกสาร ที่อยู่จดทะเบียนอาจไม่ใช่สถานที่ทำธุรกิจจริง`,
       },
       zh: {
-        title: '银行会问什么（1/5）：公司身份',
-        body: `银行工作人员会先问公司的基本信息。请按 **注册证明** 上的内容回答。
+        title: '公司身份和董事（1/5）',
+        body: `请准确记住公司文件中的以下信息。
 
-| 银行的问题 | 您的答案（来自注册证明） |
+| 要记住的内容 | 您公司的答案 |
 |---|---|
-| 公司叫什么名字？ | **{company_name_th}**（{company_name_en}） |
-| 公司什么时候注册成立？ | {registered_on} |
-| 公司有几位董事？ | {directors_count} 位 — {directors} |
-| 公司在哪里注册？注册地址？ | {head_office_address}（{province}府） |
-| 法人注册号 | {juristic_id} |
+| 完整注册名称 | **{company_name_th}**（{company_name_en}） |
+| 13 位注册号 | {juristic_id} |
+| 注册日期 | {registered_on} |
+| 注册地址 | {head_office_address} |
+| 董事 | {directors_count} 位 — {directors} |
+| 有权代表公司签字的人 | {signing_authority} |
 
-**要点**
-- 说出完整的注册名称，如被问到也要说英文名。
-- 注册日期可用佛历回答，但必须与证明上的日期一致。
-- 注册地址可能与实际办公地址不同——银行两者都会问（见第 3 张卡）。`,
+**银行可能会问：** 完整名称、注册号、注册日期、注册地址、董事和签字权是什么？
+
+**记住：** 名称和数字必须与文件一致。注册地址可能与实际经营地点不同。`,
       },
     },
   },
@@ -78,53 +76,59 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
     sortOrder: 20,
     conceptGroup: 'ownership',
     localizations: {
-      th: {
-        title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (2/5): ทุนและผู้ถือหุ้น',
-        body: `ธนาคารต้องรู้ว่าใครเป็นเจ้าของบริษัท คำตอบมาจาก **บัญชีรายชื่อผู้ถือหุ้น (บอจ.5)** และหนังสือรับรอง
-
-| คำถามที่ธนาคารถาม | คำตอบของคุณ |
-|---|---|
-| ทุนจดทะเบียนเท่าใด | {registered_capital} บาท |
-| มีหุ้นทั้งหมดกี่หุ้น | {total_shares} หุ้น มูลค่าหุ้นละ {par_value} บาท |
-| บริษัทมีผู้ถือหุ้นกี่คน | {shareholders_count} คน — {shareholders} |
-| คุณถือหุ้นกี่หุ้น คิดเป็นกี่เปอร์เซ็นต์ | {my_shares} หุ้น ({my_share_percent}%) |
-| คุณรู้จักผู้ถือหุ้นคนอื่นไหม ความสัมพันธ์คืออะไร | {my_relationship} |
-
-**เคล็ดลับ**
-- ทุนจดทะเบียน ÷ มูลค่าหุ้น = จำนวนหุ้นทั้งหมด ตรวจให้ตรงกัน
-- ตอบเรื่องผู้ถือหุ้นคนอื่นอย่างเป็นธรรมชาติและตรงกับความจริงที่เตรียมไว้`,
-      },
       en: {
-        title: 'What the bank will ask (2/5): capital and shareholders',
-        body: `The bank needs to know who owns the company. The answers come from the **shareholder list (Bor.Or.Jor.5)** and the certificate.
+        title: 'Capital, shareholders and your role (2/5)',
+        body: `Know who owns the company and what you do in it.
 
-| The bank asks | Your answer |
+| What to remember | Your answer |
 |---|---|
-| What is the registered capital? | {registered_capital} Baht |
-| What is the total number of shares? | {total_shares} shares at {par_value} Baht each |
-| How many shareholders are there? | {shareholders_count} — {shareholders} |
-| How many shares do you hold, and what percentage? | {my_shares} shares ({my_share_percent}%) |
-| Do you know the other shareholders? Relationship? | {my_relationship} |
+| Registered capital | {registered_capital} Baht |
+| Total shares and value | {total_shares} shares at {par_value} Baht each |
+| Shareholders | {shareholders_count} — {shareholders} |
+| Your shares | {my_shares} shares ({my_share_percent}%) |
+| Your name and position | {my_name} — {my_position} |
+| Your daily responsibilities | {my_responsibilities} |
+| Relationship to other shareholders | {my_relationship} |
 
-**Tips**
-- Registered capital ÷ par value = total shares. Make sure they agree.
-- Talk about the other shareholders naturally and consistently with what you prepared.`,
+**The bank may ask:** What is the capital? How many shareholders are there? How many shares do you own? What is your position and daily work?
+
+**Remember:** registered capital ÷ value per share = total shares. Use your own words for your work, but keep the facts consistent.`,
+      },
+      th: {
+        title: 'ทุน ผู้ถือหุ้น และหน้าที่ของคุณ (2/5)',
+        body: `รู้ว่าใครเป็นเจ้าของบริษัทและคุณทำหน้าที่อะไร
+
+| สิ่งที่ต้องจำ | คำตอบของคุณ |
+|---|---|
+| ทุนจดทะเบียน | {registered_capital} บาท |
+| จำนวนหุ้นและมูลค่าหุ้น | {total_shares} หุ้น หุ้นละ {par_value} บาท |
+| ผู้ถือหุ้น | {shareholders_count} คน — {shareholders} |
+| หุ้นของคุณ | {my_shares} หุ้น ({my_share_percent}%) |
+| ชื่อและตำแหน่ง | {my_name} — {my_position} |
+| หน้าที่ประจำวัน | {my_responsibilities} |
+| ความสัมพันธ์กับผู้ถือหุ้นอื่น | {my_relationship} |
+
+**ธนาคารอาจถาม:** ทุนเท่าใด มีผู้ถือหุ้นกี่คน คุณถือหุ้นกี่หุ้น และทำหน้าที่อะไร
+
+**จำไว้:** ทุนจดทะเบียน ÷ มูลค่าต่อหุ้น = จำนวนหุ้นทั้งหมด อธิบายงานด้วยคำของคุณเองแต่ข้อมูลต้องตรงกัน`,
       },
       zh: {
-        title: '银行会问什么（2/5）：资本与股东',
-        body: `银行需要了解公司的所有者。答案来自 **股东名册（บอจ.5）** 和注册证明。
+        title: '资本、股东和您的角色（2/5）',
+        body: `了解谁拥有公司，以及您在公司中的工作。
 
-| 银行的问题 | 您的答案 |
+| 要记住的内容 | 您的答案 |
 |---|---|
-| 注册资本是多少？ | {registered_capital} 泰铢 |
-| 一共有多少股份？ | {total_shares} 股，每股 {par_value} 泰铢 |
-| 公司有几位股东？ | {shareholders_count} 位 — {shareholders} |
-| 您持有多少股份？占多少比例？ | {my_shares} 股（{my_share_percent}%） |
-| 您认识其他股东吗？是什么关系？ | {my_relationship} |
+| 注册资本 | {registered_capital} 泰铢 |
+| 总股份和每股价值 | {total_shares} 股，每股 {par_value} 泰铢 |
+| 股东 | {shareholders_count} 位 — {shareholders} |
+| 您的股份 | {my_shares} 股（{my_share_percent}%） |
+| 您的姓名和职位 | {my_name} — {my_position} |
+| 您的日常职责 | {my_responsibilities} |
+| 与其他股东的关系 | {my_relationship} |
 
-**要点**
-- 注册资本 ÷ 每股面值 = 股份总数，请核对一致。
-- 谈到其他股东时要自然，并与事先准备的内容一致。`,
+**银行可能会问：** 资本是多少？有几位股东？您有多少股份？职位和日常工作是什么？
+
+**记住：** 注册资本 ÷ 每股价值 = 总股份。可用自己的话说明工作，但事实必须一致。`,
       },
     },
   },
@@ -133,68 +137,65 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
     sortOrder: 30,
     conceptGroup: 'business_plan',
     localizations: {
-      th: {
-        title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (3/5): ธุรกิจและการดำเนินงาน',
-        body: `ธนาคารต้องเข้าใจว่าบริษัททำอะไรและเงินจะเข้าออกอย่างไร คำตอบส่วนนี้มาจาก **วัตถุที่ประสงค์** และข้อมูลที่บริษัทเตรียมไว้
-
-| คำถามที่ธนาคารถาม | คำตอบของคุณ |
-|---|---|
-| บริษัททำธุรกิจหลักอะไร | {nature_of_business} |
-| ขายสินค้าหรือบริการอะไร | {products_services} |
-| วัตถุที่ประสงค์ตามที่จดทะเบียน | {business_categories} |
-| บริษัทเปิดบัญชีเพื่ออะไร | {account_purpose} |
-| เงินเข้าออกต่อเดือนประมาณเท่าใด | {monthly_volume} |
-| ลูกค้าหลักอยู่ที่ไหน | {clients_location} |
-| ซัพพลายเออร์หลักอยู่ที่ไหน | {suppliers_location} |
-| แหล่งที่มาของเงินทุน | {source_of_funds} |
-| สถานที่ประกอบธุรกิจจริง | {business_address} |
-| เริ่มดำเนินธุรกิจแล้วหรือยัง | {operations_status} |
-
-**เคล็ดลับ**
-- อธิบายธุรกิจด้วยประโยคสั้น ๆ 1–2 ประโยค สอดคล้องกับวัตถุที่ประสงค์ที่จดทะเบียน
-- ตัวเลขประมาณการต้องสมเหตุสมผลกับขนาดธุรกิจและทุนจดทะเบียน`,
-      },
       en: {
-        title: 'What the bank will ask (3/5): the business and its operations',
-        body: `The bank must understand what the company does and how money will flow. These answers come from the **objectives** and the facts the company prepared.
+        title: 'Business, customers and suppliers (3/5)',
+        body: `Explain the real business in one or two simple sentences.
 
-| The bank asks | Your answer |
+| What to remember | Your company answer |
 |---|---|
-| What is the primary business activity? | {nature_of_business} |
-| What products or services do you sell? | {products_services} |
-| Registered objectives | {business_categories} |
-| Why does the company need a bank account? | {account_purpose} |
-| Projected monthly inflows and outflows? | {monthly_volume} |
-| Where are the main clients? | {clients_location} |
-| Where are the main suppliers? | {suppliers_location} |
-| What is the source of funds? | {source_of_funds} |
-| Actual place of business? | {business_address} |
-| Has the company commenced operations? | {operations_status} |
+| What the company actually does | {nature_of_business} |
+| Products or services | {products_services} |
+| Why the company was established | {business_purpose} |
+| Main customers | {main_clients} — {clients_location} |
+| Where customers are found | {customer_channels} |
+| Main suppliers | {main_suppliers} — {suppliers_location} |
+| Actual place of business | {business_address} |
+| Registered business categories | {business_categories} |
+| Has business started? | {operations_status} |
 
-**Tips**
-- Describe the business in one or two short sentences that match the registered objectives.
-- The projected figures must be plausible for the size of the business and the registered capital.`,
+**The bank may ask:** What does the company do and sell? Why was it established? Who are the customers and suppliers? How do you find customers? Where do you operate?
+
+**Remember:** the real business must make sense with the registered objectives. If there is no website, do not mention one.`,
+      },
+      th: {
+        title: 'ธุรกิจ ลูกค้า และซัพพลายเออร์ (3/5)',
+        body: `อธิบายธุรกิจจริงให้จบใน 1–2 ประโยคง่าย ๆ
+
+| สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
+|---|---|
+| บริษัททำอะไรจริง | {nature_of_business} |
+| สินค้าหรือบริการ | {products_services} |
+| เหตุผลที่จัดตั้งบริษัท | {business_purpose} |
+| ลูกค้าหลัก | {main_clients} — {clients_location} |
+| วิธีหาลูกค้า | {customer_channels} |
+| ซัพพลายเออร์หลัก | {main_suppliers} — {suppliers_location} |
+| สถานที่ทำธุรกิจจริง | {business_address} |
+| ประเภทธุรกิจที่จดทะเบียน | {business_categories} |
+| เริ่มทำธุรกิจแล้วหรือยัง | {operations_status} |
+
+**ธนาคารอาจถาม:** บริษัททำและขายอะไร จัดตั้งเพื่ออะไร ลูกค้าและซัพพลายเออร์คือใคร หาลูกค้าอย่างไร และทำธุรกิจที่ไหน
+
+**จำไว้:** ธุรกิจจริงต้องสอดคล้องกับวัตถุประสงค์ ถ้าไม่มีเว็บไซต์ ไม่ต้องพูดถึงเว็บไซต์`,
       },
       zh: {
-        title: '银行会问什么（3/5）：业务与经营',
-        body: `银行必须了解公司做什么、资金如何进出。这部分答案来自 **经营目的** 和公司事先准备的信息。
+        title: '业务、客户和供应商（3/5）',
+        body: `用一两句简单的话说明公司的实际业务。
 
-| 银行的问题 | 您的答案 |
+| 要记住的内容 | 您公司的答案 |
 |---|---|
-| 公司主要从事什么业务？ | {nature_of_business} |
-| 销售什么产品或服务？ | {products_services} |
-| 注册经营目的 | {business_categories} |
-| 公司为什么需要开设银行账户？ | {account_purpose} |
-| 预计每月资金进出金额？ | {monthly_volume} |
-| 主要客户来自哪里？ | {clients_location} |
-| 主要供应商来自哪里？ | {suppliers_location} |
-| 资金来源是什么？ | {source_of_funds} |
-| 实际经营地址？ | {business_address} |
-| 公司是否已经开始经营？ | {operations_status} |
+| 公司实际做什么 | {nature_of_business} |
+| 产品或服务 | {products_services} |
+| 公司成立的目的 | {business_purpose} |
+| 主要客户 | {main_clients} — {clients_location} |
+| 如何寻找客户 | {customer_channels} |
+| 主要供应商 | {main_suppliers} — {suppliers_location} |
+| 实际经营地点 | {business_address} |
+| 注册业务类别 | {business_categories} |
+| 是否已开始经营 | {operations_status} |
 
-**要点**
-- 用一两句话说明业务，并与注册的经营目的一致。
-- 预计金额要与业务规模和注册资本相称。`,
+**银行可能会问：** 公司做什么、销售什么？为什么成立？客户和供应商是谁？如何找到客户？在哪里经营？
+
+**记住：** 实际业务应与注册目的相符。没有网站时，不要提到网站。`,
       },
     },
   },
@@ -203,53 +204,68 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
     sortOrder: 40,
     conceptGroup: 'personal',
     localizations: {
-      th: {
-        title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (4/5): บทบาทของคุณ',
-        body: `ธนาคารจะถามถึงตัวคุณเองในฐานะกรรมการ/ผู้ถือหุ้น ต้องตอบได้ทันทีโดยไม่ลังเล
-
-| คำถามที่ธนาคารถาม | คำตอบของคุณ |
-|---|---|
-| คุณชื่ออะไร (ตามเอกสาร) | {my_name} |
-| คุณดำรงตำแหน่งอะไรในบริษัท | {my_position} |
-| คุณรับผิดชอบงานด้านใด | {my_responsibilities} |
-| อำนาจลงนามของบริษัท | {signing_authority} |
-| คุณถือหุ้นเท่าใด | {my_shares} หุ้น ({my_share_percent}%) |
-
-**เคล็ดลับ**
-- ชื่อของคุณต้องตรงกับที่ปรากฏในหนังสือรับรองและบัญชีรายชื่อผู้ถือหุ้น
-- อธิบายหน้าที่ประจำวันสั้น ๆ เช่น ดูแลลูกค้า ติดต่อซัพพลายเออร์ อนุมัติการชำระเงิน`,
-      },
       en: {
-        title: 'What the bank will ask (4/5): your role',
-        body: `The bank will ask about you as a director/shareholder. You must answer immediately and without hesitation.
+        title: 'Money and transactions (4/5)',
+        body: `These figures come from the uploaded invoices and prepared answers.
 
-| The bank asks | Your answer |
+| What to remember | Your company answer |
 |---|---|
-| Your name (as in the documents) | {my_name} |
-| What position do you hold? | {my_position} |
-| What are your main responsibilities? | {my_responsibilities} |
-| Who can sign for the company? | {signing_authority} |
-| How many shares do you hold? | {my_shares} shares ({my_share_percent}%) |
+| Estimated monthly revenue | {monthly_revenue} |
+| How it was calculated | {revenue_basis} |
+| Average amount per transaction | {average_transaction} |
+| Estimated transactions per month | {monthly_transactions} |
+| Expected monthly money movement | {monthly_volume} |
+| Start-up source of funds | {source_of_funds} |
+| First money entering the account | {first_incoming_funds} |
+| Why the account is needed | {account_purpose} |
+| Why PromptPay or QR is needed | {promptpay_qr_purpose} |
+| Expected transaction pattern | {transaction_details} |
 
-**Tips**
-- Your name must match the certificate and the shareholder list exactly.
-- Describe your day-to-day duties briefly — e.g. customers, suppliers, approving payments.`,
+**Calculation:** add all invoice totals; count the **different invoice dates**; daily revenue = total ÷ different dates; monthly revenue = daily revenue × 30; average transaction = total ÷ invoices.
+
+**Remember:** these are estimates based on the invoices. Do not invent a different figure.`,
+      },
+      th: {
+        title: 'เงินและธุรกรรม (4/5)',
+        body: `ตัวเลขเหล่านี้มาจากใบแจ้งหนี้และคำตอบที่เตรียมไว้
+
+| สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
+|---|---|
+| รายได้ต่อเดือนโดยประมาณ | {monthly_revenue} |
+| วิธีคำนวณรายได้ | {revenue_basis} |
+| ยอดเฉลี่ยต่อธุรกรรม | {average_transaction} |
+| จำนวนธุรกรรมต่อเดือน | {monthly_transactions} |
+| เงินเข้าออกต่อเดือนที่คาดไว้ | {monthly_volume} |
+| แหล่งเงินเริ่มต้น | {source_of_funds} |
+| เงินก้อนแรกที่จะเข้าบัญชี | {first_incoming_funds} |
+| เหตุผลที่ต้องมีบัญชี | {account_purpose} |
+| เหตุผลที่ใช้พร้อมเพย์หรือ QR | {promptpay_qr_purpose} |
+| รูปแบบธุรกรรมที่คาดไว้ | {transaction_details} |
+
+**วิธีคำนวณ:** รวมยอดใบแจ้งหนี้ นับ **วันที่ไม่ซ้ำกัน** รายได้ต่อวัน = ยอดรวม ÷ จำนวนวันที่ไม่ซ้ำ รายได้ต่อเดือน = ต่อวัน × 30 และยอดเฉลี่ยต่อธุรกรรม = ยอดรวม ÷ จำนวนใบแจ้งหนี้
+
+**จำไว้:** เป็นตัวเลขประมาณการจากใบแจ้งหนี้ อย่าคิดตัวเลขใหม่เอง`,
       },
       zh: {
-        title: '银行会问什么（4/5）：您的角色',
-        body: `银行会询问您作为董事/股东的情况。必须立即、不犹豫地回答。
+        title: '资金和交易（4/5）',
+        body: `这些数字来自上传的发票和准备好的答案。
 
-| 银行的问题 | 您的答案 |
+| 要记住的内容 | 您公司的答案 |
 |---|---|
-| 您的姓名（按文件） | {my_name} |
-| 您在公司担任什么职位？ | {my_position} |
-| 您主要负责什么工作？ | {my_responsibilities} |
-| 公司的签字权 | {signing_authority} |
-| 您持有多少股份？ | {my_shares} 股（{my_share_percent}%） |
+| 预计月收入 | {monthly_revenue} |
+| 收入计算方法 | {revenue_basis} |
+| 平均每笔交易金额 | {average_transaction} |
+| 预计每月交易数量 | {monthly_transactions} |
+| 预计每月资金进出 | {monthly_volume} |
+| 启动资金来源 | {source_of_funds} |
+| 首笔进入账户的资金 | {first_incoming_funds} |
+| 开户目的 | {account_purpose} |
+| 使用 PromptPay 或二维码的原因 | {promptpay_qr_purpose} |
+| 预计交易情况 | {transaction_details} |
 
-**要点**
-- 您的姓名必须与注册证明和股东名册完全一致。
-- 简要说明日常职责，例如：客户、供应商、审批付款。`,
+**计算方法：** 发票总额相加；计算 **不同发票日期**；日收入 = 总额 ÷ 不同日期数；月收入 = 日收入 × 30；平均交易 = 总额 ÷ 发票数。
+
+**记住：** 这是根据发票估算的数字，不要编造其他数字。`,
       },
     },
   },
@@ -258,62 +274,58 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
     sortOrder: 50,
     conceptGroup: null,
     localizations: {
-      th: {
-        title: 'ข้อมูลบริษัทที่ธนาคารจะถาม (5/5): วิธีตอบให้ผ่าน',
-        body: `**ก่อนโทร / ก่อนไปธนาคาร**
-1. อ่านการ์ด 1–4 อีกครั้ง และเปิดหนังสือรับรองไว้ตรงหน้า
-2. ทำแบบทดสอบประเมินจนได้คะแนนเต็ม แล้วจึงสอบ
-3. ฝึกโทรกับเจ้าหน้าที่จำลองในระบบอย่างน้อย 1 ครั้ง
-
-**ระหว่างตอบ**
-- ฟังคำถามให้จบ ตอบสั้นและตรงประเด็น อย่าให้ข้อมูลเกินที่ถาม
-- ถ้าไม่ได้ยินหรือไม่เข้าใจ ขอให้ถามซ้ำได้ ("ขอโทษค่ะ/ครับ รบกวนถามอีกครั้งได้ไหม")
-- ตัวเลข (ทุน, หุ้น, วันที่) ต้องตรงกับเอกสารเท่านั้น — ห้ามเดา
-- คำถามเรื่องธุรกิจและเงิน ให้ตอบตามข้อมูลที่บริษัทเตรียมไว้อย่างมั่นใจ
-
-**สิ่งที่ห้ามทำ**
-- ห้ามบอกว่าไม่รู้ข้อมูลพื้นฐานของบริษัทตัวเอง
-- ห้ามอ่านจากกระดาษจนฟังดูเหมือนท่องจำ — ใช้ภาษาพูดของคุณเอง`,
-      },
       en: {
-        title: 'What the bank will ask (5/5): how to answer well',
-        body: `**Before the call / the branch visit**
-1. Re-read cards 1–4 with the certificate in front of you.
-2. Repeat the evaluation quiz until you score full marks, then take the exam.
-3. Do at least one practice call with the simulated officer.
+        title: 'Bank safety and confident answers (5/5)',
+        body: `Use these safe, simple answers.
 
-**While answering**
-- Let the officer finish the question; answer briefly and to the point; don't volunteer extra details.
-- If you didn't hear or understand, ask them to repeat — that is normal.
-- Numbers (capital, shares, dates) must match the documents exactly — never guess.
-- Business and money questions: answer confidently with the facts the company prepared.
+| The bank asks | A good answer |
+|---|---|
+| Who controls internet banking? | The authorised company director controls it. |
+| Who keeps the OTP phone? | The authorised person keeps and controls it. |
+| How do you explain a transfer? | Say who paid whom, why, the amount and the date. |
+| What supports a payment? | An invoice, agreement, receipt or matching business document. |
+| What if the bank checks? | Keep every answer consistent with the documents and real activity. |
 
-**Never**
-- Say you don't know basic facts about your own company.
-- Read from a sheet so that it sounds memorised — use your own words.`,
+**Answer in four steps:** listen to the whole question; give the direct answer first; add one short explanation if needed; ask the officer to repeat if unsure—do not guess.
+
+You do not need difficult words. Clear, honest and consistent answers are enough.`,
+      },
+      th: {
+        title: 'ความปลอดภัยและการตอบอย่างมั่นใจ (5/5)',
+        body: `ใช้คำตอบที่ปลอดภัยและเข้าใจง่าย
+
+| ธนาคารถาม | คำตอบที่ดี |
+|---|---|
+| ใครควบคุมอินเทอร์เน็ตแบงกิ้ง | กรรมการผู้มีอำนาจของบริษัท |
+| ใครเก็บโทรศัพท์รับ OTP | ผู้มีอำนาจเป็นผู้เก็บและควบคุม |
+| อธิบายการโอนเงินอย่างไร | บอกว่าใครจ่ายให้ใคร จ่ายเพื่ออะไร จำนวนเท่าใด และวันไหน |
+| ใช้อะไรยืนยันการจ่าย | ใบแจ้งหนี้ ข้อตกลง ใบเสร็จ หรือเอกสารธุรกิจที่ตรงกัน |
+| ถ้าธนาคารตรวจคำตอบ | ตอบให้ตรงกับเอกสารและธุรกิจจริงทุกครั้ง |
+
+**ตอบ 4 ขั้นตอน:** ฟังให้จบ ตอบตรง ๆ ก่อน อธิบายสั้น ๆ เมื่อจำเป็น และถ้าไม่แน่ใจให้ขอถามซ้ำ—อย่าเดา
+
+ไม่ต้องใช้คำยาก แค่ตอบให้ชัดเจน จริง และสอดคล้องกันก็เพียงพอ`,
       },
       zh: {
-        title: '银行会问什么（5/5）：如何顺利回答',
-        body: `**通话前 / 去银行前**
-1. 再读一遍第 1–4 张卡，并把注册证明放在面前。
-2. 反复做评估测验直到满分，再参加考试。
-3. 至少做一次模拟通话练习。
+        title: '银行安全和自信回答（5/5）',
+        body: `请使用安全、简单的回答。
 
-**回答时**
-- 听完问题再回答；简短、切题；不要主动提供多余信息。
-- 没听清或不理解可以请对方重复——这很正常。
-- 数字（资本、股份、日期）必须与文件完全一致——不要猜。
-- 业务和资金问题：按公司准备好的信息自信作答。
+| 银行的问题 | 合适的回答 |
+|---|---|
+| 谁控制网上银行？ | 公司授权董事控制。 |
+| 谁保管接收 OTP 的手机？ | 授权人员保管和控制。 |
+| 如何说明转账？ | 说明谁向谁付款、原因、金额和日期。 |
+| 什么支持付款？ | 发票、协议、收据或相符的业务文件。 |
+| 银行核查时怎么办？ | 回答应与文件和实际业务一致。 |
 
-**切忌**
-- 说不知道自己公司的基本信息。
-- 照着纸念、听起来像背书——用自己的话说。`,
+**四步回答：** 听完问题；先直接回答；需要时补充一句说明；不确定时请工作人员重复—不要猜。
+
+不需要复杂词语。清楚、诚实、前后一致就足够了。`,
       },
     },
   },
 ];
 
-/** The concept group a starter card teaches — the study page retrieves evidence for it. */
 export function cardConceptGroup(contentKey: string): ConceptGroup | null {
-  return BANK_INTERVIEW_CARDS.find((c) => c.contentKey === contentKey)?.conceptGroup ?? null;
+  return BANK_INTERVIEW_CARDS.find((card) => card.contentKey === contentKey)?.conceptGroup ?? null;
 }

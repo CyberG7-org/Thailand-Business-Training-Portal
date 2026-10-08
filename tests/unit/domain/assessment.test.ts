@@ -243,4 +243,41 @@ describe('bank-interview placeholders', () => {
     );
     expect(renderTemplateLenient('{company_name_th}', null, 'en')).toBe('—');
   });
+
+  it('renders the complete money cheat sheet from frozen company facts', () => {
+    const complete = {
+      ...record,
+      monthly_revenue: 'ประมาณ 641,400 บาท',
+      revenue_basis: 'ใบแจ้งหนี้ 5 ใบ ใน 2 วัน',
+      average_transaction: 'ประมาณ 21,380 บาท',
+      monthly_transactions: 'ประมาณ 75 รายการต่อเดือน',
+      transaction_details: 'โอนเงินผ่านธนาคารและ PromptPay / QR',
+    } as unknown as TemplateRecord;
+    expect(
+      renderTemplateLenient(
+        '{monthly_revenue} / {revenue_basis} / {average_transaction} / {monthly_transactions} / {transaction_details}',
+        complete,
+        'en',
+      ),
+    ).toBe(
+      'ประมาณ 641,400 บาท / ใบแจ้งหนี้ 5 ใบ ใน 2 วัน / ประมาณ 21,380 บาท / ประมาณ 75 รายการต่อเดือน / โอนเงินผ่านธนาคารและ PromptPay / QR',
+    );
+  });
+
+  it('omits the website cleanly from customer-channel wording when none exists', () => {
+    const withWebsite = {
+      ...record,
+      customer_channels: 'with_website',
+    } as unknown as TemplateRecord;
+    const withoutWebsite = {
+      ...record,
+      customer_channels: 'without_website',
+    } as unknown as TemplateRecord;
+    expect(renderTemplateLenient('{customer_channels}', withWebsite, 'en')).toBe(
+      'Online through Facebook, TikTok and the company website, as well as referrals and walk-in customers.',
+    );
+    expect(renderTemplateLenient('{customer_channels}', withoutWebsite, 'en')).toBe(
+      'Online through Facebook and TikTok, as well as referrals and walk-in customers.',
+    );
+  });
 });

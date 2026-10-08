@@ -43,6 +43,20 @@ export const TEMPLATE_FIELDS = [
   'my_relationship',
   'my_shares',
   'my_share_percent',
+  // The complete learner cheat sheet (2026-10-08): the same frozen facts as the MCQ.
+  'business_purpose',
+  'main_clients',
+  'client_origin',
+  'main_suppliers',
+  'monthly_revenue',
+  'revenue_basis',
+  'average_transaction',
+  'monthly_transactions',
+  'first_incoming_funds',
+  'promptpay_qr_purpose',
+  'customer_profile',
+  'transaction_details',
+  'customer_channels',
 ] as const;
 export type TemplateField = (typeof TEMPLATE_FIELDS)[number];
 
@@ -82,6 +96,19 @@ export type TemplateRecord = {
   my_relationship: string | null;
   my_shares: number | null;
   my_share_percent: number | null;
+  business_purpose?: string | null;
+  main_clients?: string | null;
+  client_origin?: string | null;
+  main_suppliers?: string | null;
+  monthly_revenue?: string | null;
+  revenue_basis?: string | null;
+  average_transaction?: string | null;
+  monthly_transactions?: string | null;
+  first_incoming_funds?: string | null;
+  promptpay_qr_purpose?: string | null;
+  customer_profile?: string | null;
+  transaction_details?: string | null;
+  customer_channels?: 'with_website' | 'without_website' | null;
 };
 
 export class MissingFieldError extends Error {
@@ -100,6 +127,27 @@ export class TemplateSyntaxError extends Error {
 
 const PLACEHOLDER = /\{([a-z_]+)(?:\|([^}]+))?\}/g;
 const NUMBER_LOCALES: Record<Locale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
+const CUSTOMER_CHANNELS: Record<
+  Locale,
+  Record<Exclude<TemplateRecord['customer_channels'], null | undefined>, string>
+> = {
+  th: {
+    with_website:
+      'หาลูกค้าผ่าน Facebook, TikTok และเว็บไซต์ของบริษัท รวมถึงการแนะนำจากลูกค้าเดิมและลูกค้าที่เข้ามาที่ร้าน',
+    without_website:
+      'หาลูกค้าผ่าน Facebook และ TikTok รวมถึงการแนะนำจากลูกค้าเดิมและลูกค้าที่เข้ามาที่ร้าน',
+  },
+  en: {
+    with_website:
+      'Online through Facebook, TikTok and the company website, as well as referrals and walk-in customers.',
+    without_website:
+      'Online through Facebook and TikTok, as well as referrals and walk-in customers.',
+  },
+  zh: {
+    with_website: '通过 Facebook、TikTok 和公司网站，以及客户推荐和到店客户寻找客户。',
+    without_website: '通过 Facebook 和 TikTok，以及客户推荐和到店客户寻找客户。',
+  },
+};
 
 /** Distinct record fields referenced by a template (for `dbd_field_dependencies`). */
 export function placeholderFields(text: string): TemplateField[] {
@@ -150,6 +198,8 @@ function shuffleDigits(value: string, rng: () => number): string {
 
 function formatValue(field: TemplateField, value: unknown, locale: Locale): string {
   switch (field) {
+    case 'customer_channels':
+      return CUSTOMER_CHANNELS[locale][value as 'with_website' | 'without_website'];
     case 'registered_capital':
     case 'total_shares':
     case 'par_value':
