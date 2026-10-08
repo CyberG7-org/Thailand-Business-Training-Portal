@@ -23,6 +23,8 @@ test('learner pages use the shared shell while study uses its focused navigation
   await expect(
     page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
   ).toHaveCount(4);
+  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('เอกสารเรียนรู้');
 
   // The steps beside the page (the owner, 2026-10-02): this page's step marked, an open step a

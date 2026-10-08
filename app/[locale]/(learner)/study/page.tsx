@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { ArrowClockwiseIcon, CheckCircleIcon } from '@phosphor-icons/react/dist/ssr';
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
 import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
@@ -134,7 +134,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
           </div>
         </aside>
 
-        <LearnerStageTabs current="study" statuses={statuses} />
+        <LearnerStageTabs statuses={statuses} />
 
         <section className="rise grid gap-3" style={rise('80ms')}>
           {total === 0 && <p className="px-6 py-5 text-sm text-ink-700">{t('empty')}</p>}
@@ -143,55 +143,51 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
               const current = row === next;
               const displayState: State = row.done ? 'completed' : row.state;
               return (
-                <li
-                  key={row.key}
-                  data-testid={`study-item-${row.key}`}
-                  data-current={current || undefined}
-                  className={`grid min-h-[104px] grid-cols-[58px_minmax(0,1fr)_auto] items-center gap-3 rounded-sheet bg-white px-4 py-4 shadow-glass focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-brand-600 md:min-h-[112px] md:grid-cols-[70px_minmax(0,1fr)_auto] md:gap-5 md:px-6 ${current ? 'ring-2 ring-brand-100' : ''}`}
-                >
-                  <span
-                    className={`grid size-14 place-items-center rounded-full bg-gold-100 font-display text-xl font-semibold tabular-nums md:size-16 md:text-2xl ${row.done ? 'text-gold-700' : current ? 'text-brand-900' : 'text-ink-500'}`}
-                  >
-                    {row.index}/{total}
-                  </span>
-                  <div className="min-w-0">
-                    {row.href ? (
-                      <Link
-                        href={row.href}
-                        className="text-base leading-[1.45] font-semibold text-brand-900 hover:text-brand-600"
+                <li key={row.key}>
+                  {row.href ? (
+                    <Link
+                      href={row.href}
+                      data-testid={`study-item-${row.key}`}
+                      data-study-item={row.key}
+                      data-current={current || undefined}
+                      className={`grid min-h-[104px] grid-cols-[58px_minmax(0,1fr)_auto] items-center gap-3 rounded-sheet bg-white px-4 py-4 shadow-glass transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 active:translate-y-0 md:min-h-[112px] md:grid-cols-[70px_minmax(0,1fr)_auto] md:gap-5 md:px-6 ${current ? 'ring-2 ring-brand-100' : ''}`}
+                    >
+                      <span
+                        className={`grid size-14 place-items-center rounded-full bg-gold-100 font-display text-xl font-semibold tabular-nums md:size-16 md:text-2xl ${row.done ? 'text-gold-700' : current ? 'text-brand-900' : 'text-ink-500'}`}
                       >
-                        {row.title}
-                      </Link>
-                    ) : (
+                        {row.index}/{total}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="text-base leading-[1.45] font-semibold text-brand-900">
+                          {row.title}
+                        </div>
+                        {row.description && (
+                          <div className="mt-1 line-clamp-2 text-sm leading-[1.45] text-ink-500">
+                            {row.description}
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        data-testid={`study-state-${row.key}`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs leading-[1.5] font-semibold whitespace-nowrap md:text-sm ${TAG[displayState]}`}
+                      >
+                        {row.done && <CheckCircleIcon className="size-4" weight="fill" />}
+                        {t(`state.${displayState}`)}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div
+                      data-testid={`study-item-${row.key}`}
+                      className="grid min-h-[104px] grid-cols-[58px_minmax(0,1fr)] items-center gap-3 rounded-sheet bg-white px-4 py-4 shadow-glass md:min-h-[112px] md:grid-cols-[70px_minmax(0,1fr)] md:gap-5 md:px-6"
+                    >
+                      <span className="grid size-14 place-items-center rounded-full bg-gold-100 font-display text-xl font-semibold text-ink-500 tabular-nums md:size-16 md:text-2xl">
+                        {row.index}/{total}
+                      </span>
                       <div className="text-base leading-[1.45] font-semibold text-ink-500">
                         {t('notAvailable')}
                       </div>
-                    )}
-                    {row.description && (
-                      <div className="mt-1 line-clamp-2 text-sm leading-[1.45] text-ink-500">
-                        {row.description}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-                    <span
-                      data-testid={`study-state-${row.key}`}
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs leading-[1.5] font-semibold whitespace-nowrap md:text-sm ${TAG[displayState]}`}
-                    >
-                      {row.done && <CheckCircleIcon className="size-4" weight="fill" />}
-                      {t(`state.${displayState}`)}
-                    </span>
-                    {row.href && (
-                      <Link
-                        href={row.href}
-                        data-testid={current ? 'study-continue' : undefined}
-                        className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border-2 border-brand-100 px-3 text-xs font-semibold whitespace-nowrap text-brand-700 transition-colors hover:border-brand-600 hover:bg-brand-50 md:min-h-11 md:px-4 md:text-sm"
-                      >
-                        <ArrowClockwiseIcon className="size-4 md:size-5" weight="bold" />
-                        {row.done ? t('review') : current ? t('continueShort') : t('openLesson')}
-                      </Link>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </li>
               );
             })}

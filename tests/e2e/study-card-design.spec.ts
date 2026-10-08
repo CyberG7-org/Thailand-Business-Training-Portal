@@ -15,8 +15,11 @@ test('a card shows its place in the list, leads to the next card, and the list r
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/study');
   const total = await page.locator('[data-testid^="study-item-"]').count();
-  await page.getByTestId('study-continue').click();
+  await page.locator('[data-testid^="study-item-"][data-current="true"]').click();
   await expect(page.getByTestId('study-title')).toBeVisible();
+  await expect(page.getByTestId('learner-stage-tabs')).toBeAttached();
+  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
 
   const segments = page.getByTestId('card-segments');
   await expect(segments).toContainText(`บทเรียนที่ 1 จาก ${total}`);
@@ -41,7 +44,7 @@ test('under "completed" tracking the footer marks the card done', async ({ page 
     const loginId = await seedLearnerWithCompany('บริษัท ทำเครื่องหมาย จำกัด', '2026-07-13');
     await loginAs(page, loginId, E2E_PASSWORD);
     await page.goto('/th/study');
-    await page.getByTestId('study-continue').click();
+    await page.locator('[data-testid^="study-item-"][data-current="true"]').click();
     await expect(page.getByTestId('study-title')).toBeVisible();
     await page.getByRole('button', { name: 'ทำเครื่องหมายว่าเรียนจบแล้ว' }).click();
     await expect(page.getByTestId('study-completed')).toBeVisible();
@@ -59,6 +62,7 @@ test('on a phone the card table stacks and nothing overflows', async ({ page }) 
   const key = await seedStudyCard();
   await page.goto('/th/study/' + key);
   await expect(page.getByTestId('study-body')).toBeVisible();
+  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
   const table = page.getByTestId('study-body').locator('table').first();
   await expect(table).toBeVisible();
   await expect(table.locator('thead')).toBeHidden();

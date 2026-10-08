@@ -1,7 +1,7 @@
 import {
   BankIcon,
-  BookOpenTextIcon,
   ExamIcon,
+  HouseIcon,
   IdentificationCardIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import { getTranslations } from 'next-intl/server';
@@ -9,11 +9,12 @@ import { STAGE_ROUTES } from '@/app/[locale]/(learner)/dashboard/stage-row';
 import { Link } from '@/i18n/navigation';
 import type { StageInfo, StageKey } from '@/lib/domain/progression';
 
-const TABS = ['study', 'exam', 'interview', 'nameCard'] as const satisfies readonly StageKey[];
+const TABS = ['home', 'exam', 'interview', 'nameCard'] as const;
+type Tab = (typeof TABS)[number];
 
-function StageIcon({ stage }: { stage: (typeof TABS)[number] }) {
+function StageIcon({ stage }: { stage: Tab }) {
   const className = 'size-5 shrink-0';
-  if (stage === 'study') return <BookOpenTextIcon className={className} weight="duotone" />;
+  if (stage === 'home') return <HouseIcon className={className} weight="duotone" />;
   if (stage === 'exam') return <ExamIcon className={className} weight="duotone" />;
   if (stage === 'nameCard')
     return <IdentificationCardIcon className={className} weight="duotone" />;
@@ -25,7 +26,7 @@ export async function LearnerStageTabs({
   current,
   statuses,
 }: {
-  current: (typeof TABS)[number];
+  current?: Exclude<Tab, 'home'>;
   statuses: Record<StageKey, StageInfo>;
 }) {
   const t = await getTranslations('study.tabs');
@@ -37,9 +38,9 @@ export async function LearnerStageTabs({
     >
       {TABS.map((stage, index) => {
         const active = current === stage;
-        const info = statuses[stage];
-        const locked = info.status === 'locked' || info.status === 'pending';
-        const href = locked ? null : STAGE_ROUTES[stage];
+        const info = stage === 'home' ? null : statuses[stage];
+        const locked = info ? info.status === 'locked' || info.status === 'pending' : false;
+        const href = stage === 'home' ? '/dashboard' : locked ? null : STAGE_ROUTES[stage];
         const content = (
           <>
             <StageIcon stage={stage} />
