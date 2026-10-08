@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { ChevronIcon } from '@/components/icons';
 import { LearnerShell } from '@/components/shell/learner-shell';
+import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
+import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
@@ -21,10 +23,11 @@ const RESULT_CHIP = {
 export default async function ExamHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const [attempts, passScore, retestScore] = await Promise.all([
+  const [attempts, passScore, retestScore, statuses] = await Promise.all([
     listMyAttempts(await createSupabaseServerClient(), user.id, 'exam'),
     getPolicy('mcq_pass_score'),
     getPolicy('mcq_retest_score'),
+    cachedStageStatuses(user.id),
   ]);
   const rule = mcqRule(passScore, retestScore);
   const inProgress = attempts.find((a) => a.status === 'in_progress') ?? null;
@@ -43,8 +46,9 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
     t('about.fail', { retest: rule.retestScore }),
   ];
   return (
-    <LearnerShell title={t('title')} intro={t('intro')} step="exam">
+    <LearnerShell title={t('title')} intro={t('intro')} step="exam" hideMobileNav>
       <div className="mx-auto grid max-w-[780px] gap-6">
+        <LearnerStageTabs current="exam" statuses={statuses} />
         <section
           data-testid="exam-about"
           className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7"

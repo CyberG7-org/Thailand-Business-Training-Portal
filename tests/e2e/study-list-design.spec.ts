@@ -23,17 +23,20 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(
     page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
   ).toHaveCount(4);
+  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
   await expect(rows.first()).toContainText(`1/${total}`);
-  await expect(page.getByTestId('study-continue')).toHaveText('เรียนต่อ');
+  await expect(rows.first()).toHaveAttribute('data-current', 'true');
+  await expect(rows.first()).toHaveAttribute('href', /\/th\/study\//);
 
-  await page.getByTestId('study-continue').click();
+  await rows.first().click();
   await expect(page).toHaveURL(/\/th\/study\/[^/]+$/);
   await page.goto('/th/study');
   await expect(page.getByTestId('study-summary')).toContainText(`1 จาก ${total}`);
   await expect(page.getByTestId('study-segments').locator('[data-state="done"]')).toHaveCount(1);
   await expect(rows.nth(1)).toHaveAttribute('data-current', 'true');
   await expect(rows.first()).not.toHaveAttribute('data-current', 'true');
-  await expect(page.getByTestId('study-continue')).toHaveText('เรียนต่อ');
+  await expect(rows.first()).not.toContainText('ทบทวน');
 });
 
 test('the study list fits a phone', async ({ page }) => {
@@ -41,7 +44,7 @@ test('the study list fits a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/study');
-  await expect(page.getByTestId('study-continue')).toBeVisible();
+  await expect(page.locator('[data-testid^="study-item-"][data-current="true"]')).toBeVisible();
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
   await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
   const overflow = await page.evaluate(

@@ -109,17 +109,23 @@ export function StepsList({
                   {row.statusLabel}
                 </StatusTag>
                 {row.href && (
-                  <Link
-                    href={row.href}
-                    className={`absolute inset-0 z-10 rounded-card text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 md:static md:inline-flex md:min-h-11 md:items-center md:gap-1 md:rounded-none ${
+                  <span
+                    className={`hidden min-h-11 items-center gap-1 text-sm font-medium md:inline-flex ${
                       row.current ? 'text-brand-700' : 'text-ink-500'
                     }`}
                   >
-                    <span className="sr-only md:not-sr-only">{openLabel}</span>
+                    {openLabel}
                     <ChevronIcon data-testid="stage-open-chevron" className="hidden md:block" />
-                  </Link>
+                  </span>
                 )}
               </div>
+              {row.href && (
+                <Link
+                  href={row.href}
+                  aria-label={`${openLabel}: ${row.title}`}
+                  className="absolute inset-0 z-10 rounded-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                />
+              )}
             </li>
           );
         })}

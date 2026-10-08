@@ -55,7 +55,7 @@ test('study is done once every card is opened', async ({ page }) => {
   await loginAs(page, learner, E2E_PASSWORD);
   await expect(page.getByTestId('stage-study-status')).toHaveText('เสร็จสิ้น');
   await page.goto('/th/study');
-  await expect(page.getByTestId('study-continue')).toHaveCount(0);
+  await expect(page.locator('[data-testid^="study-item-"][data-current="true"]')).toHaveCount(0);
   await expect(page.getByTestId('learner-nav-study').getByRole('link')).toHaveAttribute(
     'data-status',
     'done',
