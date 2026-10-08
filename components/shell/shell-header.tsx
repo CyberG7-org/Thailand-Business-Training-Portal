@@ -27,7 +27,7 @@ export async function ShellHeader({
     <header
       data-testid="shell-header"
       data-variant={variant}
-      className={`${study ? 'md:glass flex items-center gap-3 text-ink-900 md:rounded-card md:py-2.5 md:pr-2 md:pl-3 md:shadow-[0_8px_24px_rgb(12_26_58/0.18)]' : 'glass flex items-center rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]'} ${compact ? 'gap-2 md:gap-x-5' : study ? '' : 'flex-wrap gap-x-5 gap-y-2'}`}
+      className={`${study ? 'md:glass flex items-center gap-3 text-ink-900 md:rounded-card md:py-2.5 md:pr-2 md:pl-3 md:shadow-[0_8px_24px_rgb(12_26_58/0.18)]' : 'glass flex items-center rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]'} ${compact ? 'gap-2 md:gap-x-5' : study ? '' : 'flex-nowrap gap-2 md:gap-x-5'}`}
     >
       <Link
         href="/dashboard"
@@ -65,12 +65,12 @@ export async function ShellHeader({
       </Link>
       <LanguageToggle
         label={t('language')}
-        compact={compact || study}
+        compact
         className={study ? 'shadow-[0_2px_8px_rgb(12_26_58/0.12)]' : ''}
       />
       {user && (
         <div
-          className={`flex items-center ${study ? 'md:border-l md:border-brand-700/20 md:pl-4' : 'border-l border-brand-700/20'} ${compact ? 'pl-1 md:gap-2.5 md:pl-4' : study ? 'gap-0 md:gap-2.5' : 'gap-2.5 pl-4'}`}
+          className={`flex items-center ${study ? 'md:border-l md:border-brand-700/20 md:pl-4' : 'border-l border-brand-700/20'} ${compact ? 'pl-1 md:gap-2.5 md:pl-4' : study ? 'gap-0 md:gap-2.5' : 'gap-1 pl-2 md:gap-2.5 md:pl-4'}`}
         >
           <span
             aria-hidden="true"

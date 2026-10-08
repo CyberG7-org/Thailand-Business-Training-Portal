@@ -2,8 +2,6 @@ import type { CSSProperties } from 'react';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
-import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { requireUser } from '@/lib/auth/session';
 import {
   createMyNameCardUrl,
@@ -66,10 +64,9 @@ async function previewPictures(pdfPath: string): Promise<[string, string] | null
 export default async function NameCardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const [{ card, blocked }, t, statuses] = await Promise.all([
+  const [{ card, blocked }, t] = await Promise.all([
     ensureNameCard(user.id, new ReactPdfRenderer()),
     getTranslations('nameCard'),
-    cachedStageStatuses(user.id),
   ]);
   const [pdfUrl, pictures] = card
     ? await Promise.all([createMyNameCardUrl(user.id, card.id), previewPictures(card.pdf_path)])
@@ -78,9 +75,8 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
     `${pdfUrl}#page=${page}&zoom=page-width&view=FitH&toolbar=0&navpanes=0&scrollbar=0`;
 
   return (
-    <LearnerShell title={t('title')} intro={t('intro')} step="nameCard" hideMobileNav>
+    <LearnerShell title={t('title')} intro={t('intro')} step="nameCard">
       <div className="mx-auto grid max-w-[1240px] gap-6">
-        <LearnerStageTabs current="nameCard" statuses={statuses} />
         {blocked && (
           <Blocked>
             {t(`errors.${reasonOf(blocked)}`, { fields: blocked.fields.join(', ') })}

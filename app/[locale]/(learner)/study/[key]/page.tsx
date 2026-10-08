@@ -6,8 +6,6 @@ import remarkGfm from 'remark-gfm';
 import { CheckIcon } from '@/components/icons';
 import { ReadAloudPlayer } from '@/components/read-aloud-player';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
-import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
@@ -82,20 +80,15 @@ export default async function StudyMaterialPage({
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
   const loc = locale as AppLocale;
-  const [materials, t, statuses] = await Promise.all([
-    listStudyMaterials(db),
-    getTranslations('study'),
-    cachedStageStatuses(user.id),
-  ]);
+  const [materials, t] = await Promise.all([listStudyMaterials(db), getTranslations('study')]);
   const index = materials.findIndex((m) => m.content_key === key);
   if (index < 0) notFound();
   const material = materials[index];
   const localization = pickLocalization(material, loc);
   if (!localization) {
     return (
-      <LearnerShell title={t('title')} step="study" hideBack hideMobileNav headerVariant="study">
+      <LearnerShell title={t('title')} step="study" hideBack headerVariant="study">
         <div className="grid gap-5">
-          <LearnerStageTabs current="study" statuses={statuses} />
           <section className="rounded-card bg-white px-6 py-5 shadow-raised">
             <p data-testid="study-not-available" className="text-sm text-ink-700">
               {t('notAvailable')}
@@ -174,7 +167,6 @@ export default async function StudyMaterialPage({
     <LearnerShell
       step="study"
       hideBack
-      hideMobileNav
       headerVariant="study"
       subBarRight={<CardSegments label={t('cardOf', { n: index + 1, total })} states={states} />}
       hero={
@@ -202,7 +194,6 @@ export default async function StudyMaterialPage({
       <ViewTracker materialId={material.id} />
       {/* The card first, then what the documents say about it (the owner, 2026-10-02). */}
       <div className="grid gap-6">
-        <LearnerStageTabs current="study" statuses={statuses} />
         <article className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-9 md:py-8">
           {material.type === 'card' && (
             <div className="study-article" data-testid="study-body">

@@ -55,11 +55,11 @@ test('study is done once every card is opened', async ({ page }) => {
   await loginAs(page, learner, E2E_PASSWORD);
   await expect(page.getByTestId('stage-study-status')).toHaveText('เสร็จสิ้น');
   await page.goto('/th/study');
+  const studyItems = page.locator('[data-testid^="study-item-"]');
   await expect(page.locator('[data-testid^="study-item-"][data-current="true"]')).toHaveCount(0);
-  await expect(page.getByTestId('learner-nav-study').getByRole('link')).toHaveAttribute(
-    'data-status',
-    'done',
-  );
+  const total = await studyItems.count();
+  await expect(page.getByTestId('study-summary')).toContainText(`${total}/${total}`);
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
 });
 
 test("a card not written in the reader's language is not waited for", async ({ page }) => {

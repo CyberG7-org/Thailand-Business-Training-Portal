@@ -82,7 +82,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
       intro={total > 0 ? t('intro', { count: total }) : undefined}
       step="study"
       hideSubBar
-      hideMobileNav
+      stageNavigation="page"
       headerVariant="study"
       mainClassName="bg-gradient-to-b from-brand-50 to-white"
     >

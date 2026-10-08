@@ -64,3 +64,45 @@ The combined comparison shows the same task-first hierarchy as the dashboard ref
 - P3: production screenshots will not include the Next.js development indicator visible at the lower-left edge of the local capture.
 
 final result: passed
+
+---
+
+# Design QA — learner primary pages
+
+## Inputs
+
+- Reference: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-d8e51c75-e48f-4b69-b761-ca7474c6bdd9.png`
+- Mobile implementation: `artifacts/design-qa/learner-quiz-mobile.png`
+- Desktop implementation: `artifacts/design-qa/learner-quiz-desktop.png`
+- Browser: Chromium through the project Playwright setup and the Codex in-app browser
+
+## Render metadata
+
+- Mobile viewport: 395 × 862 CSS pixels, device scale factor 1
+- Desktop viewport: 1440 × 1000 CSS pixels, device scale factor 1
+- States: authenticated learner, quiz landing page; name-card blocked state also inspected in-browser
+- Reference locale/account: English example account
+- Implementation locale/account: Thai local E2E learner
+
+## Comparison
+
+| Area                   | Result | Notes                                                                                                                     |
+| ---------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
+| Header                 | Pass   | BT mark, compact language selector, avatar, and sign-out stay on one row on mobile and expand cleanly on desktop.         |
+| Hero                   | Pass   | Navy patterned band, back control, progress segments, title, and supporting copy preserve the reference hierarchy.        |
+| Primary navigation     | Pass   | Four equal destinations, Home first, current page omitted, separators retained; centered and widened on desktop.          |
+| Main content           | Pass   | White raised content card and blue primary action match the reference structure; desktop constrains reading width.        |
+| Responsive behavior    | Pass   | No horizontal page overflow at 390 px; desktop replaces the old sidebar with the same navigation system.                  |
+| Cross-page consistency | Pass   | Study, quiz, readiness, name card, quiz attempts/results, and readiness sessions now use the shared primary-stage layout. |
+
+## Iteration history
+
+1. Centralized primary-stage navigation in the shared learner shell and removed duplicated page-level strips.
+2. Preserved the study overview's completion-first ordering through its page-owned placement of the same shared component.
+3. Removed the desktop-only learner sidebar from primary stages and widened the mobile navigation pattern for desktop.
+4. Tightened the mobile shell header so its controls remain on one row like the reference.
+5. Re-rendered mobile and desktop screenshots and reran responsive/end-to-end checks.
+
+## Final result: passed
+
+The implementation matches the reference's layout, hierarchy, component styling, and responsive intent. Text and learner data differ only because the verification render uses the local Thai E2E account.

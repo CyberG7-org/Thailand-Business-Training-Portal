@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth/session';
 import type { StageKey } from '@/lib/domain/progression';
 import { BackPill } from './back-pill';
 import { LearnerNav } from './learner-nav';
+import { isPrimaryStage, LearnerStageTabs } from './learner-stage-tabs';
 import { ShellHeader } from './shell-header';
 import { cachedStageStatuses } from './stage-status';
 import { StepSegments } from './step-segments';
@@ -14,8 +15,8 @@ import { StepSegments } from './step-segments';
  * dot grid below. A page passes only what differs; the user and the stage statuses are read once
  * per request. The dashboard swaps the title for its hero and adds the stepper to the band; a
  * card page points the back pill at its list and shows its place there instead of the steps.
- * Every page but the dashboard, which lists the steps itself, has the steps beside it (above it
- * on a phone), so a learner moves between them as staff do with their sidebar.
+ * The four primary learner stages share the same compact navigation at every breakpoint. Legacy
+ * learner routes retain the sidebar until they are folded into the primary journey.
  */
 export async function LearnerShell({
   title,
@@ -30,7 +31,7 @@ export async function LearnerShell({
   tone = 'blue',
   hideBack = false,
   hideSubBar = false,
-  hideMobileNav = false,
+  stageNavigation = 'automatic',
   headerVariant = 'default',
   mainClassName = '',
   children,
@@ -58,14 +59,17 @@ export async function LearnerShell({
   hideBack?: boolean;
   /** Remove the entire row between the header and title. */
   hideSubBar?: boolean;
-  /** Keep the desktop sidebar but replace the phone strip with page-owned navigation. */
-  hideMobileNav?: boolean;
+  /** Study's overview places its completion summary before the shared navigation. */
+  stageNavigation?: 'automatic' | 'page';
   headerVariant?: 'default' | 'study';
   mainClassName?: string;
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
   const statuses = !home && user ? await cachedStageStatuses(user.id) : null;
+  const usesPrimaryLayout = isPrimaryStage(step);
+  const showsAutomaticStageTabs =
+    usesPrimaryLayout && statuses !== null && stageNavigation === 'automatic';
   return (
     <>
       <div
@@ -106,9 +110,14 @@ export async function LearnerShell({
       >
         {home ? (
           children
+        ) : usesPrimaryLayout ? (
+          <div className="mx-auto grid w-full max-w-[1240px] gap-6">
+            {showsAutomaticStageTabs && <LearnerStageTabs current={step} statuses={statuses} />}
+            <div className="min-w-0">{children}</div>
+          </div>
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-6">
-            <LearnerNav current={step} statuses={statuses} hideOnMobile={hideMobileNav} />
+            <LearnerNav current={step} statuses={statuses} />
             <div className="min-w-0">{children}</div>
           </div>
         )}
