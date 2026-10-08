@@ -1,7 +1,7 @@
 // Loads the five bank-interview starter study cards (D39) into the database named by
 // NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (.env.local, or the environment).
 // Staff no longer edit study cards (D81), so this is how a fresh environment gets them.
-// Safe to run again: a card whose key already exists is left untouched.
+// Safe to run again: existing approved cards are refreshed and the three old samples are retired.
 //
 // Usage: pnpm content:starter
 import { createClient } from '@supabase/supabase-js';
