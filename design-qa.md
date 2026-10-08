@@ -1,5 +1,20 @@
 # Learner dashboard mobile design QA
 
+## Readiness result redesign — 8 October 2026
+
+- Reference: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-277735ce-2547-4e5e-88d9-2309d772eeaf.png` (676 × 707).
+- Implementation: `artifacts/design-qa/interview-result-desktop.png` (1440 px wide, viewport 1440 × 1000, scale 1) and `artifacts/design-qa/interview-result-mobile.png` (390 px wide, viewport 390 × 844, scale 1), refreshed after pagination removal.
+- Initial comparison: `artifacts/design-qa/interview-result-comparison.png` records the earlier paginated iteration. The desktop content region is cropped out of the staff shell and scaled to the reference width for composition review; this is not a pixel-identical comparison. Test account data, score, and date differ from the supplied example.
+- Full view: summary, three-column desktop facts, and readiness panel follow the selected composition. Per user feedback, all question/answer cards appear in one continuous list without pagination. The existing staff shell remains unchanged around the content. The focused E2E test verifies all four fixture answers on desktop and mobile and no pagination controls; typecheck and focused lint pass.
+- Focused review: score arc reflects the percentage; blue questions and pale-gold answers remain distinguishable; compact verdict badges align to the top; incorrect answers have a red outline and explanation panel.
+- Typography, spacing, and colors use the existing Trirong/IBM Plex families and blue/gold/semantic tokens. Phosphor icons are crisp library assets; the score ring is a data visualization. Expected answers come from the stored interview plan. Recorded Thai answers are preserved rather than inventing translations.
+- Iteration: initial badges stretched vertically and the ring was solid. Added start alignment to badges and a proportional score arc, then captured and reviewed the revised screenshots.
+- Behavior: seven focused browser tests passed; after correcting production assessment pairing, the result test passed again with assessments stored on the following officer turn. The final regression test verifies the complete list without pagination, metadata, score, and incorrect-answer explanation. Existing access checks remain covered. TypeScript, lint, and formatting passed.
+- Mobile: summary columns and verdict badges stack; long content wraps within the available width. The officer narrative remains available, an intentional addition to the reference.
+- No actionable P0/P1/P2 findings remain for this scope. P3: captures contain local test account names and the development indicator.
+
+final result: passed
+
 ## Evidence
 
 - Source visual truth:
