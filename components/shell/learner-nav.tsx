@@ -19,10 +19,12 @@ const HERE = 'bg-brand-50 text-brand-700 shadow-[inset_4px_0_0_var(--color-brand
 export async function LearnerNav({
   current,
   statuses,
+  hideOnMobile = false,
 }: {
   /** The step this page belongs to; the practice round belongs to none. */
   current?: StageKey;
   statuses: Record<StageKey, StageInfo> | null;
+  hideOnMobile?: boolean;
 }) {
   const [t, ts, td] = await Promise.all([
     getTranslations('app'),
@@ -33,7 +35,7 @@ export async function LearnerNav({
     <nav
       data-testid="learner-nav"
       aria-label={td('steps.title')}
-      className="min-w-0 rounded-card bg-white p-2 shadow-raised lg:sticky lg:top-6 lg:self-start lg:p-3"
+      className={`${hideOnMobile ? 'hidden lg:block' : ''} min-w-0 rounded-card bg-white p-2 shadow-raised lg:sticky lg:top-6 lg:self-start lg:p-3`}
     >
       <p className="hidden px-3 pb-2 text-sm font-semibold text-ink-500 lg:block">
         {td('steps.title')}
