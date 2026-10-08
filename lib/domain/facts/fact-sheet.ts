@@ -32,6 +32,7 @@ export type RecordColumns = {
   signing_authority: string | null;
   /** The printed address, for the place of business when no resolved address is passed. */
   head_office_address?: string | null;
+  website?: string | null;
 };
 
 /**
@@ -97,6 +98,7 @@ export function buildFactSheet(input: {
   const p = withInvoiceAnswers(
     withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
       address: input.address?.full || input.record.head_office_address || null,
+      website: input.record.website,
     }),
     input.structured.invoices,
   );

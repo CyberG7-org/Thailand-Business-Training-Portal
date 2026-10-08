@@ -10,7 +10,14 @@ import {
 } from './helpers';
 
 type Mode =
-  'fake' | 'fail-turn' | 'fail-narrate' | 'wrong-concept' | 'leak' | 'never-close' | 'evasive';
+  | 'fake'
+  | 'fail-turn'
+  | 'fail-narrate'
+  | 'wrong-concept'
+  | 'leak'
+  | 'never-close'
+  | 'evasive'
+  | 'early-close';
 
 /** The tests steer the officer: the fake by default, a scripted misbehaviour when `mode` is set. */
 const control = vi.hoisted(() => ({ mode: 'fake' as Mode }));
@@ -58,6 +65,12 @@ vi.mock('@/lib/integrations/interview', async () => {
             say: 'ขอถามอีกครั้งนะคะ',
             assessment: { concept: item.concept, verdict: 'evasive', note: '' },
             next: { concept: item.concept },
+          };
+        case 'early-close':
+          return {
+            say: 'ครบแล้วค่ะ',
+            assessment: { concept: item.concept, verdict: 'correct', note: '' },
+            next: { close: 'plan_complete' },
           };
       }
       return fake.turn(input);
@@ -233,7 +246,7 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     await endInterview(learner, session.id);
   });
 
-  it('closes at the message budget with a closing line, not another question', async () => {
+  it('does not let the officer trap the learner on one question', async () => {
     control.mode = 'never-close';
     const { session } = await startOrResumeInterview(learner);
     let sent = 0;
@@ -243,13 +256,14 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
       if (r.closed) break;
     }
     const r = await row(session.id);
-    expect(sent).toBe(turnBudget(r.plan as never));
+    expect(sent).toBeLessThan(turnBudget(r.plan as never));
+    expect(sent).toBe(22);
     expect(r.status).toBe('completed');
     expect(r.verdict).toBe('not_ready');
-    expect(r.summary?.closeReason).toBe('turn_limit');
+    expect(r.summary?.closeReason).toBe('plan_complete');
     const last = (await turnsOf(session.id)).at(-1)!;
     expect(last.role).toBe('officer');
-    expect(last.content).toContain('ครบจำนวนข้อความ');
+    expect(last.content).toContain('ครบทุกข้อแล้ว');
     control.mode = 'fake';
   });
 
@@ -264,6 +278,19 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     const r = await row(session.id);
     expect(r.summary?.closeReason).toBe('plan_complete');
     expect(r.summary).toMatchObject({ passScore: 9, maxScore: 11 });
+  });
+
+  it('ignores an early provider close and asks all 11 questions in order', async () => {
+    control.mode = 'early-close';
+    const { session } = await startOrResumeInterview(learner);
+    await answerAll(learner, session.id, (_concept, planned) => planned || FALLBACK);
+    const r = await row(session.id);
+    expect(r.status).toBe('completed');
+    expect(r.verdict).toBe('ready');
+    expect(r.summary?.closeReason).toBe('plan_complete');
+    expect(r.summary?.reasons).toHaveLength(11);
+    expect(new Set(r.summary?.reasons.map((reason) => reason.concept)).size).toBe(11);
+    control.mode = 'fake';
   });
 
   it('marks a pasted dump and lets the learner correct it', async () => {

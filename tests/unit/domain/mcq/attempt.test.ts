@@ -7,8 +7,8 @@ import { SAMPLE_CONTEXT } from '@/lib/domain/mcq/sample';
 import type { Variant } from '@/lib/domain/mcq/variant';
 
 const BANK: Variant[] = MCQ_STARTER.map((s) => ({ ...s, id: s.key, status: 'approved' }));
-const build = (seed = 'seed-1', seen: ReadonlySet<string> = new Set(), bank = BANK) =>
-  buildAttemptQuestions(bank, SAMPLE_CONTEXT, seed, seen);
+const build = (seed = 'seed-1', useCounts: ReadonlyMap<string, number> = new Map(), bank = BANK) =>
+  buildAttemptQuestions(bank, SAMPLE_CONTEXT, seed, useCounts);
 
 describe('the questions of one attempt (D100)', () => {
   it('asks each of the 30 concepts once, with four different options known by position', () => {
@@ -59,35 +59,34 @@ describe('the questions of one attempt (D100)', () => {
     expect(order('seed-2')).not.toEqual(order('seed-1'));
   });
 
-  it('uses all three variants before cycling on the fourth attempt', () => {
-    const picked = (seen: ReadonlySet<string>) =>
-      build('seed-1', seen).questions.find((q) => q.conceptKey === 'shareholder_count')?.variantId;
-    expect(picked(new Set())).toBe('mcq-v2-shareholder-count-1');
-    expect(picked(new Set(['mcq-v2-shareholder-count-1']))).toBe('mcq-v2-shareholder-count-2');
-    expect(picked(new Set(['mcq-v2-shareholder-count-1', 'mcq-v2-shareholder-count-2']))).toBe(
+  it('uses all three variants before cycling evenly through later attempts', () => {
+    const useCounts = new Map<string, number>();
+    const picked = Array.from({ length: 5 }, () => {
+      const variant = build('seed-1', useCounts).questions.find(
+        (q) => q.conceptKey === 'shareholder_count',
+      )!.variantId;
+      useCounts.set(variant, (useCounts.get(variant) ?? 0) + 1);
+      return variant;
+    });
+    expect(picked).toEqual([
+      'mcq-v2-shareholder-count-1',
+      'mcq-v2-shareholder-count-2',
       'mcq-v2-shareholder-count-3',
-    );
-    expect(
-      picked(
-        new Set([
-          'mcq-v2-shareholder-count-1',
-          'mcq-v2-shareholder-count-2',
-          'mcq-v2-shareholder-count-3',
-        ]),
-      ),
-    ).toBe('mcq-v2-shareholder-count-1');
+      'mcq-v2-shareholder-count-1',
+      'mcq-v2-shareholder-count-2',
+    ]);
   });
 
   it('asks nothing and names the concept when the bank cannot ask one', () => {
     const bank = BANK.filter((v) => v.conceptKey !== 'otp_control');
-    const { questions, missing } = build('seed-1', new Set(), bank);
+    const { questions, missing } = build('seed-1', new Map(), bank);
     expect(questions).toEqual([]);
     expect(missing.map((m) => m.conceptKey)).toEqual(['otp_control']);
     // A draft is not asked either.
     const drafts = BANK.map((v) =>
       v.conceptKey === 'company_name' ? { ...v, status: 'draft' as const } : v,
     );
-    expect(build('seed-1', new Set(), drafts).missing.map((m) => m.conceptKey)).toEqual([
+    expect(build('seed-1', new Map(), drafts).missing.map((m) => m.conceptKey)).toEqual([
       'company_name',
     ]);
   });

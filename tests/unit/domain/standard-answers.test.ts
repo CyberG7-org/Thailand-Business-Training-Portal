@@ -48,10 +48,22 @@ describe('withStandardAnswers', () => {
     );
     expect(p.customer_profile).toBe(FIXED_ANSWERS.customer_profile);
     expect(p.main_clients).toBe(FIXED_ANSWERS.customer_profile);
-    expect(p.client_origin).toBe(FIXED_ANSWERS.client_origin);
+    expect(p.client_origin).toContain('Facebook และ TikTok');
+    expect(p.client_origin).not.toContain('เว็บไซต์');
     expect(p.main_suppliers).toBe(FIXED_ANSWERS.main_suppliers);
     expect(p.clients_location).toBe(FIXED_ANSWERS.customer_profile);
     expect(p.suppliers_location).toBe(FIXED_ANSWERS.main_suppliers);
+  });
+
+  it('mentions the website only when the company pack contains one', () => {
+    const withWebsite = withStandardAnswers(typed, {
+      address: ADDRESS,
+      website: 'https://example.co.th',
+    });
+    expect(withWebsite.client_origin).toContain('เว็บไซต์');
+
+    const withoutWebsite = withStandardAnswers(typed, { address: ADDRESS, website: null });
+    expect(withoutWebsite.client_origin).not.toContain('เว็บไซต์');
   });
 
   it('fills the place of business, the fixed answers and the purpose', () => {

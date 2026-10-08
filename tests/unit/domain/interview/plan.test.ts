@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import {
   advance,
   buildPlan,
   buildReadinessPlan,
   currentItem,
+  nextReadinessStep,
   probingItems,
+  READINESS_ITEMS,
 } from '@/lib/domain/interview/plan';
 import type { Assessment, FactSheet } from '@/lib/domain/interview/types';
 
@@ -79,6 +82,53 @@ describe('buildReadinessPlan v2', () => {
     expect(plan.items).toHaveLength(11);
     expect(plan.items.every((item) => item.core === false)).toBe(true);
     expect(plan.items.every((item) => item.question.length > 8)).toBe(true);
+  });
+
+  it('has a readable label in every language and an explicit study card for every question', () => {
+    const realCardKeys = new Set(BANK_INTERVIEW_CARDS.map((card) => card.contentKey));
+    expect(READINESS_ITEMS).toHaveLength(11);
+    for (const item of READINESS_ITEMS) {
+      expect(item.question.th).not.toBe(item.concept);
+      expect(item.question.en).not.toBe(item.concept);
+      expect(item.question.zh).not.toBe(item.concept);
+      expect(item.cardKey).toMatch(/^bank-interview-[1-5]-/);
+      expect(realCardKeys.has(item.cardKey)).toBe(true);
+    }
+    expect(READINESS_ITEMS.find((item) => item.concept === 'account_purpose')?.cardKey).toBe(
+      'bank-interview-4-role',
+    );
+  });
+
+  it('owns the sequence even when the provider tries to close, jump or repeat', () => {
+    const plan = buildReadinessPlan(facts);
+    expect(
+      nextReadinessStep(plan, { concept: 'company_name', verdict: 'correct', note: '' }),
+    ).toEqual({ next: { concept: 'registration_number' }, kind: 'next' });
+
+    const followUp = nextReadinessStep(plan, {
+      concept: 'company_name',
+      verdict: 'wrong',
+      note: '',
+    });
+    expect(followUp).toEqual({ next: { concept: 'company_name' }, kind: 'follow_up' });
+
+    const afterFollowUp = advance(plan, followUp.next);
+    expect(
+      nextReadinessStep(afterFollowUp, {
+        concept: 'company_name',
+        verdict: 'wrong',
+        note: '',
+      }),
+    ).toEqual({ next: { concept: 'registration_number' }, kind: 'next' });
+
+    const last = { ...plan, cursor: plan.items.length - 1 };
+    expect(
+      nextReadinessStep(last, {
+        concept: 'transaction_details',
+        verdict: 'correct',
+        note: '',
+      }),
+    ).toEqual({ next: { close: 'plan_complete' }, kind: 'complete' });
   });
 });
 

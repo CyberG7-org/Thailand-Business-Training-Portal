@@ -46,19 +46,22 @@ export type ConceptCheck = {
 
 /**
  * The first approved variant of the concept that passes preflight; a failing one yields to the
- * next (spec §8). Variants the learner has not been asked yet (`seen` holds the ids of those they
- * have) come first, then key order. With none left the caller raises `render_failure`.
+ * next (spec §8). Least-used variants come first, then key order. This uses all unseen variants
+ * before repeating one and keeps cycling evenly after every variant has appeared.
  */
 export function pickVariant(
   conceptKey: string,
   variants: readonly Variant[],
   ctx: RenderContext,
   seed: string,
-  seen: ReadonlySet<string> = new Set(),
+  useCounts: ReadonlyMap<string, number> = new Map(),
 ): ConceptCheck {
   const candidates = variants
     .filter((v) => v.conceptKey === conceptKey && v.status === 'approved')
-    .sort((a, b) => Number(seen.has(a.id)) - Number(seen.has(b.id)) || a.key.localeCompare(b.key));
+    .sort(
+      (a, b) =>
+        (useCounts.get(a.id) ?? 0) - (useCounts.get(b.id) ?? 0) || a.key.localeCompare(b.key),
+    );
   const skipped: ConceptCheck['skipped'] = [];
   for (const variant of candidates) {
     const result = preflightVariant(variant, ctx, `${seed}:${variant.id}`);

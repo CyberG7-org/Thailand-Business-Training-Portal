@@ -7,6 +7,7 @@ import {
   buildReadinessPlan,
   currentItem,
   isReadinessPlan,
+  nextReadinessStep,
   probingItems,
 } from '@/lib/domain/interview/plan';
 import { detectPasted } from '@/lib/domain/interview/pasted';
@@ -247,7 +248,12 @@ function guard(
   if (revealedFact(reply.say, facts) === null) return { ...reply, assessment };
   console.warn('interview: the officer stated a fact; the turn was replaced');
   const say = item ? (opening ? GREETING : REASK) + item.question : CLOSING.turn_limit;
-  return { say, assessment, next: reply.next };
+  return {
+    say,
+    // Do not accept a judgment attached to an unsafe officer reply. Ask the same question again.
+    assessment: item ? null : assessment,
+    next: item ? { concept: item.concept } : reply.next,
+  };
 }
 
 /**
@@ -409,10 +415,27 @@ export async function submitLearnerMessage(
   );
   const assessment = reply.assessment;
   const evasionsNow = evasions + (assessment?.verdict === 'evasive' ? 1 : 0);
-  // Hard limits belong to the code, whatever the officer decided; they close with a closing
-  // line, not with a question the learner can no longer answer.
   let next = reply.next;
   let say = reply.say;
+  // The provider judges the answer, but code owns the v2 route: one optional follow-up, then
+  // the next fixed question. A provider cannot skip, repeat, jump or close the plan early.
+  if (isReadinessPlan(plan) && item) {
+    const step = nextReadinessStep(plan, assessment);
+    next = step.next;
+    if (step.kind === 'follow_up') {
+      const providerReasked = 'concept' in reply.next && reply.next.concept === item.concept;
+      say = providerReasked ? reply.say : REASK + item.question;
+    }
+    if (step.kind === 'next') {
+      const following = plan.items[plan.cursor + 1];
+      say = 'รับทราบค่ะ ' + following.question;
+    }
+    if (step.kind === 'complete') {
+      say = 'ขอบคุณค่ะ ครบทุกข้อแล้ว ระบบจะสรุปผลให้นะคะ';
+    }
+  }
+  // Hard limits belong to the code, whatever the officer decided; they close with a closing
+  // line, not with a question the learner can no longer answer.
   if ('concept' in next && learnerTurns >= turnBudget(plan)) {
     next = { close: 'turn_limit' };
     say = CLOSING.turn_limit;
@@ -420,28 +443,6 @@ export async function submitLearnerMessage(
   if ('concept' in next && !isReadinessPlan(plan) && evasionsNow >= MAX_EVASIONS) {
     next = { close: 'too_many_evasions' };
     say = CLOSING.too_many_evasions;
-  }
-  // A v2 learner always gets the full 11-question practice. If an older provider instruction
-  // asks to stop for an evasive, pasted or off-topic answer, keep the promised one follow-up and
-  // then move on instead.
-  if (
-    isReadinessPlan(plan) &&
-    'close' in next &&
-    (next.close === 'too_many_evasions' || next.close === 'off_topic_limit') &&
-    item
-  ) {
-    const followUp = assessment?.verdict !== 'correct' && item.attempts < 1;
-    const following = plan.items[plan.cursor + 1];
-    if (followUp) {
-      next = { concept: item.concept };
-      say = REASK + item.question;
-    } else if (following) {
-      next = { concept: following.concept };
-      say = 'รับทราบค่ะ ' + following.question;
-    } else {
-      next = { close: 'plan_complete' };
-      say = 'ขอบคุณค่ะ ครบทุกข้อแล้ว ระบบจะสรุปผลให้นะคะ';
-    }
   }
   const seq = rows.length + 1;
   await record(sessionId, seq, 'learner', text, null);

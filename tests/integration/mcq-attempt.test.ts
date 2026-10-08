@@ -236,8 +236,33 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
       for (const variant of otp) await setVariantStatus(svc, variant.id, 'approved');
     }
     // With the question back the quiz starts, and the report closes itself.
-    const attempt = await startExam(team.learner.id, 'th');
-    expect(attempt.attempt_no).toBe(4);
+    const fourth = await startExam(team.learner.id, 'th');
+    expect(fourth.attempt_no).toBe(4);
     expect((await open()).data).toEqual([]);
+
+    // After all three variants have appeared, the rotation stays even instead of sticking to
+    // the first key forever: 1, 2, 3, then 1, 2.
+    await answerAll(fourth);
+    await finalizeExam(team.learner.id, fourth.id);
+    const fifth = await startExam(team.learner.id, 'th');
+    expect(fifth.attempt_no).toBe(5);
+    const { data: attempts } = await svc
+      .from('assessment_attempts')
+      .select('attempt_no, question_ids')
+      .eq('user_id', team.learner.id)
+      .eq('kind', 'exam')
+      .order('attempt_no');
+    const variants = await listVariants(svc);
+    const keyOf = (ids: string[]) =>
+      variants.find(
+        (variant) => variant.conceptKey === 'shareholder_count' && ids.includes(variant.id),
+      )?.key;
+    expect(attempts!.map((attempt) => keyOf(attempt.question_ids))).toEqual([
+      'mcq-v2-shareholder-count-1',
+      'mcq-v2-shareholder-count-2',
+      'mcq-v2-shareholder-count-3',
+      'mcq-v2-shareholder-count-1',
+      'mcq-v2-shareholder-count-2',
+    ]);
   });
 });

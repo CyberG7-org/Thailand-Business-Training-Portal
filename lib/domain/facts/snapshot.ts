@@ -16,7 +16,7 @@ import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
 import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
 import { summarizeInvoices, type InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
-import { withStandardAnswers } from '@/lib/domain/standard-answers';
+import { clientOriginAnswer, withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
 import { buildFactSheet, type FactSheet, type RecordColumns } from './fact-sheet';
 
@@ -77,6 +77,7 @@ export function buildTrainingSnapshot(input: {
   const interview = withInvoiceAnswers(
     withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
       address: input.address?.full || input.record.head_office_address,
+      website: input.record.website,
     }),
     input.structured.invoices,
   );
@@ -147,6 +148,9 @@ export function buildRoleSnapshot(role: LearnerRole, snapshot: TrainingSnapshot)
 export function assignmentFacts(snapshot: TrainingSnapshot, role: RoleSnapshot | null): FactSheet {
   return {
     ...snapshot.facts,
+    // Re-project this fact for new work made from an older frozen company snapshot. Historic
+    // attempts stay frozen, while a company without a website no longer claims to use one.
+    client_origin: clientOriginAnswer(Boolean(snapshot.extras.website?.trim())),
     holder_name: role?.holder_name ?? null,
     position: role?.position ?? null,
     learner_is_shareholder: role?.learner_is_shareholder ?? null,
@@ -196,8 +200,8 @@ export function templateRecordFromSnapshot(
     my_position: role?.position ?? null,
     my_responsibilities: role?.responsibilities ?? null,
     my_relationship: role?.relationship_to_shareholders ?? null,
-    my_shares: role?.my_shares ?? null,
-    my_share_percent: role?.my_share_percent ?? null,
+    my_shares: role?.learner_is_shareholder === false ? 0 : (role?.my_shares ?? null),
+    my_share_percent: role?.learner_is_shareholder === false ? 0 : (role?.my_share_percent ?? null),
     business_purpose: f.business_purpose,
     main_clients: f.main_clients,
     client_origin: f.client_origin,
@@ -233,9 +237,11 @@ export function templateRecordFromRecord(
   // The same standard answers the fact sheet reads (D91).
   const interview = withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
     address: structured.address?.full || record.head_office_address,
+    website: record.website,
   });
   const directors = (record.directors as Director[] | null) ?? null;
   const mine = myShareholding(business, role?.holder_name ?? null);
+  const learnerIsShareholder = isShareholder(business, role?.holder_name ?? null);
   return {
     company_name_th: record.company_name_th,
     company_name_en: record.company_name_en,
@@ -270,8 +276,8 @@ export function templateRecordFromRecord(
     my_position: role?.position ?? null,
     my_responsibilities: role?.responsibilities ?? null,
     my_relationship: role?.relationship_to_shareholders ?? null,
-    my_shares: mine.shares,
-    my_share_percent: mine.percent,
+    my_shares: learnerIsShareholder === false ? 0 : mine.shares,
+    my_share_percent: learnerIsShareholder === false ? 0 : mine.percent,
     business_purpose: interview.business_purpose,
     main_clients: interview.main_clients,
     client_origin: interview.client_origin,

@@ -25,13 +25,38 @@ const output = `-- Simplified learner flow v2: 30 concepts × 3 plain-language q
 -- concept variants are retired after the v2 rows have been written and approved.
 --
 -- Rollback (content only):
+--   begin;
 --   update public.questions set approval_status = 'retired'
 --     where question_key like 'mcq-v2-%';
---   update public.questions set approval_status = 'approved'
---     where concept_key is not null and question_key not like 'mcq-v2-%';
+--   update public.questions q set approval_status = previous.approval_status
+--     from private.content_migration_question_states previous
+--     where previous.migration_key = '20261008010000_simplified_learning_flow'
+--       and previous.question_id = q.id;
+--   commit;
 -- Existing attempts remain valid because rendered questions and rule snapshots are frozen.
 
 begin;
+
+create schema if not exists private;
+revoke all on schema private from public;
+
+create table if not exists private.content_migration_question_states (
+  migration_key text not null,
+  question_id uuid not null references public.questions (id) on delete cascade,
+  approval_status text not null check (approval_status in ('draft', 'approved', 'retired')),
+  primary key (migration_key, question_id)
+);
+revoke all on private.content_migration_question_states from public, anon, authenticated;
+
+-- Capture each legacy row once, before this migration changes any approval state. The rollback
+-- can therefore restore a mixed bank of draft, approved and already-retired questions exactly.
+insert into private.content_migration_question_states
+  (migration_key, question_id, approval_status)
+select '20261008010000_simplified_learning_flow', id, approval_status
+from public.questions
+where concept_key is not null
+  and question_key not like 'mcq-v2-%'
+on conflict (migration_key, question_id) do nothing;
 
 create temporary table simplified_quiz_questions (
   question_key text primary key,

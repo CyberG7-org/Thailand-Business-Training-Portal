@@ -70,16 +70,16 @@ export const TRAINING_SYLLABUS: readonly TrainingSyllabusItem[] = [
     'registered_location',
     1,
     [
-      "What is the company's registered address?",
-      'Where is the company officially registered?',
-      'Which address appears on the DBD certificate?',
+      'In which province is the company registered?',
+      'What is the province of the registered office?',
+      'Which province appears in the registered address?',
     ],
     [
-      'ที่อยู่จดทะเบียนของบริษัทคือที่ใด',
-      'บริษัทจดทะเบียนอย่างเป็นทางการที่ไหน',
-      'ที่อยู่ใดปรากฏในหนังสือรับรอง DBD',
+      'บริษัทจดทะเบียนอยู่ในจังหวัดใด',
+      'สำนักงานจดทะเบียนอยู่จังหวัดอะไร',
+      'ที่อยู่จดทะเบียนระบุจังหวัดใด',
     ],
-    ['公司的注册地址是什么？', '公司正式注册在哪里？', 'DBD 注册证明上显示哪个地址？'],
+    ['公司注册在哪个府？', '注册办事处位于哪个府？', '注册地址中注明的是哪个府？'],
   ),
   item(
     'director_count',

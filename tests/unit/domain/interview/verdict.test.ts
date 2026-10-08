@@ -116,6 +116,14 @@ describe('the v2 readiness verdict', () => {
       maxScore: 11,
       passScore: 9,
     });
+    expect(
+      decideVerdict(v2, nine, 'plan_complete').reasons.every((reason) => reason.cardKey !== null),
+    ).toBe(true);
+    expect(
+      decideVerdict(v2, nine, 'plan_complete').reasons.find(
+        (reason) => reason.concept === 'account_purpose',
+      )?.cardKey,
+    ).toBe('bank-interview-4-role');
   });
 
   it('keeps practising at 8 of 11', () => {
@@ -142,5 +150,12 @@ describe('the v2 readiness verdict', () => {
 
   it('still requires the interview to reach the end', () => {
     expect(decideVerdict(v2, answers, 'learner_ended').verdict).toBe('not_ready');
+  });
+
+  it('does not pass when the provider closes after only nine questions', () => {
+    expect(decideVerdict(v2, answers.slice(0, 9), 'plan_complete')).toMatchObject({
+      verdict: 'not_ready',
+      score: 9,
+    });
   });
 });

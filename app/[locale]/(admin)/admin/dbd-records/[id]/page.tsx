@@ -136,6 +136,7 @@ export default async function DbdRecordPage({
   const filled = withInvoiceAnswers(
     withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
       address: address.full || record.head_office_address,
+      website: record.website,
     }),
     structured.invoices,
   );
