@@ -21,12 +21,11 @@ const RESULT_CHIP = {
 export default async function ExamHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  const [attempts, passScore, retestScore] = await Promise.all([
+  const [attempts, passScore] = await Promise.all([
     listMyAttempts(await createSupabaseServerClient(), user.id, 'exam'),
     getPolicy('mcq_pass_score'),
-    getPolicy('mcq_retest_score'),
   ]);
-  const rule = mcqRule(passScore, retestScore);
+  const rule = mcqRule(passScore);
   const inProgress = attempts.find((a) => a.status === 'in_progress') ?? null;
   const submitted = attempts.filter((a) => a.status === 'submitted');
   const t = await getTranslations('exam');
@@ -36,11 +35,8 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
   const about = [
     t('about.questions', { count: MCQ_CONCEPTS.length }),
     t('about.marking'),
-    t('about.pass', { pass: rule.passScore, critical: rule.criticalKeys.length }),
-    ...(rule.retestScore < rule.passScore
-      ? [t('about.retest', { retest: rule.retestScore, below: rule.passScore - 1 })]
-      : []),
-    t('about.fail', { retest: rule.retestScore }),
+    t('about.pass', { pass: rule.passScore }),
+    t('about.fail', { pass: rule.passScore }),
   ];
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="exam">

@@ -1429,9 +1429,9 @@
       "title": "How this quiz works",
       "questions": "{count} questions: one for each thing the bank asks about your company.",
       "marking": "Each answer is marked right or wrong as soon as you choose it. An answer cannot be changed.",
-      "pass": "Pass: {pass} or more correct, with none of the {critical} key company facts wrong.",
-      "retest": "{retest} to {below} correct: take the quiz again.",
-      "fail": "Fewer than {retest} correct, or a key company fact wrong: review the study material, then take the quiz again."
+      "pass": "Pass: answer {pass} or more questions correctly.",
+      "retest": "Historic attempts may show a retest result.",
+      "fail": "Below {pass}: review the answers and study cards, then try again when you are ready."
     },
     "start": "Start the Business Knowledge Quiz",
     "resume": "Resume the Business Knowledge Quiz",

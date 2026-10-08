@@ -93,12 +93,11 @@ export async function startMcqAttempt(args: {
   const pinned = await pinnedFactsFor(admin, assignment);
   if (!pinned) throw new McqStartError('no_version');
 
-  const [ctx, variants, seen, passScore, retestScore] = await Promise.all([
+  const [ctx, variants, seen, passScore] = await Promise.all([
     loadRenderContext(admin, assignmentFacts(pinned.snapshot, pinned.role)),
     listVariants(admin),
     seenVariantIds(admin, args.userId),
     getPolicy('mcq_pass_score'),
-    getPolicy('mcq_retest_score'),
   ]);
   const seed = `${args.userId}:mcq:${Date.now()}`;
   const { questions, missing } = buildAttemptQuestions(variants, ctx, seed, seen);
@@ -130,7 +129,7 @@ export async function startMcqAttempt(args: {
       attempt_no: (last?.attempt_no ?? 0) + 1,
       question_ids: questions.map((q) => q.variantId),
       shuffle_seed: seed,
-      rule_snapshot: mcqRule(passScore, retestScore) as unknown as Json,
+      rule_snapshot: mcqRule(passScore) as unknown as Json,
       training_version_id: pinned.version.id,
       role_snapshot: pinned.role as unknown as Json,
     })

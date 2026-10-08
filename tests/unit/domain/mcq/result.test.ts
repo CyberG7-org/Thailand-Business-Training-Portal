@@ -1,70 +1,64 @@
 import { describe, expect, it } from 'vitest';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
-import { mcqResult, mcqRule, readMcqRule } from '@/lib/domain/mcq/result';
+import { legacyMcqRule, mcqResult, mcqRule, readMcqRule } from '@/lib/domain/mcq/result';
 
-const RULE = mcqRule(27, 23);
-const NON_CRITICAL = MCQ_CONCEPTS.filter((c) => !c.critical).map((c) => c.key);
+const V2_RULE = mcqRule(27);
+const V1_RULE = legacyMcqRule(27, 23);
+const NON_CRITICAL = MCQ_CONCEPTS.filter((concept) => !concept.critical).map(
+  (concept) => concept.key,
+);
 
-/** Thirty answers, wrong on the concepts named. */
 const answers = (wrong: readonly string[]) =>
-  MCQ_CONCEPTS.map((c) => ({ conceptKey: c.key, isCorrect: !wrong.includes(c.key) }));
+  MCQ_CONCEPTS.map((concept) => ({
+    conceptKey: concept.key,
+    isCorrect: !wrong.includes(concept.key),
+  }));
 
-describe('the result of the Business Knowledge Quiz (D71)', () => {
-  it('is judged on exactly the nine critical concepts of D72', () => {
-    expect(RULE.criticalKeys).toEqual([
-      'company_name',
-      'registration_number',
-      'registration_date',
-      'registered_location',
-      'director_count',
-      'director_identity',
-      'signing_authority',
-      'registered_capital',
-      'actual_business',
-    ]);
-  });
-
-  it('passes on 27 or more with no critical concept wrong', () => {
-    expect(mcqResult(answers([]), RULE)).toEqual({ result: 'pass', score: 30, criticalWrong: [] });
-    expect(mcqResult(answers(NON_CRITICAL.slice(0, 3)), RULE)).toMatchObject({
+describe('the current Business Knowledge Quiz rule', () => {
+  it('passes at 27 and has no critical-question override', () => {
+    expect(V2_RULE).toEqual({ version: 2, passScore: 27 });
+    expect(mcqResult(answers(NON_CRITICAL.slice(0, 3)), V2_RULE)).toEqual({
       result: 'pass',
       score: 27,
+      criticalWrong: [],
     });
-  });
-
-  it('asks for a retest from 23 to 26', () => {
-    expect(mcqResult(answers(NON_CRITICAL.slice(0, 4)), RULE)).toMatchObject({
-      result: 'retest',
-      score: 26,
-    });
-    expect(mcqResult(answers(NON_CRITICAL.slice(0, 7)), RULE)).toMatchObject({
-      result: 'retest',
-      score: 23,
-    });
-  });
-
-  it('fails below 23', () => {
-    expect(mcqResult(answers(NON_CRITICAL.slice(0, 8)), RULE)).toMatchObject({
-      result: 'fail',
-      score: 22,
+    expect(mcqResult(answers(['registered_capital']), V2_RULE)).toEqual({
+      result: 'pass',
+      score: 29,
       criticalWrong: [],
     });
   });
 
-  it('fails on one critical concept wrong, whatever the score, and names it', () => {
-    expect(mcqResult(answers(['registered_capital']), RULE)).toEqual({
+  it('keeps practising below 27 without a retest band', () => {
+    expect(mcqResult(answers(NON_CRITICAL.slice(0, 4)), V2_RULE)).toEqual({
+      result: 'fail',
+      score: 26,
+      criticalWrong: [],
+    });
+  });
+});
+
+describe('legacy quiz rule snapshots', () => {
+  it('retain their frozen critical and retest behaviour', () => {
+    expect(mcqResult(answers(['registered_capital']), V1_RULE)).toEqual({
       result: 'fail',
       score: 29,
       criticalWrong: ['registered_capital'],
     });
+    expect(mcqResult(answers(NON_CRITICAL.slice(0, 4)), V1_RULE)).toMatchObject({
+      result: 'retest',
+      score: 26,
+    });
   });
 
-  it('never lets the retest mark sit above the pass mark', () => {
-    expect(mcqRule(20, 25).retestScore).toBe(20);
-  });
-
-  it('reads the rule back from an attempt, and nothing from an earlier attempt', () => {
-    expect(readMcqRule(JSON.parse(JSON.stringify(RULE)))).toEqual(RULE);
+  it('reads both old unversioned snapshots and v2 snapshots', () => {
+    const storedV1 = {
+      passScore: V1_RULE.passScore,
+      retestScore: V1_RULE.retestScore,
+      criticalKeys: V1_RULE.criticalKeys,
+    };
+    expect(readMcqRule(JSON.parse(JSON.stringify(storedV1)))).toMatchObject({ version: 1 });
+    expect(readMcqRule(JSON.parse(JSON.stringify(V2_RULE)))).toEqual(V2_RULE);
     expect(readMcqRule(null)).toBeNull();
     expect(readMcqRule({ passScore: 27 })).toBeNull();
   });
