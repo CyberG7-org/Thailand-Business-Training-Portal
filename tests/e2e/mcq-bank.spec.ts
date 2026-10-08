@@ -21,7 +21,7 @@ test('the Owner loads the starter drafts, previews a variant in three languages 
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await openStarterVariant(page, 'registered_capital', 'mcq-registered-capital-1');
+  await openStarterVariant(page, 'registered_capital', 'mcq-v2-registered-capital-1');
 
   // The fictional sample company: the same numbers in each language's own form.
   await expect(page.getByTestId('preflight')).toHaveAttribute('data-ok', 'true');
@@ -44,7 +44,7 @@ test('the Owner loads the starter drafts, previews a variant in three languages 
   await expect(status).toHaveAttribute('data-status', 'approved');
   await page
     .locator('textarea[name="th_prompt"]')
-    .fill(`ทุนจดทะเบียนของ {company_name_th} คือเท่าใด (${Date.now()})`);
+    .fill(`ทุนจดทะเบียนของบริษัทคือเท่าใด (${Date.now()})`);
   await page.getByTestId('variant-save').click();
   await expect(page.getByTestId('variant-saved')).toBeVisible();
   await expect(status).toHaveAttribute('data-status', 'draft');
@@ -62,12 +62,12 @@ test('the Owner approves every checked draft at once, and all 30 concepts are re
   page,
 }) => {
   await seedApprovedBank();
-  // Both wordings of the learner's shareholding and one more, back to draft: a concept with
-  // two cases is not covered by drafts.
+  // All three v2 wordings of one concept return to draft, so that concept is temporarily not
+  // covered. Bulk approval restores all 30 concepts.
   await returnStartersToDraft([
-    'mcq-learner-shareholding-1',
-    'mcq-learner-shareholding-2',
-    'mcq-otp-control-1',
+    'mcq-v2-learner-shareholding-1',
+    'mcq-v2-learner-shareholding-2',
+    'mcq-v2-learner-shareholding-3',
   ]);
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/questions');
@@ -75,7 +75,7 @@ test('the Owner approves every checked draft at once, and all 30 concepts are re
     'data-covered',
     'false',
   );
-  await expect(page.getByTestId('bank-ready')).toHaveAttribute('data-ready', '28');
+  await expect(page.getByTestId('bank-ready')).toHaveAttribute('data-ready', '29');
 
   // One button, behind a confirm step that names the count.
   const approve = page.getByTestId('approve-drafts');
@@ -95,7 +95,7 @@ test('drawn places are different from each other and the same in every language'
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await openStarterVariant(page, 'registered_location', 'mcq-registered-location-1');
+  await openStarterVariant(page, 'registered_location', 'mcq-v2-registered-location-1');
   const th = page.getByTestId('preview-th');
   await expect(th.locator('li[data-correct="true"]')).toHaveText('A. ร้อยเอ็ด');
   await expect(page.getByTestId('preview-en').locator('li[data-correct="true"]')).toHaveText(

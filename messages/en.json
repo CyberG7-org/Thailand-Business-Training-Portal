@@ -991,7 +991,19 @@
       "verdict": "Verdict",
       "open": "Open",
       "detailTitle": "Interview detail",
+      "summaryTitle": "Interview summary",
+      "summaryIntro": "Results from the readiness interview based on company documents and the learner’s answers.",
+      "overallResult": "Overall result",
+      "correctAnswers": "Correct answers",
+      "readinessStatus": "Readiness status",
+      "interviewDate": "Interview date",
+      "learnerId": "Learner ID",
       "transcript": "Transcript",
+      "transcriptTitle": "Question & answer transcript",
+      "transcriptIntro": "Review each question, the learner’s answer, and the expected information from the company documents.",
+      "explanation": "Explanation",
+      "expectedAnswer": "Expected answer",
+      "unanswered": "No answer",
       "assessments": "Assessment by question",
       "narrative": "The officer’s summary",
       "noVerdict": "No verdict yet",
@@ -1429,9 +1441,9 @@
       "title": "How this quiz works",
       "questions": "{count} questions: one for each thing the bank asks about your company.",
       "marking": "Each answer is marked right or wrong as soon as you choose it. An answer cannot be changed.",
-      "pass": "Pass: {pass} or more correct, with none of the {critical} key company facts wrong.",
-      "retest": "{retest} to {below} correct: take the quiz again.",
-      "fail": "Fewer than {retest} correct, or a key company fact wrong: review the study material, then take the quiz again."
+      "pass": "Pass: answer {pass} or more questions correctly.",
+      "retest": "Historic attempts may show a retest result.",
+      "fail": "Below {pass}: review the answers and study cards, then try again when you are ready."
     },
     "start": "Start the Business Knowledge Quiz",
     "resume": "Resume the Business Knowledge Quiz",
@@ -1479,8 +1491,17 @@
   },
   "interview": {
     "title": "Bank Readiness Interview",
-    "intro": "An AI bank officer interviews you in Thai, as on the day: questions about your company, checked against the certificate, and a verdict on whether you are ready. Repeat as often as you like.",
+    "intro": "A friendly practice interview using the same company facts you studied.",
     "thaiOnly": "The interview is entirely in Thai.",
+    "guide": {
+      "eyebrow": "Before you start",
+      "title": "Practise at your own pace",
+      "questions": "Answer 11 short questions",
+      "pass": "Get 9 correct to be ready",
+      "language": "The interview is in Thai (ภาษาไทย)",
+      "repeat": "Practise as many times as you like (ฝึกได้ไม่จำกัด)",
+      "support": "The officer gives you one friendly second chance when an answer needs more detail. This is practice, so take your time."
+    },
     "start": "Start the interview",
     "resume": "Continue the interview",
     "history": "Past interviews",
@@ -1490,6 +1511,8 @@
       "abandoned": "Not finished"
     },
     "outcome": {
+      "readyTitle": "Ready for the next step",
+      "practiceTitle": "Keep practising — you are close",
       "ready": {
         "title": "Result: you can open the bank account",
         "detail": "You are ready to go to the bank. Book your appointment."
@@ -1501,7 +1524,9 @@
       "abandoned": {
         "title": "No result: you cannot open the bank account yet",
         "detail": "The interview was not finished. Take it again from the start."
-      }
+      },
+      "scoreReady": "You got {score} out of {maximum}. You needed {required} — you are ready for the next step.",
+      "scorePractice": "You got {score} out of {maximum}. You need {required}; review the answers below and try again."
     },
     "chat": {
       "placeholder": "Type your answer in Thai…",
@@ -1516,6 +1541,7 @@
     "debrief": {
       "title": "Interview result",
       "reasons": "Your answers, one by one",
+      "reviewNeeded": "A few answers to practise",
       "correctValue": "On the certificate: {value}",
       "review": "Review the card",
       "transcript": "Transcript",

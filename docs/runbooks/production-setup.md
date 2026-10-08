@@ -20,6 +20,18 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 
    **The MCQ bank (P17d).** Migration `20261004010000_mcq_bank.sql` adds the variant columns and makes the bank Owner-only: from this migration on a manager can no longer write or approve questions. Nothing is migrated; the earlier questions keep feeding the quiz and exam. The starter drafts are not in the migration: the Owner adds them from Admin → Question bank → *Add starter drafts*.
 
+   **Simplified learning flow (D103).** Migration `20261008010000_simplified_learning_flow.sql` upserts 90 v2 quiz variants (three per concept), approves them only after all three localizations exist, and retires earlier approved concept variants without deleting them. On an existing environment, deploy the D103-compatible application first, then run `pnpm exec supabase db push`; fresh environments may apply all migrations before their first deployment. Verify 90 approved v2 rows and no approved legacy concept rows:
+   ```sql
+   select count(*) from public.questions
+    where question_key like 'mcq-v2-%' and approval_status = 'approved'; -- 90
+
+   select count(*) from public.questions
+    where concept_key is not null
+      and question_key not like 'mcq-v2-%'
+      and approval_status = 'approved'; -- 0
+   ```
+   Content rollback is documented at the top of the migration and only swaps the approval states; frozen historic attempts are not rewritten.
+
    **Numbered accounts are renamed (D69).** On a project that already has managers and learners with the old codes, migration `20260930000000_typed_login_ids.sql` renames them as it applies: `T01` → `T-01`, `T01-01` → `T-01-01` (sign-in email included). The old code stops working at that moment. Before pushing, list who will be affected and tell each person their new login ID:
    ```sql
    select login_id as old_code, 't-' || substring(login_id from 2) as new_code, role, display_name

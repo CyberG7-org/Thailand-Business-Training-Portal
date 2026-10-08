@@ -99,15 +99,20 @@ async function turnsOf(id: string) {
   const { data } = await svc.from('interview_turns').select('*').eq('session_id', id).order('seq');
   return data ?? [];
 }
-async function answerAll(userId: string, sessionId: string, answer: (concept: string) => string) {
+async function answerAll(
+  userId: string,
+  sessionId: string,
+  answer: (concept: string, expected: string) => string,
+) {
   for (let i = 0; i < 60; i++) {
     const r = await row(sessionId);
     if (r.status !== 'in_progress') return;
-    const plan = r.plan as { items: { concept: string }[]; cursor: number };
+    const plan = r.plan as { items: { concept: string; expected: string }[]; cursor: number };
+    const item = plan.items[plan.cursor];
     const { closed } = await submitLearnerMessage(
       userId,
       sessionId,
-      answer(plan.items[plan.cursor]?.concept ?? 'end'),
+      answer(item?.concept ?? 'end', item?.expected ?? ''),
     );
     if (closed) return;
   }
@@ -123,6 +128,15 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     team = await seedTeam('เจ้าหน้าที่ล่ม');
     learner = team.learner.id;
     await confirmRecord(team.recordId, team.manager.id);
+    await svc
+      .from('dbd_records')
+      .update({
+        head_office_address: 'เลขที่ 99 กรุงเทพมหานคร',
+        registered_on: '2026-07-13',
+        directors: [{ name_th: 'นางสาว กรรมการ ตัวอย่าง', name_en: null }],
+        signing_authority: 'กรรมการหนึ่งคนลงนาม',
+      })
+      .eq('id', team.recordId);
     const { data: record } = await svc
       .from('dbd_records')
       .select('company_name_th, juristic_id')
@@ -148,8 +162,7 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     });
     expected = {
       company_name: record!.company_name_th!,
-      juristic_id: record!.juristic_id!,
-      business_activity: 'ทดสอบระบบ สินค้าทดสอบ',
+      registration_number: record!.juristic_id!,
     };
   });
 
@@ -162,7 +175,11 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
   it('keeps the verdict when the narrative fails', async () => {
     control.mode = 'fail-narrate';
     const { session } = await startOrResumeInterview(learner);
-    await answerAll(learner, session.id, (c) => expected[c] ?? FALLBACK);
+    await answerAll(
+      learner,
+      session.id,
+      (concept, planned) => (expected[concept] ?? planned) || FALLBACK,
+    );
     const r = await row(session.id);
     expect(r.status).toBe('completed');
     expect(r.verdict).toBe('ready');
@@ -210,7 +227,7 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     const { session } = await startOrResumeInterview(learner);
     const { turns } = await submitLearnerMessage(learner, session.id, 'ไม่แน่ใจ');
     const officer = turns.at(-1)!;
-    expect(officer.content).not.toContain(expected.juristic_id);
+    expect(officer.content).not.toContain(expected.registration_number);
     expect(officer.content).toContain('ขอถามอีกครั้ง');
     control.mode = 'fake';
     await endInterview(learner, session.id);
@@ -236,16 +253,17 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     control.mode = 'fake';
   });
 
-  it('closes on the third evasion whatever the officer decided', async () => {
+  it('continues after the third evasion and still reaches a score', async () => {
     control.mode = 'evasive';
     const { session } = await startOrResumeInterview(learner);
     expect((await submitLearnerMessage(learner, session.id, 'เอ่อ')).closed).toBe(false);
     expect((await submitLearnerMessage(learner, session.id, 'เอ่อ')).closed).toBe(false);
-    expect((await submitLearnerMessage(learner, session.id, 'เอ่อ')).closed).toBe(true);
-    const r = await row(session.id);
-    expect(r.summary?.closeReason).toBe('too_many_evasions');
-    expect(r.verdict).toBe('not_ready');
+    expect((await submitLearnerMessage(learner, session.id, 'เอ่อ')).closed).toBe(false);
     control.mode = 'fake';
+    await answerAll(learner, session.id, (_concept, planned) => planned || FALLBACK);
+    const r = await row(session.id);
+    expect(r.summary?.closeReason).toBe('plan_complete');
+    expect(r.summary).toMatchObject({ passScore: 9, maxScore: 11 });
   });
 
   it('marks a pasted dump and lets the learner correct it', async () => {
@@ -255,13 +273,17 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
       'ชื่อบริษัท: ' +
       expected.company_name +
       '\nเลขทะเบียน: ' +
-      expected.juristic_id +
+      expected.registration_number +
       '\nทุนจดทะเบียน: 1,000,000 บาท';
     const { turns } = await submitLearnerMessage(learner, session.id, dump);
     const officer = turns.at(-1)!;
     expect((officer.assessment as { verdict: string }).verdict).toBe('pasted');
     expect(officer.content).toContain('คำพูดของคุณเอง');
-    await answerAll(learner, session.id, (c) => expected[c] ?? FALLBACK);
+    await answerAll(
+      learner,
+      session.id,
+      (concept, planned) => (expected[concept] ?? planned) || FALLBACK,
+    );
     const r = await row(session.id);
     expect(r.verdict).toBe('ready');
     expect(r.summary?.reasons.find((x) => x.concept === 'company_name')?.verdict).toBe('correct');

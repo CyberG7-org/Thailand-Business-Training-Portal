@@ -51,14 +51,15 @@ export default async function ExamResultPage({
   const interviewOpen = ['available', 'in_progress', 'done'].includes(stages.interview.status);
   // The rule the attempt was judged by (D71); an attempt from before it has a passing mark.
   const rule = readMcqRule(attempt.rule_snapshot);
-  const criticalWrong = rule
-    ? attempt.assessment_answers
-        .filter(
-          (a) =>
-            a.is_correct !== true && a.concept_key && rule.criticalKeys.includes(a.concept_key),
-        )
-        .map((a) => conceptTitle(a.concept_key!, locale))
-    : [];
+  const criticalWrong =
+    rule?.version === 1
+      ? attempt.assessment_answers
+          .filter(
+            (a) =>
+              a.is_correct !== true && a.concept_key && rule.criticalKeys.includes(a.concept_key),
+          )
+          .map((a) => conceptTitle(a.concept_key!, locale))
+      : [];
   const score = attempt.score ?? 0;
   const max = attempt.max_score ?? 0;
 

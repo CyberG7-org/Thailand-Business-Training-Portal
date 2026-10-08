@@ -290,7 +290,7 @@ describe('the starter drafts in the bank', () => {
     expect(loaded.every((v) => Object.keys(v.texts).length === 3)).toBe(true);
 
     // The Owner edits one; loading again does not put the starter text back.
-    const capital = loaded.find((v) => v.key === 'mcq-registered-capital-1')!;
+    const capital = loaded.find((v) => v.key === 'mcq-v2-registered-capital-1')!;
     const prompt = 'ทุนจดทะเบียนตามหนังสือรับรองของ {company_name_th} คือเท่าใด';
     await saveVariant(
       asOwner,
@@ -304,7 +304,7 @@ describe('the starter drafts in the bank', () => {
 
   it('approves every checked draft at once, for the Owner only, and leaves a broken one (D100)', async () => {
     // A draft that breaks a rule, written past the editor: its correct option is a varied one.
-    const broken = (await listVariants(asOwner)).find((v) => v.key === 'mcq-director-count-1')!;
+    const broken = (await listVariants(asOwner)).find((v) => v.key === 'mcq-v2-director-count-1')!;
     await svc.from('questions').update({ correct_option_key: 'B' }).eq('id', broken.id);
 
     const manager = await createTestUser('manager');
@@ -317,16 +317,16 @@ describe('the starter drafts in the bank', () => {
     }
 
     const result = await approveCheckedDrafts(asOwner);
-    expect(result.skipped).toEqual(['mcq-director-count-1']);
+    expect(result.skipped).toContain('mcq-v2-director-count-1');
     expect(result.approved.sort()).toEqual(keys.filter((k) => k !== broken.key).sort());
     const after = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
     expect(after.find((v) => v.key === broken.key)?.status).toBe('draft');
     expect(after.filter((v) => v.status === 'approved')).toHaveLength(keys.length - 1);
-    // Every concept but the broken one's can now be asked.
-    expect(bankCoverage(after).ready).toBe(29);
+    // The other two phrasings keep this concept available.
+    expect(bankCoverage(after).ready).toBe(30);
 
     // The audit names the Owner on each approval.
-    const approvedId = after.find((v) => v.key === 'mcq-company-name-1')!.id;
+    const approvedId = after.find((v) => v.key === 'mcq-v2-company-name-1')!.id;
     const { data: audit } = await svc
       .from('audit_logs')
       .select('actor_id, after')

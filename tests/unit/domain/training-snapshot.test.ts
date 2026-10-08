@@ -118,6 +118,21 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
     });
   });
 
+  it('represents a non-shareholder as zero shares in assessment facts', () => {
+    const snapshot = buildTrainingSnapshot({ record, structured, address: null });
+    const outsider = buildRoleSnapshot({ ...role, holder_name: 'บุคคลภายนอก' }, snapshot);
+    expect(outsider).toMatchObject({
+      learner_is_shareholder: false,
+      my_shares: null,
+      my_share_percent: null,
+    });
+    expect(assignmentFacts(snapshot, outsider)).toMatchObject({
+      learner_is_shareholder: false,
+      my_shares: 0,
+      my_share_percent: 0,
+    });
+  });
+
   it('renders the same template record from the snapshot as from the live record', () => {
     const s = buildTrainingSnapshot({ record, structured, address: null });
     expect(templateRecordFromSnapshot(s, buildRoleSnapshot(role, s))).toEqual(

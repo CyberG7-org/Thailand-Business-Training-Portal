@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MCQ_STARTER } from '@/lib/content/mcq-starter';
+import { TRAINING_SYLLABUS } from '@/lib/content/training-syllabus';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import type { FactKey } from '@/lib/domain/facts/fact-sheet';
 import type { RenderContext } from '@/lib/domain/mcq/context';
@@ -32,15 +33,19 @@ describe('the starter drafts', () => {
     expect([...used].sort()).toEqual([...RECIPES].sort());
   });
 
-  it('give every one of the 30 concepts a question (D100)', () => {
+  it('gives every one of the 30 concepts exactly three simple variants', () => {
     expect(MCQ_CONCEPTS).toHaveLength(30);
     for (const concept of MCQ_CONCEPTS) {
       const own = MCQ_STARTER.filter((s) => s.conceptKey === concept.key);
-      expect(own.length, concept.key).toBeGreaterThan(0);
+      expect(own, concept.key).toHaveLength(3);
+      const syllabus = TRAINING_SYLLABUS.find((item) => item.conceptKey === concept.key)!;
+      for (const locale of ['th', 'en', 'zh'] as const) {
+        expect(own.map((variant) => variant.texts[locale]?.prompt)).toEqual([
+          ...syllabus.quizPrompts[locale],
+        ]);
+      }
     }
-    // The learner's shareholding is worded both ways: holding shares, and holding none.
-    const shareholding = MCQ_STARTER.filter((s) => s.conceptKey === 'learner_shareholding');
-    expect(shareholding.map((s) => s.appliesWhen?.value).sort()).toEqual([false, true]);
+    expect(MCQ_STARTER).toHaveLength(90);
   });
 
   it('keeps every rule, in all three languages', () => {
@@ -98,8 +103,8 @@ describe('the starter drafts', () => {
     };
     const checks = checkBank(approved(), ctx, 'seed');
     const picked = (key: string) => checks.find((c) => c.conceptKey === key)?.variant?.key;
-    expect(picked('shareholder_count')).toBe('mcq-shareholder-count-2');
-    expect(picked('monthly_transactions')).toBe('mcq-monthly-transactions-2');
-    expect(picked('actual_business_location')).toBe('mcq-actual-business-location-2');
+    expect(picked('shareholder_count')).toBe('mcq-v2-shareholder-count-1');
+    expect(picked('monthly_transactions')).toBe('mcq-v2-monthly-transactions-1');
+    expect(picked('actual_business_location')).toBe('mcq-v2-actual-business-location-1');
   });
 });

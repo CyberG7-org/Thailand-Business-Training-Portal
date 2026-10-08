@@ -1,6 +1,7 @@
 import type { Recipe } from '@/lib/domain/mcq/tokens';
 import type { StarterVariant, VariantText } from '@/lib/domain/mcq/variant';
-import { MCQ_STARTER_CONCEPTS } from './mcq-starter-concepts';
+import { MCQ_STARTER_CONCEPTS } from './mcq-starter-concepts.ts';
+import { TRAINING_SYLLABUS } from './training-syllabus.ts';
 
 /**
  * Ten worked examples for the Owner's bank (P17d plan decision 12; D91 removed the one worded
@@ -345,4 +346,82 @@ const WORKED_EXAMPLES: readonly StarterVariant[] = [
 ];
 
 /** Every starter draft: at least one question for each of the 30 MCQ concepts. */
-export const MCQ_STARTER: readonly StarterVariant[] = [...WORKED_EXAMPLES, ...MCQ_STARTER_CONCEPTS];
+/** The original bank remains exported for audit and for reading historic attempts. */
+export const LEGACY_MCQ_STARTER: readonly StarterVariant[] = [
+  ...WORKED_EXAMPLES,
+  ...MCQ_STARTER_CONCEPTS,
+];
+
+const SHAREHOLDING_BASE: StarterVariant = {
+  key: 'mcq-v2-learner-shareholding-base',
+  conceptKey: 'learner_shareholding',
+  correctKey: 'A',
+  optionRecipes: recipes('COMPOSITE_TEMPLATE', 'STATIC', 'STATIC', 'STATIC'),
+  appliesWhen: null,
+  texts: {
+    th: text(
+      'คุณถือหุ้นกี่หุ้น',
+      [
+        '{my_shares} หุ้น ({my_share_percent})',
+        'ไม่จำเป็นต้องรู้จำนวนหุ้นของตนเอง',
+        'จำนวนหุ้นเท่ากับทุนจดทะเบียนเสมอ',
+        'ธนาคารเป็นผู้กำหนดจำนวนหุ้นให้',
+      ],
+      'ตรวจจากบัญชีรายชื่อผู้ถือหุ้น: คุณถือ {my_shares} หุ้น คิดเป็น {my_share_percent}',
+    ),
+    en: text(
+      'How many shares do you own?',
+      [
+        '{my_shares} shares ({my_share_percent})',
+        'I do not need to know my shareholding',
+        'My shares always equal the registered capital',
+        'The bank decides how many shares I own',
+      ],
+      'Check the shareholder list: you own {my_shares} shares, which is {my_share_percent}.',
+    ),
+    zh: text(
+      '您持有多少股份？',
+      [
+        '{my_shares} 股（{my_share_percent}）',
+        '我不需要知道自己的持股',
+        '我的股份始终等于注册资本',
+        '银行决定我持有多少股份',
+      ],
+      '请查看股东名册：您持有 {my_shares} 股，占 {my_share_percent}。',
+    ),
+  },
+};
+
+/**
+ * The approved v2 bank: exactly three plain-language variants for every concept. The final
+ * legacy variant is used as the option base because it contains the robust one-share/one-sale
+ * alternatives added after the original bank was exercised with edge-case companies.
+ */
+export const MCQ_STARTER: readonly StarterVariant[] = TRAINING_SYLLABUS.flatMap((syllabus) => {
+  const candidates = LEGACY_MCQ_STARTER.filter(
+    (variant) => variant.conceptKey === syllabus.conceptKey,
+  );
+  const base =
+    syllabus.conceptKey === 'learner_shareholding' ? SHAREHOLDING_BASE : candidates.at(-1);
+  if (!base) throw new Error(`Missing MCQ option base for ${syllabus.conceptKey}`);
+
+  return ([0, 1, 2] as const).map((index): StarterVariant => ({
+    ...base,
+    key: `mcq-v2-${syllabus.conceptKey.replaceAll('_', '-')}-${index + 1}`,
+    appliesWhen: null,
+    optionRecipes: { ...base.optionRecipes },
+    texts: Object.fromEntries(
+      (['th', 'en', 'zh'] as const).map((locale) => {
+        const source = base.texts[locale]!;
+        return [
+          locale,
+          {
+            ...source,
+            prompt: syllabus.quizPrompts[locale][index],
+            options: { ...source.options },
+          },
+        ];
+      }),
+    ),
+  }));
+});

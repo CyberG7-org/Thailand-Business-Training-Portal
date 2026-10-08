@@ -27,6 +27,8 @@ export type SnapshotRecordColumns = RecordColumns & {
   objectives_count: number | null;
   province: string | null;
   head_office_address: string | null;
+  website?: string | null;
+  facebook_page?: string | null;
 };
 
 /**
@@ -49,6 +51,8 @@ export type TrainingExtras = {
   operations_status: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  website: string | null;
+  facebook_page: string | null;
   /** The figures the invoices give (D101), for the record page and the interview's tolerance. */
   invoice_summary: InvoiceSummary | null;
 };
@@ -99,6 +103,8 @@ export function buildTrainingSnapshot(input: {
       operations_status: interview.operations_status,
       contact_email: interview.contact_email,
       contact_phone: interview.contact_phone,
+      website: input.record.website ?? null,
+      facebook_page: input.record.facebook_page ?? null,
       invoice_summary: input.structured.invoices
         ? summarizeInvoices(input.structured.invoices.rows)
         : null,
@@ -144,8 +150,8 @@ export function assignmentFacts(snapshot: TrainingSnapshot, role: RoleSnapshot |
     holder_name: role?.holder_name ?? null,
     position: role?.position ?? null,
     learner_is_shareholder: role?.learner_is_shareholder ?? null,
-    my_shares: role?.my_shares ?? null,
-    my_share_percent: role?.my_share_percent ?? null,
+    my_shares: role?.learner_is_shareholder === false ? 0 : (role?.my_shares ?? null),
+    my_share_percent: role?.learner_is_shareholder === false ? 0 : (role?.my_share_percent ?? null),
   };
 }
 
@@ -192,6 +198,19 @@ export function templateRecordFromSnapshot(
     my_relationship: role?.relationship_to_shareholders ?? null,
     my_shares: role?.my_shares ?? null,
     my_share_percent: role?.my_share_percent ?? null,
+    business_purpose: f.business_purpose,
+    main_clients: f.main_clients,
+    client_origin: f.client_origin,
+    main_suppliers: f.main_suppliers,
+    monthly_revenue: f.monthly_revenue,
+    revenue_basis: f.revenue_basis,
+    average_transaction: f.average_transaction,
+    monthly_transactions: f.monthly_transactions,
+    first_incoming_funds: f.first_incoming_funds,
+    promptpay_qr_purpose: f.promptpay_qr_purpose,
+    customer_profile: f.customer_profile,
+    transaction_details: f.transaction_details,
+    customer_channels: x.website ? 'with_website' : 'without_website',
   };
 }
 
@@ -253,6 +272,19 @@ export function templateRecordFromRecord(
     my_relationship: role?.relationship_to_shareholders ?? null,
     my_shares: mine.shares,
     my_share_percent: mine.percent,
+    business_purpose: interview.business_purpose,
+    main_clients: interview.main_clients,
+    client_origin: interview.client_origin,
+    main_suppliers: interview.main_suppliers,
+    monthly_revenue: interview.monthly_revenue,
+    revenue_basis: interview.revenue_basis,
+    average_transaction: interview.average_transaction,
+    monthly_transactions: interview.monthly_transactions,
+    first_incoming_funds: interview.first_incoming_funds,
+    promptpay_qr_purpose: interview.promptpay_qr_purpose,
+    customer_profile: interview.customer_profile,
+    transaction_details: interview.transaction_details,
+    customer_channels: record.website ? 'with_website' : 'without_website',
   };
 }
 

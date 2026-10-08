@@ -59,15 +59,23 @@ describe('the questions of one attempt (D100)', () => {
     expect(order('seed-2')).not.toEqual(order('seed-1'));
   });
 
-  it('prefers a variant the learner has not been asked', () => {
+  it('uses all three variants before cycling on the fourth attempt', () => {
     const picked = (seen: ReadonlySet<string>) =>
       build('seed-1', seen).questions.find((q) => q.conceptKey === 'shareholder_count')?.variantId;
-    expect(picked(new Set())).toBe('mcq-shareholder-count-1');
-    expect(picked(new Set(['mcq-shareholder-count-1']))).toBe('mcq-shareholder-count-2');
-    // Both asked before: back to the first.
-    expect(picked(new Set(['mcq-shareholder-count-1', 'mcq-shareholder-count-2']))).toBe(
-      'mcq-shareholder-count-1',
+    expect(picked(new Set())).toBe('mcq-v2-shareholder-count-1');
+    expect(picked(new Set(['mcq-v2-shareholder-count-1']))).toBe('mcq-v2-shareholder-count-2');
+    expect(picked(new Set(['mcq-v2-shareholder-count-1', 'mcq-v2-shareholder-count-2']))).toBe(
+      'mcq-v2-shareholder-count-3',
     );
+    expect(
+      picked(
+        new Set([
+          'mcq-v2-shareholder-count-1',
+          'mcq-v2-shareholder-count-2',
+          'mcq-v2-shareholder-count-3',
+        ]),
+      ),
+    ).toBe('mcq-v2-shareholder-count-1');
   });
 
   it('asks nothing and names the concept when the bank cannot ask one', () => {

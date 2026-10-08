@@ -2,7 +2,13 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
 import { revealedFact } from '@/lib/domain/interview/leak';
-import { advance, buildPlan, currentItem, probingItems } from '@/lib/domain/interview/plan';
+import {
+  advance,
+  buildReadinessPlan,
+  currentItem,
+  isReadinessPlan,
+  probingItems,
+} from '@/lib/domain/interview/plan';
 import { detectPasted } from '@/lib/domain/interview/pasted';
 import type {
   Assessment,
@@ -103,6 +109,7 @@ export function factsFromTemplate(
     province: text(t.province),
     directors: t.directors?.length ? t.directors.map((d) => d.name_th).join(', ') : null,
     directors_count: t.directors?.length ? String(t.directors.length) : null,
+    signing_authority: text(t.signing_authority),
     // The officer reads the date the way the certificate prints it (D47), so a Thai answer matches.
     registered_on: t.registered_on ? formatDate(t.registered_on, 'th') : null,
     business_categories: t.business_categories?.length ? t.business_categories.join(', ') : null,
@@ -131,6 +138,8 @@ export function factsFromTemplate(
     my_relationship: text(t.my_relationship),
     my_shares: text(t.my_shares),
     my_share_percent: text(t.my_share_percent),
+    customer_profile: text(t.customer_profile),
+    transaction_details: text(t.transaction_details),
     ...invoiceFacts(invoices),
   };
 }
@@ -267,7 +276,7 @@ export async function startOrResumeInterview(
     await abandon(open.id);
   }
   const { assignment, facts } = await factsFor(userId);
-  const plan = buildPlan(facts);
+  const plan = buildReadinessPlan(facts);
   // Only a record confirmed before D58 can lack every fact; it would otherwise end ready
   // without a single question.
   if (plan.items.length === 0) throw new InterviewError('Nothing to verify', 'no_facts');
@@ -408,9 +417,31 @@ export async function submitLearnerMessage(
     next = { close: 'turn_limit' };
     say = CLOSING.turn_limit;
   }
-  if ('concept' in next && evasionsNow >= MAX_EVASIONS) {
+  if ('concept' in next && !isReadinessPlan(plan) && evasionsNow >= MAX_EVASIONS) {
     next = { close: 'too_many_evasions' };
     say = CLOSING.too_many_evasions;
+  }
+  // A v2 learner always gets the full 11-question practice. If an older provider instruction
+  // asks to stop for an evasive, pasted or off-topic answer, keep the promised one follow-up and
+  // then move on instead.
+  if (
+    isReadinessPlan(plan) &&
+    'close' in next &&
+    (next.close === 'too_many_evasions' || next.close === 'off_topic_limit') &&
+    item
+  ) {
+    const followUp = assessment?.verdict !== 'correct' && item.attempts < 1;
+    const following = plan.items[plan.cursor + 1];
+    if (followUp) {
+      next = { concept: item.concept };
+      say = REASK + item.question;
+    } else if (following) {
+      next = { concept: following.concept };
+      say = 'รับทราบค่ะ ' + following.question;
+    } else {
+      next = { close: 'plan_complete' };
+      say = 'ขอบคุณค่ะ ครบทุกข้อแล้ว ระบบจะสรุปผลให้นะคะ';
+    }
   }
   const seq = rows.length + 1;
   await record(sessionId, seq, 'learner', text, null);

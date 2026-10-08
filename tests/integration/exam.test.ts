@@ -54,7 +54,7 @@ describe('exam + notifications', () => {
     const attempt = await startExam(learner.id, 'en');
     attemptId = attempt.id;
     expect(attempt.kind).toBe('exam');
-    expect(attempt.rule_snapshot).toMatchObject({ passScore: 27, retestScore: 23 });
+    expect(attempt.rule_snapshot).toEqual({ version: 2, passScore: 27 });
 
     const full = await getAttemptWithAnswers(asLearner, attempt.id);
     for (const a of full!.assessment_answers) {
@@ -72,7 +72,7 @@ describe('exam + notifications', () => {
 
     const done = await finalizeExam(learner.id, attempt.id);
     expect(done.status).toBe('submitted');
-    expect(['pass', 'retest', 'fail']).toContain(done.result);
+    expect(['pass', 'fail']).toContain(done.result);
     expect(done.max_score).toBe(full!.assessment_answers.length);
 
     // Idempotent: finalizing again is a no-op and creates no duplicate rows.

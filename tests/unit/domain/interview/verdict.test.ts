@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan } from '@/lib/domain/interview/plan';
+import { buildPlan, buildReadinessPlan } from '@/lib/domain/interview/plan';
 import type { Assessment, FactSheet } from '@/lib/domain/interview/types';
 import { decideVerdict } from '@/lib/domain/interview/verdict';
 
@@ -88,5 +88,59 @@ describe('decideVerdict', () => {
       'plan_complete',
     );
     expect(v.verdict).toBe('ready');
+  });
+});
+
+describe('the v2 readiness verdict', () => {
+  const v2 = buildReadinessPlan({
+    ...facts,
+    registered_on: '13 กรกฎาคม 2569',
+    signing_authority: 'กรรมการหนึ่งคนลงนาม',
+    my_name: 'นางสาว ผู้เรียน ตัวอย่าง',
+    customer_profile: 'ธุรกิจและบุคคลทั่วไปในประเทศไทย',
+    transaction_details: 'รับเงินลูกค้าผ่านการโอนและ QR และจ่ายซัพพลายเออร์',
+  });
+  const answers = v2.items.map((item) => ({
+    concept: item.concept,
+    verdict: 'correct' as const,
+    note: '',
+  }));
+
+  it('passes 9 of 11 with no mandatory concept', () => {
+    const nine = answers.map((answer, index) =>
+      index < 2 ? { ...answer, verdict: 'wrong' as const } : answer,
+    );
+    expect(decideVerdict(v2, nine, 'plan_complete')).toMatchObject({
+      verdict: 'ready',
+      score: 9,
+      maxScore: 11,
+      passScore: 9,
+    });
+  });
+
+  it('keeps practising at 8 of 11', () => {
+    const eight = answers.map((answer, index) =>
+      index < 3 ? { ...answer, verdict: 'wrong' as const } : answer,
+    );
+    expect(decideVerdict(v2, eight, 'plan_complete')).toMatchObject({
+      verdict: 'not_ready',
+      score: 8,
+    });
+  });
+
+  it('counts the latest answer and does not auto-fail evasive or pasted labels', () => {
+    const revised = [
+      { ...answers[0], verdict: 'evasive' as const },
+      { ...answers[1], verdict: 'pasted' as const },
+      ...answers,
+    ];
+    expect(decideVerdict(v2, revised, 'plan_complete')).toMatchObject({
+      verdict: 'ready',
+      score: 11,
+    });
+  });
+
+  it('still requires the interview to reach the end', () => {
+    expect(decideVerdict(v2, answers, 'learner_ended').verdict).toBe('not_ready');
   });
 });

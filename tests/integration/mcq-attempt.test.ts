@@ -9,7 +9,7 @@ import {
 import { examPassedFor, finalizeExam, startExam } from '@/lib/db/exam';
 import { listVariants, setVariantStatus } from '@/lib/db/mcq-bank';
 import { validateRecord } from '@/lib/db/validation';
-import { CRITICAL_CONCEPT_KEYS, MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
+import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import {
   adminClient,
   clientFor,
@@ -79,11 +79,7 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
   it('asks one question for each of the 30 concepts and keeps the key on the server', async () => {
     const attempt = await startExam(team.learner.id, 'th');
     expect(attempt).toMatchObject({ kind: 'exam', status: 'in_progress', attempt_no: 1 });
-    expect(attempt.rule_snapshot).toEqual({
-      passScore: 27,
-      retestScore: 23,
-      criticalKeys: [...CRITICAL_CONCEPT_KEYS],
-    });
+    expect(attempt.rule_snapshot).toEqual({ version: 2, passScore: 27 });
     // Starting again resumes the same attempt.
     expect((await startExam(team.learner.id, 'th')).id).toBe(attempt.id);
 
@@ -165,7 +161,7 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
     expect(await examPassedFor(team.learner.id)).toEqual({ submitted: 1, passed: true });
   });
 
-  it('fails on one critical concept wrong with 29 right, and tells the wrong answer its correction', async () => {
+  it('passes with 29 right even when a formerly critical concept is wrong', async () => {
     const attempt = await startExam(team.learner.id, 'th');
     expect(attempt.attempt_no).toBe(2);
     const feedback = await answerAll(attempt, ['registered_capital']);
@@ -173,18 +169,18 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
     expect(wrong.isCorrect).toBe(false);
     expect(wrong.explanation).toContain('2,000,000 บาท');
     const done = await finalizeExam(team.learner.id, attempt.id);
-    expect(done).toMatchObject({ result: 'fail', score: 29, max_score: 30 });
+    expect(done).toMatchObject({ result: 'pass', score: 29, max_score: 30 });
 
     const { data: note } = await svc
       .from('notifications')
       .select('payload')
       .like('idempotency_key', `exam_result:${attempt.id}:%`);
     for (const row of note ?? []) {
-      expect(row.payload).toMatchObject({ result: 'fail', pass_score: 27, critical_wrong: 1 });
+      expect(row.payload).toMatchObject({ result: 'pass', pass_score: 27, critical_wrong: 0 });
     }
   });
 
-  it('asks for a retest on 25 right, and prefers questions not asked before', async () => {
+  it('does not pass on 25 right, and prefers questions not asked before', async () => {
     const attempt = await startExam(team.learner.id, 'th');
     // Three attempts now: the two variants of this concept have both been asked, in turn.
     const { data: asked } = await svc
@@ -196,21 +192,21 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
     const keyOf = (ids: string[]) =>
       variants.find((v) => v.conceptKey === 'shareholder_count' && ids.includes(v.id))?.key;
     expect(asked!.map((a) => keyOf(a.question_ids))).toEqual([
-      'mcq-shareholder-count-1',
-      'mcq-shareholder-count-2',
-      'mcq-shareholder-count-1',
+      'mcq-v2-shareholder-count-1',
+      'mcq-v2-shareholder-count-2',
+      'mcq-v2-shareholder-count-3',
     ]);
 
     await answerAll(attempt, NON_CRITICAL.slice(0, 5));
     const done = await finalizeExam(team.learner.id, attempt.id);
-    expect(done).toMatchObject({ result: 'retest', score: 25, max_score: 30 });
+    expect(done).toMatchObject({ result: 'fail', score: 25, max_score: 30 });
     // Any pass counts (the default rule): the first attempt's pass stands.
     expect((await examPassedFor(team.learner.id)).passed).toBe(true);
   });
 
   it('does not start when the bank cannot ask a concept, and tells the record’s staff', async () => {
-    const otp = (await listVariants(svc)).find((v) => v.key === 'mcq-otp-control-1')!;
-    await setVariantStatus(svc, otp.id, 'draft');
+    const otp = (await listVariants(svc)).filter((v) => v.conceptKey === 'otp_control');
+    for (const variant of otp) await setVariantStatus(svc, variant.id, 'draft');
     const open = () =>
       svc
         .from('training_fact_exceptions')
@@ -237,7 +233,7 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
         .eq('status', 'in_progress');
       expect(count).toBe(0);
     } finally {
-      await setVariantStatus(svc, otp.id, 'approved');
+      for (const variant of otp) await setVariantStatus(svc, variant.id, 'approved');
     }
     // With the question back the quiz starts, and the report closes itself.
     const attempt = await startExam(team.learner.id, 'th');

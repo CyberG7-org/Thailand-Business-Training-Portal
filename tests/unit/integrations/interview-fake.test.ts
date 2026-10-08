@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan } from '@/lib/domain/interview/plan';
+import { buildPlan, buildReadinessPlan } from '@/lib/domain/interview/plan';
 import { FakeInterview } from '@/lib/integrations/interview/fake';
 
 const facts = {
@@ -108,6 +108,37 @@ describe('FakeInterview', () => {
     const done = await officer.turn({ ...base, plan: last, learnerMessage: 'สินค้าทดสอบ ครับ' });
     expect(done.assessment?.verdict).toBe('correct');
     expect(done.next).toEqual({ close: 'plan_complete' });
+  });
+
+  it('does not end a v2 readiness interview early after evasive or pasted answers', async () => {
+    const officer = new FakeInterview();
+    const plan = buildReadinessPlan({
+      ...facts,
+      head_office_address: 'กรุงเทพมหานคร',
+      directors: 'นางสาว กรรมการ ตัวอย่าง',
+      signing_authority: 'กรรมการหนึ่งคนลงนาม',
+      my_name: 'นางสาว ผู้เรียน ตัวอย่าง',
+      my_position: 'กรรมการ',
+      registered_on: '13 กรกฎาคม 2569',
+      account_purpose: 'รับเงินลูกค้า',
+      customer_profile: 'ลูกค้าในประเทศไทย',
+      transaction_details: 'รับเงินด้วยการโอนและ QR',
+    });
+    const evasive = await officer.turn({
+      ...base,
+      plan,
+      learnerMessage: 'ไม่ทราบ',
+      evasions: 2,
+    });
+    expect(evasive.next).toEqual({ concept: 'company_name' });
+    const pasted = await officer.turn({
+      ...base,
+      plan,
+      learnerMessage: 'คัดลอกคำตอบ',
+      pastedDetected: true,
+      evasions: 4,
+    });
+    expect(pasted.next).toEqual({ concept: 'company_name' });
   });
 
   it('marks a wrong answer, asks once more, and never says the fact', async () => {

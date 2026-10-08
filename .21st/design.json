@@ -188,6 +188,11 @@
       "date": "2026-10-08",
       "decision": "The learner study overview uses a progress-first mobile composition with four fixed-width stage tabs and compact lesson rows containing short localized titles, completion state, and a review or continue action.",
       "reason": "The user selected this supplied visual direction exactly. It removes the back control and horizontally scrolling stage strip, keeps all navigation visible without sideways scrolling, and puts course completion at the top."
+    },
+    {
+      "date": "2026-10-08",
+      "decision": "The readiness home leads with a compact four-point guide and a visible 9/11 target; the result shows the learner's score and only the answers that need more practice.",
+      "reason": "The readiness flow should motivate rather than intimidate. The 21st.dev catalog search was unavailable (HTTP 401), so the implementation reuses the portal's responsive cards, semantic brand tokens, and mobile-first spacing."
     }
   ],
   "evidence": [

@@ -92,16 +92,16 @@ test('starter cards, interview answers and the learner role combine into a perso
   await expect(body).toContainText('10,000 หุ้น');
   await expect(body).toContainText('9,998 หุ้น (99.98%)');
   await expect(body).toContainText('2 คน');
+  await expect(body).toContainText('นางสาวผู้เรียน ทดสอบ');
+  await expect(body).toContainText('กรรมการ');
+  await expect(body).toContainText('ดูแลการดำเนินงานของบริษัท');
   await page.goto('/th/study/bank-interview-3-business');
+  await expect(page.getByTestId('study-body')).toContainText('ค้าปลีก');
+  await page.goto('/th/study/bank-interview-4-role');
   // Why the company needs the account is the same answer for every company (D91).
   await expect(page.getByTestId('study-body')).toContainText(
     'เพื่อใช้ทำธุรกรรมทางการเงินของบริษัท',
   );
-  await expect(page.getByTestId('study-body')).toContainText('ค้าปลีก');
-  await page.goto('/th/study/bank-interview-4-role');
-  await expect(page.getByTestId('study-body')).toContainText('นางสาวผู้เรียน ทดสอบ');
-  await expect(page.getByTestId('study-body')).toContainText('กรรมการ');
-  await expect(page.getByTestId('study-body')).toContainText('ดูแลการดำเนินงานของบริษัท');
   // A fact nobody entered renders as a dash, never as a raw placeholder.
   await expect(page.getByTestId('study-body')).not.toContainText('{');
 });

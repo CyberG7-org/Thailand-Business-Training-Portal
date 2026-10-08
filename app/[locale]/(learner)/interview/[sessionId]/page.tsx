@@ -16,6 +16,9 @@ type StoredSummary = {
   reasons?: VerdictReason[];
   narrative?: string;
   closeReason?: string;
+  score?: number;
+  maxScore?: number;
+  passScore?: number;
 };
 
 /** The chat while the session is open; the debrief once it has closed (spec §4.4–4.5). */
@@ -71,12 +74,25 @@ export default async function InterviewSessionPage({
     >
       <Debrief
         verdict={verdict}
-        narrative={summary?.narrative ?? ''}
+        narrative={plan.version === 2 ? '' : (summary?.narrative ?? '')}
         reasons={summary?.reasons ?? []}
         expected={expected}
         locale={locale as AppLocale}
         turns={chatTurns}
         closeReason={closeReason}
+        score={
+          plan.version === 2 &&
+          typeof summary?.score === 'number' &&
+          typeof summary.maxScore === 'number' &&
+          typeof summary.passScore === 'number'
+            ? {
+                value: summary.score,
+                maximum: summary.maxScore,
+                required: summary.passScore,
+              }
+            : null
+        }
+        focusedReview={plan.version === 2}
       />
     </LearnerShell>
   );

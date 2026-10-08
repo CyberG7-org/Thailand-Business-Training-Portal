@@ -47,9 +47,37 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
     <LearnerShell title={t('title')} intro={t('intro')} step="interview">
       <div className="mx-auto grid max-w-[780px] gap-6">
         <section className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7">
-          <p className="mb-4 rounded-control bg-brand-50 px-3.5 py-2.5 text-sm font-medium text-brand-700">
-            {t('thaiOnly')}
-          </p>
+          <div data-testid="interview-guide" className="mb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold tracking-[0.12em] text-brand-600 uppercase">
+                  {t('guide.eyebrow')}
+                </p>
+                <h2 className="mt-1 font-display text-[22px] leading-[1.35] font-semibold text-brand-900 md:text-[26px]">
+                  {t('guide.title')}
+                </h2>
+              </div>
+              <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ok-50 text-lg font-bold text-ok-600">
+                9/11
+              </span>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {(['questions', 'pass', 'language', 'repeat'] as const).map((key, index) => (
+                <div
+                  key={key}
+                  className="flex min-h-16 items-center gap-3 rounded-control bg-brand-50 px-4 py-3"
+                >
+                  <span className="shadow-soft grid size-8 shrink-0 place-items-center rounded-full bg-white text-sm font-bold text-brand-700">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm leading-[1.55] font-medium text-ink-900">
+                    {t(`guide.${key}`)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-4 text-sm leading-[1.7] text-ink-700">{t('guide.support')}</p>
+          </div>
           {!open && (
             <p
               data-testid="interview-blocked"

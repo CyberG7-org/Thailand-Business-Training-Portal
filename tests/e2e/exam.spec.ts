@@ -55,8 +55,8 @@ test('the quiz says what it is, marks each answer at once, and a pass is notifie
   const about = page.getByTestId('exam-about');
   await expect(about).toContainText('มี 30 ข้อ');
   await expect(about).toContainText('เปลี่ยนคำตอบไม่ได้');
-  await expect(about).toContainText('ตอบถูก 27 ข้อขึ้นไป');
-  await expect(about).toContainText('ตอบถูก 23 ถึง 26 ข้อ');
+  await expect(about).toContainText('ผ่านเมื่อตอบถูกอย่างน้อย 27 ข้อ');
+  await expect(about).toContainText('ต่ำกว่า 27 ข้อ');
 
   await page.getByTestId('start-exam').click();
   await page.waitForURL(/\/th\/exam\/[0-9a-f-]{36}$/);
@@ -135,7 +135,7 @@ test('the quiz says what it is, marks each answer at once, and a pass is notifie
   }
 });
 
-test('a key fact answered wrong fails and points to the study material; 25 right is a retest', async ({
+test('27 correct passes without mandatory questions; below 27 keeps practising', async ({
   page,
 }) => {
   test.setTimeout(180_000);
@@ -143,41 +143,37 @@ test('a key fact answered wrong fails and points to the study material; 25 right
   const learner = await seedQuizReadyLearner(`บริษัท ผลสามแบบ ${Date.now()} จำกัด`);
   await loginAs(page, learner, E2E_PASSWORD);
 
-  // 29 right, but the registered capital wrong: a fail, whatever the score.
-  const failed = await startQuiz(page);
-  await answerAll(page, failed, ['registered_capital']);
+  // A formerly mandatory company fact no longer overrides a passing score.
+  const passed = await startQuiz(page);
+  await answerAll(page, passed, ['registered_capital']);
+  await page.getByTestId('submit-exam').click();
+  await expect(page).toHaveURL(/\/result$/);
+  await expect(page.getByTestId('exam-result')).toHaveAttribute('data-result', 'pass');
+  await expect(page.getByTestId('exam-score')).toHaveText('29 / 30');
+  await expect(page.getByTestId('exam-critical-wrong')).toHaveCount(0);
+
+  // The next attempt: 25 of 30 is a simple not-passed result, never a separate retest band.
+  const notPassed = await startQuiz(page);
+  expect(notPassed).not.toBe(passed);
+  const wrong = (await answerKeyOf(notPassed)).map((q) => q.conceptKey).slice(0, 5);
+  await answerAll(page, notPassed, wrong);
   await page.getByTestId('submit-exam').click();
   await expect(page).toHaveURL(/\/result$/);
   await expect(page.getByTestId('exam-result')).toHaveAttribute('data-result', 'fail');
-  await expect(page.getByTestId('exam-score')).toHaveText('29 / 30');
-  await expect(page.getByTestId('exam-critical-wrong')).toContainText('ทุนจดทะเบียน');
+  await expect(page.getByTestId('exam-result')).toContainText('ยังไม่ผ่าน');
+  await expect(page.getByTestId('exam-score')).toHaveText('25 / 30');
+  await expect(page.getByTestId('exam-critical-wrong')).toHaveCount(0);
   await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/study');
   await expect(page.getByTestId('exam-retake')).toHaveAttribute('href', '/th/exam');
 
-  // The next attempt: five ordinary questions wrong, no key fact — 25 of 30, a retest.
-  const retest = await startQuiz(page);
-  expect(retest).not.toBe(failed);
-  const ordinary = (await answerKeyOf(retest))
-    .map((q) => q.conceptKey)
-    .filter((k) => !CRITICAL_CONCEPT_KEYS.includes(k))
-    .slice(0, 5);
-  await answerAll(page, retest, ordinary);
-  await page.getByTestId('submit-exam').click();
-  await expect(page).toHaveURL(/\/result$/);
-  await expect(page.getByTestId('exam-result')).toHaveAttribute('data-result', 'retest');
-  await expect(page.getByTestId('exam-result')).toContainText('ทำใหม่อีกครั้ง');
-  await expect(page.getByTestId('exam-score')).toHaveText('25 / 30');
-  await expect(page.getByTestId('exam-critical-wrong')).toHaveCount(0);
-  await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/exam');
-
   // The status pill names each result once; the row title stays focused on attempt and score.
   await page.goto('/th/exam');
-  await expect(page.getByTestId('exam-attempt-1')).toHaveAttribute('data-result', 'fail');
-  await expect(page.getByTestId('exam-attempt-2')).toHaveAttribute('data-result', 'retest');
+  await expect(page.getByTestId('exam-attempt-1')).toHaveAttribute('data-result', 'pass');
+  await expect(page.getByTestId('exam-attempt-2')).toHaveAttribute('data-result', 'fail');
   await expect(page.getByTestId('exam-attempt-summary-1')).toHaveText('ครั้งที่ 1: 29 / 30');
   await expect(page.getByTestId('exam-attempt-summary-2')).toHaveText('ครั้งที่ 2: 25 / 30');
   await page.goto('/th/dashboard');
-  await expect(page.getByTestId('stage-interview-status')).not.toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-interview-status')).toHaveText('พร้อมใช้งาน');
 });
 
 test('a company the bank cannot ask does not start the quiz, and its record says why', async ({

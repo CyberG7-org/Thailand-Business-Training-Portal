@@ -672,6 +672,117 @@ export async function seedInterviewWithTurns(
   if (turnsError) throw turnsError;
 }
 
+/** A scored readiness result with enough judged answers to exercise the staff result design. */
+export async function seedDetailedInterviewResult(loginId: string): Promise<string> {
+  const admin = svc();
+  const { userId, recordId } = await learnerAndRecord(loginId);
+  const items = [
+    {
+      concept: 'company_name',
+      question: 'ชื่อบริษัทคืออะไรคะ',
+      expected: 'บริษัท ตัวอย่าง จำกัด',
+      answer: 'บริษัท ตัวอย่าง จำกัด',
+      verdict: 'correct',
+      note: 'ตอบตรงกับชื่อบริษัทในหนังสือรับรอง',
+    },
+    {
+      concept: 'incorporation_date',
+      question: 'บริษัทจดทะเบียนเมื่อไหร่คะ',
+      expected: '10 เมษายน 2569',
+      answer: 'วันที่ 10 เมษายน 2569',
+      verdict: 'correct',
+      note: 'ตอบตรงกับวันที่จดทะเบียน',
+    },
+    {
+      concept: 'monthly_volume',
+      question: 'ประมาณการยอดรับและจ่ายเงินรายเดือนของบริษัทเท่าไหร่คะ',
+      expected: '500,000 บาทต่อเดือน',
+      answer: 'ประมาณ 300,000 บาทต่อเดือน',
+      verdict: 'wrong',
+      note: 'คำตอบยังไม่ตรงกับข้อมูลทางการเงินของบริษัท',
+    },
+    {
+      concept: 'clients_suppliers',
+      question: 'ลูกค้าหลักของบริษัทคือใครคะ',
+      expected: 'ร้านค้าปลีกในประเทศไทย',
+      answer: 'ร้านค้าปลีกในประเทศไทย',
+      verdict: 'correct',
+      note: 'ตอบตรงกับข้อมูลลูกค้าหลัก',
+    },
+  ] as const;
+  const { data: session, error } = await admin
+    .from('interview_sessions')
+    .insert({
+      user_id: userId,
+      dbd_record_id: recordId,
+      status: 'completed',
+      verdict: 'ready',
+      plan: {
+        version: 2,
+        passScore: 3,
+        cursor: items.length,
+        items: items.map((item) => ({
+          concept: item.concept,
+          phase: 'facts',
+          core: false,
+          question: item.question,
+          expected: item.expected,
+          attempts: 1,
+        })),
+      },
+      provider: 'fake',
+      summary: {
+        score: 3,
+        maxScore: 4,
+        passScore: 3,
+        narrative: 'ผู้เรียนตอบได้ดี และควรทบทวนข้อมูลรายรับรายจ่ายอีกครั้ง',
+      },
+      ended_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+  if (error) throw error;
+  const turns: {
+    session_id: string;
+    seq: number;
+    role: 'officer' | 'learner';
+    content: string;
+    assessment?: { concept: string; verdict: string; note: string } | null;
+  }[] = items.flatMap((item, index) => [
+    {
+      session_id: session.id,
+      seq: index * 2 + 1,
+      role: 'officer' as const,
+      content: item.question,
+      assessment:
+        index > 0
+          ? {
+              concept: items[index - 1].concept,
+              verdict: items[index - 1].verdict,
+              note: items[index - 1].note,
+            }
+          : null,
+    },
+    {
+      session_id: session.id,
+      seq: index * 2 + 2,
+      role: 'learner' as const,
+      content: item.answer,
+    },
+  ]);
+  const lastItem = items[items.length - 1];
+  turns.push({
+    session_id: session.id,
+    seq: items.length * 2 + 1,
+    role: 'officer',
+    content: 'ขอบคุณค่ะ',
+    assessment: { concept: lastItem.concept, verdict: lastItem.verdict, note: lastItem.note },
+  });
+  const { error: turnsError } = await admin.from('interview_turns').insert(turns);
+  if (turnsError) throw turnsError;
+  return session.id;
+}
+
 /**
  * Marks fields of the learner's company as read with the given confidences and unconfirms the
  * record, so validation has a low-confidence exception to raise. Returns the record id.
