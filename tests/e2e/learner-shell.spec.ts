@@ -4,11 +4,11 @@ import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
 /**
- * The shared learner shell (design handoff, "Shared shell"): every learner page sits under the
- * navy band with the glass header, a back pill and the five step segments; the dashboard is the
- * home and has no back pill. Segments mark the current step and only the steps actually done.
+ * The shared learner shell keeps the standard back pill and stage segments on learner pages.
+ * The dashboard is home, while the mobile-first study overview intentionally replaces those
+ * controls with its progress-first layout and four fixed stage tabs.
  */
-test('a learner page shows the band with the step segments and a back pill; the dashboard does not', async ({
+test('learner pages use the shared shell while study uses its focused navigation', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท เชลล์ร่วม จำกัด', '2026-07-13');
@@ -18,12 +18,11 @@ test('a learner page shows the band with the step segments and a back pill; the 
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
 
   await page.goto('/th/study');
-  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 1 จาก 5');
-  const segments = page.getByTestId('step-segments').locator('[data-state]');
-  await expect(segments).toHaveCount(5);
-  await expect(segments.nth(0)).toHaveAttribute('data-state', 'current');
-  // Nothing is done yet, so no segment claims gold.
-  await expect(page.getByTestId('step-segments').locator('[data-state="done"]')).toHaveCount(0);
+  await expect(page.getByTestId('nav-back')).toHaveCount(0);
+  await expect(page.getByTestId('step-segments')).toHaveCount(0);
+  await expect(
+    page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
+  ).toHaveCount(4);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('เอกสารเรียนรู้');
 
   // The steps beside the page (the owner, 2026-10-02): this page's step marked, an open step a
@@ -36,11 +35,14 @@ test('a learner page shows the band with the step segments and a back pill; the 
   await expect(page.getByTestId('learner-nav-interview').getByRole('link')).toHaveCount(0);
   await nav.getByRole('link', { name: /นามบัตร/ }).click();
   await expect(page).toHaveURL(/\/th\/name-card$/);
+  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 2 จาก 5');
+  await expect(page.getByTestId('step-segments').locator('[data-state]')).toHaveCount(5);
+  await expect(page.getByTestId('nav-back')).toBeVisible();
   await page.getByTestId('learner-nav-home').click();
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await expect(page.getByTestId('learner-nav')).toHaveCount(0);
 
-  await page.goto('/th/study');
+  await page.goto('/th/name-card');
   await page.getByTestId('nav-back').click();
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await page.goto('/th/study');
@@ -54,7 +56,8 @@ test('the shell fits a phone: no horizontal page scroll and a usable header', as
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/study');
   await expect(page.getByTestId('shell-header')).toBeVisible();
-  await expect(page.getByTestId('nav-back')).toBeVisible();
+  await expect(page.getByTestId('nav-back')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
