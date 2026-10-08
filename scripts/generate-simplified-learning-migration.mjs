@@ -31,6 +31,8 @@ const output = `-- Simplified learner flow v2: 30 concepts × 3 plain-language q
 --     where concept_key is not null and question_key not like 'mcq-v2-%';
 -- Existing attempts remain valid because rendered questions and rule snapshots are frozen.
 
+begin;
+
 create temporary table simplified_quiz_questions (
   question_key text primary key,
   concept_key text not null,
@@ -98,6 +100,8 @@ set approval_status = 'retired'
 where concept_key is not null
   and question_key not like 'mcq-v2-%'
   and approval_status = 'approved';
+
+commit;
 `;
 
 writeFileSync(destination, output);

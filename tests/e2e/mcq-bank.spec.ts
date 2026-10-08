@@ -62,8 +62,8 @@ test('the Owner approves every checked draft at once, and all 30 concepts are re
   page,
 }) => {
   await seedApprovedBank();
-  // Both wordings of the learner's shareholding and one more, back to draft: a concept with
-  // two cases is not covered by drafts.
+  // Three legacy wordings return to draft. The approved v2 bank still covers all 30 concepts;
+  // approving these drafts must not disturb that coverage.
   await returnStartersToDraft([
     'mcq-learner-shareholding-1',
     'mcq-learner-shareholding-2',
@@ -73,9 +73,9 @@ test('the Owner approves every checked draft at once, and all 30 concepts are re
   await page.goto('/th/admin/questions');
   await expect(page.getByTestId('concept-learner_shareholding')).toHaveAttribute(
     'data-covered',
-    'false',
+    'true',
   );
-  await expect(page.getByTestId('bank-ready')).toHaveAttribute('data-ready', '28');
+  await expect(page.getByTestId('bank-ready')).toHaveAttribute('data-ready', '30');
 
   // One button, behind a confirm step that names the count.
   const approve = page.getByTestId('approve-drafts');

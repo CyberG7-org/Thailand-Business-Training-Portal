@@ -55,8 +55,8 @@ test('the quiz says what it is, marks each answer at once, and a pass is notifie
   const about = page.getByTestId('exam-about');
   await expect(about).toContainText('มี 30 ข้อ');
   await expect(about).toContainText('เปลี่ยนคำตอบไม่ได้');
-  await expect(about).toContainText('ตอบถูก 27 ข้อขึ้นไป');
-  await expect(about).toContainText('ตอบถูก 23 ถึง 26 ข้อ');
+  await expect(about).toContainText('ผ่านเมื่อตอบถูกอย่างน้อย 27 ข้อ');
+  await expect(about).toContainText('ต่ำกว่า 27 ข้อ');
 
   await page.getByTestId('start-exam').click();
   await page.waitForURL(/\/th\/exam\/[0-9a-f-]{36}$/);
@@ -163,7 +163,8 @@ test('27 correct passes without mandatory questions; below 27 keeps practising',
   await expect(page.getByTestId('exam-result')).toContainText('ยังไม่ผ่าน');
   await expect(page.getByTestId('exam-score')).toHaveText('25 / 30');
   await expect(page.getByTestId('exam-critical-wrong')).toHaveCount(0);
-  await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/exam');
+  await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/study');
+  await expect(page.getByTestId('exam-retake')).toHaveAttribute('href', '/th/exam');
 
   // The status pill names each result once; the row title stays focused on attempt and score.
   await page.goto('/th/exam');
