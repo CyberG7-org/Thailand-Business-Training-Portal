@@ -1,17 +1,26 @@
 import { expect, test, type Page } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs, switchTo } from './helpers';
-import { seedLearnerWithCompany, seedPassedExam } from './seed';
+import { seedLearnerWithCompany, seedLearnerWithCompleteCompany, seedPassedExam } from './seed';
 
 /**
  * The readiness interview with the fake officer (spec §4.6): it asks the plan's Thai questions,
- * marks an answer correct when it carries the record's value, evasive on "ไม่ทราบ", and closes
- * on the third evasion or at the end of the plan. seedLearnerWithCompany gives the record a
- * name, the registration number below and the two business answers, so the plan is three items.
+ * marks an answer correct when it carries the record's value and evasive on "ไม่ทราบ". The
+ * friendly v2 plan always asks all 11 questions, offers one retry and passes at 9 correct.
  */
 const GOOD: Record<string, string> = {
-  juristic_id: '0105568233704',
-  business_activity: 'ทดสอบระบบ ขายสินค้าทดสอบให้ลูกค้าในประเทศ',
+  registration_number: '0105568233704',
+  registered_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
+  actual_business: 'ค้าส่งและค้าปลีกเสื้อผ้า',
+  products_services: 'ชุดเดรส เสื้อ กระโปรงสตรี',
+  authorized_representative: 'นางสาวกุลธิดา พลเยี่ยม',
+  attendee_identity: 'นางสาวกุลธิดา พลเยี่ยม กรรมการ',
+  registration_date: '16 เมษายน 2569',
+  account_purpose:
+    'เพื่อใช้ทำธุรกรรมทางการเงินของบริษัท รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+  customer_profile: 'ส่วนใหญ่เป็นลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+  transaction_details:
+    'ลูกค้าชำระด้วยการโอนเงินผ่านธนาคารและ PromptPay / QR เฉลี่ยรายการละประมาณ 10,000 บาท',
 };
 const FALLBACK = 'บริษัทดำเนินกิจการตามปกติ มีลูกค้าประจำในประเทศไทย';
 
@@ -52,11 +61,16 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   // This scenario completes two full interviews and then verifies the staff transcript.
   test.slow();
   const company = 'บริษัท สัมภาษณ์อีทูอี จำกัด';
-  const loginId = await seedLearnerWithCompany(company, '2026-07-13');
+  const loginId = await seedLearnerWithCompleteCompany(company);
   await seedPassedExam(loginId);
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.getByTestId('stage-interview').getByRole('link', { name: 'เปิด' }).click();
   await expect(page).toHaveURL(/\/th\/interview$/);
+  const guide = page.getByTestId('interview-guide');
+  await expect(guide).toContainText('11');
+  await expect(guide).toContainText('9');
+  await expect(guide).toContainText('ภาษาไทย');
+  await expect(guide).toContainText('ฝึกได้ไม่จำกัด');
   await page.getByTestId('interview-start').click();
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
   await expect(page.getByTestId('chat-message').first()).toHaveAttribute('data-role', 'officer');
@@ -70,7 +84,8 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
     'data-outcome',
     'cannot_open',
   );
-  await expect(page.getByTestId('interview-outcome')).toContainText('ยังเปิดบัญชีธนาคารไม่ได้');
+  await expect(page.getByTestId('interview-outcome')).toContainText('ฝึกอีกนิด');
+  await expect(page.getByTestId('interview-verdict')).toContainText('0 จาก 11');
   await expect(page.getByTestId('verdict-reason-company_name')).toHaveAttribute(
     'data-verdict',
     'evasive',
@@ -93,7 +108,8 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'ready');
   // The result says in plain words what the learner came to find out.
   await expect(page.getByTestId('interview-outcome')).toHaveAttribute('data-outcome', 'can_open');
-  await expect(page.getByTestId('interview-outcome')).toContainText('เปิดบัญชีธนาคารได้');
+  await expect(page.getByTestId('interview-outcome')).toContainText('พร้อมสำหรับขั้นตอนถัดไป');
+  await expect(page.getByTestId('interview-verdict')).toContainText('11 จาก 11');
 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-interview-status')).toHaveText('เสร็จสิ้น');
@@ -129,7 +145,7 @@ test('the learner can end the interview early and is told to try again', async (
     'data-outcome',
     'cannot_open',
   );
-  await expect(page.getByTestId('interview-outcome')).toContainText('ยังเปิดบัญชีธนาคารไม่ได้');
+  await expect(page.getByTestId('interview-outcome')).toContainText('ฝึกอีกนิด');
   await expect(page.getByTestId('close-reason')).toHaveText('คุณจบการสัมภาษณ์ก่อนครบทุกข้อ');
   await expect(page.getByRole('link', { name: 'ลองอีกครั้ง' })).toHaveAttribute(
     'href',

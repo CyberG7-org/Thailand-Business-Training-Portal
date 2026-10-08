@@ -1479,8 +1479,17 @@
   },
   "interview": {
     "title": "银行准备面试",
-    "intro": "AI 银行专员将用泰语像正式面试一样提问：询问贵公司情况、核对登记证明，并给出你是否准备好的结论。可无限次重复。",
+    "intro": "使用您学过的公司资料，进行轻松友好的模拟面试。",
     "thaiOnly": "面试全程使用泰语。",
+    "guide": {
+      "eyebrow": "开始之前",
+      "title": "按自己的节奏练习",
+      "questions": "回答 11 个简短问题",
+      "pass": "答对 9 题即可通过",
+      "language": "面试使用泰语（ภาษาไทย）",
+      "repeat": "可不限次数练习（ฝึกได้ไม่จำกัด）",
+      "support": "如果回答需要补充，专员会友好地再问一次。这只是练习，请从容作答。"
+    },
     "start": "开始面试",
     "resume": "继续面试",
     "history": "过往面试",
@@ -1490,6 +1499,8 @@
       "abandoned": "未完成"
     },
     "outcome": {
+      "readyTitle": "已准备好进入下一步",
+      "practiceTitle": "继续练习——您已经很接近了",
       "ready": {
         "title": "面试结果：可以开立银行账户",
         "detail": "您已准备好前往银行，现在可以预约。"
@@ -1501,7 +1512,9 @@
       "abandoned": {
         "title": "尚无结果：暂时不能开立银行账户",
         "detail": "面试未完成，请从头重新面试。"
-      }
+      },
+      "scoreReady": "您答对了 {score}/{maximum} 题，通过要求为 {required} 题——您已准备好进入下一步。",
+      "scorePractice": "您答对了 {score}/{maximum} 题，通过要求为 {required} 题。请复习下方答案后再试一次。"
     },
     "chat": {
       "placeholder": "请用泰语输入回答…",
@@ -1516,6 +1529,7 @@
     "debrief": {
       "title": "面试结果",
       "reasons": "你的逐题回答",
+      "reviewNeeded": "需要继续练习的答案",
       "correctValue": "证明文件记载：{value}",
       "review": "复习卡片",
       "transcript": "对话记录",

@@ -44,6 +44,8 @@ export async function Debrief({
   locale,
   turns,
   closeReason,
+  score,
+  focusedReview,
 }: {
   verdict: 'ready' | 'not_ready' | null;
   narrative: string;
@@ -54,10 +56,16 @@ export async function Debrief({
   turns: ChatTurn[];
   /** Why the session ended, in the learner's language; null when unknown. */
   closeReason: string | null;
+  score: { value: number; maximum: number; required: number } | null;
+  /** V2 teaches only the answers that need work; legacy sessions keep their original review. */
+  focusedReview: boolean;
 }) {
   const t = await getTranslations('interview');
   const ready = verdict === 'ready';
   const tag = verdict ?? 'abandoned';
+  const reviewReasons = focusedReview
+    ? reasons.filter((reason) => reason.verdict !== 'correct')
+    : reasons;
   // What the learner came to find out, in plain words (Owner, 2026-10-02): can they open the
   // account or not. The chip, the officer's narrative and the answers below explain why.
   const label = (concept: string) =>
@@ -120,10 +128,20 @@ export async function Debrief({
               (ready ? 'text-brand-900' : 'text-warn-700')
             }
           >
-            {t(`outcome.${tag}.title`)}
+            {score
+              ? t(ready ? 'outcome.readyTitle' : 'outcome.practiceTitle')
+              : t(`outcome.${tag}.title`)}
           </h2>
-          <p className="mt-1 text-base leading-[1.75] text-ink-900">{t(`outcome.${tag}.detail`)}</p>
-          {closeReason && (
+          <p className="mt-1 text-base leading-[1.75] text-ink-900">
+            {score
+              ? t(ready ? 'outcome.scoreReady' : 'outcome.scorePractice', {
+                  score: score.value,
+                  maximum: score.maximum,
+                  required: score.required,
+                })
+              : t(`outcome.${tag}.detail`)}
+          </p>
+          {closeReason && closeReason !== 'plan_complete' && (
             <p data-testid="close-reason" className="mt-2 text-sm leading-[1.7] text-ink-700">
               {t(`closeReason.${closeReason}` as never)}
             </p>
@@ -136,18 +154,18 @@ export async function Debrief({
         </div>
       </section>
 
-      {reasons.length > 0 && (
+      {reviewReasons.length > 0 && (
         <section
           className="rise overflow-hidden rounded-card bg-white shadow-raised"
           style={rise('80ms')}
         >
           <div className="border-b border-brand-100 bg-brand-50 px-5 py-3 md:px-6">
             <h2 className="font-display text-[18px] leading-[1.45] font-semibold text-brand-900 md:text-[22px]">
-              {t('debrief.reasons')}
+              {t(focusedReview ? 'debrief.reviewNeeded' : 'debrief.reasons')}
             </h2>
           </div>
           <ol data-testid="verdict-reasons">
-            {reasons.map((r) => (
+            {reviewReasons.map((r) => (
               <li
                 key={r.concept}
                 data-testid={'verdict-reason-' + r.concept}
