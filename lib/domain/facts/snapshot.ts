@@ -150,8 +150,8 @@ export function assignmentFacts(snapshot: TrainingSnapshot, role: RoleSnapshot |
     holder_name: role?.holder_name ?? null,
     position: role?.position ?? null,
     learner_is_shareholder: role?.learner_is_shareholder ?? null,
-    my_shares: role?.my_shares ?? null,
-    my_share_percent: role?.my_share_percent ?? null,
+    my_shares: role?.learner_is_shareholder === false ? 0 : (role?.my_shares ?? null),
+    my_share_percent: role?.learner_is_shareholder === false ? 0 : (role?.my_share_percent ?? null),
   };
 }
 

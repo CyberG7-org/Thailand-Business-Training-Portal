@@ -192,9 +192,9 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
     const keyOf = (ids: string[]) =>
       variants.find((v) => v.conceptKey === 'shareholder_count' && ids.includes(v.id))?.key;
     expect(asked!.map((a) => keyOf(a.question_ids))).toEqual([
-      'mcq-shareholder-count-1',
-      'mcq-shareholder-count-2',
-      'mcq-shareholder-count-1',
+      'mcq-v2-shareholder-count-1',
+      'mcq-v2-shareholder-count-2',
+      'mcq-v2-shareholder-count-3',
     ]);
 
     await answerAll(attempt, NON_CRITICAL.slice(0, 5));
@@ -205,8 +205,8 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
   });
 
   it('does not start when the bank cannot ask a concept, and tells the record’s staff', async () => {
-    const otp = (await listVariants(svc)).find((v) => v.key === 'mcq-otp-control-1')!;
-    await setVariantStatus(svc, otp.id, 'draft');
+    const otp = (await listVariants(svc)).filter((v) => v.conceptKey === 'otp_control');
+    for (const variant of otp) await setVariantStatus(svc, variant.id, 'draft');
     const open = () =>
       svc
         .from('training_fact_exceptions')
@@ -233,7 +233,7 @@ describe('the Business Knowledge Quiz attempt (D100)', () => {
         .eq('status', 'in_progress');
       expect(count).toBe(0);
     } finally {
-      await setVariantStatus(svc, otp.id, 'approved');
+      for (const variant of otp) await setVariantStatus(svc, variant.id, 'approved');
     }
     // With the question back the quiz starts, and the report closes itself.
     const attempt = await startExam(team.learner.id, 'th');
