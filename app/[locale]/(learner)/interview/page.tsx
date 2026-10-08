@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { ChevronIcon } from '@/components/icons';
 import { LearnerShell } from '@/components/shell/learner-shell';
+import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
 import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
@@ -44,8 +45,9 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
   });
 
   return (
-    <LearnerShell title={t('title')} intro={t('intro')} step="interview">
+    <LearnerShell title={t('title')} intro={t('intro')} step="interview" hideMobileNav>
       <div className="mx-auto grid max-w-[780px] gap-6">
+        <LearnerStageTabs current="interview" statuses={stages} />
         <section className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7">
           <p className="mb-4 rounded-control bg-brand-50 px-3.5 py-2.5 text-sm font-medium text-brand-700">
             {t('thaiOnly')}

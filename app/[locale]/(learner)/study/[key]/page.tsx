@@ -95,7 +95,7 @@ export default async function StudyMaterialPage({
     return (
       <LearnerShell title={t('title')} step="study" hideBack hideMobileNav headerVariant="study">
         <div className="grid gap-5">
-          <LearnerStageTabs statuses={statuses} />
+          <LearnerStageTabs current="study" statuses={statuses} />
           <section className="rounded-card bg-white px-6 py-5 shadow-raised">
             <p data-testid="study-not-available" className="text-sm text-ink-700">
               {t('notAvailable')}
@@ -202,7 +202,7 @@ export default async function StudyMaterialPage({
       <ViewTracker materialId={material.id} />
       {/* The card first, then what the documents say about it (the owner, 2026-10-02). */}
       <div className="grid gap-6">
-        <LearnerStageTabs statuses={statuses} />
+        <LearnerStageTabs current="study" statuses={statuses} />
         <article className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-9 md:py-8">
           {material.type === 'card' && (
             <div className="study-article" data-testid="study-body">

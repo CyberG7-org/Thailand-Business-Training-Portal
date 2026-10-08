@@ -60,6 +60,24 @@ test('the shell fits a phone: no horizontal page scroll and a usable header', as
   await expect(page.getByTestId('shell-header')).toBeVisible();
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
   await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
+  await expect(page.getByTestId('learner-stage-tab-home')).toBeVisible();
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
+
+  for (const [route, current] of [
+    ['/th/exam', 'exam'],
+    ['/th/interview', 'interview'],
+    ['/th/name-card', 'nameCard'],
+  ] as const) {
+    await page.goto(route);
+    const tabs = page.getByTestId('learner-stage-tabs');
+    await expect(tabs).toBeVisible();
+    await expect(tabs.locator('[data-testid^="learner-stage-tab-"]')).toHaveCount(4);
+    await expect(tabs.locator('[data-testid^="learner-stage-tab-"]').first()).toHaveAttribute(
+      'data-testid',
+      'learner-stage-tab-home',
+    );
+    await expect(page.getByTestId(`learner-stage-tab-${current}`)).toHaveCount(0);
+  }
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

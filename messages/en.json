@@ -1356,6 +1356,7 @@
     "tabs": {
       "label": "Training stages",
       "home": "Home",
+      "study": "Study",
       "exam": "Quiz",
       "interview": "Readiness",
       "nameCard": "Name card"

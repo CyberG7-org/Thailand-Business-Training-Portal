@@ -134,7 +134,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
           </div>
         </aside>
 
-        <LearnerStageTabs statuses={statuses} />
+        <LearnerStageTabs current="study" statuses={statuses} />
 
         <section className="rise grid gap-3" style={rise('80ms')}>
           {total === 0 && <p className="px-6 py-5 text-sm text-ink-700">{t('empty')}</p>}

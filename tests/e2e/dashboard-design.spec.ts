@@ -108,4 +108,6 @@ test('the dashboard fits a phone with four direct training actions', async ({ pa
   );
   expect(overflow).toBeLessThanOrEqual(0);
   expect(consoleErrors).toEqual([]);
+  await page.getByTestId('stage-study').click({ position: { x: 12, y: 118 } });
+  await expect(page).toHaveURL(/\/th\/study$/);
 });
