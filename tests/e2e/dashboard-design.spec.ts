@@ -5,8 +5,8 @@ import { seedLearnerWithCompany, seedPassedExam } from './seed';
 
 /**
  * The dashboard from the design handoff (Dashboard v4): the hero with the company pill, the
- * next step and its CTA, the progress ring, the six-step stepper, the "Your steps" list and the
- * company card. What it says must follow the learner's real progress.
+ * next step, progress summary, direct stage list, and full-width company details. What it says
+ * must follow the learner's real progress.
  */
 test('a new learner sees the company, the first step current, and the interview locked', async ({
   page,
@@ -16,15 +16,11 @@ test('a new learner sees the company, the first step current, and the interview 
   await expect(page.getByTestId('hero-kicker')).toContainText('บริษัท แดชบอร์ดใหม่ จำกัด');
   await expect(page.getByRole('img', { name: 'เสร็จแล้ว 0 จาก 4 ขั้นตอน' })).toBeVisible();
 
-  const stepper = page.getByTestId('stepper');
-  await expect(stepper.getByRole('listitem')).toHaveCount(4);
-  await expect(stepper.getByRole('listitem').nth(1)).toHaveText(/นามบัตร/);
-  await expect(stepper.locator('[aria-current="step"]')).toHaveText(/เอกสารเรียนรู้/);
-
-  await expect(page.getByRole('link', { name: 'ไปที่เอกสารเรียนรู้' })).toHaveAttribute(
-    'href',
-    '/th/study',
+  await expect(page.getByTestId('stepper')).toBeHidden();
+  await expect(page.getByTestId('dashboard-steps').locator('[aria-current="step"]')).toHaveText(
+    /เอกสารเรียนรู้/,
   );
+  await expect(page.getByRole('link', { name: 'ไปที่เอกสารเรียนรู้' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveCount(0);
   await expect(page.getByTestId('stage-interview')).toHaveAttribute('data-locked', 'true');
   await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
@@ -38,23 +34,26 @@ test('a new learner sees the company, the first step current, and the interview 
   );
 });
 
-test('after a passed exam the next step moves on and the last result is one click away', async ({
+test('after a passed exam the interview becomes current and company details follow the steps', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท สอบผ่านแล้ว จำกัด', '2026-07-13');
   await seedPassedExam(loginId);
   await loginAs(page, loginId, E2E_PASSWORD);
   // The name card is standalone (D88): the next step after the quiz is the interview.
-  await expect(page.getByTestId('stepper').locator('[aria-current="step"]')).toHaveText(
+  await expect(page.getByTestId('dashboard-steps').locator('[aria-current="step"]')).toHaveText(
     /สัมภาษณ์ความพร้อมกับธนาคาร/,
   );
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
   await expect(page.getByTestId('interview-status')).toHaveText('ยังไม่ได้เริ่ม');
-  await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveAttribute(
-    'href',
-    /\/th\/exam\/[0-9a-f-]{36}\/result$/,
-  );
+  await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveCount(0);
   await expect(page.getByRole('img', { name: 'เสร็จแล้ว 1 จาก 4 ขั้นตอน' })).toBeVisible();
+
+  const stepsBox = await page.getByTestId('dashboard-steps').boundingBox();
+  const companyBox = await page.getByTestId('company-card').boundingBox();
+  expect(stepsBox).not.toBeNull();
+  expect(companyBox).not.toBeNull();
+  expect(companyBox!.y).toBeGreaterThan(stepsBox!.y + stepsBox!.height);
 });
 
 test('the dashboard fits a phone with four direct training actions', async ({ page }) => {

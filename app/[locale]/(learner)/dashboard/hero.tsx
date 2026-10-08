@@ -1,13 +1,10 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { Link } from '@/i18n/navigation';
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 
-type Cta = { href: string; label: string };
-
 /**
- * The dashboard hero on the band (handoff, Dashboard): the company pill, the welcome, the next
- * step in one line and its actions on the left; the progress card on the right.
+ * The dashboard hero on the band: the company pill, welcome and next-step guidance on the left,
+ * with the progress summary on the right. Stage navigation lives in the list below the band.
  */
 export function Hero({
   kicker,
@@ -16,8 +13,6 @@ export function Hero({
   line,
   mobileLine,
   lineTestId,
-  primary,
-  secondary,
   children,
 }: {
   kicker: string;
@@ -26,8 +21,6 @@ export function Hero({
   line: string;
   mobileLine: string;
   lineTestId?: string;
-  primary: Cta | null;
-  secondary: Cta | null;
   children: ReactNode;
 }) {
   return (
@@ -57,37 +50,6 @@ export function Hero({
           <span className="md:hidden">{mobileLine}</span>
           <span className="hidden md:inline">{line}</span>
         </p>
-        {(primary || secondary) && (
-          <div className="rise mt-5 hidden flex-wrap gap-3 md:mt-6 md:flex" style={rise('240ms')}>
-            {primary && (
-              <Link
-                href={primary.href}
-                className="inline-flex min-h-12 items-center gap-2.5 rounded-control bg-white px-6 text-base font-semibold text-brand-900 shadow-[0_6px_20px_rgb(0_0_0/0.2)] transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgb(0_0_0/0.28)] focus-visible:outline-gold-100"
-              >
-                {primary.label}
-                <svg
-                  aria-hidden="true"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </Link>
-            )}
-            {secondary && (
-              <Link
-                href={secondary.href}
-                className="inline-flex min-h-12 items-center rounded-control border border-white/35 px-5 text-base font-medium text-white transition-colors hover:bg-white/10 focus-visible:outline-gold-100"
-              >
-                {secondary.label}
-              </Link>
-            )}
-          </div>
-        )}
       </div>
       <div className="rise hidden md:block" style={rise('200ms')}>
         {children}

@@ -15,8 +15,9 @@ import { StepSegments } from './step-segments';
  * dot grid below. A page passes only what differs; the user and the stage statuses are read once
  * per request. The dashboard swaps the title for its hero and adds the stepper to the band; a
  * card page points the back pill at its list and shows its place there instead of the steps.
- * The four primary learner stages share the same compact navigation at every breakpoint. Legacy
- * learner routes retain the sidebar until they are folded into the primary journey.
+ * The four primary learner stages share the dashboard's glass header on desktop and retain the
+ * compact learner header on phones. Legacy learner routes retain the sidebar until they are
+ * folded into the primary journey.
  */
 export async function LearnerShell({
   title,

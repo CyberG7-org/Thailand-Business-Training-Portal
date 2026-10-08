@@ -35,7 +35,10 @@ export function StepsList({
     return <BankIcon className={className} weight="duotone" />;
   };
   return (
-    <section className="rise md:overflow-hidden md:rounded-card md:bg-white md:shadow-raised">
+    <section
+      data-testid="dashboard-steps"
+      className="rise md:overflow-hidden md:rounded-card md:bg-white md:shadow-raised"
+    >
       <div className="hidden items-center justify-between gap-3 border-b border-brand-100 bg-brand-50 px-4 py-3 md:flex md:px-6 md:py-4">
         <h2 className="font-display text-[18px] leading-[1.45] font-semibold text-brand-900 md:text-[22px]">
           {title}
@@ -66,6 +69,7 @@ export function StepsList({
             <li
               key={row.key}
               data-testid={`stage-${row.key}`}
+              aria-current={row.current ? 'step' : undefined}
               data-locked={locked || undefined}
               data-mobile-action={mobileAction || undefined}
               className={`relative min-h-[132px] flex-col items-start gap-2 rounded-card border bg-white p-3 shadow-glass focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-brand-600 md:order-none md:grid md:min-h-[76px] md:grid-cols-[40px_minmax(0,1fr)_auto] md:items-center md:gap-4 md:rounded-none md:border-0 md:border-b md:border-ink-100 md:px-6 md:py-2.5 md:shadow-none md:last:border-b-0 ${mobileAction ? 'flex' : 'hidden'} ${mobileOrder} ${mobileBorder} ${tone}`}

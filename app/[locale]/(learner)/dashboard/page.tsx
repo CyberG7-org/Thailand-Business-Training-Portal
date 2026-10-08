@@ -77,13 +77,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     : currentRow === null
       ? t('next.done')
       : (currentRow.href === null && currentRow.detail) || t(`next.${currentRow.key}`);
-  const primary =
-    currentRow?.href && mine
-      ? { href: currentRow.href, label: t('cta.open', { step: currentRow.title }) }
-      : null;
-  const secondary = lastExam
-    ? { href: `/exam/${lastExam.id}/result`, label: t('cta.lastResult') }
-    : null;
   const welcome = t('welcome', { name: user.displayName ?? displayLoginId(user.loginId) });
 
   const progress = (
@@ -246,15 +239,17 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           line={line}
           mobileLine={t('mobileIntro')}
           lineTestId={mine ? undefined : 'no-company'}
-          primary={primary}
-          secondary={secondary}
         >
           {progress}
         </Hero>
       }
-      bandFooter={<Stepper rows={rows} />}
+      bandFooter={
+        <div className="md:hidden">
+          <Stepper rows={rows} />
+        </div>
+      }
     >
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start">
+      <div className="mx-auto grid w-full max-w-[1240px] gap-6 md:gap-8">
         <StepsList
           rows={rows}
           title={t('steps.title')}

@@ -67,6 +67,57 @@ final result: passed
 
 ---
 
+# Design QA — learner desktop consolidation
+
+## Inputs
+
+- Dashboard request markup: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-3eaaa944-855f-4f49-a667-2e818e092d02.png`, 943 × 931 pixels.
+- Study desktop reference: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-4c9cfd2d-ff42-4a5d-b74e-5741c5d16ac4.png`.
+- Quiz desktop reference: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-b2e1eada-3e30-44ed-b9d6-2e294ae7e6af.png`.
+- Readiness desktop reference: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-b3c1fa85-4b59-42f1-839e-089cb9813d5d.png`.
+- Name-card desktop reference: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-edb85388-a9ab-42be-bda5-78164b03c3ad.png`.
+- Dashboard implementation: `artifacts/design-qa/learner-dashboard-desktop.png`.
+- Page implementations: `artifacts/design-qa/learner-study-desktop.png`, `artifacts/design-qa/learner-exam-desktop.png`, `artifacts/design-qa/learner-interview-desktop.png`, and `artifacts/design-qa/learner-name-card-desktop.png`.
+- Combined dashboard comparison: `artifacts/design-qa/learner-dashboard-desktop-comparison.png`.
+- Browser/CSS viewport: 1440 × 1000 pixels at device scale factor 1.
+- State: authenticated Thai learner with an assigned company, passed quiz, current readiness stage, and rich company details.
+
+## Full-view comparison
+
+- The dashboard hero keeps the established glass account header and progress summary while removing both redundant hero actions and the desktop stepper.
+- The stage list now occupies the full content width, followed by the company record rather than competing with it in a narrow side column.
+- Company information retains the mobile fact-card hierarchy but uses two- and three-column desktop rows to avoid excessive scrolling and empty space.
+- Study, Quiz, Readiness, and Name Card now render the same glass account header as the dashboard at the desktop breakpoint. Their compact mobile header remains unchanged.
+
+## Focused review
+
+| Area                  | Result | Notes                                                                                                                                               |
+| --------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard hierarchy   | Pass   | Welcome and progress remain prominent; duplicate controls and the desktop stepper are absent.                                                       |
+| Stage navigation      | Pass   | Four stages have one clear full-width list with visible state and direct actions.                                                                   |
+| Company details       | Pass   | Record follows the stages and presents registration, capital, date, address, people, objectives, nature, activities, and links as responsive cards. |
+| Shared desktop header | Pass   | All four primary learner pages use the dashboard glass header with the same language, identity, and sign-out placement.                             |
+| Mobile preservation   | Pass   | The phone stepper and compact primary-page header remain available below the desktop breakpoint.                                                    |
+| Responsive spacing    | Pass   | Content is constrained to 1240 px, fills the desktop canvas, and introduces no horizontal overflow.                                                 |
+
+## Iteration history
+
+1. Removed the dashboard hero's primary and secondary action buttons.
+2. Hid the dashboard stepper at the desktop breakpoint while preserving it on phones.
+3. Converted the dashboard content from a split 7/5 grid into a full-width vertical flow.
+4. Rebuilt the desktop company record with the same icon-and-fact card language as mobile and responsive multi-column placement.
+5. Switched primary learner pages to the dashboard glass header on desktop and retained the compact mobile override.
+6. Added browser assertions for button removal, desktop stepper removal, company-card ordering, and shared-header styling.
+
+## Findings
+
+- No actionable P0, P1, or P2 visual mismatch remains for the requested desktop changes.
+- P3: local captures contain generated E2E account names and may show the Next.js development badge; neither appears as customer content in production.
+
+final result: passed
+
+---
+
 # Design QA — quiz attempt history
 
 ## Inputs

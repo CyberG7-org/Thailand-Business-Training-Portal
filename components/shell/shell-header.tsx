@@ -27,7 +27,7 @@ export async function ShellHeader({
     <header
       data-testid="shell-header"
       data-variant={variant}
-      className={`${study ? 'md:glass flex items-center gap-3 text-ink-900 md:rounded-card md:py-2.5 md:pr-2 md:pl-3 md:shadow-[0_8px_24px_rgb(12_26_58/0.18)]' : 'glass flex items-center rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]'} ${compact ? 'gap-2 md:gap-x-5' : study ? '' : 'flex-nowrap gap-2 md:gap-x-5'}`}
+      className={`${study ? 'learner-primary-header glass flex items-center gap-3 rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]' : 'glass flex items-center rounded-card py-2.5 pr-2 pl-3 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]'} ${compact ? 'gap-2 md:gap-x-5' : study ? '' : 'flex-nowrap gap-2 md:gap-x-5'}`}
     >
       <Link
         href="/dashboard"

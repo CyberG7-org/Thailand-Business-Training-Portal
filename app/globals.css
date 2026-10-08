@@ -368,6 +368,18 @@
   }
 
   @media (max-width: 767px) {
+    /* Primary learner pages keep their compact phone header, but use the dashboard's full
+       glass account header from the desktop breakpoint upward. */
+    .learner-primary-header {
+      padding-right: 0;
+      padding-left: 0;
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+
     .dashboard-home-band {
       background: var(--color-brand-50);
       color: var(--color-ink-900);

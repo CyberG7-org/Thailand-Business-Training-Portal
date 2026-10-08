@@ -4,8 +4,8 @@ import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
 /**
- * The primary learner pages share Study's compact band header and four-destination navigation at
- * every viewport. Their Home destination replaces the old Back control.
+ * The primary learner pages use the dashboard glass header on desktop, keep the compact header
+ * on phones, and share the four-destination navigation. Home replaces the old Back control.
  */
 test('primary learner pages share the focused navigation on desktop', async ({ page }) => {
   const loginId = await seedLearnerWithCompany('บริษัท เชลล์ร่วม จำกัด', '2026-07-13');
@@ -15,6 +15,7 @@ test('primary learner pages share the focused navigation on desktop', async ({ p
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
 
   await page.goto('/th/study');
+  await expect(page.getByTestId('shell-header')).toHaveClass(/glass/);
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
   await expect(page.getByTestId('step-segments')).toHaveCount(0);
   await expect(

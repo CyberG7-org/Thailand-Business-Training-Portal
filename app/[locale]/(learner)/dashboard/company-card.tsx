@@ -57,7 +57,7 @@ function DetailMark({ icon }: { icon: DetailIcon }) {
   return <FacebookLogoIcon {...props} />;
 }
 
-/** Complete company record: comfortable scrollable cards on phones, compact details on desktop. */
+/** Complete company record: the same readable detail-card language at every breakpoint. */
 export function CompanyCard({
   labels,
   nameTh,
@@ -77,6 +77,7 @@ export function CompanyCard({
 }) {
   return (
     <section
+      data-testid="company-card"
       className="rise md:overflow-hidden md:rounded-card md:bg-white md:shadow-raised"
       style={{ '--rise-delay': '100ms' } as React.CSSProperties}
     >
@@ -101,10 +102,10 @@ export function CompanyCard({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2.5 pt-2.5 md:gap-4 md:px-6 md:pt-5 md:pb-6">
+      <div className="flex flex-col gap-2.5 pt-2.5 md:gap-4 md:px-6 md:pt-6 md:pb-6">
         <div className="grid gap-2.5 md:grid-cols-2">
-          <div className="flex items-center gap-3 rounded-card bg-white px-4 py-3 shadow-glass md:rounded-control md:bg-brand-50 md:shadow-none">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600 md:hidden">
+          <div className="flex items-center gap-3 rounded-card bg-white px-4 py-3 shadow-glass md:min-h-20 md:border md:border-brand-100 md:bg-brand-50/70 md:px-5 md:py-4 md:shadow-none">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600">
               <IdentificationCardIcon className="size-5" weight="duotone" />
             </span>
             <div className="min-w-0">
@@ -114,8 +115,8 @@ export function CompanyCard({
               <div className="font-semibold text-brand-900 tabular-nums">{juristicId}</div>
             </div>
           </div>
-          <div className="flex items-center gap-3 rounded-card bg-white px-4 py-3 shadow-glass md:rounded-control md:bg-brand-50 md:shadow-none">
-            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600 md:hidden">
+          <div className="flex items-center gap-3 rounded-card bg-white px-4 py-3 shadow-glass md:min-h-20 md:border md:border-brand-100 md:bg-brand-50/70 md:px-5 md:py-4 md:shadow-none">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600">
               <CoinsIcon className="size-5" weight="duotone" />
             </span>
             <div className="min-w-0">
@@ -127,36 +128,44 @@ export function CompanyCard({
           </div>
         </div>
 
-        <dl className="flex flex-col gap-2.5 md:grid md:grid-cols-[minmax(110px,max-content)_minmax(0,1fr)] md:gap-x-3 md:gap-y-2.5 md:text-sm md:leading-[1.7]">
-          {details.map((detail) => (
-            <div
-              key={detail.label}
-              data-testid={detail.testId}
-              className="flex gap-3 rounded-card bg-white px-4 py-3 shadow-glass md:contents md:rounded-none md:bg-transparent md:p-0 md:shadow-none"
-            >
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600 md:hidden">
-                <DetailMark icon={detail.icon} />
-              </span>
-              <div className="min-w-0 md:contents">
-                <dt className="text-sm leading-[1.4] text-ink-500">{detail.label}</dt>
-                <dd className="mt-0.5 leading-[1.55] font-medium break-words text-ink-900 tabular-nums md:mt-0 md:font-normal">
-                  {detail.href ? (
-                    <a
-                      href={detail.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-brand-600 underline-offset-2 hover:underline"
-                    >
-                      {detail.value}
-                      <ArrowSquareOutIcon className="size-4 shrink-0" aria-hidden="true" />
-                    </a>
-                  ) : (
-                    detail.value
-                  )}
-                </dd>
+        <dl className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-3">
+          {details.map((detail) => {
+            const span =
+              detail.icon === 'activities'
+                ? 'md:col-span-2 xl:col-span-3'
+                : detail.icon === 'address' || detail.icon === 'nature'
+                  ? 'md:col-span-2 xl:col-span-2'
+                  : '';
+            return (
+              <div
+                key={detail.label}
+                data-testid={detail.testId}
+                className={`flex gap-3 rounded-card bg-white px-4 py-3 shadow-glass md:min-h-20 md:border md:border-brand-100 md:bg-brand-50/45 md:px-5 md:py-4 md:shadow-none ${span}`}
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-100 text-brand-600">
+                  <DetailMark icon={detail.icon} />
+                </span>
+                <div className="min-w-0">
+                  <dt className="text-sm leading-[1.4] text-ink-500">{detail.label}</dt>
+                  <dd className="mt-0.5 leading-[1.55] font-medium break-words text-ink-900 tabular-nums">
+                    {detail.href ? (
+                      <a
+                        href={detail.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-brand-600 underline-offset-2 hover:underline"
+                      >
+                        {detail.value}
+                        <ArrowSquareOutIcon className="size-4 shrink-0" aria-hidden="true" />
+                      </a>
+                    ) : (
+                      detail.value
+                    )}
+                  </dd>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </dl>
 
         {documentUrl && (
@@ -164,7 +173,7 @@ export function CompanyCard({
             href={documentUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600 text-base font-medium text-white transition-colors hover:bg-brand-700"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600 text-base font-medium text-white transition-colors hover:bg-brand-700 md:self-start md:px-6"
           >
             <FileTextIcon className="size-5" weight="duotone" />
             <span className="md:hidden">{labels.viewRecord}</span>
