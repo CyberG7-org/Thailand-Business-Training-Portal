@@ -1,6 +1,6 @@
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
-import { CORE_CONCEPTS, JURISTIC_ID_CONCEPT } from './plan';
+import { CORE_CONCEPTS, JURISTIC_ID_CONCEPT, READINESS_PASS_SCORE } from './plan';
 import type { Assessment, CloseReason, ConceptId, InterviewPlan, SessionVerdict } from './types';
 
 const BUSINESS_CONCEPT: ConceptId = 'business_activity';
@@ -39,6 +39,20 @@ export function decideVerdict(
         ? [{ concept: i.concept, verdict: a.verdict, note: a.note, cardKey: cardFor(i.concept) }]
         : [];
     });
+  if (plan.version === 2) {
+    const score = plan.items.filter(
+      (item) => latest.get(item.concept)?.verdict === 'correct',
+    ).length;
+    const passScore = plan.passScore ?? READINESS_PASS_SCORE;
+    return {
+      verdict: close === 'plan_complete' && score >= passScore ? 'ready' : 'not_ready',
+      reasons,
+      score,
+      maxScore: plan.items.length,
+      passScore,
+    };
+  }
+
   const planned = new Set(plan.items.map((i) => i.concept));
   const coreRight = CORE_CONCEPTS.filter((c) => planned.has(c)).every(
     (c) => latest.get(c)?.verdict === 'correct',

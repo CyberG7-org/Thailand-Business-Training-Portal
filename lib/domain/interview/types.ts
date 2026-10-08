@@ -19,7 +19,14 @@ export type PlanItem = {
   attempts: number;
 };
 
-export type InterviewPlan = { items: PlanItem[]; cursor: number };
+export type InterviewPlan = {
+  /** Missing means the historic v1 plan already stored in production. */
+  version?: 1 | 2;
+  /** V2 freezes its transparent threshold on the session. */
+  passScore?: number;
+  items: PlanItem[];
+  cursor: number;
+};
 
 export type CloseReason =
   'plan_complete' | 'too_many_evasions' | 'off_topic_limit' | 'learner_ended' | 'turn_limit';
@@ -46,5 +53,8 @@ export type VerdictReason = {
 export type SessionVerdict = {
   verdict: 'ready' | 'not_ready';
   reasons: VerdictReason[];
+  score?: number;
+  maxScore?: number;
+  passScore?: number;
   narrative: string;
 };

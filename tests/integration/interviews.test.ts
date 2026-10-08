@@ -19,7 +19,11 @@ import {
 const svc = adminClient();
 
 /** Answers every question the fake officer asks until the session closes. */
-async function answerAll(userId: string, sessionId: string, answer: (concept: string) => string) {
+async function answerAll(
+  userId: string,
+  sessionId: string,
+  answer: (concept: string, expected: string) => string,
+) {
   for (let i = 0; i < 40; i++) {
     const { data: session } = await svc
       .from('interview_sessions')
@@ -27,9 +31,16 @@ async function answerAll(userId: string, sessionId: string, answer: (concept: st
       .eq('id', sessionId)
       .single();
     if (session!.status !== 'in_progress') return;
-    const plan = session!.plan as { items: { concept: string }[]; cursor: number };
-    const concept = plan.items[plan.cursor]?.concept ?? 'end';
-    const { closed } = await submitLearnerMessage(userId, sessionId, answer(concept));
+    const plan = session!.plan as {
+      items: { concept: string; expected: string }[];
+      cursor: number;
+    };
+    const item = plan.items[plan.cursor];
+    const { closed } = await submitLearnerMessage(
+      userId,
+      sessionId,
+      answer(item?.concept ?? 'end', item?.expected ?? ''),
+    );
     if (closed) return;
   }
 }
@@ -43,6 +54,15 @@ describe('the readiness interview', () => {
   beforeAll(async () => {
     team = await seedTeam('สัมภาษณ์');
     await confirmRecord(team.recordId, team.manager.id);
+    await svc
+      .from('dbd_records')
+      .update({
+        head_office_address: 'เลขที่ 99 กรุงเทพมหานคร',
+        registered_on: '2026-07-13',
+        directors: [{ name_th: 'นางสาว กรรมการ ตัวอย่าง', name_en: null }],
+        signing_authority: 'กรรมการหนึ่งคนลงนาม',
+      })
+      .eq('id', team.recordId);
     const { data: record } = await svc
       .from('dbd_records')
       .select('company_name_th, juristic_id')
@@ -68,8 +88,7 @@ describe('the readiness interview', () => {
     });
     expected = {
       company_name: record!.company_name_th!,
-      juristic_id: record!.juristic_id!,
-      business_activity: 'ทดสอบระบบ สินค้าทดสอบ',
+      registration_number: record!.juristic_id!,
     };
   });
 
@@ -112,7 +131,11 @@ describe('the readiness interview', () => {
 
   it('ends ready when the answers match the record, and readiness is one-way', async () => {
     const { session } = await startOrResumeInterview(team.learner.id);
-    await answerAll(team.learner.id, session.id, (c) => expected[c] ?? FALLBACK);
+    await answerAll(
+      team.learner.id,
+      session.id,
+      (concept, planned) => (expected[concept] ?? planned) || FALLBACK,
+    );
     const { data } = await svc
       .from('interview_sessions')
       .select('verdict')
@@ -129,25 +152,28 @@ describe('the readiness interview', () => {
     expect(after.interviewSessions).toBe(3);
   });
 
-  it('lets the probing phase correct a wrong answer, and the last word wins', async () => {
+  it('gives one friendly follow-up and lets the corrected answer win', async () => {
     const { session } = await startOrResumeInterview(team.learner.id);
-    let juristicAsked = 0;
-    await answerAll(team.learner.id, session.id, (c) => {
-      if (c === 'juristic_id') return ++juristicAsked <= 2 ? '1111111111119' : expected.juristic_id;
-      return expected[c] ?? FALLBACK;
+    let registrationAsked = 0;
+    await answerAll(team.learner.id, session.id, (concept, planned) => {
+      if (concept === 'registration_number') {
+        return ++registrationAsked === 1 ? '1111111111119' : expected.registration_number;
+      }
+      return (expected[concept] ?? planned) || FALLBACK;
     });
     const { data } = await svc
       .from('interview_sessions')
       .select('verdict, summary, plan')
       .eq('id', session.id)
       .single();
-    // Wrong twice in the facts phase, asked a third time in the probing phase, right at last.
-    expect(juristicAsked).toBe(3);
+    expect(registrationAsked).toBe(2);
     const plan = data!.plan as { items: { phase: string }[] };
-    expect(plan.items.some((i) => i.phase === 'probing')).toBe(true);
+    expect(plan.items.some((i) => i.phase === 'probing')).toBe(false);
     expect(data!.verdict).toBe('ready');
     const summary = data!.summary as { reasons: { concept: string; verdict: string }[] };
-    expect(summary.reasons.find((r) => r.concept === 'juristic_id')?.verdict).toBe('correct');
+    expect(summary.reasons.find((r) => r.concept === 'registration_number')?.verdict).toBe(
+      'correct',
+    );
   });
 
   it('abandons an idle session and starts a fresh one', async () => {

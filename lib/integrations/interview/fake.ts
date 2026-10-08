@@ -1,4 +1,4 @@
-import { currentItem } from '@/lib/domain/interview/plan';
+import { currentItem, isReadinessPlan } from '@/lib/domain/interview/plan';
 import type { Assessment, OfficerTurn } from '@/lib/domain/interview/types';
 import type { InterviewProvider, NarrateInput, TurnInput } from './types';
 
@@ -88,7 +88,7 @@ export class FakeInterview implements InterviewProvider {
     }
     const assessment: Assessment = { concept: item.concept, verdict, note: NOTE[verdict] };
     const evasions = input.evasions + (verdict === 'evasive' ? 1 : 0);
-    if (evasions >= MAX_EVASIONS) {
+    if (!isReadinessPlan(input.plan) && evasions >= MAX_EVASIONS) {
       return {
         say: 'ขออภัยค่ะ วันนี้ธนาคารยังไม่สามารถดำเนินการต่อได้ ขอบคุณที่มาค่ะ',
         assessment,

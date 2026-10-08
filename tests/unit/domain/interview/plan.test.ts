@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { advance, buildPlan, currentItem, probingItems } from '@/lib/domain/interview/plan';
+import {
+  advance,
+  buildPlan,
+  buildReadinessPlan,
+  currentItem,
+  probingItems,
+} from '@/lib/domain/interview/plan';
 import type { Assessment, FactSheet } from '@/lib/domain/interview/types';
 
 const facts: FactSheet = {
@@ -42,6 +48,37 @@ describe('buildPlan', () => {
     const plan = buildPlan({ ...facts, source_of_funds: null, operations_status: null });
     expect(plan.items.every((i) => i.expected.length > 0)).toBe(true);
     expect(plan.items.map((i) => i.concept)).not.toContain('source_of_funds');
+  });
+});
+
+describe('buildReadinessPlan v2', () => {
+  it('freezes the 11 simple questions and the 9-of-11 threshold', () => {
+    const plan = buildReadinessPlan({
+      ...facts,
+      head_office_address: 'กรุงเทพมหานคร',
+      directors: 'นางสาว กรรมการ ตัวอย่าง',
+      signing_authority: 'กรรมการหนึ่งคนลงนาม',
+      my_name: 'นางสาว ผู้เรียน ตัวอย่าง',
+      customer_profile: 'ธุรกิจและบุคคลทั่วไปในประเทศไทย',
+      transaction_details: 'รับเงินลูกค้าผ่านการโอนและ QR และจ่ายซัพพลายเออร์',
+    });
+    expect(plan).toMatchObject({ version: 2, passScore: 9, cursor: 0 });
+    expect(plan.items.map((item) => item.concept)).toEqual([
+      'company_name',
+      'registration_number',
+      'registered_address',
+      'actual_business',
+      'products_services',
+      'authorized_representative',
+      'attendee_identity',
+      'registration_date',
+      'account_purpose',
+      'customer_profile',
+      'transaction_details',
+    ]);
+    expect(plan.items).toHaveLength(11);
+    expect(plan.items.every((item) => item.core === false)).toBe(true);
+    expect(plan.items.every((item) => item.question.length > 8)).toBe(true);
   });
 });
 
