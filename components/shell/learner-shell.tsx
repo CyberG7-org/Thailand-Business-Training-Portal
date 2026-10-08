@@ -70,6 +70,8 @@ export async function LearnerShell({
   const usesPrimaryLayout = isPrimaryStage(step);
   const showsAutomaticStageTabs =
     usesPrimaryLayout && statuses !== null && stageNavigation === 'automatic';
+  const effectiveHeaderVariant = usesPrimaryLayout ? 'study' : headerVariant;
+  const effectiveHideBack = hideBack || usesPrimaryLayout;
   return (
     <>
       <div
@@ -79,12 +81,12 @@ export async function LearnerShell({
           (tone === 'gold' ? ' band-gold' : '')
         }
       >
-        <ShellHeader user={user} compact={home} variant={headerVariant} />
+        <ShellHeader user={user} compact={home} variant={effectiveHeaderVariant} />
         {!home && !hideSubBar && (
           <div
-            className={`mt-8 flex flex-wrap items-center gap-4 ${hideBack ? 'justify-end' : 'justify-between'}`}
+            className={`mt-8 flex flex-wrap items-center gap-4 ${effectiveHideBack ? 'justify-end' : 'justify-between'}`}
           >
-            {!hideBack && (
+            {!effectiveHideBack && (
               <BackPill home="/dashboard" label={back?.label ?? t('back')} href={back?.href} />
             )}
             {subBarRight ?? (step && <StepSegments current={step} statuses={statuses} />)}

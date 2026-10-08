@@ -1436,7 +1436,7 @@
     "start": "开始业务知识测验",
     "resume": "继续业务知识测验",
     "history": "历史记录",
-    "attemptLine": "第 {no} 次：{score} / {max} — {result}",
+    "attemptLine": "第 {no} 次：{score} / {max}",
     "noFeedbackNote": "答案会即时保存；结果仅在提交后显示。",
     "feedbackNote": "选择后立即显示对错，且不可更改。全部作答后再提交。",
     "submit": "提交业务知识测验",

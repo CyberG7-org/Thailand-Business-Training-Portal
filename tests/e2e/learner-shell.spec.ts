@@ -4,8 +4,8 @@ import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
 /**
- * The shared learner shell keeps the standard back pill and stage segments, then uses the same
- * compact four-destination navigation across every primary learner page and viewport.
+ * The primary learner pages share Study's compact band header and four-destination navigation at
+ * every viewport. Their Home destination replaces the old Back control.
  */
 test('primary learner pages share the focused navigation on desktop', async ({ page }) => {
   const loginId = await seedLearnerWithCompany('บริษัท เชลล์ร่วม จำกัด', '2026-07-13');
@@ -29,16 +29,14 @@ test('primary learner pages share the focused navigation on desktop', async ({ p
   await expect(page).toHaveURL(/\/th\/name-card$/);
   await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 2 จาก 5');
   await expect(page.getByTestId('step-segments').locator('[data-state]')).toHaveCount(5);
-  await expect(page.getByTestId('nav-back')).toBeVisible();
+  await expect(page.getByTestId('nav-back')).toHaveCount(0);
+  await expect(page.getByTestId('shell-header')).toHaveAttribute('data-variant', 'study');
   await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
   await expect(page.getByTestId('learner-nav')).toHaveCount(0);
   await page.getByTestId('learner-stage-tab-home').click();
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await expect(page.getByTestId('learner-nav')).toHaveCount(0);
 
-  await page.goto('/th/name-card');
-  await page.getByTestId('nav-back').click();
-  await expect(page).toHaveURL(/\/th\/dashboard$/);
   await page.goto('/th/study');
   await page.getByTestId('nav-home').click();
   await expect(page).toHaveURL(/\/th\/dashboard$/);
@@ -62,6 +60,8 @@ test('the shell fits a phone: no horizontal page scroll and a usable header', as
   ] as const) {
     await page.goto(route);
     const tabs = page.getByTestId('learner-stage-tabs');
+    await expect(page.getByTestId('shell-header')).toHaveAttribute('data-variant', 'study');
+    await expect(page.getByTestId('nav-back')).toHaveCount(0);
     await expect(tabs).toBeVisible();
     await expect(tabs.locator('[data-testid^="learner-stage-tab-"]')).toHaveCount(4);
     await expect(tabs.locator('[data-testid^="learner-stage-tab-"]').first()).toHaveAttribute(
