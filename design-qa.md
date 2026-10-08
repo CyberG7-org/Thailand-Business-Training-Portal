@@ -67,6 +67,25 @@ final result: passed
 
 ---
 
+# Design QA — quiz attempt history
+
+## Inputs
+
+- Source issue: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-d15574e2-061d-4e3f-925f-2242f57e2736.png`.
+- Fixed implementation: `artifacts/design-qa/quiz-attempt-history-fixed.png`.
+- Browser/CSS viewport: 1280 × 720 pixels at device scale factor 1.
+- State: authenticated Thai learner with two completed quiz attempts.
+
+## Finding and resolution
+
+- Before: each row repeated the result in both the attempt summary and its status pill.
+- After: the summary contains only the attempt number and score; the pill is the single source of the result label.
+- Automated coverage verifies the exact summary text independently from each result state.
+
+final result: passed
+
+---
+
 # Design QA — learner primary pages
 
 ## Inputs
@@ -106,3 +125,41 @@ final result: passed
 ## Final result: passed
 
 The implementation matches the reference's layout, hierarchy, component styling, and responsive intent. Text and learner data differ only because the verification render uses the local Thai E2E account.
+
+---
+
+# Design QA — shared compact learner header
+
+## Inputs
+
+- Source visual truth: `C:/Users/cyber/AppData/Local/Temp/codex-clipboard-794c1892-8f74-4c6d-84de-c6e8f4d4296f.png`, 409 × 413 pixels.
+- Quiz implementation: `artifacts/design-qa/learner-quiz-header-mobile.png`, 395 × 916 pixels.
+- Readiness implementation: `artifacts/design-qa/learner-readiness-header-mobile.png`, 395 × 862 pixels.
+- Name-card implementation: `artifacts/design-qa/learner-name-card-header-mobile.png`, 395 × 862 pixels.
+- Browser/CSS viewport: 395 × 862 pixels at device scale factor 1.
+- State: authenticated English learner; quiz available, readiness locked, and name card blocked by an incomplete company record.
+
+## Full-view and focused comparison
+
+- Header composition: the BT mark, compact three-language selector, and circular learner avatar sit directly on the navy patterned band, matching the Study reference. The prior mobile glass container and sign-out text are gone.
+- Navigation: Home remains the first destination, the current page remains omitted, and the Back button is absent across Quiz, Readiness, and Name Card.
+- Progress: the five-step progress label and segments remain visible and right-aligned without leaving a blank Back-button slot.
+- Typography: the existing Trirong display face and IBM Plex Sans Thai body face preserve the reference's title/body hierarchy and optical weight.
+- Spacing and rhythm: header controls use the same compact top spacing and rounded navy band as Study; the navigation strip retains the same separation from the hero.
+- Colors and tokens: existing brand navy, pale-blue canvas, white surfaces, gold progress, and blue action tokens match the source design.
+- Image/icon fidelity: the existing BT mark and Phosphor navigation icons are retained; no placeholder or newly approximated artwork was introduced.
+- Copy/content: each page keeps its own localized title and supporting text while sharing the reference header structure.
+
+## Comparison history
+
+1. Earlier implementation used the default glass account header on Quiz, Readiness, and Name Card.
+2. The shared shell now selects the Study header variant for every primary learner stage.
+3. The remaining Back control was removed from primary learner pages, leaving Home as the consistent return destination.
+4. Post-fix captures show the same compact header and no Back button on all three requested pages.
+
+## Findings
+
+- No actionable P0, P1, or P2 mismatch remains.
+- P3: the small Next.js development badge in the lower-left corner is preview tooling and will not appear in production.
+
+final result: passed

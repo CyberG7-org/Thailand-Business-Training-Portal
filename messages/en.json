@@ -1436,7 +1436,7 @@
     "start": "Start the Business Knowledge Quiz",
     "resume": "Resume the Business Knowledge Quiz",
     "history": "Previous attempts",
-    "attemptLine": "Attempt {no}: {score} / {max} — {result}",
+    "attemptLine": "Attempt {no}: {score} / {max}",
     "noFeedbackNote": "Answers are saved as you go; results are shown only after you submit.",
     "feedbackNote": "Each answer is marked as soon as you choose it and cannot be changed. Submit when every question is answered.",
     "submit": "Submit the Business Knowledge Quiz",

@@ -170,10 +170,12 @@ test('a key fact answered wrong fails and points to the study material; 25 right
   await expect(page.getByTestId('exam-critical-wrong')).toHaveCount(0);
   await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/exam');
 
-  // The history names each result; neither opens the interview.
+  // The status pill names each result once; the row title stays focused on attempt and score.
   await page.goto('/th/exam');
   await expect(page.getByTestId('exam-attempt-1')).toHaveAttribute('data-result', 'fail');
   await expect(page.getByTestId('exam-attempt-2')).toHaveAttribute('data-result', 'retest');
+  await expect(page.getByTestId('exam-attempt-summary-1')).toHaveText('ครั้งที่ 1: 29 / 30');
+  await expect(page.getByTestId('exam-attempt-summary-2')).toHaveText('ครั้งที่ 2: 25 / 30');
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-interview-status')).not.toHaveText('พร้อมใช้งาน');
 });

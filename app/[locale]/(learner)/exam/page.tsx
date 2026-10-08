@@ -91,12 +91,11 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
                       href={'/exam/' + a.id + '/result'}
                       className="flex min-h-14 items-center justify-between gap-3 px-5 text-base font-medium text-brand-700 tabular-nums transition-colors hover:bg-brand-50 md:px-6"
                     >
-                      <span>
+                      <span data-testid={`exam-attempt-summary-${a.attempt_no}`}>
                         {t('attemptLine', {
                           no: a.attempt_no,
                           score: a.score ?? 0,
                           max: a.max_score ?? 0,
-                          result: t(result),
                         })}
                       </span>
                       <span className="flex items-center gap-3">
