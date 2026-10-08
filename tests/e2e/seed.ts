@@ -371,7 +371,9 @@ export async function seedAllCardsViewed(loginId: string, language?: string): Pr
 /** One study card with its localizations; staff no longer write cards in the UI (D81). */
 export async function seedLocalizedStudyCard(
   contentKey: string,
-  localizations: Record<'th' | 'en' | 'zh', { title: string; body: string; ttsEnabled?: boolean }>,
+  localizations: Partial<
+    Record<'th' | 'en' | 'zh', { title: string; body: string; ttsEnabled?: boolean }>
+  >,
 ): Promise<string> {
   const admin = svc();
   const { data: material, error } = await admin

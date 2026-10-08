@@ -13,6 +13,7 @@ import type { AppLocale } from '@/i18n/routing';
 import { getInterviewWithTurns } from '@/lib/db/interviews';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
+import { readinessItem } from '@/lib/domain/interview/plan';
 import type { InterviewPlan, Verdict, VerdictReason } from '@/lib/domain/interview/types';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { type InterviewResultItem, SessionResultTranscript } from './session-result-transcript';
@@ -75,10 +76,12 @@ export async function InterviewSessionView({
     (plan.items ?? []).map((item) => [item.concept, item.expected]),
   );
   const label = (concept: string) =>
-    concept === 'juristic_id'
-      ? ti('concept.juristic_id')
-      : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
-        concept);
+    plan.version === 2 && readinessItem(concept)
+      ? readinessItem(concept)!.question[locale as AppLocale]
+      : concept === 'juristic_id'
+        ? ti('concept.juristic_id')
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
+          concept);
 
   const resultItems: InterviewResultItem[] = [];
   let officerTurn: (typeof turns)[number] | null = null;

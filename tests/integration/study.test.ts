@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createStudyMaterial,
+  getStudyMaterialByKey,
   getMyStudyProgress,
   listStudyMaterials,
+  loadStarterCards,
   markCompleted,
   markViewed,
   pickLocalization,
@@ -84,6 +86,67 @@ describe('study material', () => {
     const mine = list.find((m) => m.id === activeId)!;
     expect(pickLocalization(mine, 'th')?.title).toBe('ทดสอบ');
     expect(pickLocalization(mine, 'zh')).toBeNull();
+  });
+
+  it('refreshes the five shipped cards and retires the three legacy samples', async () => {
+    const svc = adminClient();
+    const starterKey = `${key}-starter`;
+    const material = await createStudyMaterial(
+      asAdmin,
+      { contentKey: starterKey, type: 'card', sortOrder: 999, active: false },
+      admin.id,
+    );
+    await upsertLocalization(asAdmin, material.id, {
+      language: 'th',
+      title: 'เนื้อหาเดิม',
+      body: 'เนื้อหาเดิม',
+      ttsEnabled: true,
+    });
+    await svc
+      .from('study_materials')
+      .update({ active: true })
+      .in('content_key', ['sample-dbd-certificate', 'sample-company-facts', 'sample-bank-visit']);
+
+    try {
+      const result = await loadStarterCards(
+        asAdmin,
+        [
+          {
+            contentKey: starterKey,
+            sortOrder: 7,
+            conceptGroup: 'identity',
+            localizations: {
+              th: { title: 'ข้อมูลใหม่', body: 'คำตอบใหม่' },
+              en: { title: 'New facts', body: 'New answer' },
+              zh: { title: '新资料', body: '新答案' },
+            },
+          },
+        ],
+        admin.id,
+      );
+      expect(result).toEqual({ created: [], skipped: [starterKey] });
+
+      const refreshed = await getStudyMaterialByKey(asAdmin, starterKey);
+      expect(refreshed).toMatchObject({ active: true, sort_order: 7 });
+      expect(pickLocalization(refreshed!, 'th')).toMatchObject({
+        title: 'ข้อมูลใหม่',
+        body: 'คำตอบใหม่',
+      });
+      expect(pickLocalization(refreshed!, 'en')).toMatchObject({
+        title: 'New facts',
+        body: 'New answer',
+      });
+
+      const { data: legacy, error } = await svc
+        .from('study_materials')
+        .select('active')
+        .in('content_key', ['sample-dbd-certificate', 'sample-company-facts', 'sample-bank-visit']);
+      if (error) throw error;
+      expect(legacy).toHaveLength(3);
+      expect(legacy.every((row) => row.active === false)).toBe(true);
+    } finally {
+      await svc.from('study_materials').delete().eq('id', material.id);
+    }
   });
 
   it('tts_enabled is only honoured on the Thai localization', async () => {

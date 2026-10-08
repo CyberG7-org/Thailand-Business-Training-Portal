@@ -27,7 +27,7 @@ export type AttemptQuestion = {
 
 /**
  * One question for each of the 30 concepts, for one company (spec §8). A variant the learner has
- * already been asked yields to one they have not; the same seed draws the same places and
+ * already been asked more often yields to a less-used one; the same seed draws the same places and
  * numbers in every language; the options are put in an order of their own, and from here on are
  * known only by their position, so the row a learner can read says nothing about which is right.
  */
@@ -35,9 +35,11 @@ export function buildAttemptQuestions(
   variants: readonly Variant[],
   ctx: RenderContext,
   seed: string,
-  seen: ReadonlySet<string> = new Set(),
+  useCounts: ReadonlyMap<string, number> = new Map(),
 ): { questions: AttemptQuestion[]; missing: ConceptCheck[] } {
-  const checks = MCQ_CONCEPTS.map((concept) => pickVariant(concept.key, variants, ctx, seed, seen));
+  const checks = MCQ_CONCEPTS.map((concept) =>
+    pickVariant(concept.key, variants, ctx, seed, useCounts),
+  );
   const missing = checks.filter((c) => c.variant === null);
   if (missing.length > 0) return { questions: [], missing };
 

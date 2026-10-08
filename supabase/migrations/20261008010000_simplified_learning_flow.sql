@@ -3,13 +3,38 @@
 -- concept variants are retired after the v2 rows have been written and approved.
 --
 -- Rollback (content only):
+--   begin;
 --   update public.questions set approval_status = 'retired'
 --     where question_key like 'mcq-v2-%';
---   update public.questions set approval_status = 'approved'
---     where concept_key is not null and question_key not like 'mcq-v2-%';
+--   update public.questions q set approval_status = previous.approval_status
+--     from private.content_migration_question_states previous
+--     where previous.migration_key = '20261008010000_simplified_learning_flow'
+--       and previous.question_id = q.id;
+--   commit;
 -- Existing attempts remain valid because rendered questions and rule snapshots are frozen.
 
 begin;
+
+create schema if not exists private;
+revoke all on schema private from public;
+
+create table if not exists private.content_migration_question_states (
+  migration_key text not null,
+  question_id uuid not null references public.questions (id) on delete cascade,
+  approval_status text not null check (approval_status in ('draft', 'approved', 'retired')),
+  primary key (migration_key, question_id)
+);
+revoke all on private.content_migration_question_states from public, anon, authenticated;
+
+-- Capture each legacy row once, before this migration changes any approval state. The rollback
+-- can therefore restore a mixed bank of draft, approved and already-retired questions exactly.
+insert into private.content_migration_question_states
+  (migration_key, question_id, approval_status)
+select '20261008010000_simplified_learning_flow', id, approval_status
+from public.questions
+where concept_key is not null
+  and question_key not like 'mcq-v2-%'
+on conflict (migration_key, question_id) do nothing;
 
 create temporary table simplified_quiz_questions (
   question_key text primary key,
@@ -168,15 +193,15 @@ values
   ('mcq-v2-registration-date-3', 'th', 'วันที่ใดปรากฏในหนังสือรับรองบริษัท', '[{"key":"A","text":"{registered_on}"},{"key":"B","text":"{registered_on|date(-1y)}"},{"key":"C","text":"{registered_on|date(+1m)}"},{"key":"D","text":"{registered_on|date(-10d)}"}]'::jsonb, 'A', 'วันจดทะเบียนตามหนังสือรับรองคือ {registered_on}'),
   ('mcq-v2-registration-date-3', 'en', 'Which date appears on the company certificate?', '[{"key":"A","text":"{registered_on}"},{"key":"B","text":"{registered_on|date(-1y)}"},{"key":"C","text":"{registered_on|date(+1m)}"},{"key":"D","text":"{registered_on|date(-10d)}"}]'::jsonb, 'A', 'The registration date on the certificate is {registered_on}.'),
   ('mcq-v2-registration-date-3', 'zh', '公司注册证明上显示哪个日期？', '[{"key":"A","text":"{registered_on}"},{"key":"B","text":"{registered_on|date(-1y)}"},{"key":"C","text":"{registered_on|date(+1m)}"},{"key":"D","text":"{registered_on|date(-10d)}"}]'::jsonb, 'A', '登记证明上的注册日期为 {registered_on}。'),
-  ('mcq-v2-registered-location-1', 'th', 'ที่อยู่จดทะเบียนของบริษัทคือที่ใด', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'ที่ตั้งสำนักงานแห่งใหญ่ตามหนังสือรับรอง: {address}'),
-  ('mcq-v2-registered-location-1', 'en', 'What is the company''s registered address?', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'The head office address on the certificate: {address}'),
-  ('mcq-v2-registered-location-1', 'zh', '公司的注册地址是什么？', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', '登记证明上的总部地址：{address}'),
-  ('mcq-v2-registered-location-2', 'th', 'บริษัทจดทะเบียนอย่างเป็นทางการที่ไหน', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'ที่ตั้งสำนักงานแห่งใหญ่ตามหนังสือรับรอง: {address}'),
-  ('mcq-v2-registered-location-2', 'en', 'Where is the company officially registered?', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'The head office address on the certificate: {address}'),
-  ('mcq-v2-registered-location-2', 'zh', '公司正式注册在哪里？', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', '登记证明上的总部地址：{address}'),
-  ('mcq-v2-registered-location-3', 'th', 'ที่อยู่ใดปรากฏในหนังสือรับรอง DBD', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'ที่ตั้งสำนักงานแห่งใหญ่ตามหนังสือรับรอง: {address}'),
-  ('mcq-v2-registered-location-3', 'en', 'Which address appears on the DBD certificate?', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'The head office address on the certificate: {address}'),
-  ('mcq-v2-registered-location-3', 'zh', 'DBD 注册证明上显示哪个地址？', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', '登记证明上的总部地址：{address}'),
+  ('mcq-v2-registered-location-1', 'th', 'บริษัทจดทะเบียนอยู่ในจังหวัดใด', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'ที่ตั้งสำนักงานแห่งใหญ่ตามหนังสือรับรอง: {address}'),
+  ('mcq-v2-registered-location-1', 'en', 'In which province is the company registered?', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'The head office address on the certificate: {address}'),
+  ('mcq-v2-registered-location-1', 'zh', '公司注册在哪个府？', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', '登记证明上的总部地址：{address}'),
+  ('mcq-v2-registered-location-2', 'th', 'สำนักงานจดทะเบียนอยู่จังหวัดอะไร', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'ที่ตั้งสำนักงานแห่งใหญ่ตามหนังสือรับรอง: {address}'),
+  ('mcq-v2-registered-location-2', 'en', 'What is the province of the registered office?', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'The head office address on the certificate: {address}'),
+  ('mcq-v2-registered-location-2', 'zh', '注册办事处位于哪个府？', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', '登记证明上的总部地址：{address}'),
+  ('mcq-v2-registered-location-3', 'th', 'ที่อยู่จดทะเบียนระบุจังหวัดใด', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'ที่ตั้งสำนักงานแห่งใหญ่ตามหนังสือรับรอง: {address}'),
+  ('mcq-v2-registered-location-3', 'en', 'Which province appears in the registered address?', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', 'The head office address on the certificate: {address}'),
+  ('mcq-v2-registered-location-3', 'zh', '注册地址中注明的是哪个府？', '[{"key":"A","text":"{province}"},{"key":"B","text":"{province|geo_alt(region)}"},{"key":"C","text":"{province|geo_alt(region)}"},{"key":"D","text":"{province|geo_alt(region)}"}]'::jsonb, 'A', '登记证明上的总部地址：{address}'),
   ('mcq-v2-director-count-1', 'th', 'บริษัทมีกรรมการกี่คน', '[{"key":"A","text":"{director_count}"},{"key":"B","text":"{director_count|count(+1)}"},{"key":"C","text":"{director_count|count(+2)}"},{"key":"D","text":"{director_count|count(+3)}"}]'::jsonb, 'A', 'หนังสือรับรองระบุกรรมการ {director_count} คน ได้แก่ {directors}'),
   ('mcq-v2-director-count-1', 'en', 'How many directors does the company have?', '[{"key":"A","text":"{director_count}"},{"key":"B","text":"{director_count|count(+1)}"},{"key":"C","text":"{director_count|count(+2)}"},{"key":"D","text":"{director_count|count(+3)}"}]'::jsonb, 'A', 'The certificate lists {director_count} director(s): {directors}.'),
   ('mcq-v2-director-count-1', 'zh', '公司有几位董事？', '[{"key":"A","text":"{director_count}"},{"key":"B","text":"{director_count|count(+1)}"},{"key":"C","text":"{director_count|count(+2)}"},{"key":"D","text":"{director_count|count(+3)}"}]'::jsonb, 'A', '登记证明列明 {director_count} 名董事：{directors}。'),

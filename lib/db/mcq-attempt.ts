@@ -28,15 +28,19 @@ export class McqStartError extends Error {
   }
 }
 
-/** The bank variants a learner's earlier attempts already asked. */
-async function seenVariantIds(admin: Db, userId: string): Promise<Set<string>> {
+/** How often each bank variant appeared in this learner's earlier attempts. */
+async function variantUseCounts(admin: Db, userId: string): Promise<Map<string, number>> {
   const { data, error } = await admin
     .from('assessment_attempts')
     .select('question_ids')
     .eq('user_id', userId)
     .eq('kind', 'exam');
   if (error) throw error;
-  return new Set(data.flatMap((a) => a.question_ids));
+  const counts = new Map<string, number>();
+  for (const id of data.flatMap((attempt) => attempt.question_ids)) {
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  return counts;
 }
 
 /**
@@ -93,14 +97,14 @@ export async function startMcqAttempt(args: {
   const pinned = await pinnedFactsFor(admin, assignment);
   if (!pinned) throw new McqStartError('no_version');
 
-  const [ctx, variants, seen, passScore] = await Promise.all([
+  const [ctx, variants, useCounts, passScore] = await Promise.all([
     loadRenderContext(admin, assignmentFacts(pinned.snapshot, pinned.role)),
     listVariants(admin),
-    seenVariantIds(admin, args.userId),
+    variantUseCounts(admin, args.userId),
     getPolicy('mcq_pass_score'),
   ]);
   const seed = `${args.userId}:mcq:${Date.now()}`;
-  const { questions, missing } = buildAttemptQuestions(variants, ctx, seed, seen);
+  const { questions, missing } = buildAttemptQuestions(variants, ctx, seed, useCounts);
   if (missing.length > 0) {
     await reportRenderFailures(admin, assignment.dbd_record_id, missing);
     throw new McqStartError(

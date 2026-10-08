@@ -5,7 +5,7 @@ import { seedDetailedInterviewResult, seedLearnerWithCompleteCompany } from './s
 
 test('the staff readiness result summarizes the outcome and lists all answer cards', async ({
   page,
-}) => {
+}, testInfo) => {
   const company = `บริษัท ผลสัมภาษณ์ ${Date.now()} จำกัด`;
   const learner = await seedLearnerWithCompleteCompany(company);
   const sessionId = await seedDetailedInterviewResult(learner);
@@ -32,13 +32,13 @@ test('the staff readiness result summarizes the outcome and lists all answer car
   expect(overflow).toBeLessThanOrEqual(0);
 
   await page.screenshot({
-    path: 'artifacts/design-qa/interview-result-desktop.png',
+    path: testInfo.outputPath('interview-result-desktop.png'),
     fullPage: true,
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByTestId('interview-result-question')).toHaveCount(4);
   await page.screenshot({
-    path: 'artifacts/design-qa/interview-result-mobile.png',
+    path: testInfo.outputPath('interview-result-mobile.png'),
     fullPage: true,
   });
 });

@@ -15,6 +15,11 @@ test('a learner reads a card in three languages, progress is recorded, Thai read
     en: { title: 'Test lesson', body: '# Heading\n\nThe **important** content' },
     zh: { title: '测试课程', body: '# 标题\n\n**重要**内容' },
   });
+  const missingChineseKey = `e2e-no-zh-${stamp}`;
+  await seedLocalizedStudyCard(missingChineseKey, {
+    th: { title: 'บทเรียนไม่มีภาษาจีน', body: 'เนื้อหาภาษาไทย' },
+    en: { title: 'Lesson without Chinese', body: 'English content' },
+  });
 
   const learner = await seedLearnerWithCompany('บริษัท เรียนรู้ จำกัด', '2026-07-13');
   await loginAs(page, learner, E2E_PASSWORD);
@@ -41,10 +46,10 @@ test('a learner reads a card in three languages, progress is recorded, Thai read
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-study-status')).toHaveText('กำลังดำเนินการ');
 
-  // Chinese version exists for this card, but the seeded sample without zh shows the controlled state.
+  // Chinese exists for the first card; a deliberately incomplete card shows the controlled state.
   await page.goto('/zh/study');
-  await expect(page.getByTestId('study-item-sample-bank-visit')).toContainText('此语言暂无内容');
-  await page.goto('/zh/study/sample-bank-visit');
+  await expect(page.getByTestId(`study-item-${missingChineseKey}`)).toContainText('此语言暂无内容');
+  await page.goto(`/zh/study/${missingChineseKey}`);
   await expect(page.getByTestId('study-not-available')).toBeVisible();
 });
 
@@ -64,12 +69,16 @@ test('study is done once every card is opened', async ({ page }) => {
 
 test("a card not written in the reader's language is not waited for", async ({ page }) => {
   const learner = await seedLearnerWithCompany('บริษัท อ่านภาษาจีน จำกัด', '2026-07-13');
-  // Every card that has Chinese is opened; the seeded sample has none, so it is not.
+  await seedLocalizedStudyCard(`e2e-th-en-only-${Date.now()}`, {
+    th: { title: 'บทเรียนเฉพาะไทย', body: 'เนื้อหาภาษาไทย' },
+    en: { title: 'Thai and English only', body: 'English content' },
+  });
+  // Every card that has Chinese is opened; the deliberately incomplete card is not.
   await seedAllCardsViewed(learner, 'zh');
   await loginAs(page, learner, E2E_PASSWORD);
   await page.goto('/zh/dashboard');
   await expect(page.getByTestId('stage-study-status')).toHaveText('已完成');
-  // In Thai the sample can be opened, and it is not yet.
+  // In Thai the incomplete card can be opened, and it is not yet.
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-study-status')).toHaveText('กำลังดำเนินการ');
 });
@@ -77,7 +86,7 @@ test("a card not written in the reader's language is not waited for", async ({ p
 test('read-aloud is refused for content that is not approved for TTS', async ({ page }) => {
   const learner = await seedLearnerWithCompany('บริษัท ไม่มีเสียง จำกัด', '2026-07-13');
   await loginAs(page, learner, E2E_PASSWORD);
-  // sample-company-facts has tts_enabled on Thai; request a bogus material id instead.
+  // Request a bogus material id so no approved Thai TTS localization exists.
   const response = await page.request.get('/api/tts?material=00000000-0000-4000-8000-000000000000');
   expect(response.status()).toBe(404);
   expect(await response.json()).toEqual({ error: 'not_available' });

@@ -4,6 +4,7 @@ import { CheckIcon } from '@/components/icons';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
+import { readinessItem } from '@/lib/domain/interview/plan';
 import type { Verdict, VerdictReason } from '@/lib/domain/interview/types';
 import type { ChatTurn } from '../actions';
 
@@ -69,9 +70,11 @@ export async function Debrief({
   // What the learner came to find out, in plain words (Owner, 2026-10-02): can they open the
   // account or not. The chip, the officer's narrative and the answers below explain why.
   const label = (concept: string) =>
-    concept === 'juristic_id'
-      ? t('concept.juristic_id')
-      : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale] ?? concept);
+    focusedReview && readinessItem(concept)
+      ? readinessItem(concept)!.question[locale]
+      : concept === 'juristic_id'
+        ? t('concept.juristic_id')
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale] ?? concept);
 
   return (
     <div className="mx-auto grid max-w-[780px] gap-6">

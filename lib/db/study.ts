@@ -160,35 +160,56 @@ export async function getMyStudyProgress(db: Db, userId: string): Promise<StudyP
   return data;
 }
 
-/** Loads the bank-interview starter cards (decision D39); existing keys are left untouched. */
+const LEGACY_SAMPLE_CARD_KEYS = [
+  'sample-dbd-certificate',
+  'sample-company-facts',
+  'sample-bank-visit',
+] as const;
+
+/** Loads the five approved cards, refreshes existing copies, and retires the old sample set. */
 export async function loadStarterCards(
   db: Db,
   cards: StarterCard[],
   createdBy: string,
 ): Promise<{ created: string[]; skipped: string[] }> {
-  const existing = new Set((await listStudyMaterials(db)).map((m) => m.content_key));
+  const { error: retireError } = await db
+    .from('study_materials')
+    .update({ active: false })
+    .in('content_key', [...LEGACY_SAMPLE_CARD_KEYS]);
+  if (retireError) throw retireError;
+
+  const existing = new Map((await listStudyMaterials(db)).map((m) => [m.content_key, m]));
   const created: string[] = [];
   const skipped: string[] = [];
   for (const card of cards) {
-    if (existing.has(card.contentKey)) {
+    const current = existing.get(card.contentKey);
+    let materialId: string;
+    if (current) {
+      await updateStudyMaterial(db, current.id, {
+        type: 'card',
+        sortOrder: card.sortOrder,
+        active: true,
+      });
+      materialId = current.id;
       skipped.push(card.contentKey);
-      continue;
+    } else {
+      const material = await createStudyMaterial(
+        db,
+        { contentKey: card.contentKey, type: 'card', sortOrder: card.sortOrder, active: true },
+        createdBy,
+      );
+      materialId = material.id;
+      created.push(card.contentKey);
     }
-    const material = await createStudyMaterial(
-      db,
-      { contentKey: card.contentKey, type: 'card', sortOrder: card.sortOrder, active: true },
-      createdBy,
-    );
     for (const language of Object.keys(card.localizations) as AppLocale[]) {
       const loc = card.localizations[language];
-      await upsertLocalization(db, material.id, {
+      await upsertLocalization(db, materialId, {
         language,
         title: loc.title,
         body: loc.body,
         ttsEnabled: false,
       });
     }
-    created.push(card.contentKey);
   }
   return { created, skipped };
 }

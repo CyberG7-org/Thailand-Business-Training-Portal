@@ -131,6 +131,29 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
       my_shares: 0,
       my_share_percent: 0,
     });
+    expect(templateRecordFromSnapshot(snapshot, outsider)).toMatchObject({
+      my_shares: 0,
+      my_share_percent: 0,
+    });
+    expect(
+      templateRecordFromRecord(
+        { ...record, structured_data: structured },
+        { ...role, holder_name: 'บุคคลภายนอก' },
+      ),
+    ).toMatchObject({ my_shares: 0, my_share_percent: 0 });
+  });
+
+  it('removes a website claim when projecting an older snapshot with no website', () => {
+    const snapshot = buildTrainingSnapshot({ record, structured, address: null });
+    const oldSnapshot = {
+      ...snapshot,
+      facts: {
+        ...snapshot.facts,
+        client_origin: 'Facebook, TikTok และเว็บไซต์',
+      },
+      extras: { ...snapshot.extras, website: null },
+    };
+    expect(assignmentFacts(oldSnapshot, null).client_origin).not.toContain('เว็บไซต์');
   });
 
   it('renders the same template record from the snapshot as from the live record', () => {

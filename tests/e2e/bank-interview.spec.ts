@@ -86,6 +86,9 @@ test('starter cards, interview answers and the learner role combine into a perso
   // the session rather than racing a sign-out click, since the login page sends a signed-in
   // visitor away.
   await switchTo(page, learner, E2E_PASSWORD);
+  await page.goto('/th/study');
+  await expect(page.locator('[data-testid^="study-item-bank-interview-"]')).toHaveCount(5);
+  await expect(page.locator('[data-testid^="study-item-sample-"]')).toHaveCount(0);
   await page.goto('/th/study/bank-interview-2-ownership');
   const body = page.getByTestId('study-body');
   await expect(body).toContainText('1,000,000 บาท');

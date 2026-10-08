@@ -1,4 +1,5 @@
 import { BANK_INTERVIEW_CONCEPTS, type BankInterviewConcept } from '@/lib/domain/bank-interview';
+import type { AppLocale } from '@/i18n/routing';
 import type {
   Assessment,
   CloseReason,
@@ -23,63 +24,129 @@ const GROUP_ORDER = ['identity', 'ownership', 'business_plan', 'personal'] as co
 const MAX_PROBING = 4;
 export const READINESS_PASS_SCORE = 9;
 
-const READINESS_ITEMS: readonly {
+export type ReadinessItemDefinition = {
   concept: ConceptId;
-  question: string;
+  question: Record<AppLocale, string>;
   facts: string[];
-}[] = [
-  { concept: 'company_name', question: 'บริษัทชื่อเต็มว่าอะไรคะ', facts: ['company_name_th'] },
+  cardKey: string;
+};
+
+export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
+  {
+    concept: 'company_name',
+    question: {
+      th: 'บริษัทชื่อเต็มว่าอะไรคะ',
+      en: 'What is the company’s full name?',
+      zh: '公司的全名是什么？',
+    },
+    facts: ['company_name_th'],
+    cardKey: 'bank-interview-1-identity',
+  },
   {
     concept: 'registration_number',
-    question: 'เลขทะเบียนนิติบุคคลของบริษัทคืออะไรคะ',
+    question: {
+      th: 'เลขทะเบียนนิติบุคคลของบริษัทคืออะไรคะ',
+      en: 'What is the company registration number?',
+      zh: '公司的注册号是什么？',
+    },
     facts: ['juristic_id'],
+    cardKey: 'bank-interview-1-identity',
   },
   {
     concept: 'registered_address',
-    question: 'ที่อยู่จดทะเบียนของบริษัทอยู่ที่ไหนคะ',
+    question: {
+      th: 'ที่อยู่จดทะเบียนของบริษัทอยู่ที่ไหนคะ',
+      en: 'What is the company’s registered address?',
+      zh: '公司的注册地址在哪里？',
+    },
     facts: ['head_office_address'],
+    cardKey: 'bank-interview-1-identity',
   },
   {
     concept: 'actual_business',
-    question: 'บริษัททำธุรกิจอะไรจริงคะ',
+    question: {
+      th: 'บริษัททำธุรกิจอะไรจริงคะ',
+      en: 'What does the company actually do?',
+      zh: '公司实际经营什么业务？',
+    },
     facts: ['nature_of_business'],
+    cardKey: 'bank-interview-3-business',
   },
   {
     concept: 'products_services',
-    question: 'บริษัทขายสินค้าหรือบริการอะไรคะ',
+    question: {
+      th: 'บริษัทขายสินค้าหรือบริการอะไรคะ',
+      en: 'What products or services does the company sell?',
+      zh: '公司销售哪些产品或服务？',
+    },
     facts: ['products_services'],
+    cardKey: 'bank-interview-3-business',
   },
   {
     concept: 'authorized_representative',
-    question: 'ใครมีอำนาจลงนามแทนบริษัทคะ',
+    question: {
+      th: 'ใครมีอำนาจลงนามแทนบริษัทคะ',
+      en: 'Who can sign for the company?',
+      zh: '谁有权代表公司签字？',
+    },
     facts: ['directors', 'signing_authority'],
+    cardKey: 'bank-interview-1-identity',
   },
   {
     concept: 'attendee_identity',
-    question: 'กรุณาบอกชื่อและตำแหน่งของคุณในบริษัทค่ะ',
+    question: {
+      th: 'กรุณาบอกชื่อและตำแหน่งของคุณในบริษัทค่ะ',
+      en: 'What is your name and position in the company?',
+      zh: '请说出您在公司的姓名和职位。',
+    },
     facts: ['my_name', 'my_position'],
+    cardKey: 'bank-interview-2-ownership',
   },
   {
     concept: 'registration_date',
-    question: 'บริษัทจดทะเบียนเมื่อวันที่เท่าไรคะ',
+    question: {
+      th: 'บริษัทจดทะเบียนเมื่อวันที่เท่าไรคะ',
+      en: 'When was the company registered?',
+      zh: '公司是什么时候注册的？',
+    },
     facts: ['registered_on'],
+    cardKey: 'bank-interview-1-identity',
   },
   {
     concept: 'account_purpose',
-    question: 'บริษัทต้องการเปิดบัญชีนี้เพื่ออะไรคะ',
+    question: {
+      th: 'บริษัทต้องการเปิดบัญชีนี้เพื่ออะไรคะ',
+      en: 'Why does the company need this bank account?',
+      zh: '公司为什么需要这个银行账户？',
+    },
     facts: ['account_purpose'],
+    cardKey: 'bank-interview-4-role',
   },
   {
     concept: 'customer_profile',
-    question: 'ลูกค้าหลักของบริษัทเป็นใครคะ',
+    question: {
+      th: 'ลูกค้าหลักของบริษัทเป็นใครคะ',
+      en: 'Who are the company’s main customers?',
+      zh: '公司的主要客户是谁？',
+    },
     facts: ['customer_profile'],
+    cardKey: 'bank-interview-3-business',
   },
   {
     concept: 'transaction_details',
-    question: 'บริษัทจะรับและจ่ายเงินอย่างไรคะ',
+    question: {
+      th: 'บริษัทจะรับและจ่ายเงินอย่างไรคะ',
+      en: 'How will the company receive and pay money?',
+      zh: '公司将如何收款和付款？',
+    },
     facts: ['transaction_details'],
+    cardKey: 'bank-interview-4-role',
   },
 ];
+
+export function readinessItem(concept: ConceptId): ReadinessItemDefinition | null {
+  return READINESS_ITEMS.find((item) => item.concept === concept) ?? null;
+}
 
 const JURISTIC_ITEM: Omit<PlanItem, 'expected' | 'attempts'> = {
   concept: JURISTIC_ID_CONCEPT,
@@ -134,7 +201,7 @@ export function buildReadinessPlan(facts: FactSheet): InterviewPlan {
       concept: definition.concept,
       phase: 'facts' as const,
       core: false,
-      question: definition.question,
+      question: definition.question.th,
       // Keep the frozen rubric answer short enough to practise in one learner message even when
       // a source document contains a very long address or business description.
       expected: (expectedFor(definition.facts, facts) ?? '').slice(0, 800),
@@ -145,6 +212,26 @@ export function buildReadinessPlan(facts: FactSheet): InterviewPlan {
 
 export function isReadinessPlan(plan: InterviewPlan): boolean {
   return plan.version === 2;
+}
+
+export function nextReadinessStep(
+  plan: InterviewPlan,
+  assessment: Assessment | null,
+): {
+  next: { concept: ConceptId } | { close: 'plan_complete' };
+  kind: 'follow_up' | 'next' | 'complete';
+} {
+  const item = currentItem(plan);
+  if (!isReadinessPlan(plan) || !item) {
+    return { next: { close: 'plan_complete' }, kind: 'complete' };
+  }
+  if (assessment?.verdict !== 'correct' && item.attempts < 1) {
+    return { next: { concept: item.concept }, kind: 'follow_up' };
+  }
+  const following = plan.items[plan.cursor + 1];
+  return following
+    ? { next: { concept: following.concept }, kind: 'next' }
+    : { next: { close: 'plan_complete' }, kind: 'complete' };
 }
 
 /** What the risk officer comes back to: anything short of correct, worst first, at most four. */

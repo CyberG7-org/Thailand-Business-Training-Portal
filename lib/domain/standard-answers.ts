@@ -42,6 +42,14 @@ export const FIXED_ANSWERS = {
     'เงินค่าหุ้นที่ผู้ถือหุ้นชำระ เพื่อใช้เป็นเงินทุนเริ่มต้นและเงินหมุนเวียนของกิจการ',
 } as const satisfies Partial<Record<StandardAnswerField, string>>;
 
+const CLIENT_ORIGIN_WITHOUT_WEBSITE =
+  'หาลูกค้าผ่านช่องทางออนไลน์ ได้แก่ Facebook และ TikTok รวมถึงการแนะนำจากลูกค้าเดิมและลูกค้าที่เข้ามาที่ร้าน';
+
+/** Website is mentioned only when the uploaded company pack actually supplied one. */
+export function clientOriginAnswer(hasWebsite: boolean): string {
+  return hasWebsite ? FIXED_ANSWERS.client_origin : CLIENT_ORIGIN_WITHOUT_WEBSITE;
+}
+
 const PAYMENT = 'ลูกค้าชำระด้วยการโอนเงินผ่านธนาคารและ PromptPay / QR';
 /** The company status is always yes (D91); the earlier free-text answer says the same. */
 const OPERATING = 'เริ่มดำเนินธุรกิจแล้ว';
@@ -88,7 +96,7 @@ const show = (n: number) => n.toLocaleString('en-US');
  */
 export function withStandardAnswers(
   profile: InterviewProfile,
-  context: { address: string | null },
+  context: { address: string | null; website?: string | null },
 ): InterviewProfile {
   const revenue = firstAmount(profile.monthly_revenue);
   const average = firstAmount(profile.average_transaction);
@@ -113,6 +121,7 @@ export function withStandardAnswers(
     transaction_details:
       average !== null ? `${PAYMENT} เฉลี่ยรายการละประมาณ ${show(average)} บาท` : PAYMENT,
     ...FIXED_ANSWERS,
+    client_origin: clientOriginAnswer(Boolean(context.website?.trim())),
     monthly_volume: profile.monthly_volume ?? profile.monthly_revenue,
     clients_location: profile.clients_location ?? FIXED_ANSWERS.customer_profile,
     suppliers_location: profile.suppliers_location ?? FIXED_ANSWERS.main_suppliers,

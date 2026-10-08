@@ -1,10 +1,10 @@
--- Development/pilot seed: three fictional sample study cards so the portal has content on day one.
--- Replace with the owner's approved material through /admin/content. Contains no real data.
+-- Archived development samples. They remain available for historical references but are inactive;
+-- `pnpm content:starter` loads the five approved learner cheat sheets. Contains no real data.
 
 insert into public.study_materials (id, content_key, type, sort_order, active) values
-  ('11111111-1111-4111-8111-111111111101', 'sample-dbd-certificate', 'card', 10, true),
-  ('11111111-1111-4111-8111-111111111102', 'sample-company-facts', 'card', 20, true),
-  ('11111111-1111-4111-8111-111111111103', 'sample-bank-visit', 'card', 30, true)
+  ('11111111-1111-4111-8111-111111111101', 'sample-dbd-certificate', 'card', 10, false),
+  ('11111111-1111-4111-8111-111111111102', 'sample-company-facts', 'card', 20, false),
+  ('11111111-1111-4111-8111-111111111103', 'sample-bank-visit', 'card', 30, false)
 on conflict (content_key) do nothing;
 
 insert into public.study_material_localizations (material_id, language, title, body, tts_enabled) values
