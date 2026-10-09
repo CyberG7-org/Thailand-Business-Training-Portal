@@ -238,14 +238,6 @@ export async function InterviewSessionView({
             </dl>
           </div>
 
-          {summary?.narrative && (
-            <div className="border-t border-brand-100 bg-brand-50/60 px-5 py-3 md:px-6">
-              <p className="text-xs font-medium text-ink-500">{t('narrative')}</p>
-              <p lang="th" className="mt-1 text-sm leading-6 text-ink-700">
-                {summary.narrative}
-              </p>
-            </div>
-          )}
         </section>
 
         <SessionResultTranscript

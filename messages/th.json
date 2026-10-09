@@ -1299,7 +1299,7 @@
     "status": {
       "locked": "ล็อก",
       "pending": "รอดำเนินการ",
-      "available": "พร้อมใช้งาน",
+      "available": "เริ่ม",
       "in_progress": "กำลังดำเนินการ",
       "done": "เสร็จสิ้น"
     },
@@ -1403,7 +1403,8 @@
     "allDone": "อ่านครบทุกบทเรียนแล้ว",
     "cardOf": "บทเรียนที่ {n} จาก {total}",
     "nextCard": "บทเรียนที่ {n}: {title}",
-    "previousCard": "บทเรียนก่อนหน้า ({n})"
+    "previousCard": "บทเรียนก่อนหน้า ({n})",
+    "attendQuiz": "ทำแบบทดสอบ"
   },
   "quiz": {
     "title": "แบบฝึกหัด",

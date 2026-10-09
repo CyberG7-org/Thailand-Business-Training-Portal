@@ -16,9 +16,9 @@ test('a new learner sees the company, the first step current, and the interview 
   await expect(page.getByTestId('hero-kicker')).toContainText('บริษัท แดชบอร์ดใหม่ จำกัด');
   await expect(page.getByRole('img', { name: 'เสร็จแล้ว 0 จาก 4 ขั้นตอน' })).toBeVisible();
 
-  await expect(page.getByTestId('stepper')).toBeHidden();
+  await expect(page.getByTestId('stepper')).toHaveCount(0);
   await expect(page.getByTestId('dashboard-steps').locator('[aria-current="step"]')).toHaveText(
-    /เอกสารเรียนรู้/,
+    /ศึกษา/,
   );
   await expect(page.getByRole('link', { name: 'ไปที่เอกสารเรียนรู้' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'ดูผลล่าสุด' })).toHaveCount(0);
@@ -42,7 +42,7 @@ test('after a passed exam the interview becomes current and company details foll
   await loginAs(page, loginId, E2E_PASSWORD);
   // The name card is standalone (D88): the next step after the quiz is the interview.
   await expect(page.getByTestId('dashboard-steps').locator('[aria-current="step"]')).toHaveText(
-    /สัมภาษณ์ความพร้อมกับธนาคาร/,
+    /สัมภาษณ์/,
   );
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
   await expect(page.getByTestId('interview-status')).toHaveText('ยังไม่ได้เริ่ม');
@@ -88,8 +88,22 @@ test('the dashboard fits a phone with four direct training actions', async ({ pa
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await loginAs(page, loginId, E2E_PASSWORD);
-  await expect(page.getByTestId('stepper')).toContainText('ศึกษา');
+  await expect(page.getByTestId('stepper')).toHaveCount(0);
   await expect(page.locator('[data-mobile-action="true"]')).toHaveCount(4);
+  expect(
+    await page
+      .getByTestId('dashboard-steps')
+      .locator('li')
+      .evaluateAll((items) => items.map((item) => item.getAttribute('data-testid'))),
+  ).toEqual(['stage-study', 'stage-nameCard', 'stage-exam', 'stage-interview']);
+  for (const [stage, number] of [
+    ['study', '1'],
+    ['nameCard', '2'],
+    ['exam', '3'],
+    ['interview', '4'],
+  ]) {
+    await expect(page.getByTestId(`stage-${stage}`)).toContainText(number);
+  }
   await expect(page.getByTestId('stage-study').getByRole('link', { name: 'เปิด' })).toBeVisible();
   await expect(page.getByTestId('stage-open-chevron').first()).toBeHidden();
   await expect(page.getByTestId('stage-appointment')).toBeHidden();
@@ -99,7 +113,10 @@ test('the dashboard fits a phone with four direct training actions', async ({ pa
   await expect(page.getByTestId('company-detail-directors')).toContainText('นางสาวตัวอย่าง ทดสอบ');
   await expect(page.getByTestId('company-detail-shareholders')).toContainText('85%');
   await expect(page.getByTestId('company-detail-objectives')).toContainText('2 รายการ');
-  await expect(page.getByTestId('company-products')).toContainText('ซื้อ ขาย จัดหา');
+  await expect(page.getByTestId('company-products')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /เปิดหนังสือรับรอง|Open certificate/i })).toHaveCount(
+    0,
+  );
   await expect(page.getByTestId('company-detail-facebook')).toBeVisible();
   await expect(page.getByTestId('company-detail-website')).toHaveCount(0);
   const overflow = await page.evaluate(

@@ -3,7 +3,7 @@ import { LearnerShell } from '@/components/shell/learner-shell';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
-import { createMyDocumentSignedUrl, getMyCompany, latestSubmittedExam } from '@/lib/db/learner';
+import { getMyCompany, latestSubmittedExam } from '@/lib/db/learner';
 import { refreshNameCard } from '@/lib/db/name-cards';
 import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
@@ -21,7 +21,6 @@ import { CompanyCard, type CompanyDetail } from './company-card';
 import { Hero } from './hero';
 import { ProgressCard } from './progress-card';
 import { STAGE_ROUTES, type StageRow } from './stage-row';
-import { Stepper } from './stepper';
 import { StepsList } from './steps-list';
 
 const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
@@ -96,7 +95,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   );
 
   const record = mine?.dbd_records ?? null;
-  const documentUrl = record ? await createMyDocumentSignedUrl(user.id, record.id) : null;
   // The company as the learner is trained on it: the pinned version (D75), or the live row
   // while the record has no version yet. What it does and sells is the manager's answer, not a
   // certificate fact (Level 4).
@@ -193,20 +191,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           icon: 'nature',
           testId: 'company-nature',
         },
-        {
-          label: t('company.businessActivities', { count: company.objectives.length }),
-          value: company.objectives.length ? (
-            <ol className="list-decimal space-y-1 pl-5">
-              {company.objectives.map((objective, index) => (
-                <li key={`${objective.no ?? index}-${objective.text}`}>{objective.text}</li>
-              ))}
-            </ol>
-          ) : (
-            (company.products_services ?? '—')
-          ),
-          icon: 'activities',
-          testId: 'company-products',
-        },
       ]
     : [];
   if (company?.website) {
@@ -243,11 +227,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           {progress}
         </Hero>
       }
-      bandFooter={
-        <div className="md:hidden">
-          <Stepper rows={rows} />
-        </div>
-      }
     >
       <div className="mx-auto grid w-full max-w-[1240px] gap-6 md:gap-8">
         <StepsList
@@ -269,8 +248,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
               tag: t('company.tag'),
               juristicId: t('company.juristicId'),
               registeredCapital: t('company.registeredCapital'),
-              openCertificate: t('company.openCertificate'),
-              viewRecord: t('company.viewRecord'),
             }}
             nameTh={company.name_th ?? '—'}
             nameEn={company.name_en}
@@ -281,7 +258,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
                 : `${Number(company.registered_capital).toLocaleString(NUMBER_LOCALES[loc])} ${t('company.baht')}`
             }
             details={companyDetails}
-            documentUrl={documentUrl}
           />
         )}
       </div>

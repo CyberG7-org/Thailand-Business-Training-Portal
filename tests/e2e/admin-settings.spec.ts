@@ -33,7 +33,7 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
     await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
 
     await loginAs(page, learner, E2E_PASSWORD);
-    await expect(page.getByTestId('stage-interview-status')).toHaveText('พร้อมใช้งาน');
+    await expect(page.getByTestId('stage-interview-status')).toHaveText('เริ่ม');
   } finally {
     await setPolicy('require_exam_pass_for_interview', true);
   }

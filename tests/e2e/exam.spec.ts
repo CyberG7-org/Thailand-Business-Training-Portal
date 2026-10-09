@@ -48,7 +48,7 @@ test('the quiz says what it is, marks each answer at once, and a pass is notifie
   await seedApprovedBank();
   const learner = await seedQuizReadyLearner(`บริษัท แบบทดสอบ ${Date.now()} จำกัด`);
   await loginAs(page, learner, E2E_PASSWORD);
-  await expect(page.getByTestId('stage-exam-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-exam-status')).toHaveText('เริ่ม');
   await page.getByTestId('stage-exam').getByRole('link', { name: 'เปิด' }).click();
 
   // What the quiz is, before it starts (the Owner's point 1).
@@ -173,7 +173,7 @@ test('27 correct passes without mandatory questions; below 27 keeps practising',
   await expect(page.getByTestId('exam-attempt-summary-1')).toHaveText('ครั้งที่ 1: 29 / 30');
   await expect(page.getByTestId('exam-attempt-summary-2')).toHaveText('ครั้งที่ 2: 25 / 30');
   await page.goto('/th/dashboard');
-  await expect(page.getByTestId('stage-interview-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-interview-status')).toHaveText('เริ่ม');
 });
 
 test('a company the bank cannot ask does not start the quiz, and its record says why', async ({

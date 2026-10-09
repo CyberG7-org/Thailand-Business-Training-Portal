@@ -4,10 +4,8 @@ import {
   CalendarDotsIcon,
   CoinsIcon,
   FacebookLogoIcon,
-  FileTextIcon,
   GlobeIcon,
   IdentificationCardIcon,
-  ListChecksIcon,
   MapPinIcon,
   TargetIcon,
   UserIcon,
@@ -17,7 +15,6 @@ import type { ReactNode } from 'react';
 
 type DetailIcon =
   | 'address'
-  | 'activities'
   | 'date'
   | 'directors'
   | 'facebook'
@@ -31,8 +28,6 @@ type Labels = {
   tag: string;
   juristicId: string;
   registeredCapital: string;
-  openCertificate: string;
-  viewRecord: string;
 };
 
 export type CompanyDetail = {
@@ -52,7 +47,6 @@ function DetailMark({ icon }: { icon: DetailIcon }) {
   if (icon === 'shareholders') return <UsersThreeIcon {...props} />;
   if (icon === 'objectives') return <TargetIcon {...props} />;
   if (icon === 'nature') return <BuildingsIcon {...props} />;
-  if (icon === 'activities') return <ListChecksIcon {...props} />;
   if (icon === 'website') return <GlobeIcon {...props} />;
   return <FacebookLogoIcon {...props} />;
 }
@@ -65,7 +59,6 @@ export function CompanyCard({
   juristicId,
   registeredCapital,
   details,
-  documentUrl,
 }: {
   labels: Labels;
   nameTh: string;
@@ -73,7 +66,6 @@ export function CompanyCard({
   juristicId: string;
   registeredCapital: string;
   details: CompanyDetail[];
-  documentUrl: string | null;
 }) {
   return (
     <section
@@ -131,11 +123,7 @@ export function CompanyCard({
         <dl className="flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-3 xl:grid-cols-3">
           {details.map((detail) => {
             const span =
-              detail.icon === 'activities'
-                ? 'md:col-span-2 xl:col-span-3'
-                : detail.icon === 'address' || detail.icon === 'nature'
-                  ? 'md:col-span-2 xl:col-span-2'
-                  : '';
+              detail.icon === 'address' || detail.icon === 'nature' ? 'md:col-span-2' : '';
             return (
               <div
                 key={detail.label}
@@ -167,19 +155,6 @@ export function CompanyCard({
             );
           })}
         </dl>
-
-        {documentUrl && (
-          <a
-            href={documentUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-11 items-center justify-center gap-2 rounded-control bg-brand-600 text-base font-medium text-white transition-colors hover:bg-brand-700 md:self-start md:px-6"
-          >
-            <FileTextIcon className="size-5" weight="duotone" />
-            <span className="md:hidden">{labels.viewRecord}</span>
-            <span className="hidden md:inline">{labels.openCertificate}</span>
-          </a>
-        )}
       </div>
     </section>
   );

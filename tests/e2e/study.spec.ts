@@ -23,7 +23,7 @@ test('a learner reads a card in three languages, progress is recorded, Thai read
 
   const learner = await seedLearnerWithCompany('บริษัท เรียนรู้ จำกัด', '2026-07-13');
   await loginAs(page, learner, E2E_PASSWORD);
-  await expect(page.getByTestId('stage-study-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-study-status')).toHaveText('เริ่ม');
   await page.getByTestId('stage-study').getByRole('link', { name: 'เปิด' }).click();
   await expect(page).toHaveURL(/\/th\/study$/);
   await expect(page.getByTestId(`study-state-${key}`)).toHaveText('ใหม่');

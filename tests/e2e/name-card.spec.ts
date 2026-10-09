@@ -54,7 +54,7 @@ test('a card waits for the record and the phone, and says what is missing', asyn
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
   const noPhone = await seedLearnerWithCompany('บริษัท ไม่มีเบอร์ จำกัด', '2026-07-13', ADDRESS);
   await loginAs(page, noPhone, E2E_PASSWORD);
-  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เริ่ม');
   await page.goto('/th/name-card');
   await expect(page.getByTestId('card-blocked')).toContainText('ยังไม่มีเบอร์มือถือของคุณ');
 });

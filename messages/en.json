@@ -1299,7 +1299,7 @@
     "status": {
       "locked": "Locked",
       "pending": "Pending",
-      "available": "Available",
+      "available": "Start",
       "in_progress": "In progress",
       "done": "Done"
     },
@@ -1317,7 +1317,7 @@
       "study": "Study",
       "quiz": "Practice",
       "exam": "Quiz",
-      "nameCard": "Card",
+      "nameCard": "Namecard",
       "interview": "Interview",
       "appointment": "Booking"
     }
@@ -1403,7 +1403,8 @@
     "allDone": "All cards done",
     "cardOf": "Card {n} of {total}",
     "nextCard": "Card {n}: {title}",
-    "previousCard": "Previous card ({n})"
+    "previousCard": "Previous card ({n})",
+    "attendQuiz": "Attend the Quiz"
   },
   "quiz": {
     "title": "Practice quiz",

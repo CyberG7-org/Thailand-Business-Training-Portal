@@ -198,6 +198,11 @@
       "date": "2026-10-09",
       "decision": "Every primary learner page shows Home, Study, Quiz, Readiness, and Name card in one fixed row. The active page stays visible, mobile tabs use text without icons, and study cards have previous and next links.",
       "reason": "Learners need to move directly between sections and return to the preceding study card without horizontal navigation scrolling. The existing tab component and portal tokens were reused; the 21st.dev catalog search was unavailable (HTTP 401)."
+    },
+    {
+      "date": "2026-10-09",
+      "decision": "The learner and manager interview results use the same summary and question-answer composition without the officer narrative. Dashboard modules keep Study, Name card, Quiz, Interview order on phones and desktop, with numbered mobile tiles and no mobile stepper. Company cards omit the activities list and certificate link.",
+      "reason": "The supplied screenshots ask for consistent results and module placement while reducing duplicate detail. The existing portal components and tokens were reused after the 21st.dev catalog search returned HTTP 401."
     }
   ],
   "evidence": [

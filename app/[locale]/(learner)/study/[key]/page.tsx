@@ -277,6 +277,16 @@ export default async function StudyMaterialPage({
                   <ArrowIcon />
                 </Link>
               )}
+              {!next && (
+                <Link
+                  data-testid="study-attend-quiz"
+                  href="/exam"
+                  className="ml-auto inline-flex min-h-12 items-center justify-center rounded-control bg-brand-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+                >
+                  {t('attendQuiz')}
+                  <ArrowIcon />
+                </Link>
+              )}
             </footer>
           )}
         </article>

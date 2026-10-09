@@ -1299,7 +1299,7 @@
     "status": {
       "locked": "已锁定",
       "pending": "待定",
-      "available": "可用",
+      "available": "开始",
       "in_progress": "进行中",
       "done": "已完成"
     },
@@ -1403,7 +1403,8 @@
     "allDone": "所有卡片已完成",
     "cardOf": "第 {n} 张，共 {total} 张",
     "nextCard": "第 {n} 张：{title}",
-    "previousCard": "上一张卡片（{n}）"
+    "previousCard": "上一张卡片（{n}）",
+    "attendQuiz": "参加测验"
   },
   "quiz": {
     "title": "练习测验",

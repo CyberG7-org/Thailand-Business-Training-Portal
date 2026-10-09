@@ -17,8 +17,8 @@ test('a learner sees their company with the interview locked and no appointment 
   await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
   // The dashboard contains the four learner-owned stages; practice and booking stay elsewhere.
   await expect(page.getByTestId('stage-quiz')).toHaveCount(0);
-  await expect(page.getByTestId('stage-study-status')).toHaveText('พร้อมใช้งาน');
-  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('พร้อมใช้งาน');
+  await expect(page.getByTestId('stage-study-status')).toHaveText('เริ่ม');
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เริ่ม');
 });
 
 test('a learner whose certificate has no issue date still sees the pending reason on the company card', async ({

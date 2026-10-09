@@ -41,6 +41,9 @@ test('a card shows its place in the list, leads to the next card, and the list r
     'data-state',
     'done',
   );
+  await page.goto('/th/study');
+  await page.locator('[data-testid^="study-item-"]').last().click();
+  await expect(page.getByTestId('study-attend-quiz')).toHaveAttribute('href', '/th/exam');
 });
 
 test('under "completed" tracking the footer marks the card done', async ({ page }) => {
