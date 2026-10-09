@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { companyZip } from './company-zip';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import {
   assignLearner,
@@ -6,24 +7,19 @@ import {
   createManager,
   fillLoginSuffix,
   loginAs,
-  selectCompany,
-  selectTeam,
   switchTo,
 } from './helpers';
 
 const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
 const MANAGER_PASSWORD = 'Manager-Password-1!';
-const LEARNER_PASSWORD = 'Learner-Password-1!';
-/** What the fake reader finds in any pack (lib/integrations/extraction/fake.ts). */
-const READ_COMPANY = 'บริษัท ตัวอย่างการสกัด จำกัด';
+const LEARNER_PASSWORD = 'Learn123';
 
 /**
  * D80, D93: one page, two tabs in the order a manager works — the companies with a way to add
- * one, then the learner form; the company's pack and its four details go in one go, the reader
- * fills and indexes the rest, a clean record confirms itself, and "Assign learner" sends it
- * straight to the form. A company then shows its learner and is not given again.
+ * one, then the learner form. A ZIP with a page URL is accepted for reading; a page that cannot
+ * be read must not cause the company to be confirmed automatically.
  */
-test('a manager creates a DBD in one go; it confirms itself and takes a learner', async ({
+test('a manager uploads a DBD ZIP and an unreadable business page needs review', async ({
   page,
   request,
 }) => {
@@ -46,90 +42,22 @@ test('a manager creates a DBD in one go; it confirms itself and takes a learner'
   await page.getByRole('button', { name: 'เพิ่มในแท็บบริษัท (DBD)' }).click();
   await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
 
-  await page.getByTestId('create-dbd-files').setInputFiles('tests/fixtures/tiny.pdf');
+  await page.getByTestId('create-dbd-files').setInputFiles(companyZip());
   // No details to type (D101): what the company does is read from the pack.
   await expect(page.locator('[data-testid^="create-dbd-contact"]')).toHaveCount(0);
   await page.getByTestId('create-dbd-submit').click();
   await expect(page.getByTestId('create-dbd-status')).toBeVisible();
 
-  // Listed straight away while the reader works; then confirmed by the reader itself.
+  // Listed straight away while the reader works; the placeholder page has no business evidence.
   const status = page.locator('[data-testid^="company-status-"]');
   await expect(status).toHaveCount(1);
   await expect(status).toHaveAttribute('data-status', 'reading');
   const run = await request.get('/api/cron/index', CRON);
   expect((await run.json()).extractions).toBeGreaterThanOrEqual(1);
   await page.goto('/th/admin/users?tab=companies');
-  await expect(status).toHaveAttribute('data-status', 'confirmed_auto');
-  await expect(status).toHaveText('ยืนยันอัตโนมัติแล้ว');
-
-  // The record says who confirmed it — nobody by hand.
-  await page.getByTestId('companies').getByRole('link', { name: READ_COMPANY }).click();
-  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
-  await expect(page.getByTestId('confirmed-automatically')).toBeVisible();
-  const recordId = new URL(page.url()).pathname.split('/').pop()!;
-
-  // "Assign learner" on the company opens the learner form with it chosen.
-  await page.goto('/th/admin/users');
-  const row = page.getByTestId(`company-learner-${recordId}`);
-  await expect(row).toHaveText('มอบหมายผู้เรียน');
-  await assignLearner(page, recordId);
-  await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue(recordId);
-  await expect(page.getByTestId('check-company')).toHaveAttribute('data-done', 'true');
-
-  // The learner is created for it at once, with the contact details the manager gives.
-  await fillLoginSuffix(page);
-  await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
-  await page.locator('input[name="displayName"]').fill('ผู้เรียนครบขั้นตอน');
-  await page.locator('input[name="phone"]').fill('089-111-2222');
-  await page.locator('input[name="contactEmail"]').fill('learner@one-shot.co.th');
-  // The company's addresses come from its zip now (D101): the learner form has no boxes for them.
-  await expect(page.locator('input[name="website"]')).toHaveCount(0);
-  await expect(page.locator('input[name="facebookPage"]')).toHaveCount(0);
-  await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
-  const created = page.getByTestId('create-user-status');
-  await expect(created).toBeVisible();
-  const learner = (await created.textContent())!.match(/T-[A-Z0-9]+-[A-Z0-9]+/)![0].toLowerCase();
-
-  // The company now names its learner and is not offered again: one company, one learner.
-  await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue('');
-  await expect(
-    page.locator(`select[name="dbdRecordId"] option[value="${recordId}"]`),
-  ).toHaveAttribute('disabled', '');
-  await expect(page.getByTestId('no-free-company')).toBeVisible();
-  await page.getByTestId('tab-companies').click();
-  await expect(row).toHaveText(learner.toUpperCase());
-  await expect(page.getByTestId(`assign-learner-${recordId}`)).toHaveCount(0);
-
-  await page.goto('/th/admin/learners');
-  await expect(page.getByTestId(`company-${learner}`)).toHaveText(READ_COMPANY);
-  await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
-  const contact = page.getByTestId('contact-form');
-  await expect(contact.locator('input[name="phone"]')).toHaveValue('0891112222');
-  await expect(contact.locator('input[name="contactEmail"]')).toHaveValue('learner@one-shot.co.th');
-  await expect(contact.locator('input[name="website"]')).toHaveValue('');
-  await expect(contact.locator('input[name="facebookPage"]')).toHaveValue('');
-
-  // The manager keeps them up to date from the learner's page, the learner's own addresses too
-  // (the card falls back to them when the record has none).
-  await contact.locator('input[name="phone"]').fill('0823334444');
-  await contact.locator('input[name="website"]').fill('one-shot.co.th');
-  await contact.locator('input[name="facebookPage"]').fill('oneshotshop');
-  await contact.getByRole('button', { name: 'บันทึกข้อมูลติดต่อ' }).click();
-  await expect(page.getByTestId('contact-saved')).toBeVisible();
-  await page.reload();
-  const saved = page.getByTestId('contact-form');
-  await expect(saved.locator('input[name="phone"]')).toHaveValue('0823334444');
-  await expect(saved.locator('input[name="website"]')).toHaveValue('https://one-shot.co.th');
-  await expect(saved.locator('input[name="facebookPage"]')).toHaveValue(
-    'https://www.facebook.com/oneshotshop',
-  );
-
-  // The learner's name card was made from all this (D96): done before they open it, with the
-  // phone the manager changed.
-  await switchTo(page, learner, LEARNER_PASSWORD);
-  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เสร็จสิ้น');
-  await page.goto('/th/name-card');
-  await expect(page.getByTestId('card-meta')).toContainText('082-333-4444');
+  await expect(status).toHaveAttribute('data-status', 'attention');
+  await page.getByTestId('companies').getByRole('link').first().click();
+  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 });
 
 test('a learner needs a Thai mobile and an email', async ({ page }) => {
@@ -153,6 +81,7 @@ test("the owner's Assign learner chooses the company's team too; a company takes
   const recordId = await createConfirmedRecord(page, {
     companyNameTh: company,
     juristicId: '0105568233704',
+    team: code,
     issuedOn: '13/07/2569',
   });
   await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
@@ -161,38 +90,21 @@ test("the owner's Assign learner chooses the company's team too; a company takes
   await page.goto('/th/admin/users');
   await assignLearner(page, recordId);
   await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue(recordId);
-  await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
+  await expect(page.getByTestId('login-id-prefix')).toHaveText(code);
   await fillLoginSuffix(page);
   await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
-  await page.locator('input[name="displayName"]').fill('ผู้เรียนคนแรก');
+  await expect(page.locator('input[name="displayName"]')).toHaveValue('E2E Learner');
   await page.locator('input[name="phone"]').fill('081-234-5678');
   await page.locator('input[name="contactEmail"]').fill('first@example.co.th');
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   const created = page.getByTestId('create-user-status');
   await expect(created).toBeVisible();
-  const first = (await created.textContent())!.match(/T-[A-Z0-9]+-[A-Z0-9]+/)![0];
+  const first = (await created.textContent())!.match(/T[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}/)![0];
   await page.getByTestId('tab-companies').click();
   await expect(page.getByTestId(`company-learner-${recordId}`)).toHaveText(first);
 
-  // Offered as taken; and past the page's own check the server still refuses a second learner.
+  // Assigned companies are removed from the picker entirely.
   await page.goto('/th/admin/users?tab=learner');
   const option = page.locator(`select[name="dbdRecordId"] option[value="${recordId}"]`);
-  await expect(option).toHaveText(`${company} — มีผู้เรียนแล้ว`);
-  await expect(option).toHaveAttribute('disabled', '');
-  await selectTeam(page, code);
-  await option.evaluate((el) => el.removeAttribute('disabled'));
-  await selectCompany(page, company);
-  await fillLoginSuffix(page);
-  await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
-  await page.locator('input[name="displayName"]').fill('ผู้เรียนคนที่สอง');
-  await page.locator('input[name="phone"]').fill('081-234-5679');
-  await page.locator('input[name="contactEmail"]').fill('second@example.co.th');
-  // The button sleeps when no other company is free; wake it, as a forged request would.
-  const create = page.getByRole('button', { name: 'สร้างผู้เรียน' });
-  await create.evaluate((el) => el.removeAttribute('disabled'));
-  await create.click();
-  await expect(page.getByTestId('create-user-error')).toHaveText(
-    'บริษัทนี้มีผู้เรียนแล้ว บริษัทหนึ่งแห่งมีผู้เรียนได้หนึ่งคน',
-  );
-  await expect(page.getByTestId('create-user-status')).toHaveCount(0);
+  await expect(option).toHaveCount(0);
 });

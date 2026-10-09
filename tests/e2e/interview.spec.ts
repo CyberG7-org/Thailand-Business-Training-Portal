@@ -18,7 +18,7 @@ const GOOD: Record<string, string> = {
   registration_date: '16 เมษายน 2569',
   account_purpose:
     'เพื่อใช้ทำธุรกรรมทางการเงินของบริษัท รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
-  customer_origin: 'หน้าร้าน',
+  customer_origin: 'ลูกค้าธุรกิจในประเทศไทย มาจากหน้าร้าน',
   monthly_revenue: '300,000 บาท',
   monthly_transactions: '30 รายการ',
   average_transaction: '10,000 บาท',

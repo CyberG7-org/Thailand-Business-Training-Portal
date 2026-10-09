@@ -51,6 +51,7 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
   const ownCompany = `บริษัท ของทีม ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: ownCompany,
+    team: code,
     juristicId: '0105568233771',
     issuedOn: '13/07/2569',
   });

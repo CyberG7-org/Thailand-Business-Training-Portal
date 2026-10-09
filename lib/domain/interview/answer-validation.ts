@@ -121,9 +121,30 @@ const accountPurposeMatches = (answer: string) => {
 
 const customerOriginMatches = (answer: string, expected: string) => {
   const actual = compact(answer);
-  const target = compact(expected);
-  const channels = ['facebook', 'tiktok', 'เว็บไซต์', 'แนะนำ', 'หน้าร้าน', 'เข้ามาที่ร้าน'];
-  return channels.some((channel) => target.includes(channel) && actual.includes(channel));
+  const separator = expected.lastIndexOf(' / ');
+  const profile = separator < 0 ? '' : expected.slice(0, separator);
+  const origin = separator < 0 ? expected : expected.slice(separator + 3);
+  const profileText = compact(profile);
+  const originText = compact(origin);
+  const customerTypes = [
+    ['ธุรกิจ', 'บริษัท', 'business'],
+    ['บุคคล', 'คนทั่วไป', 'รายย่อย', 'individual', 'consumer'],
+  ];
+  const channels = [
+    ['facebook', 'เฟซบุ๊ก'],
+    ['tiktok', 'ติ๊กต็อก'],
+    ['เว็บไซต์', 'website'],
+    ['แนะนำ', 'บอกต่อ', 'referral'],
+    ['หน้าร้าน', 'เข้ามาที่ร้าน', 'walkin'],
+  ];
+  const matchesGroup = (source: string, words: string[]) =>
+    words.some((word) => source.includes(word)) && words.some((word) => actual.includes(word));
+  const customerMatches =
+    !profileText ||
+    customerTypes.some((words) => matchesGroup(profileText, words)) ||
+    looseMeaning(answer, profile);
+  const channelMatches = channels.some((words) => matchesGroup(originText, words));
+  return customerMatches && channelMatches;
 };
 
 /** One deterministic rubric for local testing and non-AI fallbacks. */
@@ -183,7 +204,8 @@ const RUBRICS: Record<string, string> = {
   attendee_identity: 'ชื่อผู้เรียนและตำแหน่งต้องตรง โดยยอมรับคำนำหน้าและการเว้นวรรคที่ต่างกัน',
   registration_date: 'วันเดียวกันในรูปปี พ.ศ. หรือ ค.ศ. ถือว่าถูก',
   account_purpose: 'สื่อความหมายทั้งรับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของบริษัท',
-  customer_origin: 'ตอบช่องทางที่ถูกต้องเพียงหนึ่งช่องทางก็ถือว่าถูก',
+  customer_origin:
+    'บอกลูกค้าอย่างน้อยหนึ่งกลุ่มที่ถูกต้อง และวิธีหาลูกค้าอย่างน้อยหนึ่งช่องทางที่ตรงกับข้อมูล; ไม่ต้องบอกทุกกลุ่มหรือทุกช่องทาง และไม่ต้องพูดถึงเว็บไซต์ถ้าไม่มี',
   monthly_revenue: 'ตัวเลขรายได้ต่อเดือนคลาดเคลื่อนได้ไม่เกิน 20%',
   monthly_transactions: 'จำนวนธุรกรรมต่อเดือนคลาดเคลื่อนได้ไม่เกิน 20%',
   average_transaction: 'ยอดเฉลี่ยต่อธุรกรรมคลาดเคลื่อนได้ไม่เกิน 20%',

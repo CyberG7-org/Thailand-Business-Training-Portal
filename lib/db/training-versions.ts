@@ -180,5 +180,24 @@ async function upsertDraft(admin: Db, recordId: string, columns: VersionColumns)
     version_no: (last?.version_no ?? 0) + 1,
     status: 'draft',
   });
+  if (error?.code === '23505') {
+    // Two requests may see no draft and choose the same next version number. Reuse the draft
+    // inserted by the other request instead of surfacing a transient validation error.
+    const { data: concurrentDraft, error: readError } = await admin
+      .from('company_training_versions')
+      .select('id')
+      .eq('dbd_record_id', recordId)
+      .eq('status', 'draft')
+      .maybeSingle();
+    if (readError) throw readError;
+    if (concurrentDraft) {
+      const { error: updateError } = await admin
+        .from('company_training_versions')
+        .update(columns)
+        .eq('id', concurrentDraft.id);
+      if (updateError) throw updateError;
+      return;
+    }
+  }
   if (error) throw error;
 }

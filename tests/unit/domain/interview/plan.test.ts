@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
+import { evaluateReadinessAnswer } from '@/lib/domain/interview/answer-validation';
 import {
   advance,
   buildPlan,
@@ -63,6 +64,7 @@ describe('buildReadinessPlan v3', () => {
       directors: 'นางสาว กรรมการ ตัวอย่าง',
       signing_authority: 'กรรมการหนึ่งคนลงนาม',
       my_name: 'นางสาว ผู้เรียน ตัวอย่าง',
+      customer_profile: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
       client_origin: 'Facebook, TikTok, เว็บไซต์, ลูกค้าแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
       monthly_revenue: 'ประมาณ 641,400 บาท',
       monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
@@ -87,6 +89,18 @@ describe('buildReadinessPlan v3', () => {
     expect(plan.items).toHaveLength(13);
     expect(plan.items.every((item) => item.core === false)).toBe(true);
     expect(plan.items.every((item) => item.question.length > 8)).toBe(true);
+    expect(plan.items[9]).toMatchObject({
+      question: 'ลูกค้าของบริษัทเป็นใคร และบริษัทหาลูกค้าอย่างไรคะ',
+      expected: expect.stringContaining('ลูกค้าธุรกิจ'),
+    });
+    const shopPlan = buildReadinessPlan({
+      ...facts,
+      customer_profile: 'ร้านค้าปลีกเสื้อผ้า',
+      client_origin: 'Facebook และหน้าร้าน',
+    });
+    const customerItem = shopPlan.items.find((item) => item.concept === 'customer_origin')!;
+    expect(evaluateReadinessAnswer(customerItem, 'ร้านค้าปลีกผ่าน Facebook')).toBe('correct');
+    expect(evaluateReadinessAnswer(customerItem, 'Facebook')).toBe('wrong');
   });
 
   it('has a readable label in every language and an explicit study card for every question', () => {

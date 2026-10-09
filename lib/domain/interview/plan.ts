@@ -36,7 +36,7 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
     concept: 'company_name',
     question: {
       th: 'บริษัทชื่อเต็มว่าอะไรคะ',
-      en: 'What is the company’s full name?',
+      en: 'What is your company’s full registered name?',
       zh: '公司的全名是什么？',
     },
     facts: ['company_name_th'],
@@ -65,8 +65,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
   {
     concept: 'actual_business',
     question: {
-      th: 'บริษัททำธุรกิจอะไรจริงคะ',
-      en: 'What does the company actually do?',
+      th: 'บริษัททำธุรกิจอะไรคะ',
+      en: 'What business does the company do?',
       zh: '公司实际经营什么业务？',
     },
     facts: ['nature_of_business'],
@@ -125,11 +125,11 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
   {
     concept: 'customer_origin',
     question: {
-      th: 'ลูกค้าของบริษัทมาจากช่องทางใดบ้างคะ',
-      en: 'Where do the company’s customers come from?',
-      zh: '公司的客户来自哪些渠道？',
+      th: 'ลูกค้าของบริษัทเป็นใคร และบริษัทหาลูกค้าอย่างไรคะ',
+      en: 'Who are your customers, and how do you find them?',
+      zh: '公司的客户是谁？您如何找到他们？',
     },
-    facts: ['client_origin'],
+    facts: ['customer_profile', 'client_origin'],
     cardKey: 'bank-interview-3-business',
   },
   {

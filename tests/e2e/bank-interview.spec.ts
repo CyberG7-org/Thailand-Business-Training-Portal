@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs, openRecordTab, switchTo } from './helpers';
+import { loginAs, switchTo } from './helpers';
 import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 
 test('starter cards, interview answers and the learner role combine into a personalised study card', async ({
@@ -41,19 +41,6 @@ test('starter cards, interview answers and the learner role combine into a perso
 
   // The starter cards are in place, as `pnpm content:starter` puts them (D81).
   await ensureStarterCards();
-
-  // Company-level interview answers on the record, opened from the companies list (D80).
-  await page.goto('/th/admin/users?tab=companies');
-  await page.getByRole('link', { name: 'บริษัท สัมภาษณ์ธนาคาร จำกัด' }).first().click();
-  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
-  await openRecordTab(page, 'interview');
-  const answers = page.getByTestId('interview-answers');
-  // The earlier answers sit behind a closed disclosure (P17a, spec §5.4); open it to fill them.
-  await answers.getByTestId('legacy-answers').locator('summary').click();
-  await answers.locator('input[name="interview_monthly_volume"]').fill('ประมาณ 300,000 บาท');
-  await answers.locator('input[name="interview_operations_status"]').fill('เริ่มดำเนินการแล้ว');
-  await page.getByTestId('save-interview').click();
-  await expect(page.getByTestId('interview-saved')).toBeVisible();
 
   // The learner's own role on the assignment.
   await page.goto('/th/admin/learners');

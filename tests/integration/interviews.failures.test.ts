@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { manualCategory } from '@/lib/domain/business-category';
 import type { InterviewProvider, TurnInput } from '@/lib/integrations/interview/types';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   confirmRecord,
   deleteTeam,
@@ -148,6 +150,14 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
         registered_on: '2026-07-13',
         directors: [{ name_th: 'นางสาว กรรมการ ตัวอย่าง', name_en: null }],
         signing_authority: 'กรรมการหนึ่งคนลงนาม',
+        structured_data: {
+          category: manualCategory('food_products', null, new Date().toISOString()),
+          interview: {
+            ...CONFIRMED_ANSWERS.interview,
+            customer_profile: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+            client_origin: 'Facebook, TikTok, เว็บไซต์, การแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
+          },
+        },
       })
       .eq('id', team.recordId);
     const { data: record } = await svc

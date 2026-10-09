@@ -3,7 +3,7 @@ import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createLearner, createManager, loginAs, switchTo } from './helpers';
 
 const MANAGER_PASSWORD = 'Manager-Password-1!';
-const LEARNER_PASSWORD = 'Learner-Password-1!';
+const LEARNER_PASSWORD = 'Learn123';
 
 /** Spec §4: a manager may suspend and reset the password of their own team's learners. */
 test('a manager can open one of their learners and suspend them', async ({ page }) => {
@@ -15,15 +15,16 @@ test('a manager can open one of their learners and suspend them', async ({ page 
   await createConfirmedRecord(page, {
     companyNameTh: company,
     juristicId: '0105568233780',
+    team: code,
     issuedOn: '13/07/2569',
   });
   // A manager's own team is implied, so their prefix and a free code show straight away (D69).
   await page.goto('/th/admin/users?tab=learner');
   await expect(page.locator('select[name="managerId"]')).toHaveCount(0);
-  await expect(page.getByTestId('login-id-prefix')).toHaveText(`${code}-`);
+  await expect(page.getByTestId('login-id-prefix')).toHaveText(code);
   await expect(page.getByTestId('login-suffix')).toHaveValue(/^[A-Z]{2}[0-9]{2}$/);
   const learner = await createLearner(page, { password: LEARNER_PASSWORD, company });
-  expect(learner).toMatch(new RegExp(`^${code.toLowerCase()}-[a-z]{2}[0-9]{2}$`));
+  expect(learner).toMatch(new RegExp(`^${code.toLowerCase()}[a-z]{2}[0-9]{2}$`));
 
   await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
@@ -44,12 +45,13 @@ test('a manager cannot open a learner of another team', async ({ page }) => {
   await createConfirmedRecord(page, {
     companyNameTh: company,
     juristicId: '0105568233712',
+    team: teamA,
     issuedOn: '13/07/2569',
   });
   await createLearner(page, { password: LEARNER_PASSWORD, company });
   await page.goto('/th/admin/learners');
   const href = await page
-    .getByRole('link', { name: /^T-[A-Z0-9]+-[A-Z0-9]+$/ })
+    .getByRole('link', { name: /^T[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$/ })
     .getAttribute('href');
 
   await switchTo(page, teamB.toLowerCase(), MANAGER_PASSWORD);

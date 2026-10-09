@@ -156,6 +156,7 @@ describe('FakeInterview', () => {
       my_position: 'กรรมการ',
       registered_on: '10 เมษายน 2569',
       account_purpose: 'รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+      customer_profile: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
       client_origin: 'Facebook, TikTok, เว็บไซต์, การแนะนำจากลูกค้าเดิม และลูกค้าที่เข้ามาที่ร้าน',
       monthly_revenue: 'ประมาณ 641,400 บาท',
       monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
@@ -184,7 +185,8 @@ describe('FakeInterview', () => {
     expect(await answer('attendee_identity', 'ตัวอย่าง ทดสอบ เป็นกรรมการ')).toBe('correct');
     expect(await answer('registration_date', '10 เมษายน 2026')).toBe('correct');
     expect(await answer('account_purpose', 'รับเงินลูกค้าและจ่ายค่าใช้จ่ายบริษัท')).toBe('correct');
-    expect(await answer('customer_origin', 'Facebook')).toBe('correct');
+    expect(await answer('customer_origin', 'ลูกค้าบุคคลทั่วไปจาก Facebook')).toBe('correct');
+    expect(await answer('customer_origin', 'Facebook')).toBe('wrong');
     expect(await answer('monthly_revenue', 'ประมาณ 600,000 บาท')).toBe('correct');
     expect(await answer('monthly_transactions', 'ประมาณ 27 รายการ')).toBe('correct');
     expect(await answer('average_transaction', 'ประมาณ 20,000 บาท')).toBe('correct');
