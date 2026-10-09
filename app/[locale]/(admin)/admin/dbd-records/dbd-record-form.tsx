@@ -6,9 +6,6 @@ import { useActionState } from 'react';
 import type { DbdRecordRow } from '@/lib/db/dbd-records';
 import {
   EMPTY_BUSINESS_PROFILE,
-  listToText,
-  objectivesToText,
-  promotersToText,
   shareholdersToText,
   type BusinessProfile,
   type Provenance,
@@ -36,7 +33,6 @@ const IDENTITY_FIELDS = [
 
 /** Level 3 — document metadata. */
 const DOCUMENT_FIELDS = [
-  ['certificate_no', 'certificateNo'],
   ['document_ref', 'documentRef'],
   ['issued_on', 'issuedOn'],
   ['registrar_name', 'registrarName'],
@@ -190,6 +186,7 @@ export function DbdRecordForm({
     <form action={formAction} className="staff-card grid divide-y divide-ink-100 p-0 md:p-0">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={record?.id ?? ''} />
+      <input type="hidden" name="certificate_no" value={record?.certificate_no ?? ''} />
 
       <section className={section}>
         <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.identity')}</h3>
@@ -255,30 +252,6 @@ export function DbdRecordForm({
       {record && (
         <section className={section} data-testid="business-profile">
           <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.business')}</h3>
-          <label className={`text-sm ${wide}`}>
-            <span className={labelText}>{t('fields.objectives')}</span>
-            <textarea
-              name="objectives_text"
-              rows={5}
-              readOnly={locked}
-              defaultValue={objectivesToText(profile.objectives)}
-              className={inputClass}
-            />
-            <span className="text-xs text-ink-500">{t('objectivesHint')}</span>
-            {levelTwoNote('objectives')}
-          </label>
-          <label className={`text-sm ${wide}`}>
-            <span className={labelText}>{t('fields.businessCategories')}</span>
-            <textarea
-              name="business_categories_text"
-              rows={2}
-              readOnly={locked}
-              defaultValue={listToText(profile.business_categories)}
-              className={inputClass}
-            />
-            <span className="text-xs text-ink-500">{t('onePerLine')}</span>
-            {levelTwoNote('business_categories')}
-          </label>
           <div className={`grid gap-4 sm:grid-cols-2 ${wide}`}>
             <label className="text-sm">
               <span className={labelText}>{t('fields.totalShares')}</span>
@@ -290,29 +263,11 @@ export function DbdRecordForm({
               />
             </label>
             <label className="text-sm">
-              <span className={labelText}>{t('fields.parValue')}</span>
-              <input
-                name="par_value"
-                readOnly={locked}
-                defaultValue={profile.share_structure.par_value ?? ''}
-                className={inputClass}
-              />
-            </label>
-            <label className="text-sm">
               <span className={labelText}>{t('fields.paidUpCapital')}</span>
               <input
                 name="paid_up_capital"
                 readOnly={locked}
                 defaultValue={profile.share_structure.paid_up_capital ?? ''}
-                className={inputClass}
-              />
-            </label>
-            <label className="text-sm">
-              <span className={labelText}>{t('fields.shareType')}</span>
-              <input
-                name="share_type"
-                readOnly={locked}
-                defaultValue={profile.share_structure.share_type ?? ''}
                 className={inputClass}
               />
             </label>
@@ -330,19 +285,7 @@ export function DbdRecordForm({
             <span className="text-xs text-ink-500">{t('shareholdersHint')}</span>
             {levelTwoNote('shareholders')}
           </label>
-          <label className="text-sm">
-            <span className={labelText}>{t('fields.promoters')}</span>
-            <textarea
-              name="promoters_text"
-              rows={3}
-              readOnly={locked}
-              defaultValue={promotersToText(profile.promoters)}
-              className={inputClass}
-            />
-            <span className="text-xs text-ink-500">{t('promotersHint')}</span>
-            {levelTwoNote('promoters')}
-          </label>
-          {['objectives', 'business_categories', 'share_structure', 'shareholders', 'promoters']
+          {['share_structure', 'shareholders']
             .filter((k) => state.fieldErrors[k])
             .map((k) => (
               <span key={k} role="alert" className={`block text-xs text-bad-600 ${wide}`}>

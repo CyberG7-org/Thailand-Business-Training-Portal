@@ -1,6 +1,12 @@
 import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
-import { CORE_CONCEPTS, JURISTIC_ID_CONCEPT, READINESS_PASS_SCORE, readinessItem } from './plan';
+import {
+  CORE_CONCEPTS,
+  JURISTIC_ID_CONCEPT,
+  READINESS_PASS_SCORE,
+  isReadinessPlan,
+  readinessItem,
+} from './plan';
 import type { Assessment, CloseReason, ConceptId, InterviewPlan, SessionVerdict } from './types';
 
 const BUSINESS_CONCEPT: ConceptId = 'business_activity';
@@ -15,7 +21,7 @@ export function latestAssessments(assessments: Assessment[]): Map<ConceptId, Ass
 
 /** The study card that teaches a concept's group; the registration number belongs to identity. */
 function cardFor(concept: ConceptId, version: InterviewPlan['version']): string | null {
-  if (version === 2) return readinessItem(concept)?.cardKey ?? null;
+  if (version === 2 || version === 3) return readinessItem(concept)?.cardKey ?? null;
   const group =
     concept === JURISTIC_ID_CONCEPT
       ? 'identity'
@@ -47,11 +53,11 @@ export function decideVerdict(
           ]
         : [];
     });
-  if (plan.version === 2) {
+  if (isReadinessPlan(plan)) {
     const score = plan.items.filter(
       (item) => latest.get(item.concept)?.verdict === 'correct',
     ).length;
-    const passScore = plan.passScore ?? READINESS_PASS_SCORE;
+    const passScore = plan.passScore ?? (plan.version === 2 ? 9 : READINESS_PASS_SCORE);
     const completed = plan.items.every((item) => latest.has(item.concept));
     return {
       verdict: close === 'plan_complete' && completed && score >= passScore ? 'ready' : 'not_ready',

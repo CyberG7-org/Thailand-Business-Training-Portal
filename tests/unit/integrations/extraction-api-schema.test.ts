@@ -47,13 +47,10 @@ describe('extraction schema for the API', () => {
       source_document: null,
     });
     expect(out.directors.value).toEqual([{ name_th: 'นางสาวตัวอย่าง ทดสอบ', name_en: null }]);
-    expect(out.objectives.value).toEqual([
-      { no: 1, text: 'ค้าปลีก' },
-      { no: null, text: 'ไม่มีเลขข้อ' },
-    ]);
+    expect(out.objectives.value).toBeNull();
     expect(out.share_structure.value).toEqual({
       total_shares: 20000,
-      par_value: 100,
+      par_value: null,
       paid_up_capital: null,
       share_type: null,
     });

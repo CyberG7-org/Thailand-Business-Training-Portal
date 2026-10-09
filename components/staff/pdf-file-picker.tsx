@@ -30,6 +30,7 @@ export function PdfFilePicker({
   hint,
   testId,
   strongLabel = false,
+  zipOnly = false,
   onChosen,
   preview,
 }: {
@@ -38,6 +39,7 @@ export function PdfFilePicker({
   hint: string;
   testId?: string;
   strongLabel?: boolean;
+  zipOnly?: boolean;
   /** The files just chosen or dropped, for the form to look into. */
   onChosen?: (files: File[]) => void;
   /** What the form found in a chosen zip, shown under the list. */
@@ -64,7 +66,9 @@ export function PdfFilePicker({
   };
 
   const take = (dropped: FileList) => {
-    const usable = [...dropped].filter(accepted);
+    const usable = [...dropped].filter((file) =>
+      zipOnly ? /\.zip$/i.test(file.name) : accepted(file),
+    );
     if (usable.length === 0 || !input.current) return;
     const transfer = new DataTransfer();
     for (const f of usable) transfer.items.add(f);
@@ -103,8 +107,12 @@ export function PdfFilePicker({
           id={id}
           name={name}
           type="file"
-          accept=".zip,.pdf,application/zip,application/x-zip-compressed,application/pdf"
-          multiple
+          accept={
+            zipOnly
+              ? '.zip,application/zip,application/x-zip-compressed'
+              : '.zip,.pdf,application/zip,application/x-zip-compressed,application/pdf'
+          }
+          multiple={!zipOnly}
           required
           data-testid={testId}
           onChange={(e) => choose([...(e.target.files ?? [])])}

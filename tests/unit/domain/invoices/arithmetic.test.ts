@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
-import { invoiceAnswers, invoiceFacts, withInvoiceAnswers } from '@/lib/domain/invoices/answers';
+import {
+  invoiceAnswers,
+  invoiceFacts,
+  withBusinessNatureFigures,
+  withInvoiceAnswers,
+} from '@/lib/domain/invoices/answers';
 import {
   checkInvoice,
   invoiceSetAsides,
@@ -169,7 +174,7 @@ describe('what the record is taught from the invoices (D101)', () => {
     const filled = withInvoiceAnswers(typed, read);
     expect(filled.monthly_revenue).toBe('ประมาณ 641,400 บาท');
     expect(filled.monthly_volume).toBe('ประมาณ 641,400 บาท');
-    expect(filled.products_services).toBe('เก้าอี้ ปากกา กระดาษ A4 โต๊ะทำงาน แฟ้ม');
+    expect(filled.products_services).toBe('ชุดเดรส');
     expect(withInvoiceAnswers(typed, null)).toEqual(typed);
     expect(withInvoiceAnswers(typed, { ...read, rows: [] })).toEqual(typed);
     // Invoices with no items keep the typed product list; private buyers give no example.
@@ -177,6 +182,19 @@ describe('what the record is taught from the invoices (D101)', () => {
     const kept = withInvoiceAnswers(typed, { ...read, rows: bare });
     expect(kept.products_services).toBe('ชุดเดรส');
     expect(kept.customer_examples).toBeNull();
+  });
+});
+
+describe('approved business-nature figures', () => {
+  it('overrides invoice estimates with the selected row, without recalculating its figures', () => {
+    const read = { read_at: '2026-10-06T00:00:00Z', model: 'fake', rows: EXAMPLE };
+    const filled = withBusinessNatureFigures(
+      withInvoiceAnswers(EMPTY_INTERVIEW_PROFILE, read),
+      'it_house',
+    );
+    expect(filled.monthly_revenue).toBe('ประมาณ 2,400,000 บาท');
+    expect(filled.average_transaction).toBe('ประมาณ 5,200 บาท');
+    expect(filled.monthly_transactions).toBe('ประมาณ 600 รายการต่อเดือน');
   });
 });
 

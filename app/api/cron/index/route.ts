@@ -3,7 +3,6 @@ import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { processIndexJobs } from '@/lib/db/dbd-index';
 import { refreshDerivedFacts } from '@/lib/db/derived-facts';
 import { extractAndApply } from '@/lib/db/extraction';
-import { invoicesRunner } from '@/lib/db/invoices';
 import { fillRecordFromTranscripts } from '@/lib/db/transcript-extraction';
 import { validateAfterChange } from '@/lib/db/validation';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
@@ -83,9 +82,6 @@ export async function GET(request: NextRequest) {
         }
         return run;
       },
-      // The invoices of a record, read into rows and the figures computed (D101).
-      invoices: async (input) =>
-        extractor ? invoicesRunner(extractor, input) : { status: 'failed', error: 'no provider' },
       // A record whose reading just finished is validated and, when clean, accepted (P17c).
       afterReading: (recordId) => validateAfterChange(recordId, null),
     });

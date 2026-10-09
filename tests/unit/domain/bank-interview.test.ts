@@ -45,6 +45,18 @@ describe('bank-interview concepts', () => {
     }
   });
 
+  it('teaches the three estimated figures as direct readiness questions without invoice maths', () => {
+    const card = BANK_INTERVIEW_CARDS.find((item) => item.contentKey === 'bank-interview-4-role');
+    expect(card).toBeDefined();
+    for (const locale of ['th', 'en', 'zh'] as const) {
+      const body = card!.localizations[locale].body;
+      expect(body).toContain('{monthly_revenue}');
+      expect(body).toContain('{monthly_transactions}');
+      expect(body).toContain('{average_transaction}');
+      expect(body).not.toContain('{revenue_basis}');
+    }
+  });
+
   it('matches the learner to a shareholder by name and derives the percentage', () => {
     const business = {
       objectives: [],

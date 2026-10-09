@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
+import { binaryReadinessAssessment } from '@/lib/domain/interview/answer-validation';
 import { revealedFact } from '@/lib/domain/interview/leak';
 import {
   advance,
@@ -141,7 +142,12 @@ export function factsFromTemplate(
     my_share_percent: text(t.my_share_percent),
     customer_profile: text(t.customer_profile),
     transaction_details: text(t.transaction_details),
+    client_origin: text(t.client_origin),
+    monthly_revenue: text(t.monthly_revenue),
+    monthly_transactions: text(t.monthly_transactions),
+    average_transaction: text(t.average_transaction),
     ...invoiceFacts(invoices),
+    transactions_per_month: text(t.monthly_transactions),
   };
 }
 
@@ -413,7 +419,7 @@ export async function submitLearnerMessage(
     facts,
     false,
   );
-  const assessment = reply.assessment;
+  const assessment = binaryReadinessAssessment(plan, reply.assessment);
   const evasionsNow = evasions + (assessment?.verdict === 'evasive' ? 1 : 0);
   let next = reply.next;
   let say = reply.say;

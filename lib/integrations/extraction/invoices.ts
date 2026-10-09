@@ -180,25 +180,25 @@ export async function readInvoicesWithClaude(
   return rows.sort((a, b) => a.index - b.index);
 }
 
-const natureApiSchema = z.object({ nature: z.string(), confidence: z.number() });
+const natureApiSchema = z.object({
+  nature: z.string(),
+  products: z.string(),
+  confidence: z.number(),
+});
 
-export const NATURE_INSTRUCTIONS = `From a Thai company's registered objectives and the items it actually sold, write ONE Thai line naming the
-kind of business it does, as a bank officer would summarise it — for example
-"ค้าส่งและค้าปลีกเครื่องเขียนและเฟอร์นิเจอร์สำนักงาน". At most 120 characters, no company name, no list of items.
-What the invoices show was sold counts more than the objectives, which are often a long standard list. Give a
-confidence from 0 to 1: high when the items make the business plain, low when only the objectives are there.`;
+export const NATURE_INSTRUCTIONS = `The following text was retrieved from the company's website or Facebook page. Use ONLY that page text, never DBD objectives or invoice items. Write two concise Thai answers:
+"nature": what business the company actually does, at most 120 characters;
+"products": its main products or services, at most 200 characters.
+If the page does not establish an answer, leave that answer empty. Give confidence from 0 to 1.`;
 
 /** One Thai line for `nature_of_business` (spec 2026-10-06 §6.4), with the reader's confidence. */
 export async function describeBusinessWithClaude(
   client: Anthropic,
   input: { objectives: string[]; items: string[] },
-): Promise<{ nature: string; confidence: number }> {
+): Promise<{ nature: string; products: string; confidence: number }> {
   const text = [
-    `Registered objectives (${input.objectives.length}):`,
-    ...input.objectives.slice(0, 60).map((o, i) => `${i + 1}. ${o}`),
-    '',
-    `Items sold, from the invoices (${input.items.length}):`,
-    ...input.items.slice(0, 60).map((item) => `- ${item}`),
+    'Company website or Facebook page text:',
+    ...input.items.slice(0, 4),
     '',
     NATURE_INSTRUCTIONS,
   ].join('\n');
@@ -213,6 +213,7 @@ export async function describeBusinessWithClaude(
   }
   return {
     nature: response.parsed_output.nature.trim().slice(0, 120),
+    products: (response.parsed_output.products ?? '').trim().slice(0, 200),
     confidence: Math.min(1, Math.max(0, response.parsed_output.confidence)),
   };
 }

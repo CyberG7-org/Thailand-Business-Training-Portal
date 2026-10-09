@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { manualCategory } from '@/lib/domain/business-category';
 import type { InterviewProvider, TurnInput } from '@/lib/integrations/interview/types';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   confirmRecord,
   deleteTeam,
@@ -148,6 +150,14 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
         registered_on: '2026-07-13',
         directors: [{ name_th: 'นางสาว กรรมการ ตัวอย่าง', name_en: null }],
         signing_authority: 'กรรมการหนึ่งคนลงนาม',
+        structured_data: {
+          category: manualCategory('food_products', null, new Date().toISOString()),
+          interview: {
+            ...CONFIRMED_ANSWERS.interview,
+            customer_profile: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+            client_origin: 'Facebook, TikTok, เว็บไซต์, การแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
+          },
+        },
       })
       .eq('id', team.recordId);
     const { data: record } = await svc
@@ -257,10 +267,13 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     }
     const r = await row(session.id);
     expect(sent).toBeLessThan(turnBudget(r.plan as never));
-    expect(sent).toBe(22);
+    expect(sent).toBe(26);
     expect(r.status).toBe('completed');
     expect(r.verdict).toBe('not_ready');
     expect(r.summary?.closeReason).toBe('plan_complete');
+    expect(
+      r.summary?.reasons.every((reason) => ['correct', 'wrong'].includes(reason.verdict)),
+    ).toBe(true);
     const last = (await turnsOf(session.id)).at(-1)!;
     expect(last.role).toBe('officer');
     expect(last.content).toContain('ครบทุกข้อแล้ว');
@@ -277,10 +290,10 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     await answerAll(learner, session.id, (_concept, planned) => planned || FALLBACK);
     const r = await row(session.id);
     expect(r.summary?.closeReason).toBe('plan_complete');
-    expect(r.summary).toMatchObject({ passScore: 9, maxScore: 11 });
+    expect(r.summary).toMatchObject({ passScore: 10, maxScore: 13 });
   });
 
-  it('ignores an early provider close and asks all 11 questions in order', async () => {
+  it('ignores an early provider close and asks all 13 questions in order', async () => {
     control.mode = 'early-close';
     const { session } = await startOrResumeInterview(learner);
     await answerAll(learner, session.id, (_concept, planned) => planned || FALLBACK);
@@ -288,8 +301,8 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
     expect(r.status).toBe('completed');
     expect(r.verdict).toBe('ready');
     expect(r.summary?.closeReason).toBe('plan_complete');
-    expect(r.summary?.reasons).toHaveLength(11);
-    expect(new Set(r.summary?.reasons.map((reason) => reason.concept)).size).toBe(11);
+    expect(r.summary?.reasons).toHaveLength(13);
+    expect(new Set(r.summary?.reasons.map((reason) => reason.concept)).size).toBe(13);
     control.mode = 'fake';
   });
 
@@ -304,7 +317,7 @@ describe('the readiness interview when the officer fails or misbehaves', () => {
       '\nทุนจดทะเบียน: 1,000,000 บาท';
     const { turns } = await submitLearnerMessage(learner, session.id, dump);
     const officer = turns.at(-1)!;
-    expect((officer.assessment as { verdict: string }).verdict).toBe('pasted');
+    expect((officer.assessment as { verdict: string }).verdict).toBe('wrong');
     expect(officer.content).toContain('คำพูดของคุณเอง');
     await answerAll(
       learner,

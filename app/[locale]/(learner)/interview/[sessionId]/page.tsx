@@ -47,7 +47,7 @@ export default async function InterviewSessionPage({
   }));
   const back = { href: '/interview', label: t('title') };
   const plan = session.plan as unknown as InterviewPlan;
-  const guidedReadiness = plan.version === 2;
+  const guidedReadiness = plan.version === 2 || plan.version === 3;
 
   if (session.status === 'in_progress') {
     const budget = {

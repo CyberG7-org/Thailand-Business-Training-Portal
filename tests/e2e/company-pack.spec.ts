@@ -36,7 +36,7 @@ function supplementZip(name: string): { name: string; mimeType: string; buffer: 
   };
 }
 
-test('a manager uploads one zip: the browser sorts it, the reads fill the record, the invoices give the figures', async ({
+test('a manager uploads one ZIP: documents and page links are sorted without invoice calculations', async ({
   page,
   request,
 }) => {
@@ -64,7 +64,7 @@ test('a manager uploads one zip: the browser sorts it, the reads fill the record
   await page.getByTestId('create-dbd-submit').click();
   await expect(page.getByTestId('create-dbd-status')).toBeVisible();
 
-  // The cron reads the pack and the invoices; the record confirms itself (D80, D101).
+  // The cron reads the pack. The placeholder website and Facebook page are not valid evidence.
   const first = await request.get('/api/cron/index', CRON);
   const summary = await first.json();
   expect(summary.extractions + summary.invoices).toBeGreaterThanOrEqual(1);
@@ -72,7 +72,7 @@ test('a manager uploads one zip: the browser sorts it, the reads fill the record
   await request.get('/api/cron/index', CRON);
   await page.goto('/th/admin/users?tab=companies');
   const status = page.locator('[data-testid^="company-status-"]').first();
-  await expect(status).toHaveAttribute('data-status', 'confirmed_auto');
+  await expect(status).toHaveAttribute('data-status', 'attention');
 
   // The record: the documents by group, the addresses, the figures.
   await page.getByTestId('companies').getByRole('link').first().click();
@@ -89,7 +89,7 @@ test('a manager uploads one zip: the browser sorts it, the reads fill the record
     'https://www.chayasri.co.th',
   );
 
-  // Confirmation locks the DBD pack, but invoices and agreements can still be maintained.
+  // Supplementary documents can still be maintained while the record needs review.
   await documents.locator('input[name="document"]').setInputFiles(supplementZip(zipName));
   await expect(documents.getByTestId('pack-preview')).toHaveAttribute('data-pack', '0');
   await expect(documents.getByTestId('pack-preview')).toHaveAttribute('data-invoices', '1');
@@ -104,12 +104,6 @@ test('a manager uploads one zip: the browser sorts it, the reads fill the record
   await expect(documents.getByTestId('documents-invoice').locator('li')).toHaveCount(3);
 
   await openRecordTab(page, 'interview');
-  const figures = page.getByTestId('invoice-figures');
-  // Three fake invoices on three days: 82,900 in all → 829,000 a month, 30 transactions.
-  await expect(figures).toContainText('829,000');
-  await expect(figures).toContainText('30');
-  await expect(figures).toContainText('27,633');
-  // Nothing to type: the asked amounts are gone, the fixed answers are there.
+  await expect(page.getByTestId('invoice-figures')).toHaveCount(0);
   await expect(page.locator('textarea[name="interview_monthly_revenue"]')).toHaveCount(0);
-  await expect(page.getByTestId('fixed-answers')).toContainText('TikTok');
 });

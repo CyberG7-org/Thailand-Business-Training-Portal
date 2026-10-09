@@ -113,6 +113,7 @@ describe('the invoice read (D101)', () => {
     expect(await extractor.describeBusiness({ objectives: ['ค้าปลีก'], items: ['ปากกา'] })).toEqual(
       {
         nature: 'ค้าส่งเครื่องเขียน',
+        products: '',
         confidence: 1,
       },
     );

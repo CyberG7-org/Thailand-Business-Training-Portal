@@ -4,7 +4,9 @@
  */
 
 /** The shortest initial password the server accepts (`newAccountSchema`). */
-export const MIN_PASSWORD_LENGTH = 10;
+export const MIN_PASSWORD_LENGTH = 6;
+export const MAX_PASSWORD_LENGTH = 8;
+export const LEARNER_PASSWORD_PATTERN = /^[a-z0-9]{6,8}$/i;
 
 /** What the "Before you create" list ticks off; `team` only when the owner picks one. */
 export type ChecklistItem = 'team' | 'company' | 'password' | 'name' | 'contact';
@@ -33,7 +35,7 @@ export function newLearnerChecklist(
   if (needsTeam) items.push({ item: 'team', done: values.team !== '' });
   items.push(
     { item: 'company', done: values.company !== '' },
-    { item: 'password', done: values.password.length >= MIN_PASSWORD_LENGTH },
+    { item: 'password', done: LEARNER_PASSWORD_PATTERN.test(values.password) },
     { item: 'name', done: values.name.trim() !== '' },
     {
       item: 'contact',
@@ -62,12 +64,9 @@ export function secureIndex(below: number): number {
 }
 
 /**
- * A starting password for the manager to hand over: three groups of four, e.g. `Kp7w-Xm3r-Tz9q`
- * — fourteen characters, past the minimum, and easy to read out. `random` returns a whole
+ * An eight-character starting password for the manager to hand over. `random` returns a whole
  * number below its argument; the default draws evenly from the browser's or Node's crypto.
  */
 export function generatePassword(random: (below: number) => number = secureIndex): string {
-  const group = () =>
-    Array.from({ length: 4 }, () => PASSWORD_CHARS[random(PASSWORD_CHARS.length)]).join('');
-  return [group(), group(), group()].join('-');
+  return Array.from({ length: 8 }, () => PASSWORD_CHARS[random(PASSWORD_CHARS.length)]).join('');
 }

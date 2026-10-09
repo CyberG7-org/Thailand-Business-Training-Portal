@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { strToU8, zipSync } from 'fflate';
 import { PDFDocument } from 'pdf-lib';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
@@ -16,13 +17,20 @@ async function twoMegabytePdf(): Promise<Buffer> {
 test('a scanned pack of several megabytes uploads from the browser and is registered', async ({
   page,
 }) => {
+  test.setTimeout(90_000);
   const buffer = await twoMegabytePdf();
   expect(buffer.byteLength).toBeGreaterThan(1.5 * 1024 * 1024);
+  const pack = Buffer.from(
+    zipSync({
+      'company/scan.pdf': new Uint8Array(buffer),
+      'company/links.txt': strToU8('Facebook https://www.facebook.com/chayasritrade/'),
+    }),
+  );
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
   await page
     .getByTestId('upload-first-file')
-    .setInputFiles({ name: 'scan.pdf', mimeType: 'application/pdf', buffer });
+    .setInputFiles({ name: 'scan-pack.zip', mimeType: 'application/zip', buffer: pack });
   await page.getByTestId('upload-first-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=/);
   const item = page.getByTestId('document-list').locator('li').first();

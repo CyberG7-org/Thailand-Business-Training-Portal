@@ -238,12 +238,12 @@ export function fromApiExtraction(api: DbdExtractionApi): DbdExtractionOutput {
     signing_authority: wrap('signing_authority', textOrNull(api.signing_authority)),
     head_office_address: wrap('head_office_address', textOrNull(api.head_office_address)),
     province: wrap('province', textOrNull(api.province)),
-    objectives: wrap(
-      'objectives',
-      api.objectives.map((o) => ({ no: intOrNull(o.no), text: o.text })),
+    objectives: wrap('objectives', []),
+    business_categories: wrap('business_categories', []),
+    share_structure: wrap(
+      'share_structure',
+      shareEmpty ? null : { ...shareValue, par_value: null, share_type: null },
     ),
-    business_categories: wrap('business_categories', api.business_categories),
-    share_structure: wrap('share_structure', shareEmpty ? null : shareValue),
     shareholders: wrap(
       'shareholders',
       api.shareholders.map((sh) => ({
@@ -253,22 +253,19 @@ export function fromApiExtraction(api: DbdExtractionApi): DbdExtractionOutput {
         percent: numberOrNull(sh.percent),
       })),
     ),
-    promoters: wrap(
-      'promoters',
-      api.promoters.map((p) => ({ name: p.name, nationality: textOrNull(p.nationality) })),
-    ),
+    promoters: wrap('promoters', []),
     documents: api.documents.map((d) => ({
       index: d.index,
       document_type: d.document_type,
       title_as_printed: textOrNull(d.title_as_printed),
       pages: intOrNull(d.pages),
     })),
-    certificate_no: wrap('certificate_no', textOrNull(api.certificate_no)),
+    certificate_no: wrap('certificate_no', null),
     document_ref: wrap('document_ref', textOrNull(api.document_ref)),
     issued_on: wrap('issued_on', textOrNull(api.issued_on)),
     registrar_name: wrap('registrar_name', textOrNull(api.registrar_name)),
     issuing_office: wrap('issuing_office', textOrNull(api.issuing_office)),
-    objectives_count: wrap('objectives_count', numberOrNull(api.objectives_count)),
+    objectives_count: wrap('objectives_count', null),
   };
 }
 
@@ -334,11 +331,9 @@ The documents you may see and what each one supplies:
   (item 3), registered capital (item 4), head office address (item 5), number of objectives (item 6); header:
   certificate number, registration office, registration date, 13-digit juristic id; footer: issue date
   (ออกให้ ณ วันที่), Registrar's name; the reference number (Ref:/เลขที่อ้างอิง) printed near the QR code.
-- วัตถุที่ประสงค์ (objectives sheet attached to the certificate): the numbered list of business objectives.
-- บัญชีรายชื่อผู้ถือหุ้น (บอจ.5, shareholder list): total shares, par value, paid-up capital, each shareholder with
+- บัญชีรายชื่อผู้ถือหุ้น (บอจ.5, shareholder list): total shares, paid-up capital, each shareholder with
   nationality, number of shares (and percentage if printed).
-- หนังสือบริคณห์สนธิ (บอจ.2, memorandum of association): the promoters (ผู้เริ่มก่อการ) with nationality, initial
-  share structure.
+- หนังสือบริคณห์สนธิ (บอจ.2, memorandum of association): no fields are needed from this document.
 - ข้อบังคับ (articles of association) or anything else: classify as "articles" / "other".
 
 Rules:
@@ -355,12 +350,10 @@ Rules:
 - issued_on is the certificate's issue date at the bottom of the certificate, NOT the company registration date.
 - registered_on is the juristic person registration date (จดทะเบียน).
 - juristic_id is the 13-digit juristic person registration number.
-- registered_capital, total_shares, par_value, paid_up_capital: numeric amounts without separators.
+- registered_capital, total_shares, paid_up_capital: numeric amounts without separators.
 - province: the province (จังหวัด) of the head office, as printed in the address.
 - directors: one entry per director; name_en only if an English name is printed.
-- objectives: every numbered objective as printed on the objectives sheet (Thai text), in order.
-- business_categories: short Thai labels summarising what kinds of business the objectives cover (e.g. "ค้าปลีก",
-  "นำเข้า-ส่งออก", "บริการให้คำปรึกษา"), at most 10; empty when no objectives are readable.
+- Do not retrieve business objectives, business categories, promoters, share type, par value, or certificate number. Return empty values for these schema fields.
 - documents: one entry per uploaded PDF, in upload order (index starts at 1), with its type and printed title.
 - confidence: 1.0 when the value is printed unambiguously, lower when inferred, OCR-uncertain or partially legible.
 - In provenance: source_text is the exact printed snippet the value came from ("" if none); source_page the 1-based

@@ -18,6 +18,7 @@ test('the admin cannot reassign a learner to another team company', async ({ pag
   const companyB = `บริษัท ของทีมบี ${Date.now()} จำกัด`;
   await createConfirmedRecord(page, {
     companyNameTh: companyB,
+    team: teamB,
     juristicId: '0105568233739',
     issuedOn: '13/07/2569',
   });
@@ -30,7 +31,7 @@ test('the admin cannot reassign a learner to another team company', async ({ pag
     issuedOn: '13/07/2569',
   });
   const learner = await createLearner(page, {
-    password: 'Learner-Password-1!',
+    password: 'Learn123',
     company: companyX,
     team: teamA,
   });

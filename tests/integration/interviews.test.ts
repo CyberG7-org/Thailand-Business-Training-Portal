@@ -6,7 +6,9 @@ import {
   submitLearnerMessage,
 } from '@/lib/db/interviews';
 import { loadProgressionFacts } from '@/lib/db/progression';
+import { manualCategory } from '@/lib/domain/business-category';
 import {
+  CONFIRMED_ANSWERS,
   adminClient,
   clientFor,
   confirmRecord,
@@ -61,6 +63,14 @@ describe('the readiness interview', () => {
         registered_on: '2026-07-13',
         directors: [{ name_th: 'นางสาว กรรมการ ตัวอย่าง', name_en: null }],
         signing_authority: 'กรรมการหนึ่งคนลงนาม',
+        structured_data: {
+          category: manualCategory('food_products', null, new Date().toISOString()),
+          interview: {
+            ...CONFIRMED_ANSWERS.interview,
+            customer_profile: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+            client_origin: 'Facebook, TikTok, เว็บไซต์, การแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
+          },
+        },
       })
       .eq('id', team.recordId);
     const { data: record } = await svc
@@ -106,7 +116,7 @@ describe('the readiness interview', () => {
     expect(again.session.id).toBe(first.session.id);
   });
 
-  it('ends not ready when the learner evades, and the reasons name the concepts', async () => {
+  it('ends not ready with only wrong results when the learner does not know the answers', async () => {
     const { session } = await startOrResumeInterview(team.learner.id);
     await answerAll(team.learner.id, session.id, () => 'ไม่ทราบ');
     const { data } = await svc
@@ -119,11 +129,15 @@ describe('the readiness interview', () => {
     const summary = data!.summary as {
       reasons: { concept: string; verdict: string }[];
       narrative: string;
+      score: number;
+      maxScore: number;
+      passScore: number;
     };
-    expect(
-      summary.reasons.some((r) => r.concept === 'company_name' && r.verdict === 'evasive'),
-    ).toBe(true);
-    expect(summary.narrative.length).toBeGreaterThan(0);
+    expect(summary.reasons.some((r) => r.concept === 'company_name' && r.verdict === 'wrong')).toBe(
+      true,
+    );
+    expect(summary.reasons.every((reason) => reason.verdict === 'wrong')).toBe(true);
+    expect(summary).toMatchObject({ score: 0, maxScore: 13, passScore: 10 });
     const facts = await loadProgressionFacts(await clientFor(team.learner), team.learner.id);
     expect(facts.interviewSessions).toBe(1);
     expect(facts.interviewReady).toBe(false);

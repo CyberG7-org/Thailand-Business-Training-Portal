@@ -5,7 +5,7 @@
  * Codes are case-insensitive — stored lower-case, as every login id in this project is, and
  * shown upper-case — so `t-a12` can never reach a screen.
  */
-export const MANAGER_PREFIX = 't-';
+export const MANAGER_PREFIX = 't';
 
 /** Whose code is being chosen: a manager's (the owner) or a learner's (staff). */
 export type LoginIdKind = 'manager' | 'learner';
@@ -40,7 +40,7 @@ export function managerLoginId(suffix: string): string {
  * manager created before D85 keeps working until renamed.
  */
 export function learnerPrefix(managerLoginId: string): string {
-  return `${managerLoginId.trim().toLowerCase()}-`;
+  return managerLoginId.trim().toLowerCase().replaceAll('-', '');
 }
 
 export function learnerLoginId(managerLoginId: string, suffix: string): string {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   refreshDerivedFacts,
   remapBusinessCategory,
@@ -55,11 +55,11 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     await deleteTestUser(owner.id);
   });
 
-  it('derives the address and maps the category, then leaves them alone', async () => {
+  it('derives the address and leaves the category for staff to choose', async () => {
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('updated');
     const s = await stored(recordId);
     expect(s.address).toMatchObject({ status: 'resolved', postcode: '45110' });
-    expect(s.category).toMatchObject({ status: 'mapped', key: 'clothing_fashion', source: 'auto' });
+    expect(s.category).toMatchObject({ status: 'unmapped', error: 'choose-category' });
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('unchanged');
   });
 
@@ -67,7 +67,7 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     await setInterview(recordId, { main_clients: 'ร้านค้าปลีกในร้อยเอ็ด' });
     const s = await stored(recordId);
     expect(s.address?.status).toBe('resolved');
-    expect(s.category?.key).toBe('clothing_fashion');
+    expect(s.category?.key).toBeNull();
   });
 
   it('re-derives the address when the printed address changes', async () => {
@@ -101,20 +101,20 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('unchanged');
   });
 
-  it('holds a person’s choice until the business words change', async () => {
-    await setBusinessCategory(svc, recordId, 'furniture_home');
+  it('holds a person’s approved category when business words change', async () => {
+    await setBusinessCategory(svc, recordId, 'fashion_accessories');
     await refreshDerivedFacts(svc, recordId, deps);
     expect((await stored(recordId)).category).toMatchObject({
-      key: 'furniture_home',
+      key: 'fashion_accessories',
       source: 'manual',
     });
     await setInterview(recordId, { nature_of_business: 'ขายบ้าน' });
     await refreshDerivedFacts(svc, recordId, deps);
-    // The words changed, so the mapper decides again; its best match is the category (D90).
+    // A page-text update never silently changes staff's revenue category.
     expect((await stored(recordId)).category).toMatchObject({
       status: 'mapped',
-      source: 'auto',
-      key: 'furniture_home',
+      source: 'manual',
+      key: 'fashion_accessories',
       candidate_key: null,
     });
   });
@@ -125,15 +125,16 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     );
   });
 
-  it('records why nothing was mapped when no mapper is configured, and maps again on request', async () => {
+  it('does not auto-map categories even when a mapper is configured', async () => {
     await setInterview(recordId, { nature_of_business: 'ขายเสื้อผ้าออนไลน์' });
+    await updateStructuredData(svc, recordId, (current) => ({ ...current, category: null }));
     await refreshDerivedFacts(svc, recordId, { mapper: null });
     expect((await stored(recordId)).category).toMatchObject({
       status: 'unmapped',
-      error: 'not_configured',
+      error: 'choose-category',
     });
     await remapBusinessCategory(svc, recordId, deps);
-    expect((await stored(recordId)).category).toMatchObject({ status: 'mapped' });
+    expect((await stored(recordId)).category).toMatchObject({ status: 'unmapped' });
   });
 
   it('never lets a failing mapper cost the address or throw (D73: category is metadata)', async () => {
@@ -159,7 +160,80 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
       await expect(refreshDerivedFacts(svc, data.id, { mapper: broken })).resolves.toBe('updated');
       const s = await stored(data.id);
       expect(s.address).toMatchObject({ status: 'resolved', postcode: '45110' });
-      expect(s.category).toMatchObject({ status: 'unmapped', error: 'mapper down' });
+      expect(s.category).toMatchObject({ status: 'unmapped', error: 'choose-category' });
+    } finally {
+      await svc.from('dbd_records').delete().eq('id', data.id);
+    }
+  });
+
+  it('caches Apify Facebook text until the Page link changes or a refresh is requested', async () => {
+    const { data, error } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท เฟซบุ๊ก จำกัด',
+        head_office_address: ROI_ET,
+        facebook_page: 'https://www.facebook.com/firstshop',
+        created_by: owner.id,
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    const readFacebook = vi.fn(async (url: string) => `Page details for ${url}`);
+    const facebookDeps = {
+      mapper: null,
+      readFacebook,
+      describe: async () => ({ nature: 'ค้าปลีก', products: 'เครื่องเขียน', confidence: 0.8 }),
+    };
+    try {
+      await refreshDerivedFacts(svc, data.id, facebookDeps);
+      await refreshDerivedFacts(svc, data.id, facebookDeps);
+      expect(readFacebook).toHaveBeenCalledTimes(1);
+      expect((await stored(data.id)).facebook_source).toMatchObject({ status: 'read' });
+      await svc
+        .from('dbd_records')
+        .update({ facebook_page: 'https://www.facebook.com/secondshop' })
+        .eq('id', data.id);
+      await refreshDerivedFacts(svc, data.id, facebookDeps);
+      expect(readFacebook).toHaveBeenCalledTimes(2);
+      await refreshDerivedFacts(svc, data.id, facebookDeps, { refreshFacebook: true });
+      expect(readFacebook).toHaveBeenCalledTimes(3);
+    } finally {
+      await svc.from('dbd_records').delete().eq('id', data.id);
+    }
+  });
+
+  it('does not repeatedly charge for an unreadable Facebook Page during the same day', async () => {
+    const { data, error } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท เฟซบุ๊กไม่พร้อม จำกัด',
+        head_office_address: ROI_ET,
+        facebook_page: 'https://www.facebook.com/unavailable',
+        created_by: owner.id,
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    const readFacebook = vi.fn(async () => null);
+    try {
+      await refreshDerivedFacts(svc, data.id, {
+        mapper: null,
+        readFacebook,
+        now: () => new Date('2026-10-09T00:00:00Z'),
+      });
+      await refreshDerivedFacts(svc, data.id, {
+        mapper: null,
+        readFacebook,
+        now: () => new Date('2026-10-09T01:00:00Z'),
+      });
+      expect(readFacebook).toHaveBeenCalledTimes(1);
+      expect((await stored(data.id)).facebook_source).toMatchObject({ status: 'unavailable' });
+      await refreshDerivedFacts(svc, data.id, {
+        mapper: null,
+        readFacebook,
+        now: () => new Date('2026-10-10T01:00:00Z'),
+      });
+      expect(readFacebook).toHaveBeenCalledTimes(2);
     } finally {
       await svc.from('dbd_records').delete().eq('id', data.id);
     }
@@ -175,13 +249,13 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
       }
       return {
         ...stored,
-        category: manualCategory('furniture_home', 'h', new Date().toISOString()),
+        category: manualCategory('fashion_accessories', 'h', new Date().toISOString()),
       };
     });
     expect(result).toBe('updated');
     const s = await stored(recordId);
     expect(s.interview?.main_clients).toBe('ลูกค้าที่มาระหว่างเขียน');
-    expect(s.category).toMatchObject({ key: 'furniture_home', source: 'manual' });
+    expect(s.category).toMatchObject({ key: 'fashion_accessories', source: 'manual' });
   });
 
   it('reports a race it could not settle instead of overwriting', async () => {
@@ -196,6 +270,6 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     );
     expect(result).toBe('raced');
     // The stale snapshot never landed: the last concurrent edit and the category are both intact.
-    expect((await stored(recordId)).category).toMatchObject({ key: 'furniture_home' });
+    expect((await stored(recordId)).category).toMatchObject({ key: 'fashion_accessories' });
   });
 });

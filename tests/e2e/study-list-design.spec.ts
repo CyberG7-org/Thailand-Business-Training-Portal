@@ -30,8 +30,12 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
   await expect(rows.first()).toHaveAttribute('href', /\/th\/study\//);
 
+  const recorded = page.waitForResponse(
+    (response) => response.request().method() === 'POST' && /\/th\/study\//.test(response.url()),
+  );
   await rows.first().click();
   await expect(page).toHaveURL(/\/th\/study\/[^/]+$/);
+  expect((await recorded).ok()).toBe(true);
   await page.goto('/th/study');
   await expect(page.getByTestId('study-summary')).toContainText(`1 จาก ${total}`);
   await expect(page.getByTestId('study-segments').locator('[data-state="done"]')).toHaveCount(1);

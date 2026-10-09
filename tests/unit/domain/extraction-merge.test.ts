@@ -26,7 +26,7 @@ describe('extractionToFormValues', () => {
 
   it('turns numbers into input strings and directors into the textarea format', () => {
     expect(s.values.registered_capital).toBe('2000000');
-    expect(s.values.objectives_count).toBe('14');
+    expect(s.values.objectives_count).toBeUndefined();
     expect(s.values.directors_text).toBe('นางสาวตัวอย่าง ทดสอบ | Miss Sample Test');
   });
 

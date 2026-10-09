@@ -67,6 +67,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `APP_INTERNAL_EMAIL_DOMAIN` | e.g. `learner.<your-domain>` | maps login ids to auth emails; never receives mail |
    | `CRON_SECRET` | long random string | Vercel Cron sends it automatically as a bearer token |
    | `ANTHROPIC_API_KEY` | Anthropic key | DBD extraction and AI question authoring; `EXTRACTION_PROVIDER=off` / `QUESTION_GEN_PROVIDER=off` to disable either |
+   | `APIFY_API_TOKEN` | Optional Apify API token | server only; reads public Facebook Page details via `api-ninja/facebook-pages-scraper` and up to five posts via `apify/facebook-posts-scraper`. Each new Page link starts two capped paid Actor runs; successful text is cached on the DBD record. Without it, Facebook is not scraped. |
    | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | ElevenLabs | Thai read-aloud; `TTS_PROVIDER=off` to disable |
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |

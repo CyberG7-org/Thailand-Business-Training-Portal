@@ -137,6 +137,13 @@ export async function validateRecord(
       blocks: f.blocks,
       detail: f.detail as unknown as Json,
     });
+    // The cron and a page request can validate the same record together. A concurrent validator
+    // may have inserted this open finding after our snapshot; the unique index makes that safe.
+    if (
+      insertError?.code === '23505' &&
+      insertError.message.includes('training_fact_exceptions_one_open')
+    )
+      continue;
     if (insertError) throw insertError;
     opened += 1;
   }

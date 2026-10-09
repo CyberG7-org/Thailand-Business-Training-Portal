@@ -10,7 +10,7 @@ import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
-import { cardConceptGroup } from '@/lib/content/bank-interview-cards';
+import { BANK_INTERVIEW_CARDS, cardConceptGroup } from '@/lib/content/bank-interview-cards';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { loadCardEvidence, type Evidence } from '@/lib/db/passages';
@@ -112,7 +112,12 @@ export default async function StudyMaterialPage({
     : assignment
       ? toTemplateRecord(assignment.dbd_records, assignment)
       : null;
-  const body = renderTemplateLenient(localization.body ?? '', templateRecord, loc);
+  // Starter cards are maintained in code now that staff cannot edit them. Use the current
+  // approved wording even if an environment has not rerun content:starter after deployment.
+  const starterBody = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === key)?.localizations[
+    loc
+  ].body;
+  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', templateRecord, loc);
 
   // "From your documents" (spec §8, D44): passages of the learner's OWN record for this card's
   // concepts. The assignment is the ownership check; names are read with the service role because
