@@ -2,18 +2,13 @@ import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
-import { listBusinessCategories } from '@/lib/db/business-categories';
+import { BUSINESS_NATURES } from '@/lib/domain/business-natures';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { companyStatus } from '@/lib/domain/auto-confirm';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
-import {
-  ASKED_INTERVIEW_FIELDS,
-  STANDARD_ANSWER_FIELDS,
-  withStandardAnswers,
-  type StandardAnswerField,
-} from '@/lib/domain/standard-answers';
+import { withStandardAnswers } from '@/lib/domain/standard-answers';
 import { extractionToFormValues, type ExtractionSuggestions } from '@/lib/domain/extraction-merge';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { DbdRecordForm } from '../dbd-record-form';
@@ -21,8 +16,7 @@ import { AddressPanel } from './address-panel';
 import { CategoryPanel } from './category-panel';
 import { ExceptionsPanel } from './exceptions-panel';
 import { LinksForm } from './links-form';
-import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
-import { invoiceSetAsides, summarizeInvoices } from '@/lib/domain/invoices/arithmetic';
+import { withBusinessNatureFigures } from '@/lib/domain/invoices/answers';
 import type { PackGroup } from '@/lib/domain/pack/sort';
 import { InterviewForm } from './interview-form';
 import { AskDocuments } from './ask-documents';
@@ -55,10 +49,6 @@ export default async function DbdRecordPage({
   const { db, record, structured, documents, exceptions, address } = loaded;
   const t = await getTranslations('admin.dbd');
 
-  const categories = await listBusinessCategories(db, { activeOnly: true });
-  const labelOf = (c: (typeof categories)[number]) =>
-    locale === 'en' ? c.label_en : locale === 'zh' ? c.label_zh : c.label_th;
-
   // The reading runs in the background (D46): show the latest extract job, or that oversized
   // documents are still being indexed before their transcripts can fill the record.
   const { data: extractJob } = await db
@@ -69,36 +59,6 @@ export default async function DbdRecordPage({
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  // The invoices job (D101), beside the pack's.
-  const { data: invoicesJob } = await db
-    .from('index_jobs')
-    .select('status, last_error')
-    .eq('record_id', id)
-    .eq('kind', 'invoices')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const invoiceReading: ReadingState | null =
-    invoicesJob?.status === 'queued' || invoicesJob?.status === 'running'
-      ? { status: invoicesJob.status, error: null }
-      : invoicesJob?.status === 'failed'
-        ? { status: 'failed', error: invoicesJob.last_error }
-        : null;
-  // The invoice documents in upload order carry the rows of the read, by index.
-  const invoiceDocuments = documents.filter((d) => d.group === 'invoice');
-  const invoiceRows = structured.invoices?.rows ?? [];
-  const invoiceSummary = structured.invoices ? summarizeInvoices(invoiceRows) : null;
-  const invoiceSetAside = invoiceSetAsides(invoiceRows);
-  const invoiceOf = (documentId: string) => {
-    const position = invoiceDocuments.findIndex((d) => d.id === documentId);
-    const row = invoiceRows.find((r) => r.index === position + 1);
-    if (!structured.invoices || !row) return null;
-    return {
-      date: row.issue_date,
-      total: row.grand_total,
-      setAside: invoiceSetAside.find((s) => s.index === row.index)?.reason ?? null,
-    };
-  };
   let reading: ReadingState | null = null;
   if (extractJob?.status === 'queued' || extractJob?.status === 'running') {
     reading = { status: extractJob.status, error: null };
@@ -130,22 +90,19 @@ export default async function DbdRecordPage({
       : { data: null };
 
   const confirmed = record.extraction_status === 'confirmed';
-  // Level 4 asks five questions (D91); the rest are standard answers, shown as the sheet reads
-  // them.
-  // The invoices' answers sit on top (D101), so the count and the standard answers see them.
-  const filled = withInvoiceAnswers(
+  // Bank interview figures come from the manager-selected business category.
+  const filled = withBusinessNatureFigures(
     withStandardAnswers(structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
       address: address.full || record.head_office_address,
       website: record.website,
     }),
-    structured.invoices,
+    structured.category?.key,
   );
-  const answered = ASKED_INTERVIEW_FIELDS.filter(
-    (field) => String(filled[field] ?? '').trim() !== '',
-  ).length;
-  const standardAnswers = Object.fromEntries(
-    STANDARD_ANSWER_FIELDS.map((field) => [field, filled[field]]),
-  ) as Record<StandardAnswerField, string | null>;
+  const answered = [
+    filled.monthly_revenue,
+    filled.average_transaction,
+    filled.monthly_transactions,
+  ].filter((value) => Boolean(value?.trim())).length;
   const status = companyStatus(
     record,
     reading ? (reading.status === 'failed' ? 'failed' : 'open') : null,
@@ -204,7 +161,7 @@ export default async function DbdRecordPage({
           exceptions: t('tabs.exceptions'),
         }}
         badges={{
-          interview: { text: `${answered}/${ASKED_INTERVIEW_FIELDS.length}` },
+          interview: { text: `${answered}/3` },
           documents: { text: String(documents.length) },
           ...(exceptions.length > 0
             ? { exceptions: { text: String(exceptions.length), warn: true } }
@@ -223,20 +180,17 @@ export default async function DbdRecordPage({
                 documentNames={documents.map((d) => d.original_name)}
               />
               <AddressPanel address={address} stored={Boolean(structured.address)} />
-              <CategoryPanel
-                recordId={record.id}
-                assignment={structured.category ?? null}
-                options={categories.map((c) => ({ key: c.key, label: labelOf(c) }))}
-              />
             </>
           ),
           interview: (
-            <InterviewForm
-              recordId={record.id}
-              answers={structured.interview ?? EMPTY_INTERVIEW_PROFILE}
-              standard={standardAnswers}
-              invoices={invoiceSummary}
-            />
+            <div className="grid gap-4">
+              <CategoryPanel
+                recordId={record.id}
+                assignment={structured.category ?? null}
+                options={BUSINESS_NATURES.map(([key, label]) => ({ key, label }))}
+              />
+              <InterviewForm figures={filled} />
+            </div>
           ),
           documents: (
             <>
@@ -266,7 +220,6 @@ export default async function DbdRecordPage({
                   id: d.id,
                   name: d.original_name,
                   group: d.group as PackGroup,
-                  invoice: d.group === 'invoice' ? invoiceOf(d.id) : null,
                   type: d.document_type,
                   sizeBytes: d.size_bytes,
                   pageCount: d.page_count,
@@ -275,13 +228,17 @@ export default async function DbdRecordPage({
                   indexError: d.index_error,
                 }))}
                 reading={reading}
-                invoiceReading={invoiceReading}
                 extractionAvailable={getDbdExtractor() !== null}
               />
               <LinksForm
                 recordId={record.id}
                 website={record.website}
                 facebookPage={record.facebook_page}
+                facebookStatus={
+                  structured.facebook_source?.url === record.facebook_page
+                    ? structured.facebook_source.status
+                    : null
+                }
               />
               <AskDocuments recordId={record.id} />
             </>

@@ -12,7 +12,7 @@ import { CreateDbdForm } from './create-dbd-form';
 export type CompanyRow = {
   id: string;
   name: string | null;
-  juristicId: string | null;
+  director: string | null;
   /** The certificate's issue date, already formatted for the reader's language. */
   issuedOn: string | null;
   status: CompanyStatus;
@@ -61,12 +61,10 @@ export function CompaniesPanel({
   const t = useTranslations('admin.createDbd');
   const [query, setQuery] = useState('');
   const q = query.trim().toLowerCase();
-  const digits = q.replace(/\D/g, '');
   const shown = q
     ? rows.filter(
         (r) =>
-          (r.name ?? '').toLowerCase().includes(q) ||
-          (digits !== '' && (r.juristicId ?? '').includes(digits)),
+          (r.name ?? '').toLowerCase().includes(q) || (r.director ?? '').toLowerCase().includes(q),
       )
     : rows;
 
@@ -105,7 +103,7 @@ export function CompaniesPanel({
               <tr>
                 <th className="md:pl-6">{t('columns.company')}</th>
                 {showTeam && <th>{t('columns.team')}</th>}
-                <th>{t('columns.juristicId')}</th>
+                <th>{t('columns.director')}</th>
                 <th>{t('columns.issuedOn')}</th>
                 <th>{t('columns.status')}</th>
                 <th className="md:pr-6">{t('columns.learner')}</th>
@@ -134,9 +132,7 @@ export function CompaniesPanel({
                         {r.teamCode ?? '—'}
                       </td>
                     )}
-                    <td className="align-middle font-mono text-ink-700 tabular-nums">
-                      {r.juristicId ?? '—'}
-                    </td>
+                    <td className="align-middle text-ink-700">{r.director ?? '—'}</td>
                     <td className="align-middle whitespace-nowrap">{r.issuedOn ?? '—'}</td>
                     <td className="align-middle">
                       <span

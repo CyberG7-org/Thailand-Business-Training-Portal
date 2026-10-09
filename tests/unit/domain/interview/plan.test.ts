@@ -8,6 +8,7 @@ import {
   nextReadinessStep,
   probingItems,
   READINESS_ITEMS,
+  readinessItem,
 } from '@/lib/domain/interview/plan';
 import type { Assessment, FactSheet } from '@/lib/domain/interview/types';
 
@@ -54,18 +55,20 @@ describe('buildPlan', () => {
   });
 });
 
-describe('buildReadinessPlan v2', () => {
-  it('freezes the 11 simple questions and the 9-of-11 threshold', () => {
+describe('buildReadinessPlan v3', () => {
+  it('freezes the 13 simple questions and the 10-of-13 threshold', () => {
     const plan = buildReadinessPlan({
       ...facts,
       head_office_address: 'กรุงเทพมหานคร',
       directors: 'นางสาว กรรมการ ตัวอย่าง',
       signing_authority: 'กรรมการหนึ่งคนลงนาม',
       my_name: 'นางสาว ผู้เรียน ตัวอย่าง',
-      customer_profile: 'ธุรกิจและบุคคลทั่วไปในประเทศไทย',
-      transaction_details: 'รับเงินลูกค้าผ่านการโอนและ QR และจ่ายซัพพลายเออร์',
+      client_origin: 'Facebook, TikTok, เว็บไซต์, ลูกค้าแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
+      monthly_revenue: 'ประมาณ 641,400 บาท',
+      monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
+      average_transaction: 'ประมาณ 21,380 บาท',
     });
-    expect(plan).toMatchObject({ version: 2, passScore: 9, cursor: 0 });
+    expect(plan).toMatchObject({ version: 3, passScore: 10, cursor: 0 });
     expect(plan.items.map((item) => item.concept)).toEqual([
       'company_name',
       'registration_number',
@@ -76,17 +79,19 @@ describe('buildReadinessPlan v2', () => {
       'attendee_identity',
       'registration_date',
       'account_purpose',
-      'customer_profile',
-      'transaction_details',
+      'customer_origin',
+      'monthly_revenue',
+      'monthly_transactions',
+      'average_transaction',
     ]);
-    expect(plan.items).toHaveLength(11);
+    expect(plan.items).toHaveLength(13);
     expect(plan.items.every((item) => item.core === false)).toBe(true);
     expect(plan.items.every((item) => item.question.length > 8)).toBe(true);
   });
 
   it('has a readable label in every language and an explicit study card for every question', () => {
     const realCardKeys = new Set(BANK_INTERVIEW_CARDS.map((card) => card.contentKey));
-    expect(READINESS_ITEMS).toHaveLength(11);
+    expect(READINESS_ITEMS).toHaveLength(13);
     for (const item of READINESS_ITEMS) {
       expect(item.question.th).not.toBe(item.concept);
       expect(item.question.en).not.toBe(item.concept);
@@ -97,6 +102,15 @@ describe('buildReadinessPlan v2', () => {
     expect(READINESS_ITEMS.find((item) => item.concept === 'account_purpose')?.cardKey).toBe(
       'bank-interview-4-role',
     );
+  });
+
+  it('keeps labels and study-card links for frozen v2 sessions', () => {
+    expect(readinessItem('customer_profile')).toMatchObject({
+      cardKey: 'bank-interview-3-business',
+    });
+    expect(readinessItem('transaction_details')).toMatchObject({
+      cardKey: 'bank-interview-4-role',
+    });
   });
 
   it('owns the sequence even when the provider tries to close, jump or repeat', () => {
@@ -124,7 +138,7 @@ describe('buildReadinessPlan v2', () => {
     const last = { ...plan, cursor: plan.items.length - 1 };
     expect(
       nextReadinessStep(last, {
-        concept: 'transaction_details',
+        concept: 'average_transaction',
         verdict: 'correct',
         note: '',
       }),

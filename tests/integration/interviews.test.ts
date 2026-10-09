@@ -106,7 +106,7 @@ describe('the readiness interview', () => {
     expect(again.session.id).toBe(first.session.id);
   });
 
-  it('ends not ready when the learner evades, and the reasons name the concepts', async () => {
+  it('ends not ready with only wrong results when the learner does not know the answers', async () => {
     const { session } = await startOrResumeInterview(team.learner.id);
     await answerAll(team.learner.id, session.id, () => 'ไม่ทราบ');
     const { data } = await svc
@@ -119,11 +119,15 @@ describe('the readiness interview', () => {
     const summary = data!.summary as {
       reasons: { concept: string; verdict: string }[];
       narrative: string;
+      score: number;
+      maxScore: number;
+      passScore: number;
     };
-    expect(
-      summary.reasons.some((r) => r.concept === 'company_name' && r.verdict === 'evasive'),
-    ).toBe(true);
-    expect(summary.narrative.length).toBeGreaterThan(0);
+    expect(summary.reasons.some((r) => r.concept === 'company_name' && r.verdict === 'wrong')).toBe(
+      true,
+    );
+    expect(summary.reasons.every((reason) => reason.verdict === 'wrong')).toBe(true);
+    expect(summary).toMatchObject({ score: 0, maxScore: 13, passScore: 10 });
     const facts = await loadProgressionFacts(await clientFor(team.learner), team.learner.id);
     expect(facts.interviewSessions).toBe(1);
     expect(facts.interviewReady).toBe(false);

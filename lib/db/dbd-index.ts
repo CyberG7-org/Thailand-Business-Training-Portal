@@ -660,10 +660,16 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
 
     const { data: doc, error: docError } = await admin
       .from('dbd_documents')
-      .select('id, path, page_count, document_type')
+      .select('id, path, page_count, document_type, group')
       .eq('id', job.document_id)
       .single();
     if (docError) throw docError;
+    if (doc.group !== 'pack') {
+      await setJob(admin, job.id, { status: 'done', locked_until: null, last_error: null });
+      await setDocument(admin, doc.id, { index_status: 'skipped', index_error: null });
+      summary.skipped++;
+      continue;
+    }
 
     try {
       if (!doc.page_count) throw new Error('unreadable_pdf');

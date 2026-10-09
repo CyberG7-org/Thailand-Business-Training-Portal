@@ -48,7 +48,7 @@ describe('learner contact details', () => {
     });
     const learner = await createLearnerAccount({
       suffix: 'ca01',
-      password: PASSWORD,
+      password: 'Test1234',
       managerId: manager.id,
       contact,
     });

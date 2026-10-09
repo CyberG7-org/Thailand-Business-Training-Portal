@@ -14,9 +14,7 @@ import {
 } from '../actions';
 import { PackPreviewCard } from '../pack-preview';
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../use-direct-upload';
-import { readInvoicesAgainAction } from '../actions';
 import type { PackGroup } from '@/lib/domain/pack/sort';
-import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { showRecordTab } from './record-tabs';
 
 const initial: ToolState = { ok: false, error: null };
@@ -36,8 +34,6 @@ export type DocumentSummary = {
   id: string;
   name: string;
   group: PackGroup;
-  /** What the invoice read made of it (D101); null before the read. */
-  invoice: { date: string | null; total: number | null; setAside: string | null } | null;
   type: string | null;
   sizeBytes: number;
   pageCount: number | null;
@@ -98,15 +94,12 @@ export function DocumentsCard({
   status,
   documents,
   reading,
-  invoiceReading,
   extractionAvailable,
 }: {
   id: string;
   status: string;
   documents: DocumentSummary[];
   reading: ReadingState | null;
-  /** The invoices job's state (D101), beside the pack's. */
-  invoiceReading: ReadingState | null;
   extractionAvailable: boolean;
 }) {
   const locale = useLocale();
@@ -162,34 +155,10 @@ export function DocumentsCard({
                             {typeLabel(doc.type)}
                           </span>
                         )}
-                        {group === 'invoice' && (
-                          <span
-                            className={
-                              doc.invoice?.setAside ? 'staff-tag text-warn-700' : 'staff-tag'
-                            }
-                            data-testid="invoice-row"
-                            data-set-aside={doc.invoice?.setAside ?? undefined}
-                          >
-                            {!doc.invoice
-                              ? t('invoices.notRead')
-                              : doc.invoice.setAside
-                                ? t('invoices.setAside', {
-                                    reason: t(
-                                      `invoices.reasons.${doc.invoice.setAside}` as 'invoices.reasons.no_date',
-                                    ),
-                                  })
-                                : t('invoices.row', {
-                                    date: doc.invoice.date
-                                      ? formatDate(doc.invoice.date, locale as Locale)
-                                      : '—',
-                                    total: (doc.invoice.total ?? 0).toLocaleString('en-US'),
-                                  })}
-                          </span>
-                        )}
                         <span className="text-ink-500 tabular-nums">
                           {(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB
                         </span>
-                        {group !== 'agreement' && (
+                        {group === 'pack' && (
                           <span
                             data-testid="index-status"
                             data-status={doc.indexStatus}
@@ -202,7 +171,7 @@ export function DocumentsCard({
                             })}
                           </span>
                         )}
-                        {group !== 'agreement' && canRequestIndex(doc.indexStatus) && (
+                        {group === 'pack' && canRequestIndex(doc.indexStatus) && (
                           <form action={retryIndexAction}>
                             <input type="hidden" name="locale" value={locale} />
                             <input type="hidden" name="id" value={id} />
@@ -236,34 +205,6 @@ export function DocumentsCard({
                       </li>
                     ))}
                 </ul>
-                {group === 'invoice' && extractionAvailable && (
-                  <form
-                    action={readInvoicesAgainAction}
-                    className="flex flex-wrap items-center gap-3"
-                  >
-                    <input type="hidden" name="locale" value={locale} />
-                    <input type="hidden" name="id" value={id} />
-                    <button
-                      type="submit"
-                      className="staff-btn-ghost staff-btn-sm"
-                      data-testid="read-invoices"
-                    >
-                      {t('invoices.readAgain')}
-                    </button>
-                    {invoiceReading && (
-                      <p
-                        role={invoiceReading.status === 'failed' ? 'alert' : 'status'}
-                        data-testid="invoice-reading-status"
-                        data-state={invoiceReading.status}
-                        className="text-sm text-ink-700"
-                      >
-                        {invoiceReading.status === 'failed'
-                          ? t('invoices.failed', { reason: invoiceReading.error ?? '' })
-                          : t('invoices.queued')}
-                      </p>
-                    )}
-                  </form>
-                )}
               </div>
             ))}
           </div>

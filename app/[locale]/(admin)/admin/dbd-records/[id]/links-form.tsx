@@ -14,10 +14,12 @@ export function LinksForm({
   recordId,
   website,
   facebookPage,
+  facebookStatus,
 }: {
   recordId: string;
   website: string | null;
   facebookPage: string | null;
+  facebookStatus: 'read' | 'unavailable' | null;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd.links');
@@ -55,6 +57,11 @@ export function LinksForm({
           />
         </label>
       </div>
+      {facebookPage && (
+        <p className="text-sm text-ink-500" data-testid="facebook-read-status">
+          {t('facebookStatus')}: {t(facebookStatus ?? 'notRead')}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" disabled={pending} className="staff-btn-ghost staff-btn-sm">
           {t('save')}

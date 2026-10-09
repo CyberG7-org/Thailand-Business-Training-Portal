@@ -7,6 +7,8 @@ import { assignDbdRecord, learnersOfRecords } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { deleteDbdRecord } from '@/lib/db/dbd-records';
+import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { updateStructuredData } from '@/lib/db/derived-facts';
 import { refreshNameCardAfter } from '@/lib/db/name-cards';
 import { createLearnerAccount, deleteLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -90,8 +92,6 @@ export async function createUserAction(
 
   // The learner is created with their name (D66) and the code the staff member typed after the
   // team's prefix (D69); the prefix itself is the server's, from the team.
-  const displayName = String(formData.get('displayName') ?? '').trim();
-  if (!displayName) return fail("Enter the learner's name");
 
   // The contact details the manager gives the learner (D80), checked before any account exists.
   const contact = learnerContactSchema.safeParse(contactFromForm(formData));
@@ -104,13 +104,17 @@ export async function createUserAction(
   if (!dbdRecordId) return fail('Choose the company the learner belongs to');
   const { data: record, error: recordError } = await db
     .from('dbd_records')
-    .select('id, company_name_th, extraction_status')
+    .select('id, company_name_th, directors, extraction_status')
     .eq('id', dbdRecordId)
     .maybeSingle();
   if (recordError) return fail(recordError.message);
   if (!record || record.extraction_status !== 'confirmed') {
     return fail('The chosen DBD record is not confirmed yet');
   }
+  const displayName = Array.isArray(record.directors)
+    ? String((record.directors[0] as { name_th?: string } | undefined)?.name_th ?? '').trim()
+    : '';
+  if (!displayName) return fail('The company needs a director name before creating a learner');
   // One learner per company (D93), checked before any account exists so a refusal leaves none.
   const taken = await learnersOfRecords(createSupabaseAdminClient(), [record.id]);
   if (taken.has(record.id)) {
@@ -137,6 +141,17 @@ export async function createUserAction(
   });
   try {
     await assignDbdRecord(db, { userId: created.id, dbdRecordId: record.id });
+    const contactUpdate = await updateStructuredData(db, record.id, (stored) => ({
+      ...stored,
+      interview: {
+        ...(stored.interview ?? EMPTY_INTERVIEW_PROFILE),
+        contact_email: contact.data.contactEmail,
+        contact_phone: contact.data.phone,
+      },
+    }));
+    if (contactUpdate !== 'updated' && contactUpdate !== 'unchanged') {
+      throw new Error(`Company contact details could not be saved (${contactUpdate})`);
+    }
   } catch (e) {
     revalidatePath(`/${locale}/admin/users`);
     const message = e instanceof Error ? e.message : String(e);

@@ -55,7 +55,7 @@ export const FACT_QUERIES = [
   'วัตถุที่ประสงค์ จำนวน ข้อ',
 ];
 
-const SWEPT_LISTS: SweptList[] = ['shareholders', 'share_structure', 'objectives', 'promoters'];
+const SWEPT_LISTS: SweptList[] = ['shareholders', 'share_structure'];
 /** Sweeps carry no per-row confidence; the lists are shown for review at this level. */
 const LIST_CONFIDENCE = 0.9;
 const CAS_ATTEMPTS = 5;
@@ -308,7 +308,7 @@ async function writeLists(
     const structured = readStructuredData(row.structured_data);
     business = structuredClone(structured.business ?? EMPTY_BUSINESS_PROFILE);
     lists = [];
-    for (const list of ['shareholders', 'objectives', 'promoters'] as const) {
+    for (const list of ['shareholders'] as const) {
       if (business[list].length === 0 && picked[list].length > 0) {
         (business as Record<string, unknown>)[list] = picked[list];
         lists.push(list);

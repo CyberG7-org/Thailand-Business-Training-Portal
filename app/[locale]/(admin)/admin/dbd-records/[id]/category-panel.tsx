@@ -3,16 +3,16 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
 import type { CategoryAssignment } from '@/lib/domain/business-category';
-import { remapBusinessCategoryAction, setBusinessCategoryAction, type ToolState } from '../actions';
+import { setBusinessCategoryAction, type ToolState } from '../actions';
 
 export type CategoryOptionView = { key: string; label: string };
 
 const initial: ToolState = { ok: false, error: null };
-const KNOWN_ERRORS = ['no_text', 'not_configured', 'no_categories'] as const;
+const KNOWN_ERRORS = ['no_text', 'not_configured', 'no_categories', 'choose-category'] as const;
 
 /**
  * The record's business category (spec §5.3, D90): the mapper's best match, or a person's own
- * choice, which holds until the business text changes; "map again" starts over.
+ * choice, which determines the three interview figures.
  */
 export function CategoryPanel({
   recordId,
@@ -26,7 +26,6 @@ export function CategoryPanel({
   const locale = useLocale();
   const t = useTranslations('admin.dbd.category');
   const [setState, setAction, setting] = useActionState(setBusinessCategoryAction, initial);
-  const [remapState, remapAction, remapping] = useActionState(remapBusinessCategoryAction, initial);
   const label = (key: string | null) => options.find((o) => o.key === key)?.label ?? key ?? '—';
   const pct = assignment?.confidence != null ? Math.round(assignment.confidence * 100) : 0;
   const status = assignment?.status ?? 'unmapped';
@@ -76,21 +75,9 @@ export function CategoryPanel({
           {t('set')}
         </button>
       </form>
-      <form action={remapAction}>
-        <input type="hidden" name="locale" value={locale} />
-        <input type="hidden" name="id" value={recordId} />
-        <button
-          type="submit"
-          disabled={remapping}
-          className="staff-btn-ghost"
-          data-testid="category-remap"
-        >
-          {t('remap')}
-        </button>
-      </form>
-      {(setState.error || remapState.error) && (
+      {setState.error && (
         <p role="alert" className="text-sm text-bad-600">
-          {setState.error ?? remapState.error}
+          {setState.error}
         </p>
       )}
     </section>

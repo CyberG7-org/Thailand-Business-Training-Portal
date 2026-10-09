@@ -23,18 +23,18 @@ function seeded(seed: number): () => number {
 }
 
 describe('composing a code', () => {
-  it('prefixes a manager with T- and stores it lower-case', () => {
-    expect(MANAGER_PREFIX).toBe('t-');
-    expect(managerLoginId('A12')).toBe('t-a12');
-    expect(managerLoginId(' a12 ')).toBe('t-a12');
+  it('prefixes a manager with T and stores it lower-case', () => {
+    expect(MANAGER_PREFIX).toBe('t');
+    expect(managerLoginId('A12')).toBe('ta12');
+    expect(managerLoginId(' a12 ')).toBe('ta12');
   });
 
   it("puts a learner under their manager's whole code", () => {
-    expect(learnerPrefix('t-a12')).toBe('t-a12-');
-    expect(learnerLoginId('t-a12', 'DA42')).toBe('t-a12-da42');
-    expect(learnerLoginId('T-A12', ' da42 ')).toBe('t-a12-da42');
+    expect(learnerPrefix('t-a12')).toBe('ta12');
+    expect(learnerLoginId('t-a12', 'DA42')).toBe('ta12da42');
+    expect(learnerLoginId('T-A12', ' da42 ')).toBe('ta12da42');
     // A team from before D85 keeps working the same way until it is renamed.
-    expect(learnerLoginId('t-01', 'da42')).toBe('t-01-da42');
+    expect(learnerLoginId('t-01', 'da42')).toBe('t01da42');
   });
 });
 

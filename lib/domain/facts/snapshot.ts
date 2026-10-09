@@ -14,8 +14,8 @@ import {
 } from '@/lib/domain/dbd-profile';
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
-import { withInvoiceAnswers } from '@/lib/domain/invoices/answers';
-import { summarizeInvoices, type InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
+import { withBusinessNatureFigures } from '@/lib/domain/invoices/answers';
+import type { InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
 import { clientOriginAnswer, withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
 import { buildFactSheet, type FactSheet, type RecordColumns } from './fact-sheet';
@@ -74,12 +74,12 @@ export function buildTrainingSnapshot(input: {
 }): TrainingSnapshot {
   const business = input.structured.business ?? EMPTY_BUSINESS_PROFILE;
   // The earlier answers follow the new ones when blank (D91), as the fact sheet's do.
-  const interview = withInvoiceAnswers(
+  const interview = withBusinessNatureFigures(
     withStandardAnswers(input.structured.interview ?? EMPTY_INTERVIEW_PROFILE, {
       address: input.address?.full || input.record.head_office_address,
       website: input.record.website,
     }),
-    input.structured.invoices,
+    input.structured.category?.key,
   );
   return {
     facts: buildFactSheet({
@@ -106,9 +106,7 @@ export function buildTrainingSnapshot(input: {
       contact_phone: interview.contact_phone,
       website: input.record.website ?? null,
       facebook_page: input.record.facebook_page ?? null,
-      invoice_summary: input.structured.invoices
-        ? summarizeInvoices(input.structured.invoices.rows)
-        : null,
+      invoice_summary: null,
     },
   };
 }

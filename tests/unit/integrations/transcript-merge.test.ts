@@ -43,11 +43,11 @@ describe('selectByTypeAuthority', () => {
     ]);
     expect(picked.shareholders.map((s) => s.name)).toEqual(['ผู้ถือหุ้น ปัจจุบัน']);
     expect(picked.share_structure.total_shares).toBe(10000);
-    expect(picked.promoters.map((p) => p.name)).toEqual(['ผู้เริ่มก่อการ เก่า']);
-    expect(picked.objectives).toEqual([{ no: 1, text: 'ค้าปลีก' }]);
+    expect(picked.promoters).toEqual([]);
+    expect(picked.objectives).toEqual([]);
   });
 
-  it('falls back to the certificate for objectives and to the memorandum for the share structure', () => {
+  it('does not read objectives and falls back to the memorandum for share structure', () => {
     const cert: SweepResult = {
       ...structuredClone(EMPTY_SWEEP),
       objectives: [{ no: 1, text: 'x' }],
@@ -60,7 +60,7 @@ describe('selectByTypeAuthority', () => {
       { type: 'certificate', result: cert },
       { type: 'memorandum', result: memo },
     ]);
-    expect(picked.objectives).toHaveLength(1);
+    expect(picked.objectives).toEqual([]);
     expect(picked.share_structure.total_shares).toBe(5);
     expect(picked.shareholders).toEqual([]);
   });
@@ -79,7 +79,7 @@ describe('sanitizeSweptLists', () => {
     };
     const clean = sanitizeSweptLists(swept);
     expect(clean.shareholders.map((s) => s.name)).toEqual(['นาย ก']);
-    expect(clean.objectives).toEqual([{ no: 2, text: 'ส่งออก' }]);
+    expect(clean.objectives).toEqual([]);
     expect(clean.promoters).toEqual([]);
     expect(businessProfileSchema.safeParse({ ...clean, business_categories: [] }).success).toBe(
       true,
