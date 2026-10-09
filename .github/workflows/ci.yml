@@ -67,6 +67,9 @@ jobs:
           pnpm exec supabase start
           node scripts/write-local-env.mjs
 
+      - name: Build for browser tests
+        run: pnpm build
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
