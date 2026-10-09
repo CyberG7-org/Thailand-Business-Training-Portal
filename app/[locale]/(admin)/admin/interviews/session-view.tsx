@@ -237,7 +237,6 @@ export async function InterviewSessionView({
               </div>
             </dl>
           </div>
-
         </section>
 
         <SessionResultTranscript
