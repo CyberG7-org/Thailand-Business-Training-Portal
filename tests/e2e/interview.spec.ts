@@ -84,18 +84,20 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
     'data-outcome',
     'cannot_open',
   );
-  await expect(page.getByTestId('interview-outcome')).toContainText('ฝึกอีกนิด');
-  await expect(page.getByTestId('interview-verdict')).toContainText('0 จาก 11');
-  await expect(page.getByTestId('verdict-reason-company_name')).toHaveAttribute(
-    'data-verdict',
-    'evasive',
+  await expect(page.getByTestId('interview-outcome')).toContainText(
+    'ยังไม่พร้อม — ยังเปิดบัญชีไม่ได้',
   );
-  // The debrief teaches: the correct company name is shown now, and never was in the chat.
-  await expect(page.getByTestId('verdict-reasons')).toContainText(company);
-  for (const bubble of await page.getByTestId('chat-message').all()) {
-    if ((await bubble.getAttribute('data-role')) === 'officer') {
-      await expect(bubble).not.toContainText('0105568233704');
-    }
+  await expect(page.getByTestId('interview-verdict')).toContainText('0 จาก 11');
+  await expect(
+    page.getByTestId('interview-result-question').first().locator('[data-verdict]'),
+  ).toHaveAttribute('data-verdict', 'evasive');
+  // The result teaches: the correct company name is shown now, and was never in the chat.
+  await expect(page.getByTestId('admin-transcript')).toContainText(company);
+  for (const bubble of await page
+    .getByTestId('admin-transcript')
+    .locator('[data-role="officer"]')
+    .all()) {
+    await expect(bubble).not.toContainText('0105568233704');
   }
 
   await page.goto('/th/interview');
@@ -108,7 +110,7 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'ready');
   // The result says in plain words what the learner came to find out.
   await expect(page.getByTestId('interview-outcome')).toHaveAttribute('data-outcome', 'can_open');
-  await expect(page.getByTestId('interview-outcome')).toContainText('พร้อมสำหรับขั้นตอนถัดไป');
+  await expect(page.getByTestId('interview-outcome')).toContainText('พร้อมแล้ว — เปิดบัญชีได้');
   await expect(page.getByTestId('interview-verdict')).toContainText('11 จาก 11');
 
   await page.goto('/th/dashboard');
@@ -145,7 +147,9 @@ test('the learner can end the interview early and is told to try again', async (
     'data-outcome',
     'cannot_open',
   );
-  await expect(page.getByTestId('interview-outcome')).toContainText('ฝึกอีกนิด');
+  await expect(page.getByTestId('interview-outcome')).toContainText(
+    'ยังไม่พร้อม — ยังเปิดบัญชีไม่ได้',
+  );
   await expect(page.getByTestId('close-reason')).toHaveText('คุณจบการสัมภาษณ์ก่อนครบทุกข้อ');
   await expect(page.getByRole('link', { name: 'ลองอีกครั้ง' })).toHaveAttribute(
     'href',
