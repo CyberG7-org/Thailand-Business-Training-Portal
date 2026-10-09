@@ -41,7 +41,7 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการอัปโหลด', MANAGER_PASSWORD);
   const adminCompany = `บริษัท ของแอดมินเท่านั้น ${Date.now()} จำกัด`;
-  await createConfirmedRecord(page, {
+  const adminRecordId = await createConfirmedRecord(page, {
     companyNameTh: adminCompany,
     juristicId: '0105568233704',
     issuedOn: '13/07/2569',
@@ -49,7 +49,7 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
 
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   const ownCompany = `บริษัท ของทีม ${Date.now()} จำกัด`;
-  await createConfirmedRecord(page, {
+  const ownRecordId = await createConfirmedRecord(page, {
     companyNameTh: ownCompany,
     team: code,
     juristicId: '0105568233771',
@@ -61,8 +61,8 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
   await page.goto('/th/admin/dbd-records');
   await expect(page).toHaveURL(/\/th\/admin\/users/);
   const companies = page.getByTestId('companies');
-  await expect(companies.locator('tbody')).toContainText(ownCompany);
-  await expect(companies.locator('tbody')).not.toContainText(adminCompany);
+  await expect(companies.getByTestId(`company-learner-${ownRecordId}`)).toBeVisible();
+  await expect(companies.getByTestId(`company-learner-${adminRecordId}`)).toHaveCount(0);
   // A manager sees no Team column: every record on their list is theirs.
   await expect(page.getByRole('columnheader', { name: 'ทีม' })).toHaveCount(0);
 
@@ -71,8 +71,12 @@ test('a record a manager uploads belongs to their team', async ({ page }) => {
   await page.goto('/th/admin/users?tab=companies');
   const all = page.getByTestId('companies');
   await expect(all.getByRole('columnheader', { name: 'ทีม' })).toBeVisible();
-  await expect(all.locator('tr').filter({ hasText: ownCompany })).toContainText(code);
-  await expect(all.locator('tr').filter({ hasText: adminCompany })).not.toContainText(code);
+  await expect(
+    all.getByRole('row').filter({ has: page.getByTestId(`company-learner-${ownRecordId}`) }),
+  ).toContainText(code);
+  await expect(
+    all.getByRole('row').filter({ has: page.getByTestId(`company-learner-${adminRecordId}`) }),
+  ).not.toContainText(code);
 });
 
 test('a suspended manager loses the admin area on the next request', async ({ page, browser }) => {
