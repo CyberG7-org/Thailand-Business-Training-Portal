@@ -1,19 +1,22 @@
 import { expect, test } from '@playwright/test';
 import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedManager, seedTeamLearner } from './seed';
+import { recordIdForLearner, seedManager, seedTeamLearner } from './seed';
 
 test('deleting a DBD keeps its learner ready for another company', async ({ page }) => {
   const company = `บริษัท ลบดีบีดี ${Date.now()} จำกัด`;
   const manager = await seedManager('ผู้จัดการลบดีบีดี');
   const learner = await seedTeamLearner(manager.id, company, '2026-01-05');
+  const recordId = await recordIdForLearner(learner);
   await loginAs(page, manager.loginId, E2E_PASSWORD);
 
   await page.goto('/th/admin/users');
-  const companyRow = page.getByRole('row').filter({ hasText: company });
+  const companyRow = page
+    .getByRole('row')
+    .filter({ has: page.getByTestId(`company-learner-${recordId}`) });
   page.once('dialog', (dialog) => dialog.accept());
   await companyRow.getByRole('button', { name: 'ลบบริษัท' }).click();
-  await expect(page.getByRole('row').filter({ hasText: company })).toHaveCount(0);
+  await expect(page.getByTestId(`company-learner-${recordId}`)).toHaveCount(0);
 
   await page.goto('/th/admin/learners');
   const ready = page.getByTestId(`company-${learner}`).getByRole('link', {
@@ -29,6 +32,7 @@ test('deleting a learner leaves their company ready for another learner', async 
   const company = `บริษัท ลบผู้เรียน ${Date.now()} จำกัด`;
   const manager = await seedManager('ผู้จัดการลบผู้เรียน');
   const learner = await seedTeamLearner(manager.id, company, '2026-01-05');
+  const recordId = await recordIdForLearner(learner);
   await loginAs(page, manager.loginId, E2E_PASSWORD);
 
   await page.goto('/th/admin/learners');
@@ -38,6 +42,8 @@ test('deleting a learner leaves their company ready for another learner', async 
   await expect(page.getByTestId(`learner-${learner}`)).toHaveCount(0);
 
   await page.goto('/th/admin/users');
-  const companyRow = page.getByRole('row').filter({ hasText: company });
+  const companyRow = page
+    .getByRole('row')
+    .filter({ has: page.getByTestId(`company-learner-${recordId}`) });
   await expect(companyRow.getByRole('button', { name: 'มอบหมายผู้เรียน' })).toBeVisible();
 });

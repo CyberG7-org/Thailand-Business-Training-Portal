@@ -1,5 +1,4 @@
 import { expect, test, type Page } from '@playwright/test';
-import { CRITICAL_CONCEPT_KEYS } from '@/lib/domain/concepts/registry';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 import {
@@ -80,8 +79,8 @@ test('the quiz says what it is, marks each answer at once, and a pass is notifie
     await expect(first.getByTestId(`option-${option}`)).toBeDisabled();
   }
 
-  // One question that is not a key fact, answered wrong: the correct answer and why.
-  const slip = key.findIndex((q, i) => i > 0 && !CRITICAL_CONCEPT_KEYS.includes(q.conceptKey));
+  // Any one question can be wrong; only the overall 27/30 score decides the result.
+  const slip = 1;
   const wrongPick = OPTIONS.find((o) => o !== key[slip].correctKey)!;
   const slipped = page.getByTestId(`question-card-${slip}`);
   await slipped.getByTestId(`option-${wrongPick}`).click();

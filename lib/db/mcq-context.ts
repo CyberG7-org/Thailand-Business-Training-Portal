@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { FactSheet } from '@/lib/domain/facts/fact-sheet';
+import { BUSINESS_NATURES } from '@/lib/domain/business-natures';
 import { assignmentFacts, buildRoleSnapshot, type RoleSnapshot } from '@/lib/domain/facts/snapshot';
 import type { RenderContext } from '@/lib/domain/mcq/context';
 import { listBusinessCategories } from './business-categories';
@@ -24,13 +25,20 @@ export async function loadRenderContext(db: Db, facts: FactSheet): Promise<Rende
   return {
     facts,
     geo,
-    categories: categories.map((c) => ({
-      key: c.key,
-      th: c.label_th,
-      en: c.label_en,
-      zh: c.label_zh,
-      active: c.active,
-    })),
+    categories: [
+      ...categories.map((c) => ({
+        key: c.key,
+        th: c.label_th,
+        en: c.label_en,
+        zh: c.label_zh,
+        active: c.active,
+      })),
+      // Bank-interview categories are approved in code. Keep legacy DB categories too so
+      // learners pinned to an older training version can still render their quiz.
+      ...BUSINESS_NATURES.filter(([key]) => !categories.some((c) => c.key === key)).map(
+        ([key, en, , , , th, zh]) => ({ key, th, en, zh, active: true }),
+      ),
+    ],
   };
 }
 
