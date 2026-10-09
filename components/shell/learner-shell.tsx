@@ -67,7 +67,7 @@ export async function LearnerShell({
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
-  const statuses = !home && user ? await cachedStageStatuses(user.id) : null;
+  const statuses = user ? await cachedStageStatuses(user.id) : null;
   const usesPrimaryLayout = isPrimaryStage(step);
   const showsAutomaticStageTabs =
     usesPrimaryLayout && statuses !== null && stageNavigation === 'automatic';
@@ -112,7 +112,10 @@ export async function LearnerShell({
         className={`${home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'} ${mainClassName}`}
       >
         {home ? (
-          children
+          <div className="mx-auto grid w-full max-w-[1240px] gap-6">
+            {statuses && <LearnerStageTabs current="home" statuses={statuses} />}
+            {children}
+          </div>
         ) : usesPrimaryLayout ? (
           <div className="mx-auto grid w-full max-w-[1240px] gap-6">
             {showsAutomaticStageTabs && <LearnerStageTabs current={step} statuses={statuses} />}

@@ -1402,7 +1402,8 @@
     },
     "allDone": "อ่านครบทุกบทเรียนแล้ว",
     "cardOf": "บทเรียนที่ {n} จาก {total}",
-    "nextCard": "บทเรียนที่ {n}: {title}"
+    "nextCard": "บทเรียนที่ {n}: {title}",
+    "previousCard": "บทเรียนก่อนหน้า ({n})"
   },
   "quiz": {
     "title": "แบบฝึกหัด",

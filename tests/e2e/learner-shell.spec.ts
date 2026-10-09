@@ -5,7 +5,7 @@ import { seedLearnerWithCompany } from './seed';
 
 /**
  * The primary learner pages use the dashboard glass header on desktop, keep the compact header
- * on phones, and share the four-destination navigation. Home replaces the old Back control.
+ * on phones, and share the five-destination navigation. Home replaces the old Back control.
  */
 test('primary learner pages share the focused navigation on desktop', async ({ page }) => {
   const loginId = await seedLearnerWithCompany('บริษัท เชลล์ร่วม จำกัด', '2026-07-13');
@@ -13,6 +13,7 @@ test('primary learner pages share the focused navigation on desktop', async ({ p
   await expect(page).toHaveURL(/\/th\/dashboard$/);
   await expect(page.getByTestId('shell-header')).toBeVisible();
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('aria-current', 'page');
 
   await page.goto('/th/study');
   await expect(page.getByTestId('shell-header')).toHaveClass(/glass/);
@@ -20,9 +21,9 @@ test('primary learner pages share the focused navigation on desktop', async ({ p
   await expect(page.getByTestId('step-segments')).toHaveCount(0);
   await expect(
     page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
   await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('เอกสารเรียนรู้');
 
   await expect(page.getByTestId('learner-nav')).toHaveCount(0);
@@ -52,7 +53,7 @@ test('the shell fits a phone: no horizontal page scroll and a usable header', as
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
   await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
   await expect(page.getByTestId('learner-stage-tab-home')).toBeVisible();
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
 
   for (const [route, current] of [
     ['/th/exam', 'exam'],
@@ -64,13 +65,21 @@ test('the shell fits a phone: no horizontal page scroll and a usable header', as
     await expect(page.getByTestId('shell-header')).toHaveAttribute('data-variant', 'study');
     await expect(page.getByTestId('nav-back')).toHaveCount(0);
     await expect(tabs).toBeVisible();
-    await expect(tabs.locator('[data-testid^="learner-stage-tab-"]')).toHaveCount(4);
+    await expect(tabs.locator('[data-testid^="learner-stage-tab-"]')).toHaveCount(5);
     await expect(tabs.locator('[data-testid^="learner-stage-tab-"]').first()).toHaveAttribute(
       'data-testid',
       'learner-stage-tab-home',
     );
-    await expect(page.getByTestId(`learner-stage-tab-${current}`)).toHaveCount(0);
+    await expect(page.getByTestId(`learner-stage-tab-${current}`)).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   }
+  await page.setViewportSize({ width: 320, height: 700 });
+  await expect(
+    page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
+  ).toHaveCount(5);
+  await expect(page.getByTestId('learner-stage-tabs').locator('svg').first()).toBeHidden();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );

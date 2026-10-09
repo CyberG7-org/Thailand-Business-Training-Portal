@@ -1402,7 +1402,8 @@
     },
     "allDone": "所有卡片已完成",
     "cardOf": "第 {n} 张，共 {total} 张",
-    "nextCard": "第 {n} 张：{title}"
+    "nextCard": "第 {n} 张：{title}",
+    "previousCard": "上一张卡片（{n}）"
   },
   "quiz": {
     "title": "练习测验",
