@@ -193,6 +193,11 @@
       "date": "2026-10-08",
       "decision": "The readiness home leads with a compact four-point guide and a visible 9/11 target; the result shows the learner's score and only the answers that need more practice.",
       "reason": "The readiness flow should motivate rather than intimidate. The 21st.dev catalog search was unavailable (HTTP 401), so the implementation reuses the portal's responsive cards, semantic brand tokens, and mobile-first spacing."
+    },
+    {
+      "date": "2026-10-09",
+      "decision": "Every primary learner page shows Home, Study, Quiz, Readiness, and Name card in one fixed row. The active page stays visible, mobile tabs use text without icons, and study cards have previous and next links.",
+      "reason": "Learners need to move directly between sections and return to the preceding study card without horizontal navigation scrolling. The existing tab component and portal tokens were reused; the 21st.dev catalog search was unavailable (HTTP 401)."
     }
   ],
   "evidence": [

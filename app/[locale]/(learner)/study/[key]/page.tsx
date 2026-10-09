@@ -143,6 +143,13 @@ export default async function StudyMaterialPage({
     return p ? 'viewed' : 'new';
   });
   const total = materials.length;
+  const previousMaterial = materials
+    .slice(0, index)
+    .reverse()
+    .find((m) => pickLocalization(m, loc) !== null);
+  const previous = previousMaterial
+    ? { key: previousMaterial.content_key, index: materials.indexOf(previousMaterial) + 1 }
+    : null;
   const nextMaterial = materials.slice(index + 1).find((m) => pickLocalization(m, loc) !== null);
   const next = nextMaterial
     ? {
@@ -222,8 +229,20 @@ export default async function StudyMaterialPage({
                 {t('pdfMissing')}
               </p>
             ))}
-          {(completionTracking === 'completed' || next) && (
-            <footer className="mt-8 flex flex-wrap items-center justify-end gap-4 border-t border-ink-100 pt-6">
+          {(completionTracking === 'completed' || previous || next) && (
+            <footer className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-ink-100 pt-6">
+              {previous && (
+                <Link
+                  data-testid="study-previous"
+                  href={'/study/' + previous.key}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-control border border-brand-100 px-3 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                >
+                  <span className="rotate-180">
+                    <ArrowIcon />
+                  </span>
+                  {t('previousCard', { n: previous.index })}
+                </Link>
+              )}
               {completionTracking === 'completed' ? (
                 <form action={markCompletedAction}>
                   <input type="hidden" name="locale" value={locale} />
@@ -249,7 +268,11 @@ export default async function StudyMaterialPage({
                 </form>
               ) : null}
               {next && (
-                <Link data-testid="study-next" href={'/study/' + next.key} className={footerLink}>
+                <Link
+                  data-testid="study-next"
+                  href={'/study/' + next.key}
+                  className={`${footerLink} ml-auto`}
+                >
                   {t('nextCard', { n: next.index, title: next.title })}
                   <ArrowIcon />
                 </Link>

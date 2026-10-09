@@ -1,15 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany } from './seed';
+import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 
 /**
- * The mobile-first study list: progress first, four fixed stage tabs and compact lesson rows.
+ * The mobile-first study list: progress first, five fixed stage tabs and compact lesson rows.
  * Opening a card counts under the default "viewed" tracking, so the next Continue action moves on.
  */
 test('the study list shows progress, points at the next card, and moves on when a card is done', async ({
   page,
 }) => {
+  await ensureStarterCards();
   const loginId = await seedLearnerWithCompany('บริษัท รายการเรียน จำกัด', '2026-07-13');
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/study');
@@ -22,9 +23,9 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
   await expect(
     page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
   await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
   await expect(rows.first()).toContainText(`1/${total}`);
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
   await expect(rows.first()).toHaveAttribute('href', /\/th\/study\//);

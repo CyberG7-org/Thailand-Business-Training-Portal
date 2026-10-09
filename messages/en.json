@@ -1402,7 +1402,8 @@
     },
     "allDone": "All cards done",
     "cardOf": "Card {n} of {total}",
-    "nextCard": "Card {n}: {title}"
+    "nextCard": "Card {n}: {title}",
+    "previousCard": "Previous card ({n})"
   },
   "quiz": {
     "title": "Practice quiz",

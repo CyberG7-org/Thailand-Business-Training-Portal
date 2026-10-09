@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedLearnerWithCompany, seedStudyCard, setPolicy } from './seed';
+import { ensureStarterCards, seedLearnerWithCompany, seedStudyCard, setPolicy } from './seed';
 
 /**
  * The study card says where it sits in the course without a competing back control. Its footer
@@ -11,6 +11,7 @@ import { seedLearnerWithCompany, seedStudyCard, setPolicy } from './seed';
 test('a card shows its place in the list, leads to the next card, and the list records the read', async ({
   page,
 }) => {
+  await ensureStarterCards();
   const loginId = await seedLearnerWithCompany('บริษัท อ่านบทเรียน จำกัด', '2026-07-13');
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/study');
@@ -19,7 +20,8 @@ test('a card shows its place in the list, leads to the next card, and the list r
   await expect(page.getByTestId('study-title')).toBeVisible();
   await expect(page.getByTestId('learner-stage-tabs')).toBeAttached();
   await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveCount(0);
+  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByTestId('study-previous')).toHaveCount(0);
 
   const segments = page.getByTestId('card-segments');
   await expect(segments).toContainText(`บทเรียนที่ 1 จาก ${total}`);
@@ -32,13 +34,17 @@ test('a card shows its place in the list, leads to the next card, and the list r
   await next.click();
   await expect(page).toHaveURL(/\/th\/study\/[^/]+$/);
   await expect(page.getByTestId('card-segments')).toContainText(`บทเรียนที่ 2 จาก ${total}`);
-  await expect(page.getByTestId('card-segments').locator('[data-state]').first()).toHaveAttribute(
+  await expect(page.getByTestId('study-previous')).toContainText('บทเรียนก่อนหน้า (1)');
+  await page.getByTestId('study-previous').click();
+  await expect(page.getByTestId('card-segments')).toContainText(`บทเรียนที่ 1 จาก ${total}`);
+  await expect(page.getByTestId('card-segments').locator('[data-state]').nth(1)).toHaveAttribute(
     'data-state',
     'done',
   );
 });
 
 test('under "completed" tracking the footer marks the card done', async ({ page }) => {
+  await ensureStarterCards();
   await setPolicy('study_completion_tracking', 'completed');
   try {
     const loginId = await seedLearnerWithCompany('บริษัท ทำเครื่องหมาย จำกัด', '2026-07-13');
