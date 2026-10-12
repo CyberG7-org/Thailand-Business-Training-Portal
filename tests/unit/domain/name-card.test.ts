@@ -57,7 +57,7 @@ describe('name card data', () => {
     expect(d.website).toBeNull();
     expect(d.facebookPage).toBeNull();
     expect(d.templateVersion).toBe(NAME_CARD_TEMPLATE_VERSION);
-    expect(d.templateVersion).toBe('two-sided-v4');
+    expect(d.templateVersion).toBe('two-sided-v5');
   });
 
   it('prints the website and the Facebook page as people read them', () => {
@@ -67,6 +67,12 @@ describe('name card data', () => {
     });
     expect(d.website).toBe('thara-vanich.co.th');
     expect(d.facebookPage).toBe('tharavanich');
+  });
+
+  it('leaves absent phone and email off the card', () => {
+    const d = buildNameCardData({ ...source, contact_email: null }, null, holder);
+    expect(d.phoneDisplay).toBeNull();
+    expect(d.email).toBeNull();
   });
 
   it("keeps the company's English name and the business answers optional", () => {

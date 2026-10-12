@@ -343,7 +343,7 @@ function Back({ data }: { data: NameCardData }) {
         <ThaiText style={s.holderTh}>{data.holderName}</ThaiText>
       </View>
       <View style={[s.abs, { left: 12, top: 52, width: 190 }]}>
-        <Fact icon="phone">{data.phoneDisplay}</Fact>
+        {data.phoneDisplay && <Fact icon="phone">{data.phoneDisplay}</Fact>}
         {data.email && <Fact icon="mail">{data.email}</Fact>}
         <Fact icon="pin" thai>
           {data.address}

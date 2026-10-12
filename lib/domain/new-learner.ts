@@ -9,7 +9,7 @@ export const MAX_PASSWORD_LENGTH = 8;
 export const LEARNER_PASSWORD_PATTERN = /^[a-z0-9]{6,8}$/i;
 
 /** What the "Before you create" list ticks off; `team` only when the owner picks one. */
-export type ChecklistItem = 'team' | 'company' | 'password' | 'name' | 'contact';
+export type ChecklistItem = 'team' | 'company' | 'password' | 'name';
 
 export type NewLearnerValues = {
   team: string;
@@ -37,10 +37,6 @@ export function newLearnerChecklist(
     { item: 'company', done: values.company !== '' },
     { item: 'password', done: LEARNER_PASSWORD_PATTERN.test(values.password) },
     { item: 'name', done: values.name.trim() !== '' },
-    {
-      item: 'contact',
-      done: values.phone.trim() !== '' && values.email.trim() !== '' && values.emailValid,
-    },
   );
   return items;
 }

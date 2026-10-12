@@ -8,8 +8,7 @@ export type ContactField = 'phone' | 'contactEmail' | 'website' | 'facebookPage'
 const ALL: ContactField[] = ['phone', 'contactEmail', 'website', 'facebookPage'];
 
 /**
- * A learner's contact details as their manager gives them (D80): phone and email required,
- * website and Facebook page optional. Shared by the create form and the learner's own page, so
+ * A learner's optional contact details as their manager gives them (D80). Shared by the create form and the learner's own page, so
  * both post the same field names to the same validation. The create form lays them out in two
  * sections, so it asks for some of them at a time (`only`) with its bolder labels (`strong`).
  */
@@ -25,17 +24,16 @@ export function LearnerContactFields({
   const t = useTranslations('admin.users.contact');
   const label = strong ? 'font-semibold text-ink-900' : undefined;
   const optional = <span className="font-normal text-ink-500">{t('optional')}</span>;
-  // At Create learner (strong) the two required details say what they are for (D101).
+  // Optional details supplied here appear on the learner's name card.
   const forCard = strong ? <span className="font-normal text-ink-500"> {t('forCard')}</span> : null;
   const fields: Record<ContactField, React.ReactNode> = {
     phone: (
       <label key="phone" className="text-sm">
         <span className={label}>{t('phone')}</span>
-        {forCard}
+        {forCard} {optional}
         <input
           name="phone"
           type="tel"
-          required
           inputMode="tel"
           maxLength={20}
           autoComplete="off"
@@ -48,11 +46,10 @@ export function LearnerContactFields({
     contactEmail: (
       <label key="contactEmail" className="text-sm">
         <span className={label}>{t('contactEmail')}</span>
-        {forCard}
+        {forCard} {optional}
         <input
           name="contactEmail"
           type="email"
-          required
           maxLength={320}
           autoComplete="off"
           defaultValue={values?.contactEmail ?? ''}

@@ -13,6 +13,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: { serverActions: { bodySizeLimit: '4.2mb' } },
   // pdf.js and its canvas draw document pages for the reader (D98); the canvas is a native
   // module and neither is to be bundled.
   serverExternalPackages: ['@napi-rs/canvas', 'pdfjs-dist'],

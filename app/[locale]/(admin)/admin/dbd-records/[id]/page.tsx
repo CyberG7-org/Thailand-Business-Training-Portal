@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
@@ -47,6 +48,10 @@ export default async function DbdRecordPage({
   const loaded = await loadRecord(id);
   if (!loaded) notFound();
   const { db, record, structured, documents, exceptions, address } = loaded;
+  const sourceImage = structured.source_image;
+  const { data: signedImage } = sourceImage
+    ? await db.storage.from('dbd-documents').createSignedUrl(sourceImage.path, 300)
+    : { data: null };
   const t = await getTranslations('admin.dbd');
 
   // The reading runs in the background (D46): show the latest extract job, or that oversized
@@ -170,6 +175,42 @@ export default async function DbdRecordPage({
         panels={{
           details: (
             <>
+              {sourceImage && (
+                <div className="staff-card grid gap-3">
+                  <h2 className="font-semibold">Source image · check every extracted fact</h2>
+                  <p className="text-sm text-ink-700">
+                    This business-profile image is not an official certificate. The first director
+                    is used as the training answer for signing authority; verify it before saving.
+                    Choose a business category under Bank interview to fill the three approved
+                    financial estimates.
+                  </p>
+                  {signedImage?.signedUrl && (
+                    <a
+                      href={signedImage.signedUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="staff-link w-fit"
+                    >
+                      Open original image
+                    </a>
+                  )}
+                  {signedImage?.signedUrl && (
+                    <Image
+                      src={signedImage.signedUrl}
+                      alt="Uploaded company information"
+                      width={900}
+                      height={1200}
+                      unoptimized
+                      className="h-auto max-h-[700px] w-auto max-w-full rounded-lg object-contain"
+                    />
+                  )}
+                  {!sourceImage.reviewed && (
+                    <p className="staff-notice-warn">
+                      Review and save the details below before this company can be used.
+                    </p>
+                  )}
+                </div>
+              )}
               {suggestions && <p className="staff-notice-warn">{t('reviewSuggestions')}</p>}
               <DbdRecordForm
                 record={record}
@@ -178,6 +219,17 @@ export default async function DbdRecordPage({
                 interview={structured.interview ?? null}
                 provenance={structured.provenance ?? {}}
                 documentNames={documents.map((d) => d.original_name)}
+                imageSource={Boolean(sourceImage)}
+              />
+              <LinksForm
+                recordId={record.id}
+                website={record.website}
+                facebookPage={record.facebook_page}
+                facebookStatus={
+                  structured.facebook_source?.url === record.facebook_page
+                    ? structured.facebook_source.status
+                    : null
+                }
               />
               <AddressPanel address={address} stored={Boolean(structured.address)} />
             </>
@@ -213,34 +265,26 @@ export default async function DbdRecordPage({
                   {t('extractionNotConfigured')}
                 </p>
               )}
-              <DocumentsCard
-                id={record.id}
-                status={record.extraction_status}
-                documents={documents.map((d) => ({
-                  id: d.id,
-                  name: d.original_name,
-                  group: d.group as PackGroup,
-                  type: d.document_type,
-                  sizeBytes: d.size_bytes,
-                  pageCount: d.page_count,
-                  indexStatus: d.index_status as DocumentSummary['indexStatus'],
-                  indexedPages: d.indexed_pages,
-                  indexError: d.index_error,
-                }))}
-                reading={reading}
-                extractionAvailable={getDbdExtractor() !== null}
-              />
-              <LinksForm
-                recordId={record.id}
-                website={record.website}
-                facebookPage={record.facebook_page}
-                facebookStatus={
-                  structured.facebook_source?.url === record.facebook_page
-                    ? structured.facebook_source.status
-                    : null
-                }
-              />
-              <AskDocuments recordId={record.id} />
+              {!sourceImage && (
+                <DocumentsCard
+                  id={record.id}
+                  status={record.extraction_status}
+                  documents={documents.map((d) => ({
+                    id: d.id,
+                    name: d.original_name,
+                    group: d.group as PackGroup,
+                    type: d.document_type,
+                    sizeBytes: d.size_bytes,
+                    pageCount: d.page_count,
+                    indexStatus: d.index_status as DocumentSummary['indexStatus'],
+                    indexedPages: d.indexed_pages,
+                    indexError: d.index_error,
+                  }))}
+                  reading={reading}
+                  extractionAvailable={getDbdExtractor() !== null}
+                />
+              )}
+              {!sourceImage && <AskDocuments recordId={record.id} />}
             </>
           ),
           exceptions: <ExceptionsPanel recordId={record.id} exceptions={exceptions} />,

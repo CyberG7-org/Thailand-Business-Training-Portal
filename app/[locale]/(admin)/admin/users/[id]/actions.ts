@@ -9,6 +9,7 @@ import { createSupabaseAdminClient } from '@/lib/db/admin';
 import {
   assignDbdRecord,
   deactivateAssignment,
+  getActiveAssignmentForUser,
   learnersOfRecords,
   updateAssignmentRole,
 } from '@/lib/db/assignments';
@@ -28,6 +29,8 @@ import {
   setAccountStatus,
 } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { updateStructuredData } from '@/lib/db/derived-facts';
+import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 
 export type AccountActionState = { message: string | null; error: string | null };
 
@@ -158,15 +161,27 @@ export async function updateContactAction(
     const t = await getTranslations({ locale, namespace: 'admin.users.contact.errors' });
     return { message: null, error: t(firstContactProblem(parsed.error)) };
   }
-  const { error } = await (
-    await createSupabaseServerClient()
-  )
+  const db = await createSupabaseServerClient();
+  const { error } = await db
     .from('profiles')
     .update(contactColumns(parsed.data))
     .eq('id', userId)
     .select('id')
     .single();
   if (error) return { message: null, error: errorMessage(error) };
+  const assignment = await getActiveAssignmentForUser(db, userId);
+  if (assignment) {
+    const result = await updateStructuredData(db, assignment.dbd_record_id, (stored) => ({
+      ...stored,
+      interview: {
+        ...(stored.interview ?? EMPTY_INTERVIEW_PROFILE),
+        contact_email: parsed.data.contactEmail,
+        contact_phone: parsed.data.phone,
+      },
+    }));
+    if (result !== 'updated')
+      return { message: null, error: 'Company contact could not be updated; please try again.' };
+  }
   await recordAccountAction(staff.id, 'contact', userId, contactColumns(parsed.data));
   // A new phone is a new card (D96).
   refreshNameCardAfter(userId);

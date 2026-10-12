@@ -1,82 +1,22 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
-import { PdfFilePicker } from '@/components/staff/pdf-file-picker';
-import { PackPreviewCard } from '../dbd-records/pack-preview';
-import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../dbd-records/use-direct-upload';
+import { UploadFirstForm } from '../dbd-records/new/upload-first-form';
 
-/**
- * "Create DBD" (D80): the pack and the four details only a manager can give, sent in one go.
- * The record is created with the details already on it, the documents go straight from the
- * browser to storage (D45), and the reader fills and indexes the rest in the background — a
- * clean record then confirms itself. The staff member stays here and watches the list above.
- * `embedded` drops the card and the title, for the foot of the companies list, which has both.
- */
+/** The manager's main Companies tab uses the same ZIP-or-image intake as the dedicated page. */
 export function CreateDbdForm({
   extractionAvailable,
+  zipExtractionAvailable,
   embedded = false,
 }: {
   extractionAvailable: boolean;
+  zipExtractionAvailable: boolean;
   embedded?: boolean;
 }) {
-  const locale = useLocale();
-  const t = useTranslations('admin.createDbd');
-  const td = useTranslations('admin.dbd');
-  const { state, pending, submit, inspect, preview } = useDirectUpload({
-    locale,
-    id: null,
-    redirect: false,
-  });
-  const uploadError = UPLOAD_ERROR_KEYS.find((k) => k === state.error);
-  // Embedded, everything spans the row of the companies list.
-  const wide = embedded ? 'md:col-span-2' : '';
-
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        submit(e.currentTarget);
-      }}
-      id="create-dbd"
-      className={`grid scroll-mt-6 ${embedded ? 'max-w-3xl gap-4 md:grid-cols-2' : 'staff-card max-w-2xl gap-3'}`}
-      data-testid="create-dbd"
-    >
-      {!embedded && <h2 className="font-semibold">{t('title')}</h2>}
-      <p className={`text-sm text-ink-700 ${wide}`}>
-        {extractionAvailable ? t('intro') : t('introNoReader')}
-      </p>
-      <div className={wide}>
-        <PdfFilePicker
-          zipOnly
-          name="document"
-          label={t('documents')}
-          hint={td('fileHint')}
-          testId="create-dbd-files"
-          strongLabel={embedded}
-          onChosen={inspect}
-          preview={preview && <PackPreviewCard preview={preview} />}
-        />
-      </div>
-      {state.error && (
-        <p role="alert" data-testid="create-dbd-error" className={`text-sm text-bad-600 ${wide}`}>
-          {uploadError ? td(`errors.${uploadError}`) : state.error}
-        </p>
-      )}
-      {state.ok && (
-        <p role="status" data-testid="create-dbd-status" className={`staff-notice-ok ${wide}`}>
-          {extractionAvailable ? t('created') : t('createdNoReader')}
-        </p>
-      )}
-      <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 ${wide}`}>
-        <button
-          type="submit"
-          disabled={pending}
-          data-testid="create-dbd-submit"
-          className="staff-btn"
-        >
-          {pending ? td('uploadingAndReading') : t('submit')}
-        </button>
-      </div>
-    </form>
+    <UploadFirstForm
+      extractionAvailable={extractionAvailable}
+      zipExtractionAvailable={zipExtractionAvailable}
+      embedded={embedded}
+    />
   );
 }

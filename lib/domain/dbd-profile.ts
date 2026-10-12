@@ -101,6 +101,7 @@ const facebookSourceSchema = z.object({
 });
 
 export type StructuredData = {
+  source_image?: { path: string; mime_type: string; reviewed: boolean } | null;
   business?: BusinessProfile;
   /** Bank-interview answers the DBD cannot supply (decision D39). */
   interview?: InterviewProfile;
@@ -133,6 +134,17 @@ export function readStructuredData(raw: unknown): StructuredData {
   const described = describedSchema.safeParse(data.described);
   const facebookSource = facebookSourceSchema.safeParse(data.facebook_source);
   return {
+    source_image:
+      data.source_image &&
+      typeof data.source_image === 'object' &&
+      typeof (data.source_image as Record<string, unknown>).path === 'string' &&
+      typeof (data.source_image as Record<string, unknown>).mime_type === 'string'
+        ? {
+            path: (data.source_image as { path: string }).path,
+            mime_type: (data.source_image as { mime_type: string }).mime_type,
+            reviewed: (data.source_image as { reviewed?: boolean }).reviewed === true,
+          }
+        : null,
     invoices: invoices.success ? invoices.data : null,
     described: described.success ? described.data : null,
     facebook_source: facebookSource.success ? facebookSource.data : null,
@@ -176,23 +188,29 @@ export function parseObjectivesText(text: string): Objective[] {
 export function shareholdersToText(shareholders: Shareholder[]): string {
   return shareholders
     .map((s) =>
-      [s.name, s.nationality ?? '', s.shares === null ? '' : String(s.shares)]
+      [
+        s.name,
+        s.nationality ?? '',
+        s.shares === null ? '' : String(s.shares),
+        s.percent === null ? '' : String(s.percent),
+      ]
         .join(' | ')
         .replace(/(\s\|\s)+$/, ''),
     )
     .join('\n');
 }
 
-/** "Name | nationality | shares" per line; nationality and shares are optional. */
+/** "Name | nationality | shares | percent" per line; trailing values are optional. */
 export function parseShareholdersText(text: string): Shareholder[] {
   return lines(text).map((line) => {
-    const [name = '', nationality, shares] = line.split('|').map((s) => s.trim());
+    const [name = '', nationality, shares, percent] = line.split('|').map((s) => s.trim());
     const n = shares ? Number(shares.replace(/,/g, '')) : null;
+    const p = percent ? Number(percent.replace(/%/g, '')) : null;
     return {
       name,
       nationality: nationality ? nationality : null,
       shares: n !== null && Number.isFinite(n) ? n : null,
-      percent: null,
+      percent: p !== null && Number.isFinite(p) ? p : null,
     };
   });
 }

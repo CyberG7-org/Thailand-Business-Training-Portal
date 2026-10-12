@@ -1110,7 +1110,7 @@ export type Database = {
           holder_name_en: string | null
           id: string
           pdf_path: string
-          phone_number: string
+          phone_number: string | null
           telegram_sent_at: string | null
           template_version: string
           user_id: string
@@ -1122,7 +1122,7 @@ export type Database = {
           holder_name_en?: string | null
           id?: string
           pdf_path: string
-          phone_number: string
+          phone_number?: string | null
           telegram_sent_at?: string | null
           template_version: string
           user_id: string
@@ -1134,7 +1134,7 @@ export type Database = {
           holder_name_en?: string | null
           id?: string
           pdf_path?: string
-          phone_number?: string
+          phone_number?: string | null
           telegram_sent_at?: string | null
           template_version?: string
           user_id?: string

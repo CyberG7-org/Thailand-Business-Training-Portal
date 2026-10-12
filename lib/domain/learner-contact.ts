@@ -51,18 +51,25 @@ function optionalAddress(normalize: (s: string) => string | null, message: strin
 /**
  * The contact details a manager gives a learner (D80). Each issue's message is the field's key,
  * so the form says in the staff member's language which one is wrong. Phone and email are
- * required; the phone is kept in its normalized local form (`0812345678`), which the name card
- * formats.
+ * optional; a supplied phone is kept in its normalized local form (`0812345678`).
  */
 export const learnerContactSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .transform(
-      (v, ctx) =>
-        normalizeThaiMobile(v) ?? (ctx.addIssue({ code: 'custom', message: 'phone' }), z.NEVER),
-    ),
-  contactEmail: z.string().trim().email('contactEmail').max(320, 'contactEmail'),
+  phone: z.preprocess(
+    blankToNull,
+    z
+      .string()
+      .trim()
+      .transform(
+        (v, ctx) =>
+          normalizeThaiMobile(v) ?? (ctx.addIssue({ code: 'custom', message: 'phone' }), z.NEVER),
+      )
+      .nullable()
+      .default(null),
+  ),
+  contactEmail: z.preprocess(
+    blankToNull,
+    z.string().trim().email('contactEmail').max(320, 'contactEmail').nullable().default(null),
+  ),
   website: optionalAddress(toWebAddress, 'website'),
   facebookPage: optionalAddress(toFacebookPage, 'facebookPage'),
 });

@@ -7,7 +7,7 @@ import type {
   Turn,
 } from '@/lib/domain/interview/types';
 
-export type InterviewProviderName = 'claude' | 'fake' | 'off';
+export type InterviewProviderName = 'gemini' | 'claude' | 'fake' | 'off';
 
 export type TurnInput = {
   facts: FactSheet;
@@ -28,7 +28,7 @@ export type NarrateInput = {
 };
 
 export interface InterviewProvider {
-  readonly name: 'claude' | 'fake';
+  readonly name: 'gemini' | 'claude' | 'fake';
   turn(input: TurnInput): Promise<OfficerTurn>;
   narrate(input: NarrateInput): Promise<string>;
 }

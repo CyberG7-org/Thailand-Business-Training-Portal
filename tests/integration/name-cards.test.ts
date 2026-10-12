@@ -114,7 +114,7 @@ describe('name cards', () => {
     expect(card.phone_number).toBe('0812345678');
     expect(card.holder_name).toBe('สมชาย ทดสอบ');
     expect(card.holder_name_en).toBeNull();
-    expect(card.template_version).toBe('two-sided-v4');
+    expect(card.template_version).toBe('two-sided-v5');
     expect(card.pdf_path.startsWith(`${learner.id}/`)).toBe(true);
 
     expect((await getMyLatestNameCard(asLearner, learner.id))?.id).toBe(card.id);
@@ -124,12 +124,11 @@ describe('name cards', () => {
   });
 
   it('makes the card from what staff entered, keeps it while nothing changes, remakes it when something does (D96)', async () => {
-    // No phone given yet: nothing to print, and nothing typed by the learner fills it.
+    // No phone given yet: the card is still available, with no phone printed.
     await svc.from('profiles').update({ phone: null }).eq('id', learner.id);
-    expect((await ensureNameCard(learner.id, fakeRenderer)).blocked).toEqual({
-      code: 'no_phone',
-      fields: [],
-    });
+    const withoutPhone = await ensureNameCard(learner.id, fakeRenderer);
+    expect(withoutPhone.blocked).toBeNull();
+    expect(withoutPhone.card?.phone_number).toBeNull();
 
     await svc.from('profiles').update({ phone: '0812345678' }).eq('id', learner.id);
     const first = await ensureNameCard(learner.id, fakeRenderer);
@@ -138,7 +137,7 @@ describe('name cards', () => {
       phone_number: '0812345678',
       holder_name: 'สมชาย ทดสอบ',
       dbd_record_id: recordId,
-      template_version: 'two-sided-v4',
+      template_version: 'two-sided-v5',
     });
     expect((await ensureNameCard(learner.id, fakeRenderer)).card?.id).toBe(first.card!.id);
 

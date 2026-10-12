@@ -196,6 +196,7 @@ export async function saveDbdRecordAction(
         ...stored,
         business: business.data,
         interview: formDataToInterview(formData, stored),
+        source_image: stored.source_image ? { ...stored.source_image, reviewed: true } : null,
       });
       await deriveAfterSave(db, id, admin.id);
       revalidatePath(`/${locale}/admin/dbd-records/${id}`);

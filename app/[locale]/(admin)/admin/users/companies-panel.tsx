@@ -46,6 +46,7 @@ export function CompaniesPanel({
   rows,
   showTeam,
   extractionAvailable,
+  zipExtractionAvailable,
   addOpen,
   onAddOpenChange,
   onAssign,
@@ -53,6 +54,7 @@ export function CompaniesPanel({
   rows: CompanyRow[];
   showTeam: boolean;
   extractionAvailable: boolean;
+  zipExtractionAvailable: boolean;
   addOpen: boolean;
   onAddOpenChange: (open: boolean) => void;
   /** Opens the learner form with this company chosen. */
@@ -200,7 +202,11 @@ export function CompaniesPanel({
                 {t('closeAdd')}
               </button>
             </div>
-            <CreateDbdForm extractionAvailable={extractionAvailable} embedded />
+            <CreateDbdForm
+              extractionAvailable={extractionAvailable}
+              zipExtractionAvailable={zipExtractionAvailable}
+              embedded
+            />
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

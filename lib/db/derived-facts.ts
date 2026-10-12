@@ -125,11 +125,13 @@ export async function refreshDerivedFacts(
       let interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
       let described = stored.described ?? null;
       let facebookSource = stored.facebook_source ?? null;
-      const websiteText = record.website
-        ? await (deps.readPage ?? readBusinessPage)(record.website)
-        : null;
+      const imageSource = Boolean(stored.source_image);
+      const websiteText =
+        !imageSource && record.website
+          ? await (deps.readPage ?? readBusinessPage)(record.website)
+          : null;
       let facebookText: string | null = null;
-      if (record.facebook_page) {
+      if (!imageSource && record.facebook_page) {
         const sameUrl = facebookSource?.url === record.facebook_page;
         const failedRecently =
           facebookSource?.status === 'unavailable' &&
@@ -156,7 +158,7 @@ export async function refreshDerivedFacts(
           };
           changed = true;
         }
-      } else if (facebookSource) {
+      } else if (!imageSource && facebookSource) {
         facebookSource = null;
         changed = true;
       }

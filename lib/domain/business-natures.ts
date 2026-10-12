@@ -49,12 +49,12 @@ export const BUSINESS_NATURES = [
   ],
   [
     'beauty_products',
-    'Beauty Products Trading',
+    'Beauty Products and Services',
     1500000,
     1800,
     800,
-    'ค้าผลิตภัณฑ์ความงาม',
-    '美容产品贸易',
+    'ผลิตภัณฑ์และบริการความงาม',
+    '美容产品与服务',
   ],
   [
     'motorcycle_parts',
