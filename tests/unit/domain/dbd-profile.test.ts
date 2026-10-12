@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { categoryInputHash } from '@/lib/domain/business-category';
-import { parseShareholdersText, readStructuredData, shareholdersToText } from '@/lib/domain/dbd-profile';
+import {
+  parseShareholdersText,
+  readStructuredData,
+  shareholdersToText,
+} from '@/lib/domain/dbd-profile';
 
 const address = {
   full: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',

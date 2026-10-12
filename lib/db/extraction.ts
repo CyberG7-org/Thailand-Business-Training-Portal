@@ -260,9 +260,9 @@ async function directPass(
   const structured: StructuredData = {
     ...current,
     business: {
-      ...(businessFilled ? business : keptBusiness ?? business),
+      ...(businessFilled ? business : (keptBusiness ?? business)),
       share_structure: {
-        ...(businessFilled ? business : keptBusiness ?? business).share_structure,
+        ...(businessFilled ? business : (keptBusiness ?? business)).share_structure,
         paid_up_capital: input.registered_capital,
       },
     },

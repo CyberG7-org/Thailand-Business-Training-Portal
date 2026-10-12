@@ -206,7 +206,8 @@ export default async function DbdRecordPage({
                   )}
                   {!sourceImage.reviewed && (
                     <p className="staff-notice-warn">
-                      Review the details below before this company can be used. Edits save automatically.
+                      Review the details below before this company can be used. Edits save
+                      automatically.
                     </p>
                   )}
                 </div>
