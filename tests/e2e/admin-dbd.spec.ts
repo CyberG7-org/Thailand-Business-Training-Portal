@@ -14,10 +14,12 @@ test('admin creates a record with a BE date, sees it as printed, and confirms it
   await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
 });
 
-test('DBD creation requires a ZIP pack and offers no manual entry', async ({ page }) => {
+test('DBD creation offers image or ZIP upload and no manual entry', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
-  await expect(page.getByTestId('upload-first-file')).toHaveAttribute('accept', /\.zip/);
+  await expect(page.getByTestId('upload-first-file')).toHaveAttribute('accept', /image\/jpeg/);
+  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await expect(page.getByTestId('upload-zip-file')).toHaveAttribute('accept', /\.zip/);
   await expect(page.getByTestId('manual-form-toggle')).toHaveCount(0);
   await expect(page.locator('input[name="company_name_th"]')).toHaveCount(0);
 });

@@ -50,7 +50,8 @@ test('a manager uploads one ZIP: documents and page links are sorted without inv
 
   // What the zip holds, before anything is sent.
   const zipName = `pack-${Date.now()}`;
-  await page.getByTestId('create-dbd-files').setInputFiles(companyZip(zipName));
+  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await page.getByTestId('create-dbd-zip-files').setInputFiles(companyZip(zipName));
   const preview = page.getByTestId('pack-preview');
   await expect(preview).toHaveAttribute('data-pack', '1');
   await expect(preview).toHaveAttribute('data-invoices', '3');
@@ -61,8 +62,8 @@ test('a manager uploads one ZIP: documents and page links are sorted without inv
   await expect(preview.getByTestId('pack-preview-website')).toContainText('chayasri.co.th');
   // No boxes to type into: the four details of D80 are gone.
   await expect(page.locator('[data-testid^="create-dbd-contact"]')).toHaveCount(0);
-  await page.getByTestId('create-dbd-submit').click();
-  await expect(page.getByTestId('create-dbd-status')).toBeVisible();
+  await page.getByTestId('create-dbd-zip-submit').click();
+  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=/);
 
   // The cron reads the pack. The placeholder website and Facebook page are not valid evidence.
   const first = await request.get('/api/cron/index', CRON);
@@ -70,13 +71,9 @@ test('a manager uploads one ZIP: documents and page links are sorted without inv
   expect(summary.extractions + summary.invoices).toBeGreaterThanOrEqual(1);
   // A second run drains whichever job the first one did not get to.
   await request.get('/api/cron/index', CRON);
-  await page.goto('/th/admin/users?tab=companies');
-  const status = page.locator('[data-testid^="company-status-"]').first();
-  await expect(status).toHaveAttribute('data-status', 'attention');
-
   // The record: the documents by group, the addresses, the figures.
-  await page.getByTestId('companies').getByRole('link').first().click();
-  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}/);
+  await page.reload();
+  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
   await openRecordTab(page, 'documents');
   const documents = page.getByTestId('documents-card');
   await expect(documents.getByTestId('documents-invoice').locator('li')).toHaveCount(3);
