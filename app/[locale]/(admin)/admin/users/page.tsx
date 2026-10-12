@@ -82,7 +82,10 @@ export default async function CreateLearnerAndDbdPage({
     .sort((a, b) => (a.company_name_th ?? '').localeCompare(b.company_name_th ?? '', 'th'))
     .map((r) => ({
       id: r.id,
-      name: r.company_name_th ?? t('untitledCompany'),
+      name:
+        r.company_name_en && r.company_name_th
+          ? `${r.company_name_en} — ${r.company_name_th}`
+          : (r.company_name_en ?? r.company_name_th ?? t('untitledCompany')),
       status: r.extraction_status,
       confirmed: r.extraction_status === 'confirmed',
       taken: learners.has(r.id),

@@ -8,7 +8,7 @@ export type CategoryMapInput = {
 export type CategoryMapResult = { key: string | null; confidence: number };
 
 export interface CategoryMapper {
-  readonly name: 'claude' | 'fake';
+  readonly name: 'claude' | 'gemini' | 'fake';
   /** Recorded on the stored decision; null for the fake. */
   readonly model: string | null;
   map(input: CategoryMapInput): Promise<CategoryMapResult>;

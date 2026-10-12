@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { saveLinksAction, type ToolState } from '../actions';
 
 const initial: ToolState = { ok: false, error: null };
@@ -24,8 +24,37 @@ export function LinksForm({
   const locale = useLocale();
   const t = useTranslations('admin.dbd.links');
   const [state, formAction, pending] = useActionState(saveLinksAction, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirty = useRef(false);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const scheduleSave = () => {
+    dirty.current = true;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      if (formRef.current && dirty.current) {
+        dirty.current = false;
+        formRef.current.requestSubmit();
+      }
+    }, 1000);
+  };
   return (
-    <form action={formAction} className="staff-card grid gap-3" data-testid="record-links">
+    <form
+      ref={formRef}
+      action={formAction}
+      onInput={scheduleSave}
+      onSubmit={() => {
+        dirty.current = false;
+        if (timer.current) clearTimeout(timer.current);
+      }}
+      className="staff-card grid gap-3"
+      data-testid="record-links"
+    >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={recordId} />
       <div>
@@ -63,6 +92,9 @@ export function LinksForm({
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">
+        <span className="text-xs text-ink-500" aria-live="polite">
+          {pending ? t('saving') : state.ok ? t('saved') : t('autoSave')}
+        </span>
         <button type="submit" disabled={pending} className="staff-btn-ghost staff-btn-sm">
           {t('save')}
         </button>

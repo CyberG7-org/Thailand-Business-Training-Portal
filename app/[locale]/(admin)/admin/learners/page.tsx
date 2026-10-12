@@ -47,6 +47,7 @@ export default async function LearnerRecordPage({
               <tr>
                 <th>{t('columns.loginId')}</th>
                 <th>{t('columns.company')}</th>
+                <th>{t('columns.director')}</th>
                 <th>{t('columns.issuedOn')}</th>
                 <th>{t('columns.mcq')}</th>
                 <th>{t('columns.chatbot')}</th>
@@ -72,7 +73,7 @@ export default async function LearnerRecordPage({
                     <td data-testid={`company-${r.loginId}`}>
                       {r.company ? (
                         <Link href={`/admin/dbd-records/${r.company.id}`} className="staff-link">
-                          {r.company.nameTh ?? '—'}
+                          {r.company.nameEn ?? r.company.nameTh ?? '—'}
                         </Link>
                       ) : (
                         <Link
@@ -84,6 +85,7 @@ export default async function LearnerRecordPage({
                         </Link>
                       )}
                     </td>
+                    <td>{r.company?.director ?? '—'}</td>
                     <td data-testid={`issued-${r.loginId}`} className="whitespace-nowrap">
                       {r.company?.issuedOn ? formatDate(r.company.issuedOn, locale as Locale) : '—'}
                     </td>

@@ -17,7 +17,13 @@ export type LearnerRecordRow = {
   id: string;
   loginId: string;
   /** The company of the learner's active assignment, when the caller may read it. */
-  company: { id: string; nameTh: string | null; issuedOn: string | null } | null;
+  company: {
+    id: string;
+    nameEn: string | null;
+    nameTh: string | null;
+    director: string | null;
+    issuedOn: string | null;
+  } | null;
   mcq: McqResult | null;
   /** Submitted exam attempts: the MCQ cell links to their history when there is one. */
   mcqAttempts: number;
@@ -49,7 +55,7 @@ export async function loadLearnerRecords(db: Db): Promise<LearnerRecordRow[]> {
     allRows((from, to) =>
       db
         .from('user_dbd_assignments')
-        .select('user_id, dbd_records(id, company_name_th, issued_on)')
+        .select('user_id, dbd_records(id, company_name_en, company_name_th, directors, issued_on)')
         .eq('active', true)
         .order('id')
         .range(from, to),
@@ -89,9 +95,22 @@ export async function loadLearnerRecords(db: Db): Promise<LearnerRecordRow[]> {
       const r = a.dbd_records as {
         id: string;
         company_name_th: string | null;
+        company_name_en: string | null;
+        directors: { name_th?: string; name_en?: string }[] | null;
         issued_on: string | null;
       } | null;
-      return [a.user_id, r ? { id: r.id, nameTh: r.company_name_th, issuedOn: r.issued_on } : null];
+      return [
+        a.user_id,
+        r
+          ? {
+              id: r.id,
+              nameEn: r.company_name_en,
+              nameTh: r.company_name_th,
+              director: r.directors?.[0]?.name_th ?? r.directors?.[0]?.name_en ?? null,
+              issuedOn: r.issued_on,
+            }
+          : null,
+      ];
     }),
   );
   const examsOf = group(exams);

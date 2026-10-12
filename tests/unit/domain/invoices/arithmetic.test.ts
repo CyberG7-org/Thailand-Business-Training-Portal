@@ -193,8 +193,8 @@ describe('approved business-nature figures', () => {
       'it_house',
     );
     expect(filled.monthly_revenue).toBe('ประมาณ 2,400,000 บาท');
-    expect(filled.average_transaction).toBe('ประมาณ 5,200 บาท');
-    expect(filled.monthly_transactions).toBe('ประมาณ 600 รายการต่อเดือน');
+    expect(filled.average_transaction).toBe('ประมาณ 5,500 บาท');
+    expect(filled.monthly_transactions).toBe('ประมาณ 1,000 รายการต่อเดือน');
   });
 });
 

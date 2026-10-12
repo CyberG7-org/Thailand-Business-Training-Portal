@@ -259,7 +259,13 @@ async function directPass(
   // path) is kept; this pass only adds what it read.
   const structured: StructuredData = {
     ...current,
-    business: businessFilled ? business : keptBusiness,
+    business: {
+      ...(businessFilled ? business : keptBusiness ?? business),
+      share_structure: {
+        ...(businessFilled ? business : keptBusiness ?? business).share_structure,
+        paid_up_capital: input.registered_capital,
+      },
+    },
     document_type: extraction.documents?.[0]?.document_type ?? current.document_type ?? null,
     provenance: { ...(current.provenance ?? {}), ...extractedProvenance(extraction) },
   };

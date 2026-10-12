@@ -114,7 +114,14 @@ function formDataToBusiness(formData: FormData, stored: ReturnType<typeof readSt
         : current.share_structure.share_type,
     },
     shareholders: has('shareholders_text')
-      ? parseShareholdersText(String(formData.get('shareholders_text') ?? ''))
+      ? parseShareholdersText(String(formData.get('shareholders_text') ?? '')).map((holder) => {
+          const original = current.shareholders.find((saved) => saved.name === holder.name);
+          return {
+            ...holder,
+            shares: holder.shares ?? original?.shares ?? null,
+            nationality: holder.nationality ?? original?.nationality ?? null,
+          };
+        })
       : current.shareholders,
     promoters: has('promoters_text')
       ? parsePromotersText(String(formData.get('promoters_text') ?? ''))
@@ -192,6 +199,8 @@ export async function saveDbdRecordAction(
         }
         return { ok: false, error: 'validation', fieldErrors };
       }
+      // The simplified form has one capital figure: paid-up follows registered capital.
+      business.data.share_structure.paid_up_capital = parsed.data.registered_capital;
       await updateDbdRecord(db, id, parsed.data, {
         ...stored,
         business: business.data,

@@ -154,7 +154,13 @@ export function readStructuredData(raw: unknown): StructuredData {
     provenance:
       data.provenance && typeof data.provenance === 'object' ? (data.provenance as Provenance) : {},
     address: address.success ? address.data : null,
-    category: category.success ? settleCategory(category.data) : null,
+    category: category.success
+      ? settleCategory(
+          category.data.key === 'cosmetics'
+            ? { ...category.data, key: 'beauty_products' }
+            : category.data,
+        )
+      : null,
   };
 }
 
@@ -187,22 +193,22 @@ export function parseObjectivesText(text: string): Objective[] {
 
 export function shareholdersToText(shareholders: Shareholder[]): string {
   return shareholders
-    .map((s) =>
-      [
-        s.name,
-        s.nationality ?? '',
-        s.shares === null ? '' : String(s.shares),
-        s.percent === null ? '' : String(s.percent),
-      ]
-        .join(' | ')
-        .replace(/(\s\|\s)+$/, ''),
-    )
+    .map((s) => `${s.name}, ${s.percent === null ? '' : `${s.percent}%`}`.trimEnd())
     .join('\n');
 }
 
-/** "Name | nationality | shares | percent" per line; trailing values are optional. */
+/** "Name, percentage" per line; legacy pipe-delimited rows remain accepted. */
 export function parseShareholdersText(text: string): Shareholder[] {
   return lines(text).map((line) => {
+    if (!line.includes('|')) {
+      const match = /^(.*?),\s*(\d+(?:\.\d+)?)\s*[%％]?$/.exec(line);
+      return {
+        name: match?.[1]?.trim() ?? line.trim(),
+        nationality: null,
+        shares: null,
+        percent: match ? Number(match[2]) : null,
+      };
+    }
     const [name = '', nationality, shares, percent] = line.split('|').map((s) => s.trim());
     const n = shares ? Number(shares.replace(/,/g, '')) : null;
     const p = percent ? Number(percent.replace(/%/g, '')) : null;

@@ -1,8 +1,14 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
-import { businessNature } from '@/lib/domain/business-natures';
-import { categoryInputHash, failedCategory, manualCategory } from '@/lib/domain/business-category';
+import { BUSINESS_NATURES, businessNature } from '@/lib/domain/business-natures';
+import {
+  categoryInputHash,
+  decideCategory,
+  failedCategory,
+  manualCategory,
+  needsRemap,
+} from '@/lib/domain/business-category';
 import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
 import { normalizeThai } from '@/lib/domain/thai-text';
 import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
@@ -184,12 +190,41 @@ export async function refreshDerivedFacts(
 
       const hash = categoryInputHash(interview.nature_of_business, interview.products_services);
       let category = stored.category ?? null;
-      if (!category?.key || !businessNature(category.key)) {
-        const reason = hash ? 'choose-category' : 'no_text';
-        if (category?.error !== reason || category?.input_hash !== hash) {
-          category = failedCategory(reason, hash, at);
-          changed = true;
+      if (
+        hash &&
+        deps.mapper &&
+        (options.remapCategory ||
+          (category?.source !== 'manual' &&
+            (needsRemap(category, hash) || (category?.key && !businessNature(category.key)))))
+      ) {
+        try {
+          const result = await deps.mapper.map({
+            natureOfBusiness: interview.nature_of_business ?? '',
+            productsServices: interview.products_services,
+            categories: BUSINESS_NATURES.map(([key, label_th, , , , thai]) => ({
+              key,
+              label_th: thai,
+              label_en: label_th,
+            })),
+          });
+          category = decideCategory({
+            result,
+            activeKeys: new Set(BUSINESS_NATURES.map(([key]) => key)),
+            model: deps.mapper.model,
+            inputHash: hash,
+            at,
+          });
+        } catch (error) {
+          console.error('category mapping', recordId, error);
+          category = failedCategory('mapping_failed', hash, at);
         }
+        changed = true;
+      } else if (!hash && (category?.key || category?.error !== 'no_text')) {
+        category = failedCategory('no_text', null, at);
+        changed = true;
+      } else if (hash && !deps.mapper && !category?.key && category?.error !== 'not_configured') {
+        category = failedCategory('not_configured', hash, at);
+        changed = true;
       }
 
       return changed

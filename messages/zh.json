@@ -223,10 +223,11 @@
       },
       "columns": {
         "loginId": "登录ID",
-        "company": "公司名称",
-        "issuedOn": "DBD签发日期",
-        "mcq": "业务知识测验",
-        "chatbot": "银行准备面试",
+        "company": "公司（英文名称）",
+        "director": "董事姓名",
+        "issuedOn": "证书签发日期",
+        "mcq": "测验",
+        "chatbot": "面试",
         "appointment": "预约",
         "actions": "操作"
       },
@@ -330,6 +331,8 @@
       "untitled": "（尚无公司名称）",
       "save": "保存",
       "saved": "已保存",
+      "autoSave": "更改会自动保存",
+      "saving": "正在保存…",
       "status": "状态",
       "dateHint": "按证明上的写法，例如 9 เมษายน 2569 或 09/04/2569",
       "directorsHint": "每行一位董事：泰文名 | 英文名",
@@ -442,7 +445,7 @@
       },
       "invoiceFigures": {
         "title": "业务类别规定的数字",
-        "hint": "请在上方选择业务类别。即使有发票，也使用该类别规定的数字。",
+        "hint": "所选业务类别的数字仅为规划估算，并非已核实的公司财务数据。用于银行尽调前请核对。",
         "monthlyRevenue": "月收入",
         "averagePerTransaction": "平均每笔金额",
         "transactionsPerMonth": "每月交易笔数",
@@ -465,6 +468,8 @@
         "notRead": "尚未读取。请检查 Apify 配置。",
         "save": "保存地址",
         "saved": "已保存",
+        "autoSave": "更改会自动保存",
+        "saving": "正在保存…",
         "invalid": "请输入网站地址（example.co.th）和 Facebook 主页名称或链接。"
       },
       "objectivesHint": "每行一条，可带序号，如 \"1. 经营…\"",

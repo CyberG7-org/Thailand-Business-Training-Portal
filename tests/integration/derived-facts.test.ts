@@ -55,11 +55,11 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     await deleteTestUser(owner.id);
   });
 
-  it('derives the address and leaves the category for staff to choose', async () => {
+  it('derives the address and selects a category from the business words', async () => {
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('updated');
     const s = await stored(recordId);
     expect(s.address).toMatchObject({ status: 'resolved', postcode: '45110' });
-    expect(s.category).toMatchObject({ status: 'unmapped', error: 'choose-category' });
+    expect(s.category).toMatchObject({ status: 'mapped', key: 'clothing_apparel', source: 'auto' });
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('unchanged');
   });
 
@@ -67,7 +67,7 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     await setInterview(recordId, { main_clients: 'ร้านค้าปลีกในร้อยเอ็ด' });
     const s = await stored(recordId);
     expect(s.address?.status).toBe('resolved');
-    expect(s.category?.key).toBeNull();
+    expect(s.category?.key).toBe('clothing_apparel');
   });
 
   it('re-derives the address when the printed address changes', async () => {
@@ -125,16 +125,19 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     );
   });
 
-  it('does not auto-map categories even when a mapper is configured', async () => {
+  it('auto-maps when configured and reports when mapping is unavailable', async () => {
     await setInterview(recordId, { nature_of_business: 'ขายเสื้อผ้าออนไลน์' });
     await updateStructuredData(svc, recordId, (current) => ({ ...current, category: null }));
     await refreshDerivedFacts(svc, recordId, { mapper: null });
     expect((await stored(recordId)).category).toMatchObject({
       status: 'unmapped',
-      error: 'choose-category',
+      error: 'not_configured',
     });
     await remapBusinessCategory(svc, recordId, deps);
-    expect((await stored(recordId)).category).toMatchObject({ status: 'unmapped' });
+    expect((await stored(recordId)).category).toMatchObject({
+      status: 'mapped',
+      key: 'clothing_apparel',
+    });
   });
 
   it('never lets a failing mapper cost the address or throw (D73: category is metadata)', async () => {
@@ -160,7 +163,7 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
       await expect(refreshDerivedFacts(svc, data.id, { mapper: broken })).resolves.toBe('updated');
       const s = await stored(data.id);
       expect(s.address).toMatchObject({ status: 'resolved', postcode: '45110' });
-      expect(s.category).toMatchObject({ status: 'unmapped', error: 'choose-category' });
+      expect(s.category).toMatchObject({ status: 'unmapped', error: 'mapping_failed' });
     } finally {
       await svc.from('dbd_records').delete().eq('id', data.id);
     }

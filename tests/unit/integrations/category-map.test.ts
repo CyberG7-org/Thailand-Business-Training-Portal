@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveCategoryMapProvider } from '@/lib/integrations/category-map';
 import { ClaudeCategoryMapper } from '@/lib/integrations/category-map/claude';
 import { FakeCategoryMapper } from '@/lib/integrations/category-map/fake';
+import { GeminiCategoryMapper } from '@/lib/integrations/category-map/gemini';
 
 const categories = [
   {
@@ -20,8 +21,32 @@ describe('resolveCategoryMapProvider', () => {
   it('follows the same rule as every adapter', () => {
     expect(resolveCategoryMapProvider({ CATEGORY_MAP_PROVIDER: 'off' })).toBe('off');
     expect(resolveCategoryMapProvider({ ANTHROPIC_API_KEY: 'k' })).toBe('claude');
+    expect(resolveCategoryMapProvider({ GEMINI_API_KEY: 'k', NODE_ENV: 'production' })).toBe(
+      'gemini',
+    );
     expect(resolveCategoryMapProvider({ NODE_ENV: 'production' })).toBe('off');
     expect(resolveCategoryMapProvider({})).toBe('fake');
+  });
+});
+
+describe('GeminiCategoryMapper', () => {
+  it('sends the two business answers and accepts only listed category keys', async () => {
+    const request = async (_url: string, options: RequestInit) => {
+      expect(JSON.stringify(options.body)).toContain('ขายเสื้อผ้า');
+      expect(JSON.stringify(options.body)).toContain('เสื้อสตรี');
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            { content: { parts: [{ text: '{"key":"clothing_fashion","confidence":0.91}' }] } },
+          ],
+        }),
+        { status: 200 },
+      );
+    };
+    const mapper = new GeminiCategoryMapper('test-key', request as typeof fetch);
+    await expect(
+      mapper.map({ natureOfBusiness: 'ขายเสื้อผ้า', productsServices: 'เสื้อสตรี', categories }),
+    ).resolves.toEqual({ key: 'clothing_fashion', confidence: 0.91 });
   });
 });
 

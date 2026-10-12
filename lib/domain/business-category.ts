@@ -28,8 +28,8 @@ export function categoryInputHash(
   productsServices: string | null,
 ): string | null {
   const nature = (natureOfBusiness ?? '').replace(/\s+/g, ' ').trim();
-  if (!nature) return null;
   const products = (productsServices ?? '').replace(/\s+/g, ' ').trim();
+  if (!nature && !products) return null;
   const text = `${nature}\n${products}`;
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {

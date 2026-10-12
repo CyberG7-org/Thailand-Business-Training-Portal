@@ -58,6 +58,7 @@ export function CategoryPanel({
         <label className="grid min-w-0 flex-1 gap-1 text-sm">
           {t('choose')}
           <select
+            key={assignment?.key ?? 'none'}
             name="categoryKey"
             required
             defaultValue={assignment?.key ?? ''}

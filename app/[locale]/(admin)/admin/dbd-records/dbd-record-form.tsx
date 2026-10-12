@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { formatDate, isISODate, type Locale } from '@/lib/domain/thai-date';
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import type { DbdRecordRow } from '@/lib/db/dbd-records';
 import {
   EMPTY_BUSINESS_PROFILE,
@@ -31,7 +31,7 @@ const IDENTITY_FIELDS = [
   ['province', 'province'],
 ] as const;
 
-/** Level 3 — document metadata. */
+/** Stored document metadata is preserved, but not repeated in the learner-facts editor. */
 const DOCUMENT_FIELDS = [
   ['document_ref', 'documentRef'],
   ['issued_on', 'issuedOn'],
@@ -77,6 +77,25 @@ export function DbdRecordForm({
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const [state, formAction, pending] = useActionState(saveDbdRecordAction, initial);
+  const formRef = useRef<HTMLFormElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirty = useRef(false);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+  const saveChanged = () => {
+    if (!record?.id || !dirty.current) return;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      if (formRef.current && dirty.current) {
+        dirty.current = false;
+        formRef.current.requestSubmit();
+      }
+    }, 900);
+  };
   const locked = record?.extraction_status === 'confirmed' && !imageSource;
   const answers = interview;
   const missingAnswers = missingBusinessAnswers(answers);
@@ -185,10 +204,41 @@ export function DbdRecordForm({
   );
 
   return (
-    <form action={formAction} className="staff-card grid divide-y divide-ink-100 p-0 md:p-0">
+    <form
+      ref={formRef}
+      action={formAction}
+      onSubmit={() => {
+        dirty.current = false;
+        if (timer.current) clearTimeout(timer.current);
+      }}
+      onInput={() => {
+        dirty.current = true;
+        saveChanged();
+      }}
+      onChange={() => {
+        dirty.current = true;
+        saveChanged();
+      }}
+      onBlurCapture={() => {
+        if (dirty.current) saveChanged();
+      }}
+      className="staff-card grid divide-y divide-ink-100 p-0 md:p-0"
+    >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={record?.id ?? ''} />
-      <input type="hidden" name="certificate_no" value={record?.certificate_no ?? ''} />
+      <input
+        type="hidden"
+        name="certificate_no"
+        value={record?.certificate_no ?? suggestions?.values.certificate_no ?? ''}
+      />
+      {DOCUMENT_FIELDS.map(([name]) => (
+        <input
+          key={name}
+          type="hidden"
+          name={name}
+          value={record?.[name] ?? suggestions?.values[name] ?? ''}
+        />
+      ))}
 
       <section className={section}>
         <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.identity')}</h3>
@@ -254,26 +304,9 @@ export function DbdRecordForm({
       {record && (
         <section className={section} data-testid="business-profile">
           <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.business')}</h3>
-          <div className={`grid gap-4 sm:grid-cols-2 ${wide}`}>
-            <label className="text-sm">
-              <span className={labelText}>{t('fields.totalShares')}</span>
-              <input
-                name="total_shares"
-                readOnly={locked}
-                defaultValue={profile.share_structure.total_shares ?? ''}
-                className={inputClass}
-              />
-            </label>
-            <label className="text-sm">
-              <span className={labelText}>{t('fields.paidUpCapital')}</span>
-              <input
-                name="paid_up_capital"
-                readOnly={locked}
-                defaultValue={profile.share_structure.paid_up_capital ?? ''}
-                className={inputClass}
-              />
-            </label>
-          </div>
+          <p className={`text-sm text-ink-500 ${wide}`}>
+            {t('fields.paidUpCapital')} = {t('fields.registeredCapital')}
+          </p>
           <div className={wide}>{levelTwoNote('share_structure')}</div>
           <label className="text-sm">
             <span className={labelText}>{t('fields.shareholders')}</span>
@@ -285,7 +318,7 @@ export function DbdRecordForm({
               className={inputClass}
             />
             <span className="text-xs text-ink-500">
-              Name | nationality | shares | percentage (one shareholder per line)
+              Name, percentage (one shareholder per line)
             </span>
             {levelTwoNote('shareholders')}
           </label>
@@ -299,27 +332,18 @@ export function DbdRecordForm({
         </section>
       )}
 
-      {!imageSource && (
-        <section className={section}>
-          <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.document')}</h3>
-          {DOCUMENT_FIELDS.map(renderField)}
-        </section>
-      )}
-
       <div className="flex flex-wrap items-center justify-end gap-3 p-4 md:px-6">
         {state.error && state.error !== 'validation' && (
           <p role="alert" className="mr-auto text-sm text-bad-600">
             {state.error === 'answers-required' ? t('errors.answers-required') : state.error}
           </p>
         )}
-        {state.ok && (
-          <p role="status" className="mr-auto text-sm text-ok-600">
-            {t('saved')}
-          </p>
-        )}
         {/* Always present: the four answers above stay editable after confirmation, and a
           record confirmed before they were required still owes them. The certificate inputs are
           read-only once confirmed, so saving then rewrites them unchanged. */}
+        <span className="text-xs text-ink-500" aria-live="polite">
+          {pending ? t('saving') : state.ok ? t('saved') : t('autoSave')}
+        </span>
         <button type="submit" disabled={pending} className="staff-btn">
           {t('save')}
         </button>

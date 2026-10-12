@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { categoryInputHash } from '@/lib/domain/business-category';
-import { readStructuredData } from '@/lib/domain/dbd-profile';
+import { parseShareholdersText, readStructuredData, shareholdersToText } from '@/lib/domain/dbd-profile';
 
 const address = {
   full: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
@@ -64,8 +64,19 @@ describe('categoryInputHash', () => {
     expect(categoryInputHash('ขายรองเท้า', 'เสื้อสตรี')).not.toBe(a);
   });
 
-  it('has nothing to hash without a nature of business', () => {
-    expect(categoryInputHash(null, 'เสื้อ')).toBeNull();
+  it('can map from products even without a nature of business', () => {
+    expect(categoryInputHash(null, 'เสื้อ')).not.toBeNull();
     expect(categoryInputHash('  ', null)).toBeNull();
+  });
+});
+
+describe('shareholder editor', () => {
+  it('shows and accepts name with percentage, without extra columns', () => {
+    const holders = parseShareholdersText('นางสาวสิริรัตน์ ดวงจันทร์, 90%\nนายสมชาย ใจดี, 10%');
+    expect(holders.map(({ name, percent }) => [name, percent])).toEqual([
+      ['นางสาวสิริรัตน์ ดวงจันทร์', 90],
+      ['นายสมชาย ใจดี', 10],
+    ]);
+    expect(shareholdersToText(holders)).toBe('นางสาวสิริรัตน์ ดวงจันทร์, 90%\nนายสมชาย ใจดี, 10%');
   });
 });

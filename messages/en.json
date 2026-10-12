@@ -223,10 +223,11 @@
       },
       "columns": {
         "loginId": "Login ID",
-        "company": "Company name",
-        "issuedOn": "DBD issued date",
-        "mcq": "Business Knowledge Quiz",
-        "chatbot": "Bank Readiness Interview",
+        "company": "Company (English name)",
+        "director": "Director",
+        "issuedOn": "DBD issued",
+        "mcq": "Quiz",
+        "chatbot": "Interview",
         "appointment": "Appointment",
         "actions": "Actions"
       },
@@ -298,7 +299,7 @@
         "company": "Company (English name)",
         "director": "Director",
         "juristicId": "Juristic person ID",
-        "issuedOn": "Certificate issued",
+        "issuedOn": "DBD issued",
         "team": "Team",
         "status": "Status",
         "learner": "Learner",
@@ -330,6 +331,8 @@
       "untitled": "(no company name yet)",
       "save": "Save",
       "saved": "Saved",
+      "autoSave": "Changes save automatically",
+      "saving": "Saving…",
       "status": "Status",
       "dateHint": "As printed on the certificate, e.g. 9 เมษายน 2569, 09/04/2569 or 9 April 2026",
       "directorsHint": "One director per line: Thai name | English name",
@@ -401,11 +404,11 @@
       "uploadedButNotRead": "The file was uploaded but could not be read ({reason}). Fill the fields yourself or try reading again.",
       "levels": {
         "identity": "Level 1 — Company identity (certificate)",
-        "business": "Level 2 — Business profile (objectives sheet / Bor.Or.Jor.5 / Bor.Or.Jor.2)",
+        "business": "Shareholders",
         "document": "Level 3 — DBD document metadata",
         "interview": "Level 4 — Bank interview answers (facts the DBD does not hold)",
         "answers": "Contact and business",
-        "answersIntro": "Answers the DBD documents do not hold: from the invoices, or the same for every company; nothing to type."
+        "answersIntro": "Check the business description and products used in the quiz and interview. Contact details are optional for the name card."
       },
       "documentTypes": {
         "certificate": "Certificate",
@@ -442,7 +445,7 @@
       },
       "invoiceFigures": {
         "title": "Approved category figures",
-        "hint": "Select the business category above. Its approved figures are used even when invoices are available.",
+        "hint": "Illustrative planning estimates from the selected business category, not verified company figures. Check before using them for bank KYC.",
         "monthlyRevenue": "Monthly revenue",
         "averagePerTransaction": "Average per transaction",
         "transactionsPerMonth": "Transactions per month",
@@ -456,7 +459,7 @@
       },
       "links": {
         "title": "Company addresses",
-        "hint": "Read from the zip's link files; the name card prints them. Correct them here if needed.",
+        "hint": "Read from the uploaded image or ZIP when available. Correct them here if needed; changes save automatically.",
         "website": "Website",
         "facebookPage": "Facebook page",
         "facebookStatus": "Facebook reading",
@@ -465,6 +468,8 @@
         "notRead": "Not read yet. Check the Apify setup.",
         "save": "Save addresses",
         "saved": "Saved",
+        "autoSave": "Changes save automatically",
+        "saving": "Saving…",
         "invalid": "Enter a web address (example.co.th) and a Facebook page name or link."
       },
       "objectivesHint": "One objective per line; a leading number is kept, e.g. \"1. To operate…\"",

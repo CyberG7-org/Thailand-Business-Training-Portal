@@ -39,6 +39,7 @@ export function companyImageToDraft(profile: CompanyImageProfile): {
     objectives_count: profile.objectives.length || null,
   });
   const business = businessProfileSchema.parse({
+    share_structure: { paid_up_capital: record.registered_capital },
     objectives: profile.objectives
       .filter((item) => item.trim())
       .map((text, index) => ({

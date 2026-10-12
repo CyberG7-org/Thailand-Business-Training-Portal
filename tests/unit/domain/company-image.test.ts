@@ -32,6 +32,7 @@ describe('company image intake', () => {
     expect(draft.record.registered_on).toBe('2026-04-07');
     expect(draft.record.signing_authority).toBe(salon.directors[0].name_th);
     expect(draft.business.shareholders.map((person) => person.percent)).toEqual([90, 10]);
+    expect(draft.business.share_structure.paid_up_capital).toBe(draft.record.registered_capital);
     expect(draft.business.objectives).toHaveLength(2);
     expect(draft.interview.nature_of_business).toBe(salon.nature_of_business);
     expect(draft.interview.products_services).toContain('แชมพู');
@@ -43,10 +44,10 @@ describe('company image intake', () => {
     const draft = companyImageToDraft({ ...salon, website: '', facebook_page: '' });
     expect(draft.website).toBeNull();
     expect(draft.facebookPage).toBeNull();
-    expect(businessNature('beauty_products')?.[1]).toBe('Beauty Products and Services');
+    expect(businessNature('beauty_products')?.[1]).toBe('Beauty & Cosmetic Products Trading');
     const filled = withBusinessNatureFigures(EMPTY_INTERVIEW_PROFILE, 'beauty_products');
     expect(filled.monthly_revenue).toContain('1,500,000');
-    expect(filled.monthly_transactions).toContain('1,800');
-    expect(filled.average_transaction).toContain('800');
+    expect(filled.monthly_transactions).toContain('2,000');
+    expect(filled.average_transaction).toContain('1,000');
   });
 });

@@ -4,6 +4,7 @@ import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { createDbdRecord } from '@/lib/db/dbd-records';
 import { validateAfterChange } from '@/lib/db/validation';
+import { refreshDerivedFacts } from '@/lib/db/derived-facts';
 import { companyImageToDraft } from '@/lib/domain/company-image';
 import {
   CompanyImageOutputError,
@@ -77,6 +78,9 @@ export async function uploadCompanyImageAction(
       })
       .eq('id', row.id);
     if (saveError) throw saveError;
+    await refreshDerivedFacts(db, row.id).catch((error) =>
+      console.error('company category mapping', row.id, error),
+    );
     await validateAfterChange(row.id, staff.id);
     return { error: null, recordId: row.id };
   } catch (error) {
