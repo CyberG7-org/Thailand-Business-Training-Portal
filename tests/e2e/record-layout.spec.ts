@@ -9,7 +9,9 @@ import { seedLearnerWithCompleteCompany, setProvenance } from './seed';
  */
 test('the status column sits under the sidebar and leaves with the record', async ({ page }) => {
   test.setTimeout(90_000);
-  const learner = await seedLearnerWithCompleteCompany(`บริษัท คอลัมน์ข้าง ${Date.now()} จำกัด`);
+  const learner = await seedLearnerWithCompleteCompany(`บริษัท คอลัมน์ข้าง ${Date.now()} จำกัด`, {
+    category: true,
+  });
   const recordId = await setProvenance(learner, { registered_capital: 0.6 });
 
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
@@ -37,7 +39,10 @@ test('the status column sits under the sidebar and leaves with the record', asyn
   await expect(page.getByTestId('exception-low_confidence-registered_capital')).toBeVisible();
 
   // Another page has nothing under the sidebar, and its sidebar stays pinned.
-  await page.getByTestId('staff-nav').getByRole('link', { name: 'ข้อยกเว้น', exact: true }).click();
+  await page
+    .getByTestId('staff-nav')
+    .getByRole('link', { name: 'ข้อผิดพลาด', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/th\/admin\/exceptions/);
   await expect(side).toHaveCount(0);
   await expect(page.getByTestId('staff-nav').locator('..')).toHaveCSS('position', 'sticky');

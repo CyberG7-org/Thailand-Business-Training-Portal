@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { companyZip } from './company-zip';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 
@@ -8,7 +9,9 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
-  await page.getByTestId('upload-first-file').setInputFiles('tests/fixtures/twenty-five-pages.pdf');
+  await page
+    .getByTestId('upload-first-file')
+    .setInputFiles(companyZip('tests/fixtures/twenty-five-pages.pdf'));
   await page.getByTestId('upload-first-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=queued/);
   await expect(page.getByTestId('reading-status')).toContainText('เบื้องหลัง');
@@ -30,13 +33,8 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
   );
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
-  // One 25-page document is one type (a certificate here): its sweep yields the objectives.
-  await expect(
-    page.getByTestId('business-profile').locator('textarea[name="objectives_text"]'),
-  ).toHaveValue(/^1\. ประกอบกิจการค้าปลีก/);
-  // A clean pack is accepted automatically. Its DBD documents are then locked, so a later read
-  // cannot silently replace the accepted facts.
-  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
-  await expect(page.getByTestId('confirmed-automatically')).toBeVisible();
-  await expect(page.getByTestId('extract-button')).toHaveCount(0);
+  // The removed objectives panel stays absent, and an unreadable placeholder page does not
+  // silently confirm the company.
+  await expect(page.locator('textarea[name="objectives_text"]')).toHaveCount(0);
+  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 });

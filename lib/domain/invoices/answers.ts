@@ -1,4 +1,5 @@
 import type { InterviewProfile } from '@/lib/domain/bank-interview';
+import { businessNature } from '@/lib/domain/business-natures';
 import { formatDate } from '@/lib/domain/thai-date';
 import { summarizeInvoices, type InvoiceSummary } from './arithmetic';
 import type { InvoiceRead, InvoiceRow } from './schema';
@@ -107,10 +108,29 @@ export function withInvoiceAnswers(
   return {
     ...profile,
     ...answers,
-    // A product list the invoices cannot give keeps what the record had.
-    products_services: answers.products_services ?? profile.products_services,
+    // The company page, not invoice items, supplies its product description.
+    products_services: profile.products_services,
     customer_examples: answers.customer_examples ?? profile.customer_examples,
     // The earlier answer the study card prints follows the new one (D91).
     monthly_volume: answers.monthly_revenue,
+  };
+}
+
+/** The selected business nature supplies the three approved interview figures. */
+export function withBusinessNatureFigures(
+  profile: InterviewProfile,
+  categoryKey: string | null | undefined,
+): InterviewProfile {
+  const nature = businessNature(categoryKey);
+  if (!nature) return profile;
+  const [, , monthlyRevenue, monthlyTransactions, averageTransaction] = nature;
+  const monthly_revenue = `ประมาณ ${baht(monthlyRevenue)}`;
+  return {
+    ...profile,
+    monthly_revenue,
+    average_transaction: `ประมาณ ${baht(averageTransaction)}`,
+    monthly_transactions: `ประมาณ ${monthlyTransactions.toLocaleString('en-US')} รายการต่อเดือน`,
+    monthly_volume: monthly_revenue,
+    revenue_basis: 'ตัวเลขประมาณการตามประเภทธุรกิจที่เลือก',
   };
 }

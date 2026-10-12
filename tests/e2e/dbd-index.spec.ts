@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { companyZip } from './company-zip';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 
@@ -8,7 +9,9 @@ test('an uploaded pack is indexed by the cron in slices and the admin can ask it
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
-  await page.getByTestId('upload-first-file').setInputFiles('tests/fixtures/three-pages.pdf');
+  await page
+    .getByTestId('upload-first-file')
+    .setInputFiles(companyZip('tests/fixtures/three-pages.pdf'));
   await page.getByTestId('upload-first-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}/);
 

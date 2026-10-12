@@ -18,6 +18,7 @@ export const UPLOAD_ERROR_KEYS = [
   'file-too-large',
   'zip-too-large',
   'cannot-open',
+  'missing-business-link',
 ] as const;
 
 /** What a chosen zip holds, shown before anything is sent (spec 2026-10-06 §2). */
@@ -130,9 +131,14 @@ export function useDirectUpload(options: { locale: string; id: string | null; re
         setState({ ok: false, error: problem });
         return;
       }
+      if (!options.id && !links?.website && !links?.facebook) {
+        setState({ ok: false, error: 'missing-business-link' });
+        return;
+      }
       const prepared = await prepareUploadsAction({
         locale: options.locale,
         id: options.id,
+        links,
         files: files.map((f) => ({
           name: f.file.name,
           size: f.file.size,

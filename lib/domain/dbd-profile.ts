@@ -93,6 +93,12 @@ export type Provenance = Record<
 >;
 
 const describedSchema = z.object({ hash: z.string(), confidence: z.number(), at: z.string() });
+const facebookSourceSchema = z.object({
+  url: z.string().url(),
+  status: z.enum(['read', 'unavailable']),
+  text: z.string().max(12_000).nullable(),
+  at: z.string(),
+});
 
 export type StructuredData = {
   business?: BusinessProfile;
@@ -108,6 +114,8 @@ export type StructuredData = {
   invoices?: InvoiceRead | null;
   /** What the business description rests on (D101): a hash of objectives and items, and the reader's confidence. */
   described?: { hash: string; confidence: number; at: string } | null;
+  /** Cached Apify Page text, so re-derivation does not start another paid run. */
+  facebook_source?: z.output<typeof facebookSourceSchema> | null;
 };
 
 /**
@@ -123,9 +131,11 @@ export function readStructuredData(raw: unknown): StructuredData {
   const category = categoryAssignmentSchema.safeParse(data.category);
   const invoices = invoiceReadSchema.safeParse(data.invoices);
   const described = describedSchema.safeParse(data.described);
+  const facebookSource = facebookSourceSchema.safeParse(data.facebook_source);
   return {
     invoices: invoices.success ? invoices.data : null,
     described: described.success ? described.data : null,
+    facebook_source: facebookSource.success ? facebookSource.data : null,
     business: business.success ? business.data : EMPTY_BUSINESS_PROFILE,
     interview: interview.success ? interview.data : interviewProfileSchema.parse({}),
     document_type: typeof data.document_type === 'string' ? data.document_type : null,

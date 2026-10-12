@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan } from '@/lib/domain/interview/plan';
+import { buildPlan, buildReadinessPlan } from '@/lib/domain/interview/plan';
 import { ClaudeInterview } from '@/lib/integrations/interview/claude';
 
 const facts = {
@@ -64,6 +64,26 @@ describe('ClaudeInterview', () => {
     await new ClaudeInterview(client).turn({ ...base, plan: buildPlan(facts) });
     const params = calls[0] as Params;
     expect(params.system[0].text).toContain('20%');
+  });
+
+  it('sends the current v3 binary rubric to the officer', async () => {
+    const { client, calls } = stub({
+      say: 'รับทราบค่ะ',
+      assessment: { concept: 'registered_address', verdict: 'partial', note: 'บางส่วน' },
+      next: { concept: 'actual_business' },
+    });
+    const plan = buildReadinessPlan({
+      ...facts,
+      head_office_address: 'เขตวัฒนา กรุงเทพมหานคร',
+    });
+    await new ClaudeInterview(client).turn({
+      ...base,
+      plan: { ...plan, cursor: 2 },
+      learnerMessage: 'วัฒนา กรุงเทพมหานคร',
+    });
+    const params = calls[0] as Params;
+    expect(params.system[0].text).toContain('correct หรือ wrong เท่านั้น');
+    expect(params.messages.at(-1)?.content).toContain('จังหวัดและส่วนสำคัญอีกหนึ่งส่วน');
   });
 
   it('keeps the messages alternating: the transcript, then the answer with the state', async () => {

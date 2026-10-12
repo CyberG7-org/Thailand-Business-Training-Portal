@@ -141,6 +141,61 @@ describe('FakeInterview', () => {
     expect(pasted.next).toEqual({ concept: 'company_name' });
   });
 
+  it('accepts the loose v3 rubric and emits only correct or wrong evaluations', async () => {
+    const officer = new FakeInterview();
+    const readinessFacts = {
+      ...facts,
+      company_name_th: 'บริษัท ลัคกี้ชิป ฟู้ด จำกัด',
+      juristic_id: '0105569000134',
+      head_office_address: 'เลขที่ 99/9 ถนนสุขุมวิท แขวงคลองตัน เขตวัฒนา กรุงเทพมหานคร',
+      nature_of_business: 'จำหน่ายอาหารและขนมขบเคี้ยวทางออนไลน์',
+      products_services: 'มันฝรั่งทอด ขนม และเครื่องดื่ม',
+      directors: 'นางสาว ตัวอย่าง ทดสอบ',
+      signing_authority: 'กรรมการหนึ่งคนลงลายมือชื่อและประทับตราสำคัญของบริษัท',
+      my_name: 'นางสาว ตัวอย่าง ทดสอบ',
+      my_position: 'กรรมการ',
+      registered_on: '10 เมษายน 2569',
+      account_purpose: 'รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+      customer_profile: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+      client_origin: 'Facebook, TikTok, เว็บไซต์, การแนะนำจากลูกค้าเดิม และลูกค้าที่เข้ามาที่ร้าน',
+      monthly_revenue: 'ประมาณ 641,400 บาท',
+      monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
+      average_transaction: 'ประมาณ 21,380 บาท',
+    };
+    const plan = buildReadinessPlan(readinessFacts);
+    const answer = async (concept: string, learnerMessage: string) => {
+      const cursor = plan.items.findIndex((item) => item.concept === concept);
+      const turn = await officer.turn({
+        ...base,
+        facts: readinessFacts,
+        plan: { ...plan, cursor },
+        learnerMessage,
+      });
+      return turn.assessment?.verdict;
+    };
+
+    expect(await answer('company_name', 'บริษัทลัคกี้ชิปฟู้ดจำกัด')).toBe('correct');
+    expect(await answer('registration_number', '010-5569-00013-4')).toBe('correct');
+    expect(await answer('registered_address', 'วัฒนา กรุงเทพมหานคร')).toBe('correct');
+    expect(await answer('actual_business', 'ขายขนมออนไลน์')).toBe('correct');
+    expect(await answer('products_services', 'ขายมันฝรั่งทอด')).toBe('correct');
+    expect(await answer('authorized_representative', 'กรรมการหนึ่งคนลงนามพร้อมตราบริษัท')).toBe(
+      'correct',
+    );
+    expect(await answer('attendee_identity', 'ตัวอย่าง ทดสอบ เป็นกรรมการ')).toBe('correct');
+    expect(await answer('registration_date', '10 เมษายน 2026')).toBe('correct');
+    expect(await answer('account_purpose', 'รับเงินลูกค้าและจ่ายค่าใช้จ่ายบริษัท')).toBe('correct');
+    expect(await answer('customer_origin', 'ลูกค้าบุคคลทั่วไปจาก Facebook')).toBe('correct');
+    expect(await answer('customer_origin', 'Facebook')).toBe('wrong');
+    expect(await answer('monthly_revenue', 'ประมาณ 600,000 บาท')).toBe('correct');
+    expect(await answer('monthly_transactions', 'ประมาณ 27 รายการ')).toBe('correct');
+    expect(await answer('average_transaction', 'ประมาณ 20,000 บาท')).toBe('correct');
+
+    expect(await answer('registration_number', '0105569000999')).toBe('wrong');
+    expect(await answer('monthly_revenue', '100,000 บาท')).toBe('wrong');
+    expect(await answer('company_name', 'ไม่ทราบ')).toBe('wrong');
+  });
+
   it('marks a wrong answer, asks once more, and never says the fact', async () => {
     const officer = new FakeInterview();
     const plan = buildPlan(facts);

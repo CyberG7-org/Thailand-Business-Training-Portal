@@ -5,22 +5,23 @@ import { seedLearnerWithCompany, seedLearnerWithCompleteCompany, seedPassedExam 
 
 /**
  * The readiness interview with the fake officer (spec §4.6): it asks the plan's Thai questions,
- * marks an answer correct when it carries the record's value and evasive on "ไม่ทราบ". The
- * friendly v2 plan always asks all 11 questions, offers one retry and passes at 9 correct.
+ * marks each answer correct or wrong. The friendly v3 plan always asks all 13 questions, offers
+ * one retry and passes at 10 correct.
  */
 const GOOD: Record<string, string> = {
   registration_number: '0105568233704',
   registered_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
   actual_business: 'ค้าส่งและค้าปลีกเสื้อผ้า',
   products_services: 'ชุดเดรส เสื้อ กระโปรงสตรี',
-  authorized_representative: 'นางสาวกุลธิดา พลเยี่ยม',
+  authorized_representative: 'กรรมการหนึ่งคนลงนามและประทับตราบริษัท',
   attendee_identity: 'นางสาวกุลธิดา พลเยี่ยม กรรมการ',
   registration_date: '16 เมษายน 2569',
   account_purpose:
     'เพื่อใช้ทำธุรกรรมทางการเงินของบริษัท รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
-  customer_profile: 'ส่วนใหญ่เป็นลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
-  transaction_details:
-    'ลูกค้าชำระด้วยการโอนเงินผ่านธนาคารและ PromptPay / QR เฉลี่ยรายการละประมาณ 10,000 บาท',
+  customer_origin: 'ลูกค้าธุรกิจในประเทศไทย มาจากหน้าร้าน',
+  monthly_revenue: '300,000 บาท',
+  monthly_transactions: '30 รายการ',
+  average_transaction: '10,000 บาท',
 };
 const FALLBACK = 'บริษัทดำเนินกิจการตามปกติ มีลูกค้าประจำในประเทศไทย';
 
@@ -57,7 +58,7 @@ test('the interview is locked before the exam and open after it', async ({ page 
 
 test('a learner who evades is not ready, retries with good answers, and becomes ready for good', async ({
   page,
-}) => {
+}, testInfo) => {
   // This scenario completes two full interviews and then verifies the staff transcript.
   test.slow();
   const company = 'บริษัท สัมภาษณ์อีทูอี จำกัด';
@@ -67,8 +68,8 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await page.getByTestId('stage-interview').getByRole('link', { name: 'เปิด' }).click();
   await expect(page).toHaveURL(/\/th\/interview$/);
   const guide = page.getByTestId('interview-guide');
-  await expect(guide).toContainText('11');
-  await expect(guide).toContainText('9');
+  await expect(guide).toContainText('13');
+  await expect(guide).toContainText('10');
   await expect(guide).toContainText('ภาษาไทย');
   await expect(guide).toContainText('ฝึกได้ไม่จำกัด');
   await page.getByTestId('interview-start').click();
@@ -84,15 +85,23 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
     'data-outcome',
     'cannot_open',
   );
-  await expect(page.getByTestId('interview-outcome')).toContainText(
-    'ยังไม่พร้อม — ยังเปิดบัญชีไม่ได้',
-  );
-  await expect(page.getByTestId('interview-verdict')).toContainText('0 จาก 11');
+  await expect(page.getByTestId('interview-outcome')).toContainText('ยังไม่พร้อม');
+  await expect(page.getByRole('progressbar', { name: 'ผลรวม' })).toBeVisible();
   await expect(
-    page.getByTestId('interview-result-question').first().locator('[data-verdict]'),
-  ).toHaveAttribute('data-verdict', 'evasive');
-  // The result teaches: the correct company name is shown now, and was never in the chat.
+    page.getByTestId('admin-transcript').locator('[data-verdict="wrong"]').first(),
+  ).toBeVisible();
   await expect(page.getByTestId('admin-transcript')).toContainText(company);
+  await expect(page.getByText('บทสรุปของเจ้าหน้าที่')).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByTestId('interview-result-question').first()).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    ),
+  ).toBeLessThanOrEqual(0);
+  await page.screenshot({ path: testInfo.outputPath('learner-result-mobile.png') });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.screenshot({ path: testInfo.outputPath('learner-result-desktop.png') });
   for (const bubble of await page
     .getByTestId('admin-transcript')
     .locator('[data-role="officer"]')
@@ -110,8 +119,10 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await expect(page.getByTestId('interview-verdict')).toHaveAttribute('data-verdict', 'ready');
   // The result says in plain words what the learner came to find out.
   await expect(page.getByTestId('interview-outcome')).toHaveAttribute('data-outcome', 'can_open');
-  await expect(page.getByTestId('interview-outcome')).toContainText('พร้อมแล้ว — เปิดบัญชีได้');
-  await expect(page.getByTestId('interview-verdict')).toContainText('11 จาก 11');
+  await expect(page.getByTestId('interview-outcome')).toContainText('พร้อมแล้ว');
+  await expect(
+    page.getByTestId('admin-transcript').locator('[data-role="learner"]').first(),
+  ).toBeVisible();
 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-interview-status')).toHaveText('เสร็จสิ้น');
@@ -147,9 +158,7 @@ test('the learner can end the interview early and is told to try again', async (
     'data-outcome',
     'cannot_open',
   );
-  await expect(page.getByTestId('interview-outcome')).toContainText(
-    'ยังไม่พร้อม — ยังเปิดบัญชีไม่ได้',
-  );
+  await expect(page.getByTestId('interview-outcome')).toContainText('ยังไม่พร้อม');
   await expect(page.getByTestId('close-reason')).toHaveText('คุณจบการสัมภาษณ์ก่อนครบทุกข้อ');
   await expect(page.getByRole('link', { name: 'ลองอีกครั้ง' })).toHaveAttribute(
     'href',

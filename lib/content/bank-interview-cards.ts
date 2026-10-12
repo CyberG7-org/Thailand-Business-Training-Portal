@@ -153,7 +153,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | Registered business categories | {business_categories} |
 | Has business started? | {operations_status} |
 
-**The bank may ask:** What does the company do and sell? Why was it established? Who are the customers and suppliers? How do you find customers? Where do you operate?
+**The bank will ask:** What business does the company do? What are its main products or services? Who are its customers, and how do you find them? You can name one correct customer group and one real channel. You do not need to list everything.
 
 **Remember:** the real business must make sense with the registered objectives. If there is no website, do not mention one.`,
       },
@@ -173,7 +173,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | ประเภทธุรกิจที่จดทะเบียน | {business_categories} |
 | เริ่มทำธุรกิจแล้วหรือยัง | {operations_status} |
 
-**ธนาคารอาจถาม:** บริษัททำและขายอะไร จัดตั้งเพื่ออะไร ลูกค้าและซัพพลายเออร์คือใคร หาลูกค้าอย่างไร และทำธุรกิจที่ไหน
+**ธนาคารจะถาม:** บริษัททำธุรกิจอะไร ขายสินค้าหรือบริการหลักอะไร ลูกค้าเป็นใคร และหาลูกค้าอย่างไร ตอบกลุ่มลูกค้าที่ถูกต้องหนึ่งกลุ่มและช่องทางหนึ่งช่องทางก็พอ ไม่ต้องบอกทุกอย่าง
 
 **จำไว้:** ธุรกิจจริงต้องสอดคล้องกับวัตถุประสงค์ ถ้าไม่มีเว็บไซต์ ไม่ต้องพูดถึงเว็บไซต์`,
       },
@@ -193,7 +193,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | 注册业务类别 | {business_categories} |
 | 是否已开始经营 | {operations_status} |
 
-**银行可能会问：** 公司做什么、销售什么？为什么成立？客户和供应商是谁？如何找到客户？在哪里经营？
+**银行会问：** 公司做什么业务？主要销售什么？客户是谁，您如何找到他们？说出一个正确的客户群体和一个获客渠道即可，不必列出全部。
 
 **记住：** 实际业务应与注册目的相符。没有网站时，不要提到网站。`,
       },
@@ -206,12 +206,11 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
     localizations: {
       en: {
         title: 'Money and transactions (4/5)',
-        body: `These figures come from the uploaded invoices and prepared answers.
+        body: `Learn these three estimates from your company's approved business category. They are not calculated from invoices.
 
 | What to remember | Your company answer |
 |---|---|
 | Estimated monthly revenue | {monthly_revenue} |
-| How it was calculated | {revenue_basis} |
 | Average amount per transaction | {average_transaction} |
 | Estimated transactions per month | {monthly_transactions} |
 | Expected monthly money movement | {monthly_volume} |
@@ -221,18 +220,20 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | Why PromptPay or QR is needed | {promptpay_qr_purpose} |
 | Expected transaction pattern | {transaction_details} |
 
-**Calculation:** add all invoice totals; count the **different invoice dates**; daily revenue = total ÷ different dates; monthly revenue = daily revenue × 30; average transaction = total ÷ invoices.
+**The bank will ask:**
+1. Tell me about the company's estimated monthly revenue. Answer: **{monthly_revenue}**.
+2. Tell me about the company's estimated total number of transactions per month. Answer: **{monthly_transactions}**.
+3. Tell me about the company's estimated average transaction amount. Answer: **{average_transaction}**.
 
-**Remember:** these are estimates based on the invoices. Do not invent a different figure.`,
+**Remember:** these are estimates for your company's business category. Say the approximate figure; a small difference is okay.`,
       },
       th: {
         title: 'เงินและธุรกรรม (4/5)',
-        body: `ตัวเลขเหล่านี้มาจากใบแจ้งหนี้และคำตอบที่เตรียมไว้
+        body: `จำตัวเลขประมาณการ 3 อย่างตามประเภทธุรกิจที่อนุมัติของบริษัท ไม่ได้คำนวณจากใบแจ้งหนี้
 
 | สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
 |---|---|
 | รายได้ต่อเดือนโดยประมาณ | {monthly_revenue} |
-| วิธีคำนวณรายได้ | {revenue_basis} |
 | ยอดเฉลี่ยต่อธุรกรรม | {average_transaction} |
 | จำนวนธุรกรรมต่อเดือน | {monthly_transactions} |
 | เงินเข้าออกต่อเดือนที่คาดไว้ | {monthly_volume} |
@@ -242,18 +243,20 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | เหตุผลที่ใช้พร้อมเพย์หรือ QR | {promptpay_qr_purpose} |
 | รูปแบบธุรกรรมที่คาดไว้ | {transaction_details} |
 
-**วิธีคำนวณ:** รวมยอดใบแจ้งหนี้ นับ **วันที่ไม่ซ้ำกัน** รายได้ต่อวัน = ยอดรวม ÷ จำนวนวันที่ไม่ซ้ำ รายได้ต่อเดือน = ต่อวัน × 30 และยอดเฉลี่ยต่อธุรกรรม = ยอดรวม ÷ จำนวนใบแจ้งหนี้
+**ธนาคารจะถาม:**
+1. รายได้ต่อเดือนโดยประมาณของบริษัทเท่าไร ตอบ: **{monthly_revenue}**
+2. บริษัทมีธุรกรรมทั้งหมดประมาณกี่รายการต่อเดือน ตอบ: **{monthly_transactions}**
+3. ยอดเงินเฉลี่ยต่อธุรกรรมประมาณเท่าไร ตอบ: **{average_transaction}**
 
-**จำไว้:** เป็นตัวเลขประมาณการจากใบแจ้งหนี้ อย่าคิดตัวเลขใหม่เอง`,
+**จำไว้:** เป็นตัวเลขประมาณการตามประเภทธุรกิจ ตอบเป็นตัวเลขใกล้เคียงได้`,
       },
       zh: {
         title: '资金和交易（4/5）',
-        body: `这些数字来自上传的发票和准备好的答案。
+        body: `记住公司已批准业务类别的三项估算数字；它们不是根据发票计算的。
 
 | 要记住的内容 | 您公司的答案 |
 |---|---|
 | 预计月收入 | {monthly_revenue} |
-| 收入计算方法 | {revenue_basis} |
 | 平均每笔交易金额 | {average_transaction} |
 | 预计每月交易数量 | {monthly_transactions} |
 | 预计每月资金进出 | {monthly_volume} |
@@ -263,9 +266,12 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | 使用 PromptPay 或二维码的原因 | {promptpay_qr_purpose} |
 | 预计交易情况 | {transaction_details} |
 
-**计算方法：** 发票总额相加；计算 **不同发票日期**；日收入 = 总额 ÷ 不同日期数；月收入 = 日收入 × 30；平均交易 = 总额 ÷ 发票数。
+**银行会问：**
+1. 公司预计每月收入是多少？回答：**{monthly_revenue}**。
+2. 公司预计每月有多少笔交易？回答：**{monthly_transactions}**。
+3. 公司平均每笔交易金额是多少？回答：**{average_transaction}**。
 
-**记住：** 这是根据发票估算的数字，不要编造其他数字。`,
+**记住：** 这些是按业务类别确定的估算数字，可以回答接近的金额。`,
       },
     },
   },

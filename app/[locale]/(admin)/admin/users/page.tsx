@@ -86,6 +86,9 @@ export default async function CreateLearnerAndDbdPage({
       status: r.extraction_status,
       confirmed: r.extraction_status === 'confirmed',
       taken: learners.has(r.id),
+      director: Array.isArray(r.directors)
+        ? ((r.directors[0] as { name_th?: string } | undefined)?.name_th ?? null)
+        : null,
       // The picker narrows to the chosen team: pairing a learner with another team's company
       // leaves them studying data their own manager cannot see.
       teamId: r.team_id,
@@ -95,8 +98,10 @@ export default async function CreateLearnerAndDbdPage({
     : null;
   const rows: CompanyRow[] = records.map((r) => ({
     id: r.id,
-    name: r.company_name_th,
-    juristicId: r.juristic_id,
+    name: r.company_name_en,
+    director: Array.isArray(r.directors)
+      ? ((r.directors[0] as { name_th?: string } | undefined)?.name_th ?? null)
+      : null,
     issuedOn: r.issued_on ? formatDate(r.issued_on, locale as Locale) : null,
     status: companyStatus(r, reading.get(r.id) ?? null),
     teamCode: r.team_id ? (teamCodeOf?.get(r.team_id) ?? null) : null,

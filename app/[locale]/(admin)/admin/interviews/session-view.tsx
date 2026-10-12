@@ -76,7 +76,7 @@ export async function InterviewSessionView({
     (plan.items ?? []).map((item) => [item.concept, item.expected]),
   );
   const label = (concept: string) =>
-    plan.version === 2 && readinessItem(concept)
+    (plan.version === 2 || plan.version === 3) && readinessItem(concept)
       ? readinessItem(concept)!.question[locale as AppLocale]
       : concept === 'juristic_id'
         ? ti('concept.juristic_id')

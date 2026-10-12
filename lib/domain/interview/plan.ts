@@ -22,7 +22,7 @@ export const CORE_CONCEPTS: readonly ConceptId[] = [
 /** Identity, then ownership, then the business and the learner's own role (spec §4.2). */
 const GROUP_ORDER = ['identity', 'ownership', 'business_plan', 'personal'] as const;
 const MAX_PROBING = 4;
-export const READINESS_PASS_SCORE = 9;
+export const READINESS_PASS_SCORE = 10;
 
 export type ReadinessItemDefinition = {
   concept: ConceptId;
@@ -36,7 +36,7 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
     concept: 'company_name',
     question: {
       th: 'บริษัทชื่อเต็มว่าอะไรคะ',
-      en: 'What is the company’s full name?',
+      en: 'What is your company’s full registered name?',
       zh: '公司的全名是什么？',
     },
     facts: ['company_name_th'],
@@ -65,8 +65,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
   {
     concept: 'actual_business',
     question: {
-      th: 'บริษัททำธุรกิจอะไรจริงคะ',
-      en: 'What does the company actually do?',
+      th: 'บริษัททำธุรกิจอะไรคะ',
+      en: 'What business does the company do?',
       zh: '公司实际经营什么业务？',
     },
     facts: ['nature_of_business'],
@@ -123,6 +123,50 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
     cardKey: 'bank-interview-4-role',
   },
   {
+    concept: 'customer_origin',
+    question: {
+      th: 'ลูกค้าของบริษัทเป็นใคร และบริษัทหาลูกค้าอย่างไรคะ',
+      en: 'Who are your customers, and how do you find them?',
+      zh: '公司的客户是谁？您如何找到他们？',
+    },
+    facts: ['customer_profile', 'client_origin'],
+    cardKey: 'bank-interview-3-business',
+  },
+  {
+    concept: 'monthly_revenue',
+    question: {
+      th: 'รายได้ต่อเดือนโดยประมาณของบริษัทเท่าไรคะ',
+      en: 'What is the company’s estimated monthly revenue?',
+      zh: '公司预计每月收入是多少？',
+    },
+    facts: ['monthly_revenue'],
+    cardKey: 'bank-interview-4-role',
+  },
+  {
+    concept: 'monthly_transactions',
+    question: {
+      th: 'บริษัทมีธุรกรรมทั้งหมดประมาณกี่รายการต่อเดือนคะ',
+      en: 'About how many transactions does the company have each month?',
+      zh: '公司每月大约有多少笔交易？',
+    },
+    facts: ['monthly_transactions'],
+    cardKey: 'bank-interview-4-role',
+  },
+  {
+    concept: 'average_transaction',
+    question: {
+      th: 'ยอดเงินเฉลี่ยต่อธุรกรรมของบริษัทประมาณเท่าไรคะ',
+      en: 'What is the company’s estimated average transaction amount?',
+      zh: '公司预计平均每笔交易金额是多少？',
+    },
+    facts: ['average_transaction'],
+    cardKey: 'bank-interview-4-role',
+  },
+];
+
+/** Labels retained for debriefs from frozen v2 (11-question) sessions. */
+const LEGACY_READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
+  {
     concept: 'customer_profile',
     question: {
       th: 'ลูกค้าหลักของบริษัทเป็นใครคะ',
@@ -145,7 +189,11 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
 ];
 
 export function readinessItem(concept: ConceptId): ReadinessItemDefinition | null {
-  return READINESS_ITEMS.find((item) => item.concept === concept) ?? null;
+  return (
+    READINESS_ITEMS.find((item) => item.concept === concept) ??
+    LEGACY_READINESS_ITEMS.find((item) => item.concept === concept) ??
+    null
+  );
 }
 
 const JURISTIC_ITEM: Omit<PlanItem, 'expected' | 'attempts'> = {
@@ -191,10 +239,10 @@ export function buildPlan(facts: FactSheet): InterviewPlan {
   return { items, cursor: 0 };
 }
 
-/** The friendly v2 readiness interview: 11 fixed questions, no mandatory concept. */
+/** The friendly v3 readiness interview: 13 fixed questions, no mandatory concept. */
 export function buildReadinessPlan(facts: FactSheet): InterviewPlan {
   return {
-    version: 2,
+    version: 3,
     passScore: READINESS_PASS_SCORE,
     cursor: 0,
     items: READINESS_ITEMS.map((definition) => ({
@@ -211,7 +259,7 @@ export function buildReadinessPlan(facts: FactSheet): InterviewPlan {
 }
 
 export function isReadinessPlan(plan: InterviewPlan): boolean {
-  return plan.version === 2;
+  return plan.version === 2 || plan.version === 3;
 }
 
 export function nextReadinessStep(

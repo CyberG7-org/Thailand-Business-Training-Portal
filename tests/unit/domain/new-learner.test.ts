@@ -10,7 +10,7 @@ import {
 const filled: NewLearnerValues = {
   team: 'team-id',
   company: 'record-id',
-  password: 'Kp7w-Xm3r-Tz9q',
+  password: 'Kp7wXm3r',
   name: 'สมชาย ใจดี',
   phone: '081-234-5678',
   email: 'somchai@example.co.th',
@@ -35,9 +35,10 @@ describe('newLearnerChecklist', () => {
   });
 
   it('wants a password of at least the server minimum', () => {
-    expect(MIN_PASSWORD_LENGTH).toBe(10);
+    expect(MIN_PASSWORD_LENGTH).toBe(6);
+    expect(doneOf({ ...filled, password: 'x'.repeat(5) }).password).toBe(false);
+    expect(doneOf({ ...filled, password: 'x'.repeat(6) }).password).toBe(true);
     expect(doneOf({ ...filled, password: 'x'.repeat(9) }).password).toBe(false);
-    expect(doneOf({ ...filled, password: 'x'.repeat(10) }).password).toBe(true);
   });
 
   it('does not count a name of spaces', () => {
@@ -58,10 +59,10 @@ describe('newLearnerChecklist', () => {
 });
 
 describe('generatePassword', () => {
-  it('makes three groups of four from readable characters, past the minimum', () => {
+  it('makes eight alphanumeric characters from readable characters', () => {
     let n = 0;
     const password = generatePassword((below) => n++ % below);
-    expect(password).toMatch(/^[a-zA-Z2-9]{4}-[a-zA-Z2-9]{4}-[a-zA-Z2-9]{4}$/);
+    expect(password).toMatch(/^[a-zA-Z2-9]{8}$/);
     expect(password.length).toBeGreaterThanOrEqual(MIN_PASSWORD_LENGTH);
     expect(password).not.toMatch(/[01OIl]/);
   });

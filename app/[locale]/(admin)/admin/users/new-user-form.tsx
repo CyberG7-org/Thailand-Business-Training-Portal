@@ -13,6 +13,7 @@ import {
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
 import {
   MIN_PASSWORD_LENGTH,
+  MAX_PASSWORD_LENGTH,
   generatePassword,
   newLearnerChecklist,
   type NewLearnerValues,
@@ -34,6 +35,7 @@ export type CompanyOption = {
   confirmed: boolean;
   /** It already has its learner: one per company (D93). */
   taken: boolean;
+  director: string | null;
 };
 
 /** What the companies tab may ask of the form: choose a company, as "Assign learner" does. */
@@ -171,7 +173,7 @@ export function NewUserForm({
   // (teams === null) sees whatever RLS already gave them.
   const offeredFor = (team: string) =>
     teams ? companies.filter((c) => !team || c.teamId === team || c.teamId == null) : companies;
-  const offered = offeredFor(teamId);
+  const offered = offeredFor(teamId).filter((company) => !company.taken);
   const confirmed = companies.filter((c) => c.confirmed);
   // A company is given once (D93): confirmed and still without a learner.
   const free = confirmed.filter((c) => !c.taken);
@@ -218,6 +220,8 @@ export function NewUserForm({
                   type={showPassword ? 'text' : 'password'}
                   required
                   minLength={MIN_PASSWORD_LENGTH}
+                  maxLength={MAX_PASSWORD_LENGTH}
+                  pattern="[A-Za-z0-9]{6,8}"
                   autoComplete="new-password"
                   placeholder={t('passwordPlaceholder')}
                   className="staff-input min-w-0 flex-1"
@@ -257,6 +261,9 @@ export function NewUserForm({
             <input
               name="displayName"
               required
+              key={companyId}
+              value={companies.find((company) => company.id === companyId)?.director ?? ''}
+              readOnly
               maxLength={120}
               placeholder={t('namePlaceholder')}
               className="staff-input mt-1"

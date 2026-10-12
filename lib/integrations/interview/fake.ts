@@ -1,4 +1,5 @@
 import { currentItem, isReadinessPlan } from '@/lib/domain/interview/plan';
+import { evaluateReadinessAnswer } from '@/lib/domain/interview/answer-validation';
 import type { Assessment, OfficerTurn } from '@/lib/domain/interview/types';
 import type { InterviewProvider, NarrateInput, TurnInput } from './types';
 
@@ -70,7 +71,9 @@ export class FakeInterview implements InterviewProvider {
     }
     const message = input.learnerMessage;
     let verdict: Assessment['verdict'];
-    if (input.pastedDetected) verdict = 'pasted';
+    if (input.plan.version === 3) {
+      verdict = input.pastedDetected ? 'wrong' : evaluateReadinessAnswer(item, message);
+    } else if (input.pastedDetected) verdict = 'pasted';
     else {
       const answer = norm(message);
       const parts = item.expected.split(' / ');
@@ -97,7 +100,10 @@ export class FakeInterview implements InterviewProvider {
     }
     const stay = verdict !== 'correct' && item.attempts < 1;
     if (stay) {
-      const ask = verdict === 'pasted' ? 'กรุณาตอบด้วยคำพูดของคุณเองนะคะ ' : 'ขอถามอีกครั้งนะคะ ';
+      const ask =
+        input.pastedDetected || verdict === 'pasted'
+          ? 'กรุณาตอบด้วยคำพูดของคุณเองนะคะ '
+          : 'ขอถามอีกครั้งนะคะ ';
       return { say: ask + item.question, assessment, next: { concept: item.concept } };
     }
     const next = input.plan.items[input.plan.cursor + 1];

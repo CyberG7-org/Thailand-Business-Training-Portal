@@ -42,10 +42,38 @@ jobs:
       - name: Client bundle secret scan
         run: pnpm check:secrets
 
+  e2e:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start local Supabase and write env
+        run: |
+          pnpm exec supabase start
+          node scripts/write-local-env.mjs
+
+      - name: Build for browser tests
+        run: pnpm build
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: E2E tests
-        run: pnpm test:e2e
+      - name: E2E tests (${{ matrix.shard }}/2)
+        run: pnpm test:e2e --shard=${{ matrix.shard }}/2
         env:
           CI: 'true'

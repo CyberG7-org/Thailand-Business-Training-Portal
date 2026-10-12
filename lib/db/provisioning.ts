@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
+import { LEARNER_PASSWORD_PATTERN } from '@/lib/domain/new-learner';
 import type { LearnerContact } from '@/lib/domain/learner-contact';
 import {
   MANAGER_PREFIX,
@@ -25,7 +26,7 @@ export const newAccountSchema = z.object({
     .string()
     .trim()
     .refine(isValidLoginId, 'Login ID must be 3–64 letters, digits, ".", "_" or "-"'),
-  password: z.string().min(10, 'Password must be at least 10 characters'),
+  password: z.string().min(6),
   role: z.enum(['learner', 'manager', 'admin']).default('learner'),
   displayName: z.string().trim().max(120).optional(),
   preferredLanguage: z.enum(['th', 'en', 'zh']).default('th'),
@@ -51,6 +52,12 @@ export async function createAccount(
     throw new ProvisioningError(parsed.error.issues[0]?.message ?? 'Invalid input', 'invalid');
   }
   const { loginId, password, role, displayName, preferredLanguage } = parsed.data;
+  if (role === 'learner' && !LEARNER_PASSWORD_PATTERN.test(password)) {
+    throw new ProvisioningError('Password must be 6–8 letters or digits', 'invalid');
+  }
+  if (role !== 'learner' && password.length < 10) {
+    throw new ProvisioningError('Password must be at least 10 characters', 'invalid');
+  }
   const normalizedLoginId = loginId.toLowerCase();
 
   const { data, error } = await createSupabaseAdminClient().auth.admin.createUser({
@@ -89,10 +96,19 @@ type Deps = { createAccount: typeof createAccount };
 const newPersonSchema = newAccountSchema.omit({ loginId: true, role: true });
 
 /** Everything the form can get wrong is checked before the auth service is asked. */
-function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
+function parsePerson(
+  input: NewPerson,
+  role: 'manager' | 'learner',
+): z.infer<typeof newPersonSchema> {
   const parsed = newPersonSchema.safeParse(input);
   if (!parsed.success) {
     throw new ProvisioningError(parsed.error.issues[0]?.message ?? 'Invalid input', 'invalid');
+  }
+  if (role === 'learner' && !LEARNER_PASSWORD_PATTERN.test(parsed.data.password)) {
+    throw new ProvisioningError('Password must be 6–8 letters or digits', 'invalid');
+  }
+  if (role === 'manager' && parsed.data.password.length < 10) {
+    throw new ProvisioningError('Password must be at least 10 characters', 'invalid');
   }
   return parsed.data;
 }
@@ -230,7 +246,7 @@ export async function createManagerAccount(
   input: NewPerson & { suffix: string },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
-  const person = parsePerson(input);
+  const person = parsePerson(input, 'manager');
   const suffix = parseSuffix('manager', input.suffix);
   return createUnderCode(MANAGER_PREFIX + suffix, { ...person, role: 'manager' }, deps);
 }
@@ -255,7 +271,7 @@ export async function createLearnerAccount(
   input: NewPerson & { managerId: string; suffix: string; contact?: LearnerContact },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
-  const person = parsePerson(input);
+  const person = parsePerson(input, 'learner');
   const suffix = parseSuffix('learner', input.suffix);
   const prefix = await learnerPrefixOf(input.managerId);
   const created = await createUnderCode(prefix + suffix, { ...person, role: 'learner' }, deps);
@@ -299,10 +315,20 @@ export async function deleteLearnerAccount(actorId: string, learnerId: string): 
 }
 
 export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {
-  if (newPassword.length < 10) {
+  const admin = createSupabaseAdminClient();
+  const { data: profile, error: profileError } = await admin
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle();
+  if (profileError || !profile) throw new ProvisioningError('Account not found', 'invalid');
+  if (profile.role === 'learner' && !LEARNER_PASSWORD_PATTERN.test(newPassword)) {
+    throw new ProvisioningError('Password must be 6–8 letters or digits', 'invalid');
+  }
+  if (profile.role !== 'learner' && newPassword.length < 10) {
     throw new ProvisioningError('Password must be at least 10 characters', 'invalid');
   }
-  const { error } = await createSupabaseAdminClient().auth.admin.updateUserById(userId, {
+  const { error } = await admin.auth.admin.updateUserById(userId, {
     password: newPassword,
   });
   if (error) throw new ProvisioningError(error.message, 'unknown');

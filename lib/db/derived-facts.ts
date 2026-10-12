@@ -1,14 +1,8 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { EMPTY_INTERVIEW_PROFILE, type InterviewProfile } from '@/lib/domain/bank-interview';
-import {
-  categoryInputHash,
-  decideCategory,
-  failedCategory,
-  manualCategory,
-  needsRemap,
-  type CategoryAssignment,
-} from '@/lib/domain/business-category';
+import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { businessNature } from '@/lib/domain/business-natures';
+import { categoryInputHash, failedCategory, manualCategory } from '@/lib/domain/business-category';
 import { readStructuredData, type StructuredData } from '@/lib/domain/dbd-profile';
 import { normalizeThai } from '@/lib/domain/thai-text';
 import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
@@ -16,10 +10,9 @@ import { createHash } from 'node:crypto';
 import { getCategoryMapper } from '@/lib/integrations/category-map';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import type { DbdExtractor } from '@/lib/integrations/extraction/types';
-import { productsOf } from '@/lib/domain/invoices/answers';
-import { EMPTY_BUSINESS_PROFILE } from '@/lib/domain/dbd-profile';
+import { readBusinessPage } from '@/lib/integrations/extraction/business-page';
+import { readFacebookPageWithApify } from '@/lib/integrations/extraction/apify-facebook';
 import type { CategoryMapper } from '@/lib/integrations/category-map/types';
-import { listBusinessCategories } from './business-categories';
 import type { Database, Json } from './database.types';
 import { getDbdRecord, type DbdRecordRow } from './dbd-records';
 import { geoLookup } from './geo';
@@ -30,6 +23,8 @@ export type DerivedFactsDeps = {
   mapper: CategoryMapper | null;
   /** Writes one line for the kind of business from the objectives and the items sold (D101). */
   describe?: DbdExtractor['describeBusiness'] | null;
+  readPage?: typeof readBusinessPage;
+  readFacebook?: typeof readFacebookPageWithApify;
   now?: () => Date;
 };
 
@@ -41,12 +36,10 @@ const defaultDeps = (): DerivedFactsDeps => {
   };
 };
 
-/** What the description rests on; a change of either side describes the business again. */
-function describeHash(objectives: string[], items: string[]): string | null {
-  if (objectives.length === 0 && items.length === 0) return null;
-  return createHash('sha1')
-    .update(JSON.stringify([objectives, items]))
-    .digest('hex');
+/** A change to the website or Facebook page describes the business again. */
+function describeHash(pages: string[]): string | null {
+  if (pages.length === 0) return null;
+  return createHash('sha1').update(JSON.stringify(pages)).digest('hex');
 }
 
 /** How often a person's explicit choice is retried against edits landing meanwhile. */
@@ -98,7 +91,12 @@ export async function refreshDerivedFacts(
   db: Db,
   recordId: string,
   deps: DerivedFactsDeps = defaultDeps(),
-  options: { remapCategory?: boolean; describe?: boolean; attempts?: number } = {},
+  options: {
+    remapCategory?: boolean;
+    describe?: boolean;
+    refreshFacebook?: boolean;
+    attempts?: number;
+  } = {},
 ): Promise<StructuredDataUpdate> {
   // The printed address with the marks a reader dropped put back (D92), when a resolution did.
   let repaired: string | null = null;
@@ -123,27 +121,57 @@ export async function refreshDerivedFacts(
       // form, the name card and the questions all show the address as it is printed.
       repaired = address.full !== printed ? address.full : null;
 
-      // The kind of business, written from the objectives and what the invoices show was sold
-      // (D101): always once invoices are there, otherwise only for a record whose nature nobody
-      // wrote — a nature typed before the pack stays. What was sold becomes the products.
+      // Website/Facebook content is the only source for what the company does and sells.
       let interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
       let described = stored.described ?? null;
-      const rows = stored.invoices?.rows ?? [];
-      const items = (productsOf(rows) ?? '').split(' ').filter(Boolean);
-      const objectives = (stored.business ?? EMPTY_BUSINESS_PROFILE).objectives.map((o) => o.text);
-      const basis = describeHash(objectives, items);
-      const wanted =
-        deps.describe &&
-        basis !== null &&
-        described?.hash !== basis &&
-        (options.describe || items.length > 0 || !interview.nature_of_business?.trim());
+      let facebookSource = stored.facebook_source ?? null;
+      const websiteText = record.website
+        ? await (deps.readPage ?? readBusinessPage)(record.website)
+        : null;
+      let facebookText: string | null = null;
+      if (record.facebook_page) {
+        const sameUrl = facebookSource?.url === record.facebook_page;
+        const failedRecently =
+          facebookSource?.status === 'unavailable' &&
+          Date.parse(at) - Date.parse(facebookSource.at) < 24 * 60 * 60 * 1000;
+        if (
+          sameUrl &&
+          !options.refreshFacebook &&
+          (facebookSource?.status === 'read' || failedRecently)
+        ) {
+          facebookText = facebookSource?.text ?? null;
+        } else if (deps.readFacebook || deps.readPage || process.env.APIFY_API_TOKEN) {
+          try {
+            facebookText = await (deps.readFacebook ?? deps.readPage ?? readFacebookPageWithApify)(
+              record.facebook_page,
+            );
+          } catch (error) {
+            console.error('facebook page read', recordId, error);
+          }
+          facebookSource = {
+            url: record.facebook_page,
+            status: facebookText ? 'read' : 'unavailable',
+            text: facebookText,
+            at,
+          };
+          changed = true;
+        }
+      } else if (facebookSource) {
+        facebookSource = null;
+        changed = true;
+      }
+      const sourcePages = [websiteText, facebookText].filter((page): page is string =>
+        Boolean(page),
+      );
+      const basis = describeHash(sourcePages);
+      const wanted = deps.describe && basis !== null && described?.hash !== basis;
       if (wanted) {
         try {
-          const written = await deps.describe!({ objectives, items });
+          const written = await deps.describe!({ objectives: [], items: sourcePages });
           interview = {
             ...interview,
             nature_of_business: written.nature.trim() || interview.nature_of_business,
-            products_services: productsOf(rows) ?? interview.products_services,
+            products_services: written.products?.trim() || interview.products_services,
           };
           described = { hash: basis, confidence: written.confidence, at };
           changed = true;
@@ -154,51 +182,21 @@ export async function refreshDerivedFacts(
 
       const hash = categoryInputHash(interview.nature_of_business, interview.products_services);
       let category = stored.category ?? null;
-      if (options.remapCategory || needsRemap(category, hash)) {
-        category =
-          hash === null
-            ? failedCategory('no_text', null, at)
-            : await mapCategory(db, interview, hash, deps, at);
-        changed = true;
+      if (!category?.key || !businessNature(category.key)) {
+        const reason = hash ? 'choose-category' : 'no_text';
+        if (category?.error !== reason || category?.input_hash !== hash) {
+          category = failedCategory(reason, hash, at);
+          changed = true;
+        }
       }
 
-      return changed ? { ...stored, interview, described, address, category } : null;
+      return changed
+        ? { ...stored, interview, described, facebook_source: facebookSource, address, category }
+        : null;
     },
     options.attempts ?? 1,
     () => (repaired === null ? {} : { head_office_address: repaired }),
   );
-}
-
-async function mapCategory(
-  db: Db,
-  interview: InterviewProfile,
-  hash: string,
-  deps: DerivedFactsDeps,
-  at: string,
-): Promise<CategoryAssignment> {
-  if (!deps.mapper) return failedCategory('not_configured', hash, at);
-  try {
-    const categories = await listBusinessCategories(db, { activeOnly: true });
-    if (categories.length === 0) return failedCategory('no_categories', hash, at);
-    const result = await deps.mapper.map({
-      natureOfBusiness: interview.nature_of_business ?? '',
-      productsServices: interview.products_services,
-      categories: categories.map((c) => ({
-        key: c.key,
-        label_th: c.label_th,
-        label_en: c.label_en,
-      })),
-    });
-    return decideCategory({
-      result,
-      activeKeys: new Set(categories.map((c) => c.key)),
-      model: deps.mapper.model,
-      inputHash: hash,
-      at,
-    });
-  } catch (e) {
-    return failedCategory(e instanceof Error ? e.message.slice(0, 300) : 'failed', hash, at);
-  }
 }
 
 /**
@@ -211,8 +209,7 @@ export async function setBusinessCategory(
   key: string,
   now: Date = new Date(),
 ): Promise<void> {
-  const categories = await listBusinessCategories(db, { activeOnly: true });
-  if (!categories.some((c) => c.key === key)) throw new Error('unknown-category');
+  if (!businessNature(key)) throw new Error('unknown-category');
   const result = await updateStructuredData(db, recordId, (stored) => {
     const interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
     const hash = categoryInputHash(interview.nature_of_business, interview.products_services);

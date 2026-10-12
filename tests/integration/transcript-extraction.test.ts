@@ -163,10 +163,10 @@ describe('the transcript path', () => {
     });
     expect(done.status).toBe('done');
     expect(done.applied).toEqual([]); // the particulars were stored by the first run
-    expect(done.lists.sort()).toEqual(['objectives', 'share_structure', 'shareholders']);
+    expect(done.lists.sort()).toEqual(['share_structure', 'shareholders']);
     // list pages 3–5 in batches of 2: [3,4] cached, [5] read; sheet page 2 read; the certificate
     // is not swept because the objectives sheet already supplied the objectives → 3 in total
-    expect(sweeps).toBe(3);
+    expect(sweeps).toBe(2);
   });
 
   it('filled empty facts and empty lists, keeping what the admin typed, with provenance for what it filled', async () => {
@@ -181,12 +181,12 @@ describe('the transcript path', () => {
     expect(record.extraction_raw).not.toBeNull(); // the form shows the confidence cue from it
     const structured = readStructuredData(record.structured_data);
     expect(structured.business?.shareholders.map((s) => s.name)).toContain('นางสาวตัวอย่าง ทดสอบ');
-    expect(structured.business?.objectives).toHaveLength(3);
+    expect(structured.business?.objectives).toHaveLength(0);
     expect(structured.business?.share_structure.total_shares).toBe(20000);
     expect(structured.provenance?.company_name_th).toMatchObject({ source_page: 1 });
     expect(structured.provenance?.head_office_address).toBeUndefined();
     expect(structured.provenance?.shareholders).toMatchObject({ source_document: 2 });
-    expect(structured.provenance?.objectives).toMatchObject({ source_document: 3 });
+    expect(structured.provenance?.objectives).toBeUndefined();
   });
 
   it('is idempotent and never overwrites: a second run changes nothing and calls no model', async () => {
@@ -315,7 +315,7 @@ describe('the transcript path', () => {
     });
     expect(result.status).toBe('done');
     expect(sizes).toEqual([3, 1, 1, 1]);
-    expect(result.lists.sort()).toEqual(['objectives', 'share_structure', 'shareholders']);
+    expect(result.lists.sort()).toEqual(['share_structure', 'shareholders']);
   });
 
   it('stores a big swept list whole and readable, dropping only rows without a name', async () => {

@@ -91,48 +91,50 @@ describe('decideVerdict', () => {
   });
 });
 
-describe('the v2 readiness verdict', () => {
-  const v2 = buildReadinessPlan({
+describe('the v3 readiness verdict', () => {
+  const v3 = buildReadinessPlan({
     ...facts,
     registered_on: '13 กรกฎาคม 2569',
     signing_authority: 'กรรมการหนึ่งคนลงนาม',
     my_name: 'นางสาว ผู้เรียน ตัวอย่าง',
-    customer_profile: 'ธุรกิจและบุคคลทั่วไปในประเทศไทย',
-    transaction_details: 'รับเงินลูกค้าผ่านการโอนและ QR และจ่ายซัพพลายเออร์',
+    client_origin: 'Facebook, TikTok, เว็บไซต์, ลูกค้าแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
+    monthly_revenue: 'ประมาณ 641,400 บาท',
+    monthly_transactions: 'ประมาณ 30 รายการต่อเดือน',
+    average_transaction: 'ประมาณ 21,380 บาท',
   });
-  const answers = v2.items.map((item) => ({
+  const answers = v3.items.map((item) => ({
     concept: item.concept,
     verdict: 'correct' as const,
     note: '',
   }));
 
-  it('passes 9 of 11 with no mandatory concept', () => {
-    const nine = answers.map((answer, index) =>
-      index < 2 ? { ...answer, verdict: 'wrong' as const } : answer,
+  it('passes 10 of 13 with no mandatory concept', () => {
+    const ten = answers.map((answer, index) =>
+      index < 3 ? { ...answer, verdict: 'wrong' as const } : answer,
     );
-    expect(decideVerdict(v2, nine, 'plan_complete')).toMatchObject({
+    expect(decideVerdict(v3, ten, 'plan_complete')).toMatchObject({
       verdict: 'ready',
-      score: 9,
-      maxScore: 11,
-      passScore: 9,
+      score: 10,
+      maxScore: 13,
+      passScore: 10,
     });
     expect(
-      decideVerdict(v2, nine, 'plan_complete').reasons.every((reason) => reason.cardKey !== null),
+      decideVerdict(v3, ten, 'plan_complete').reasons.every((reason) => reason.cardKey !== null),
     ).toBe(true);
     expect(
-      decideVerdict(v2, nine, 'plan_complete').reasons.find(
+      decideVerdict(v3, ten, 'plan_complete').reasons.find(
         (reason) => reason.concept === 'account_purpose',
       )?.cardKey,
     ).toBe('bank-interview-4-role');
   });
 
-  it('keeps practising at 8 of 11', () => {
-    const eight = answers.map((answer, index) =>
-      index < 3 ? { ...answer, verdict: 'wrong' as const } : answer,
+  it('keeps practising at 9 of 13', () => {
+    const nine = answers.map((answer, index) =>
+      index < 4 ? { ...answer, verdict: 'wrong' as const } : answer,
     );
-    expect(decideVerdict(v2, eight, 'plan_complete')).toMatchObject({
+    expect(decideVerdict(v3, nine, 'plan_complete')).toMatchObject({
       verdict: 'not_ready',
-      score: 8,
+      score: 9,
     });
   });
 
@@ -142,20 +144,49 @@ describe('the v2 readiness verdict', () => {
       { ...answers[1], verdict: 'pasted' as const },
       ...answers,
     ];
-    expect(decideVerdict(v2, revised, 'plan_complete')).toMatchObject({
+    expect(decideVerdict(v3, revised, 'plan_complete')).toMatchObject({
       verdict: 'ready',
-      score: 11,
+      score: 13,
     });
   });
 
   it('still requires the interview to reach the end', () => {
-    expect(decideVerdict(v2, answers, 'learner_ended').verdict).toBe('not_ready');
+    expect(decideVerdict(v3, answers, 'learner_ended').verdict).toBe('not_ready');
   });
 
-  it('does not pass when the provider closes after only nine questions', () => {
-    expect(decideVerdict(v2, answers.slice(0, 9), 'plan_complete')).toMatchObject({
+  it('does not pass when the provider closes after only ten questions', () => {
+    expect(decideVerdict(v3, answers.slice(0, 10), 'plan_complete')).toMatchObject({
       verdict: 'not_ready',
+      score: 10,
+    });
+  });
+});
+
+describe('a frozen v2 readiness verdict', () => {
+  it('defaults to the historical 9-of-11 threshold when an old snapshot omitted passScore', () => {
+    const v2 = {
+      version: 2 as const,
+      cursor: 0,
+      items: Array.from({ length: 11 }, (_, index) => ({
+        concept: `legacy_${index}`,
+        phase: 'facts' as const,
+        core: false,
+        question: `Question ${index + 1}`,
+        expected: `Answer ${index + 1}`,
+        attempts: 0,
+      })),
+    };
+    const nine = v2.items.map((item, index) => ({
+      concept: item.concept,
+      verdict: index < 9 ? ('correct' as const) : ('wrong' as const),
+      note: '',
+    }));
+
+    expect(decideVerdict(v2, nine, 'plan_complete')).toMatchObject({
+      verdict: 'ready',
       score: 9,
+      maxScore: 11,
+      passScore: 9,
     });
   });
 });

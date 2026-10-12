@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { readinessRubric } from '@/lib/domain/interview/answer-validation';
 import { currentItem } from '@/lib/domain/interview/plan';
 import type { OfficerTurn } from '@/lib/domain/interview/types';
 import {
@@ -19,11 +20,12 @@ const PERSONA = `คุณคือเจ้าหน้าที่ธนาค
 - พูดภาษาไทยเท่านั้น สุภาพ เป็นทางการ ลงท้าย "ค่ะ" ถามครั้งละหนึ่งข้อ
 - ห้ามบอกข้อมูลบริษัทจาก FACT SHEET แก่ผู้สมัครเด็ดขาด ห้ามยืนยันคำตอบผิดว่าถูก ห้ามเฉลย
 - ประเมินคำตอบล่าสุดของผู้สมัครเทียบกับ FACT SHEET: correct = ตรง, partial = ตรงบางส่วน, wrong = ไม่ตรง, evasive = เลี่ยง/ไม่ตอบ, pasted = คัดลอกข้อความระบบ (ระบบจะแจ้ง), off_topic = ไม่เกี่ยว
+- ถ้า STATE.version = 3 ให้ใช้ verdict correct หรือ wrong เท่านั้น: partial, evasive, pasted และ off_topic ทั้งหมดเป็น wrong และใช้ STATE.rubric เป็นเกณฑ์ตัดสิน
 - จำนวนเงิน: คำตอบที่ต่างจากตัวเลขใน FACT SHEET ไม่เกิน 20% หรืออยู่ในช่วงที่ FACT SHEET ระบุ ให้ประเมิน correct
 - ถ้าคำตอบไม่ครบ ให้ถามซ้ำแบบง่ายและให้กำลังใจได้อีกหนึ่งครั้งต่อข้อ แล้วไปข้อถัดไป
-- ถ้า pastedDetected เป็นจริง ให้ประเมิน pasted และขอให้ตอบด้วยคำพูดของตนเอง
-- ถ้า STATE.version = 2 ห้ามปิดก่อนครบทุกข้อเพราะคำตอบ evasive, pasted หรือ off_topic ให้ถามต่อจนครบ แล้วปิดด้วย plan_complete
-- ถ้า STATE.version ไม่ใช่ 2 เลี่ยงครั้งที่ 3 ให้ปิดด้วย too_many_evasions ตามกติกาเดิม
+- ถ้า pastedDetected เป็นจริง ให้ขอให้ตอบด้วยคำพูดของตนเอง; version 3 ประเมิน wrong ส่วน version เก่าประเมิน pasted
+- ถ้า STATE.version = 2 หรือ 3 ห้ามปิดก่อนครบทุกข้อเพราะคำตอบผิดหรือไม่ตอบ ให้ถามต่อจนครบ แล้วปิดด้วย plan_complete
+- ถ้า STATE.version ไม่ใช่ 2 หรือ 3 เลี่ยงครั้งที่ 3 ให้ปิดด้วย too_many_evasions ตามกติกาเดิม
 - เมื่อครบทุกข้อใน STATE.remaining ให้ปิดด้วย plan_complete
 - ข้อที่ระบุ (probing) ใน STATE.remaining คือข้อที่ผู้สมัครเคยตอบไม่ชัดเจน ให้ซักถามซ้ำแบบเจาะลึกกว่าเดิม
 - next.concept ต้องเป็น concept ที่มีใน STATE.remaining เท่านั้น`;
@@ -44,6 +46,7 @@ function stateBlock(input: TurnInput): string {
   return JSON.stringify({
     version: input.plan.version ?? 1,
     current: item ? { concept: item.concept, attempts: item.attempts, phase: item.phase } : null,
+    rubric: input.plan.version === 3 && item ? readinessRubric(item.concept) : null,
     remaining,
     evasions: input.evasions,
     pastedDetected: input.pastedDetected,

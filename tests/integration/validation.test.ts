@@ -40,6 +40,24 @@ describe('validateRecord (spec §5.5–5.6, D74)', () => {
     await deleteTeam(team);
   });
 
+  it('handles two validators opening the same findings concurrently', async () => {
+    const concurrent = await seedTeam('ตรวจพร้อมกัน');
+    try {
+      await Promise.all([
+        validateRecord(svc, concurrent.recordId, concurrent.manager.id),
+        validateRecord(svc, concurrent.recordId, concurrent.manager.id),
+      ]);
+      const findings = await listOpenExceptions(svc, concurrent.recordId);
+      expect(findings.length).toBeGreaterThan(0);
+      expect(new Set(findings.map((finding) => `${finding.kind}:${finding.field}`)).size).toBe(
+        findings.length,
+      );
+    } finally {
+      await svc.from('training_fact_exceptions').delete().eq('dbd_record_id', concurrent.recordId);
+      await deleteTeam(concurrent);
+    }
+  });
+
   it('lists what blocks acceptance on a bare record and accepts nothing', async () => {
     const result = (await validateRecord(svc, team.recordId, team.manager.id))!;
     expect(result.accepted).toBe(false);

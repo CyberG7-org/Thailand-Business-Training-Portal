@@ -21,6 +21,94 @@ function svc() {
   );
 }
 
+/** Seed a company for tests whose subject is assignment or record display, not ZIP creation. */
+export async function seedCompanyRecord(input: {
+  companyNameTh: string;
+  juristicId?: string;
+  issuedOn?: string;
+  team?: string;
+  confirmed?: boolean;
+}): Promise<string> {
+  const admin = svc();
+  const { data: owner, error: ownerError } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', E2E_ADMIN.loginId)
+    .single();
+  if (ownerError || !owner) throw ownerError ?? new Error('E2E owner missing');
+  const { data: manager, error: managerError } = input.team
+    ? await admin.from('profiles').select('id').eq('login_id', input.team.toLowerCase()).single()
+    : { data: null, error: null };
+  if (managerError) throw managerError;
+  const date = input.issuedOn?.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const issuedOn = date
+    ? `${Number(date[3]) > 2400 ? Number(date[3]) - 543 : Number(date[3])}-${date[2]}-${date[1]}`
+    : (input.issuedOn ?? null);
+  const confirmed = input.confirmed ?? true;
+  const { data: record, error } = await admin
+    .from('dbd_records')
+    .insert({
+      company_name_th: input.companyNameTh,
+      company_name_en: 'E2E COMPANY CO., LTD.',
+      directors: [{ name_th: 'E2E Learner', name_en: null }],
+      juristic_id: input.juristicId ?? null,
+      issued_on: issuedOn,
+      team_id: manager?.id ?? null,
+      created_by: manager?.id ?? owner.id,
+      extraction_status: confirmed ? 'confirmed' : 'pending',
+      confirmed_by: confirmed ? owner.id : null,
+      confirmed_at: confirmed ? new Date().toISOString() : null,
+      structured_data: {
+        interview: {
+          nature_of_business: 'ขายเสื้อผ้าออนไลน์',
+          products_services: 'เสื้อผ้าสตรีนำเข้า',
+          contact_email: 'info@e2e.co.th',
+          contact_phone: '02-000-0000',
+        },
+      },
+    })
+    .select('id')
+    .single();
+  if (error || !record) throw error ?? new Error('Company seed failed');
+  return record.id;
+}
+
+/** Permit an indexed-document test to study its passages without relying on a live social page. */
+export async function confirmExtractedRecord(recordId: string): Promise<void> {
+  const admin = svc();
+  const { data: record, error: recordError } = await admin
+    .from('dbd_records')
+    .select('structured_data')
+    .eq('id', recordId)
+    .single();
+  if (recordError || !record) throw recordError ?? new Error('Extracted record missing');
+  const structured = (record.structured_data ?? {}) as Record<string, unknown>;
+  const interview = (structured.interview ?? {}) as Record<string, unknown>;
+  const { data: owner, error: ownerError } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', E2E_ADMIN.loginId)
+    .single();
+  if (ownerError || !owner) throw ownerError ?? new Error('E2E owner missing');
+  const { error } = await admin
+    .from('dbd_records')
+    .update({
+      extraction_status: 'confirmed',
+      confirmed_by: owner.id,
+      confirmed_at: new Date().toISOString(),
+      structured_data: {
+        ...structured,
+        interview: {
+          ...interview,
+          nature_of_business: 'ขายเสื้อผ้าออนไลน์',
+          products_services: 'เสื้อผ้าสตรีนำเข้า',
+        },
+      },
+    })
+    .eq('id', recordId);
+  if (error) throw error;
+}
+
 /**
  * Gives a confirmed record an active version from its sheet as it stands — what every confirmed
  * record held before P17c — and pins its assignments to it. A seeded learner can then be evaluated
@@ -162,6 +250,24 @@ export async function seedLearnerForRecord(recordId: string): Promise<string> {
     .insert({ user_id: user.user.id, dbd_record_id: recordId });
   if (assignError) throw assignError;
   return loginId;
+}
+
+export async function recordIdForLearner(loginId: string): Promise<string> {
+  const admin = svc();
+  const { data: profile, error: profileError } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', loginId)
+    .single();
+  if (profileError || !profile) throw profileError ?? new Error('Learner profile missing');
+  const { data: assignment, error } = await admin
+    .from('user_dbd_assignments')
+    .select('dbd_record_id')
+    .eq('user_id', profile.id)
+    .eq('active', true)
+    .single();
+  if (error || !assignment) throw error ?? new Error('Learner assignment missing');
+  return assignment.dbd_record_id;
 }
 
 /**
@@ -420,7 +526,7 @@ export async function seedLearnerWithCompleteCompany(
     head_office_address: 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด',
     structured_data: {
       ...(options.category
-        ? { category: manualCategory('clothing_fashion', 'e2e', new Date().toISOString()) }
+        ? { category: manualCategory('fashion_accessories', 'e2e', new Date().toISOString()) }
         : {}),
       business: {
         shareholders: [

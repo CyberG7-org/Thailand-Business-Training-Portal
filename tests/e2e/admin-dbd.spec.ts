@@ -1,12 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import {
-  createConfirmedRecord,
-  fillBusinessAnswers,
-  loginAs,
-  openManualRecordForm,
-  openRecordTab,
-} from './helpers';
+import { createConfirmedRecord, loginAs } from './helpers';
 
 test('admin creates a record with a BE date, sees it as printed, and confirms it', async ({
   page,
@@ -20,47 +14,12 @@ test('admin creates a record with a BE date, sees it as printed, and confirms it
   await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
 });
 
-test('the record lists what blocks acceptance, and accepts itself the moment it is done', async ({
-  page,
-}) => {
+test('DBD creation requires a ZIP pack and offers no manual entry', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await openManualRecordForm(page);
-  await page.locator('input[name="company_name_th"]').fill('บริษัท ไม่ครบ จำกัด');
-  await page.getByRole('button', { name: 'บันทึก' }).click();
-  await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}$/);
-
-  // Only the identity and business nature block acceptance; contact details and products can be
-  // absent from a company pack (D101).
-  const blocking = page.getByTestId('exceptions-acceptance');
-  await expect(blocking).toContainText('เลขทะเบียนนิติบุคคล');
-  await expect(blocking).toContainText('ธุรกิจทำอะไร');
-  await expect(blocking).not.toContainText('อีเมลของบริษัท');
-  await expect(blocking).not.toContainText('สินค้าหรือบริการ');
-  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
-
-  // The answers alone are not enough: the registration number is still missing.
-  await fillBusinessAnswers(page);
-  await expect(blocking).toContainText('เลขทะเบียนนิติบุคคล');
-  await expect(blocking).not.toContainText('ธุรกิจทำอะไร');
-
-  // A number with a wrong check digit is an exception of its own, not accepted.
-  await page.locator('input[name="juristic_id"]').fill('0105568233705');
-  const level1 = page.locator('form:has(input[name="juristic_id"])');
-  await level1.getByRole('button', { name: 'บันทึก' }).click();
-  await expect(level1.getByRole('status')).toContainText('บันทึกแล้ว');
-  await openRecordTab(page, 'exceptions');
-  await expect(page.getByTestId('exception-invalid-juristic_id')).toBeVisible();
-  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
-
-  await openRecordTab(page, 'details');
-  await page.locator('input[name="juristic_id"]').fill('0105568233704');
-  await level1.getByRole('button', { name: 'บันทึก' }).click();
-  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
-  await openRecordTab(page, 'exceptions');
-  await expect(page.getByTestId('exceptions-acceptance')).toHaveCount(0);
-  // The version waits for the rest of the sheet.
-  await expect(page.getByTestId('exceptions-version')).toBeVisible();
-  await expect(page.getByTestId('training-versions')).toHaveAttribute('data-active', '');
+  await page.goto('/th/admin/dbd-records/new');
+  await expect(page.getByTestId('upload-first-file')).toHaveAttribute('accept', /\.zip/);
+  await expect(page.getByTestId('manual-form-toggle')).toHaveCount(0);
+  await expect(page.locator('input[name="company_name_th"]')).toHaveCount(0);
 });
 
 test('a learner studies what their own company sells', async ({ page }) => {
@@ -70,7 +29,5 @@ test('a learner studies what their own company sells', async ({ page }) => {
     juristicId: '0105568233721',
     issuedOn: '13/07/2569',
   });
-  await expect(page.locator('textarea[name="interview_nature_of_business"]')).toHaveValue(
-    'ขายเสื้อผ้าออนไลน์',
-  );
+  await expect(page.getByTestId('record-status')).toHaveText('confirmed');
 });

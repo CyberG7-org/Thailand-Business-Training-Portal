@@ -109,7 +109,7 @@
       "managers": "Managers",
       "learners": "Learner Record",
       "businessCategories": "Business categories",
-      "exceptions": "Exceptions"
+      "exceptions": "Errors"
     },
     "users": {
       "title": "Create learner & DBD",
@@ -179,7 +179,7 @@
       "tabCompanies": "Companies (DBD)",
       "signIn": "Sign-in",
       "signInIntro": "The learner uses these to log in the first time.",
-      "passwordPlaceholder": "At least 10 characters",
+      "passwordPlaceholder": "6–8 letters or numbers",
       "generatePassword": "Generate",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
@@ -260,9 +260,9 @@
     },
     "createDbd": {
       "title": "Create DBD",
-      "intro": "Upload the company zip — the DBD pack, the invoices, the agreements and the files with its Facebook page and website — or the DBD PDFs alone. Everything is read in the background (1–3 minutes): the DBD facts, and the money figures from the invoices. When every fact is found, the company confirms itself and can be given to a learner.",
-      "introNoReader": "Upload the company zip or the DBD PDFs. Automatic reading is not set up here, so open the company afterwards to fill it in and confirm it.",
-      "documents": "Company zip, or DBD PDFs",
+      "intro": "Upload one company zip with DBD documents, invoices, agreements, and a Facebook or website link. The website is optional if Facebook is included. Invoices are stored but not analysed. DBD facts are read in the background; business description and products come from the linked page. Choose a business category in Bank interview for the approved money figures.",
+      "introNoReader": "Upload one company zip with DBD documents and a Facebook or website link. Automatic reading is not set up here, so open the company afterwards to review it.",
+      "documents": "Company zip",
       "packPreview": {
         "title": "Found in {name}",
         "pack": "{count, plural, one {DBD pack: # file} other {DBD pack: # files}}",
@@ -289,13 +289,14 @@
         "attention": "Needs attention"
       },
       "companiesIntro": "Each learner studies one company's DBD record — its study material, questions and bank date. Only confirmed companies can be given to a learner.",
-      "search": "Search name or 13-digit ID",
+      "search": "Search company or director",
       "noMatch": "No company matches “{query}”.",
       "addCompany": "Add a company that isn't listed",
       "addCompanyHint": "Upload its DBD documents — it's checked automatically in 1–3 minutes.",
       "closeAdd": "Close",
       "columns": {
-        "company": "Company (Thai name)",
+        "company": "Company (English name)",
+        "director": "Director",
         "juristicId": "Juristic person ID",
         "issuedOn": "Certificate issued",
         "team": "Team",
@@ -345,6 +346,7 @@
         "file-too-large": "A file in the zip is over 30 MB. Reduce it and try again.",
         "zip-too-large": "The zip is over 200 MB in all. Take some files out.",
         "cannot-open": "This zip cannot be opened. Make it again and try once more.",
+        "missing-business-link": "Add a website or Facebook link to the company zip before creating it.",
         "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below)."
       },
       "fields": {
@@ -389,7 +391,7 @@
         "too_large": "The documents exceed 30 MB in total; split or compress them"
       },
       "uploadFirstTitle": "Upload the DBD certificate (Thai)",
-      "uploadFirstHint": "Choose the Thai PDFs (several at once: certificate, objectives sheet, Bor.Or.Jor.5, Bor.Or.Jor.2). The documents are read and all three levels are filled in automatically; you then review, correct if needed, and confirm.",
+      "uploadFirstHint": "Choose one company zip with DBD documents and at least a Facebook or website link. The website is optional when Facebook is included. Review the extracted facts afterwards.",
       "uploadFirstNoExtraction": "Document reading is not configured (ANTHROPIC_API_KEY required). The file is stored and you fill in the fields below yourself.",
       "uploadAndFill": "Upload and fill automatically",
       "uploadingAndReading": "Uploading…",
@@ -418,7 +420,7 @@
       },
       "documentGroups": {
         "pack": "DBD pack",
-        "invoice": "Invoices",
+        "invoice": "Invoices (stored, not read)",
         "agreement": "Agreements (stored, not read)"
       },
       "invoices": {
@@ -439,8 +441,8 @@
         "none": "No invoices yet. Upload them on the Documents tab and the figures below are worked out from them; until then the two amounts can be typed here."
       },
       "invoiceFigures": {
-        "title": "From the invoices",
-        "hint": "Worked out from the invoices by the Owner's rule. To change a figure, add or remove invoices and read them again; nothing here is typed.",
+        "title": "Approved category figures",
+        "hint": "Select the business category above. Its approved figures are used even when invoices are available.",
         "monthlyRevenue": "Monthly revenue",
         "averagePerTransaction": "Average per transaction",
         "transactionsPerMonth": "Transactions per month",
@@ -448,7 +450,7 @@
         "dailyRange": "Lowest and highest day",
         "itemPriceRange": "Cheapest and dearest item",
         "dates": "Dates covered",
-        "used": "{count, plural, one {# invoice used} other {# invoices used}}",
+        "used": "{count, plural, one {# invoice read} other {# invoices read}}",
         "baht": "{amount} baht",
         "range": "{low} – {high}"
       },
@@ -457,6 +459,10 @@
         "hint": "Read from the zip's link files; the name card prints them. Correct them here if needed.",
         "website": "Website",
         "facebookPage": "Facebook page",
+        "facebookStatus": "Facebook reading",
+        "read": "Page details and recent posts read via Apify",
+        "unavailable": "Could not read the page. Save addresses to try again.",
+        "notRead": "Not read yet. Check the Apify setup.",
         "save": "Save addresses",
         "saved": "Saved",
         "invalid": "Enter a web address (example.co.th) and a Facebook page name or link."
@@ -469,7 +475,7 @@
       "removeDocument": "Remove",
       "sourceDocument": "from {name}",
       "sourcePage": "page {page}",
-      "fileHint": "One company zip (DBD pack, invoices, agreements, link files) or PDFs; up to 30 MB per file, 40 files and 200 MB in all",
+      "fileHint": "One company zip (DBD pack, invoices, agreements, and Facebook or website link); up to 30 MB per PDF inside, 40 files and 200 MB in all",
       "interviewHint": "Only what no document can answer. Everything else the bank asks is filled in below without anyone typing it.",
       "amountHint": "Write the amount in digits, for example 300,000. Transactions per month are worked out from the two amounts.",
       "standardAnswers": {
@@ -577,9 +583,10 @@
         "manual": "chosen by a person",
         "unmapped": "No category yet",
         "errors": {
-          "no_text": "Write what the business does first",
+          "no_text": "No business description was read from the Facebook or website page",
           "not_configured": "Automatic mapping is switched off",
           "no_categories": "The category list is empty",
+          "choose-category": "Choose a category to set the bank interview figures",
           "failed": "Automatic mapping failed; choose one or map again"
         },
         "choose": "Choose the category",
@@ -646,7 +653,7 @@
       "versions": {
         "title": "Training versions",
         "intro": "Learners study and are evaluated on a frozen copy of these facts. A save that changes them makes a new version; nobody moves to it until a person moves them.",
-        "none": "No version yet — it activates when nothing blocks it (see Exceptions).",
+        "none": "No version yet — it activates when nothing blocks it (see Errors).",
         "active": "Version {n} — active since {date}",
         "complete": "Complete at company scope: every one of the 29 Business Knowledge Quiz and 10 Bank Readiness Interview concepts resolves.",
         "incomplete": "Not complete yet — still missing:",
@@ -662,11 +669,11 @@
       "acceptance": {
         "accepted": "Accepted by {name}",
         "acceptedAuto": "Accepted automatically: the reading was clean and the business nature was there.",
-        "waiting": "{count, plural, one {# exception} other {# exceptions}} blocking acceptance",
-        "blocked": "Not accepted yet — settle the exceptions."
+        "waiting": "{count, plural, one {# error} other {# errors}} blocking acceptance",
+        "blocked": "Not accepted yet — settle the errors."
       },
       "exceptions": {
-        "title": "Exceptions",
+        "title": "Errors",
         "intro": "What the validators found. A record is accepted when nothing blocks acceptance; its training version activates when nothing blocks the version. Notes are for review only.",
         "none": "Nothing open: the record is clean.",
         "groups": {
@@ -715,7 +722,7 @@
         "details": "Company details",
         "interview": "Bank interview",
         "documents": "Documents",
-        "exceptions": "Exceptions"
+        "exceptions": "Errors"
       },
       "checks": {
         "title": "Before it can be used",
@@ -725,7 +732,7 @@
         "accepted": "Accepted",
         "done": "done",
         "todo": "still to do",
-        "openExceptions": "See exceptions"
+        "openExceptions": "See errors"
       },
       "addDocuments": "Add documents",
       "teamChip": "Team {code}"
@@ -1093,8 +1100,8 @@
       }
     },
     "exceptions": {
-      "title": "Exceptions",
-      "intro": "Every open exception on the companies you look after, the ones blocking acceptance first. Open a company to settle them.",
+      "title": "Errors",
+      "intro": "Every open error on the companies you look after, the ones blocking acceptance first. Open a company to settle them.",
       "empty": "Nothing open.",
       "columns": {
         "company": "Company",
@@ -1109,7 +1116,7 @@
         "version": "version",
         "none": "—"
       },
-      "count": "{count, plural, =0 {No open exceptions} one {# open exception} other {# open exceptions}}"
+      "count": "{count, plural, =0 {No open errors} one {# open error} other {# open errors}}"
     },
     "filePicker": {
       "choose": "Choose files",
@@ -1498,8 +1505,8 @@
     "guide": {
       "eyebrow": "Before you start",
       "title": "Practise at your own pace",
-      "questions": "Answer 11 short questions",
-      "pass": "Get 9 correct to be ready",
+      "questions": "Answer 13 short questions",
+      "pass": "Get 10 correct to be ready",
       "language": "The interview is in Thai (ภาษาไทย)",
       "repeat": "Practise as many times as you like (ฝึกได้ไม่จำกัด)",
       "support": "The officer gives you one friendly second chance when an answer needs more detail. This is practice, so take your time."

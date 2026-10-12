@@ -16,7 +16,6 @@ export type ExtractedField<T> = {
 
 export const EXTRACTION_TEXT_FIELDS = [
   'juristic_id',
-  'certificate_no',
   'document_ref',
   'company_name_th',
   'company_name_en',
@@ -28,7 +27,7 @@ export const EXTRACTION_TEXT_FIELDS = [
   'issuing_office',
   'registrar_name',
 ] as const;
-export const EXTRACTION_NUMBER_FIELDS = ['registered_capital', 'objectives_count'] as const;
+export const EXTRACTION_NUMBER_FIELDS = ['registered_capital'] as const;
 
 export type ExtractionTextField = (typeof EXTRACTION_TEXT_FIELDS)[number];
 export type ExtractionNumberField = (typeof EXTRACTION_NUMBER_FIELDS)[number];
@@ -62,7 +61,7 @@ export interface DbdExtractor {
   describeBusiness(input: {
     objectives: string[];
     items: string[];
-  }): Promise<{ nature: string; confidence: number }>;
+  }): Promise<{ nature: string; products?: string; confidence: number }>;
 }
 
 /** A transcript passage handed to the facts call, labelled for provenance. */

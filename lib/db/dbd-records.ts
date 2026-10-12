@@ -164,7 +164,7 @@ export async function registerDbdDocument(
   input: { path: string; originalName: string; group?: PackGroup },
 ): Promise<string> {
   const { path } = input;
-  // The zip's sort (D101): the pack is read whole, an invoice into rows, an agreement not at all.
+  // Only DBD pack documents are indexed; invoices and agreements are retained without reading.
   const group: PackGroup = input.group ?? 'pack';
   if (!path.startsWith(`${id}/`) || path.includes('..')) {
     throw new DocumentUploadError('The upload does not belong to this record', 'invalid-file');
@@ -191,7 +191,7 @@ export async function registerDbdDocument(
   } catch {
     pageCount = null;
   }
-  const indexing = resolveVectorProvider() !== 'off' && group !== 'agreement';
+  const indexing = resolveVectorProvider() !== 'off' && group === 'pack';
   const { data: doc, error: docError } = await db
     .from('dbd_documents')
     .insert({

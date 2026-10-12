@@ -30,8 +30,7 @@ export function UploadFirstForm({ extractionAvailable }: { extractionAvailable: 
       <input
         name="document"
         type="file"
-        accept=".zip,.pdf,application/zip,application/x-zip-compressed,application/pdf"
-        multiple
+        accept=".zip,application/zip,application/x-zip-compressed"
         required
         data-testid="upload-first-file"
         onChange={(e) => void inspect([...(e.target.files ?? [])])}

@@ -2,7 +2,6 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { PdfFilePicker } from '@/components/staff/pdf-file-picker';
-import { Link } from '@/i18n/navigation';
 import { PackPreviewCard } from '../dbd-records/pack-preview';
 import { UPLOAD_ERROR_KEYS, useDirectUpload } from '../dbd-records/use-direct-upload';
 
@@ -48,6 +47,7 @@ export function CreateDbdForm({
       </p>
       <div className={wide}>
         <PdfFilePicker
+          zipOnly
           name="document"
           label={t('documents')}
           hint={td('fileHint')}
@@ -76,9 +76,6 @@ export function CreateDbdForm({
         >
           {pending ? td('uploadingAndReading') : t('submit')}
         </button>
-        <Link href="/admin/dbd-records/new" className="staff-link text-sm">
-          {t('byHand')}
-        </Link>
       </div>
     </form>
   );

@@ -269,7 +269,11 @@ export class FakeDbdExtractor implements DbdExtractor {
   }
 
   async describeBusiness(input: { objectives: string[]; items: string[] }) {
-    return { nature: FAKE_NATURE, confidence: input.items.length > 0 ? 0.9 : 0.6 };
+    return {
+      nature: FAKE_NATURE,
+      products: 'เครื่องเขียนและเฟอร์นิเจอร์สำนักงาน',
+      confidence: input.items.length > 0 ? 0.9 : 0.6,
+    };
   }
 
   constructor(private readonly result: DbdExtraction = SAMPLE_EXTRACTION) {}

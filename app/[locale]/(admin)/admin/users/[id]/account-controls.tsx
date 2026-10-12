@@ -28,7 +28,9 @@ export function AccountControls({
             name="password"
             type="text"
             required
-            minLength={10}
+            minLength={6}
+            maxLength={8}
+            pattern="[A-Za-z0-9]{6,8}"
             autoComplete="off"
             className="staff-input mt-1"
           />

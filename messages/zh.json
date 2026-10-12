@@ -109,7 +109,7 @@
       "managers": "经理",
       "learners": "学员记录",
       "businessCategories": "业务类别",
-      "exceptions": "例外"
+      "exceptions": "错误"
     },
     "users": {
       "title": "创建学员与DBD",
@@ -179,7 +179,7 @@
       "tabCompanies": "公司（DBD）",
       "signIn": "登录信息",
       "signInIntro": "学员首次登录时使用这些信息。",
-      "passwordPlaceholder": "至少 10 个字符",
+      "passwordPlaceholder": "6–8 位字母或数字",
       "generatePassword": "生成",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",
@@ -260,9 +260,9 @@
     },
     "createDbd": {
       "title": "创建DBD",
-      "intro": "上传公司 zip 文件（DBD 文件包、发票、合同，以及含 Facebook 主页和网站链接的文件），或只上传 DBD 的 PDF。系统会在后台读取全部内容（1–3 分钟）：DBD 信息，以及根据发票计算的财务数字。信息齐全后，公司会自动确认，并可分配给学员。",
-      "introNoReader": "上传公司 zip 文件或 DBD 的 PDF。此处未设置自动读取，请之后打开公司页面填写并确认。",
-      "documents": "公司 zip 文件，或 DBD 的 PDF",
+      "intro": "上传一个公司 zip 文件，包含 DBD 文件、发票、合同，以及 Facebook 或网站链接。有 Facebook 时网站可不提供。发票只保存、不分析；系统在后台读取 DBD，业务性质及产品来自链接页面。在银行面试中选择业务类别以使用规定的财务数字。",
+      "introNoReader": "上传一个包含 DBD 文件和 Facebook 或网站链接的公司 zip 文件，然后打开公司页面检查。",
+      "documents": "公司 zip 文件",
       "packPreview": {
         "title": "在 {name} 中找到",
         "pack": "DBD 文件包：{count} 个文件",
@@ -289,13 +289,14 @@
         "attention": "需要处理"
       },
       "companiesIntro": "每位学员学习一家公司的 DBD 记录——包括学习资料、题目和银行预约日期。只有已确认的公司才能分配给学员。",
-      "search": "搜索名称或 13 位注册号",
+      "search": "搜索公司或董事姓名",
       "noMatch": "没有与“{query}”匹配的公司。",
       "addCompany": "添加未列出的公司",
       "addCompanyHint": "上传其 DBD 文件——系统会在 1–3 分钟内自动检查。",
       "closeAdd": "关闭",
       "columns": {
-        "company": "公司（泰文名称）",
+        "company": "公司（英文名称）",
+        "director": "董事姓名",
         "juristicId": "法人注册号",
         "issuedOn": "证书签发日期",
         "team": "团队",
@@ -345,6 +346,7 @@
         "file-too-large": "zip 中有文件超过 30 MB，请缩小后重试。",
         "zip-too-large": "zip 文件总计超过 200 MB，请移除部分文件。",
         "cannot-open": "无法打开此 zip 文件，请重新打包后再试。",
+        "missing-business-link": "创建公司前，请在 zip 文件中加入网站或 Facebook 链接。",
         "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。"
       },
       "fields": {
@@ -389,7 +391,7 @@
         "too_large": "文件总大小超过 30 MB，请拆分或压缩"
       },
       "uploadFirstTitle": "上传 DBD 注册证明（泰文）",
-      "uploadFirstHint": "选择泰文 PDF（可多选：注册证明、经营目的表、บอจ.5、บอจ.2）。系统会读取文件并自动填写三个级别的信息；然后由您检查、必要时修改并确认。",
+      "uploadFirstHint": "选择一个包含 DBD 文件及 Facebook 或网站链接的公司 zip 文件。有 Facebook 时网站可不提供。随后检查提取的信息。",
       "uploadFirstNoExtraction": "尚未配置文档读取 AI（需要 ANTHROPIC_API_KEY）。文件会被保存，请在下方自行填写。",
       "uploadAndFill": "上传并自动填写",
       "uploadingAndReading": "正在上传…",
@@ -418,7 +420,7 @@
       },
       "documentGroups": {
         "pack": "DBD 文件包",
-        "invoice": "发票",
+        "invoice": "发票（仅保存，不读取）",
         "agreement": "合同（仅保存，不读取）"
       },
       "invoices": {
@@ -439,8 +441,8 @@
         "none": "尚无发票。请在“文件”标签页上传，系统会据此计算下方数字；在此之前可在此处填写两个金额。"
       },
       "invoiceFigures": {
-        "title": "来自发票",
-        "hint": "按系统所有者的规则从发票计算得出。如需更改数字，请添加或删除发票并重新读取；此处无需填写。",
+        "title": "业务类别规定的数字",
+        "hint": "请在上方选择业务类别。即使有发票，也使用该类别规定的数字。",
         "monthlyRevenue": "月收入",
         "averagePerTransaction": "平均每笔金额",
         "transactionsPerMonth": "每月交易笔数",
@@ -448,7 +450,7 @@
         "dailyRange": "最低与最高单日",
         "itemPriceRange": "最低与最高单价",
         "dates": "涵盖日期",
-        "used": "使用了 {count} 张发票",
+        "used": "已读取 {count} 张发票",
         "baht": "{amount} 泰铢",
         "range": "{low} – {high}"
       },
@@ -457,6 +459,10 @@
         "hint": "读取自 zip 中的链接文件，并印在名片上。如有需要可在此修改。",
         "website": "网站",
         "facebookPage": "Facebook 主页",
+        "facebookStatus": "Facebook 页面读取",
+        "read": "已通过 Apify 读取主页信息和近期帖子",
+        "unavailable": "无法读取主页。再次保存地址即可重试。",
+        "notRead": "尚未读取。请检查 Apify 配置。",
         "save": "保存地址",
         "saved": "已保存",
         "invalid": "请输入网站地址（example.co.th）和 Facebook 主页名称或链接。"
@@ -469,7 +475,7 @@
       "removeDocument": "删除",
       "sourceDocument": "来自 {name}",
       "sourcePage": "第 {page} 页",
-      "fileHint": "一个公司 zip 文件（DBD 文件包、发票、合同、链接文件）或多个 PDF；每个文件不超过 30 MB，总计不超过 40 个文件、200 MB",
+      "fileHint": "一个公司 zip 文件（DBD 文件、发票、合同以及 Facebook 或网站链接）；内部 PDF 每个不超过 30 MB，总计不超过 40 个文件、200 MB",
       "interviewHint": "仅需填写任何文件都无法回答的问题。银行会问的其他问题已在下方自动填好，无需输入。",
       "amountHint": "请用数字填写金额，例如 300,000。每月交易笔数由这两个金额计算得出。",
       "standardAnswers": {
@@ -577,9 +583,10 @@
         "manual": "由人员选择",
         "unmapped": "尚无类别",
         "errors": {
-          "no_text": "请先填写业务内容",
+          "no_text": "未能从 Facebook 或网站页面读取业务说明",
           "not_configured": "自动匹配已关闭",
           "no_categories": "类别列表为空",
+          "choose-category": "请选择业务类别以设置银行面试财务数字",
           "failed": "自动匹配失败，请手动选择或重新匹配"
         },
         "choose": "选择类别",
@@ -715,7 +722,7 @@
         "details": "公司信息",
         "interview": "银行面谈",
         "documents": "文件",
-        "exceptions": "例外"
+        "exceptions": "错误"
       },
       "checks": {
         "title": "使用前需完成",
@@ -1498,8 +1505,8 @@
     "guide": {
       "eyebrow": "开始之前",
       "title": "按自己的节奏练习",
-      "questions": "回答 11 个简短问题",
-      "pass": "答对 9 题即可通过",
+      "questions": "回答 13 个简短问题",
+      "pass": "答对 10 题即可通过",
       "language": "面试使用泰语（ภาษาไทย）",
       "repeat": "可不限次数练习（ฝึกได้ไม่จำกัด）",
       "support": "如果回答需要补充，专员会友好地再问一次。这只是练习，请从容作答。"

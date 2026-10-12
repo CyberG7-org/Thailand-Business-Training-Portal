@@ -1,13 +1,16 @@
 import { expect, test } from '@playwright/test';
+import { companyZip } from './company-zip';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { fillBusinessAnswers, loginAs } from './helpers';
-import { ensureStarterCards, seedLearnerForRecord } from './seed';
+import { loginAs } from './helpers';
+import { confirmExtractedRecord, ensureStarterCards, seedLearnerForRecord } from './seed';
 
 test('learners see passages from their own documents', async ({ page, request }) => {
   // 1. An indexed, confirmed reference record (upload-first → cron → confirm).
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
-  await page.getByTestId('upload-first-file').setInputFiles('tests/fixtures/three-pages.pdf');
+  await page
+    .getByTestId('upload-first-file')
+    .setInputFiles(companyZip('tests/fixtures/three-pages.pdf'));
   await page.getByTestId('upload-first-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/([0-9a-f-]{36})/);
   const recordId = page.url().match(/dbd-records\/([0-9a-f-]{36})/)![1];
@@ -17,7 +20,8 @@ test('learners see passages from their own documents', async ({ page, request })
   expect(run.status()).toBe(200);
   await page.reload();
   await expect(page.getByTestId('index-status').first()).toHaveAttribute('data-status', 'ready');
-  await fillBusinessAnswers(page);
+  await confirmExtractedRecord(recordId);
+  await page.reload();
   await expect(page.getByTestId('record-status')).toHaveText('confirmed');
 
   // 2. Starter cards exist (idempotent; D81 — no staff screen for them).

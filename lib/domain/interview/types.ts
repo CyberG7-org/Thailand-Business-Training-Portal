@@ -21,8 +21,8 @@ export type PlanItem = {
 
 export type InterviewPlan = {
   /** Missing means the historic v1 plan already stored in production. */
-  version?: 1 | 2;
-  /** V2 freezes its transparent threshold on the session. */
+  version?: 1 | 2 | 3;
+  /** Guided readiness plans freeze their transparent threshold on the session. */
   passScore?: number;
   items: PlanItem[];
   cursor: number;

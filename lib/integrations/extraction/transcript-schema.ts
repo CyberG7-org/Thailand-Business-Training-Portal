@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import {
   PROFILE_LIST_LIMITS,
-  objectiveSchema,
-  promoterSchema,
   shareStructureSchema,
   shareholderSchema,
 } from '@/lib/domain/dbd-profile';
@@ -130,12 +128,7 @@ export const LIST_AUTHORITY: Record<SweptList, DocumentType[]> = {
 };
 
 /** Document kinds worth sweeping at all (the union of the authority lists, in that order). */
-export const SWEEP_TYPES: DocumentType[] = [
-  'shareholder_list',
-  'objectives_sheet',
-  'memorandum',
-  'certificate',
-];
+export const SWEEP_TYPES: DocumentType[] = ['shareholder_list', 'memorandum'];
 
 export function hasShareStructure(s: SweepResult['share_structure']): boolean {
   return Object.values(s).some((v) => v !== null);
@@ -156,7 +149,7 @@ export function selectByTypeAuthority(
     return byType.get(type)!;
   };
   const out: SweepResult = structuredClone(EMPTY_SWEEP);
-  for (const list of ['shareholders', 'objectives', 'promoters'] as const) {
+  for (const list of ['shareholders'] as const) {
     for (const type of LIST_AUTHORITY[list]) {
       const rows = merged(type)[list];
       if (rows.length > 0) {
@@ -192,9 +185,9 @@ export function sanitizeSweptLists(swept: SweepResult): SweepResult {
   };
   const structure = shareStructureSchema.safeParse(swept.share_structure);
   return {
-    objectives: keep(swept.objectives, objectiveSchema, PROFILE_LIST_LIMITS.objectives),
+    objectives: [],
     shareholders: keep(swept.shareholders, shareholderSchema, PROFILE_LIST_LIMITS.shareholders),
-    promoters: keep(swept.promoters, promoterSchema, PROFILE_LIST_LIMITS.promoters),
+    promoters: [],
     share_structure: structure.success ? structure.data : { ...EMPTY_SWEEP.share_structure },
   };
 }
@@ -214,10 +207,11 @@ export const CLASSIFY_INSTRUCTIONS = `These are the first pages of one document 
 export const FACTS_INSTRUCTIONS = `You receive passages transcribed from a Thai DBD company pack, each labelled with its document number and page.
 Extract the company's registered particulars exactly as printed, following the same rules as for a full document pack:
 never invent, empty sentinels for anything not printed, and one provenance entry per field you read with the
-document number and page of the passage it came from. Leave the list fields (objectives, shareholders, promoters)
-empty — they are read separately.`;
+document number and page of the passage it came from. Leave objectives, shareholders, promoters,
+business categories, certificate number, share type, and par value empty. Shareholders and share
+structure are read separately.`;
 
 export const SWEEP_INSTRUCTIONS = `You receive consecutive transcribed pages of ONE Thai DBD document. Return every list row printed on these pages,
-in order, exactly as printed: objectives (numbered; no 0 when unnumbered), shareholders (name, nationality, number
-of shares, percentage — 0 when not printed), promoters (ผู้เริ่มก่อการ), and the share structure figures if printed
-(0 / "" otherwise). Rows continue across pages: return what these pages show; never invent or complete a row.`;
+in order, exactly as printed: shareholders (name, nationality, number of shares, percentage — 0 when
+not printed), and total shares and paid-up capital if printed. Do not read objectives, promoters,
+share type or par value. Rows continue across pages: return what these pages show; never invent or complete a row.`;

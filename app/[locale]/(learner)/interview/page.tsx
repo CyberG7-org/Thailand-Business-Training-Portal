@@ -58,7 +58,7 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
                 </h2>
               </div>
               <span className="grid size-12 shrink-0 place-items-center rounded-full bg-ok-50 text-lg font-bold text-ok-600">
-                9/11
+                10/13
               </span>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">

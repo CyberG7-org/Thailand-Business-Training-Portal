@@ -22,16 +22,10 @@ import {
   enqueueIndexJob,
   type AskResult,
 } from '@/lib/db/dbd-index';
-import { enqueueInvoicesJob } from '@/lib/db/invoices';
 import { toFacebookPage, toWebAddress } from '@/lib/domain/learner-contact';
 import type { PackLinks } from '@/lib/domain/pack/links';
 import type { PackGroup } from '@/lib/domain/pack/sort';
-import {
-  refreshDerivedFacts,
-  remapBusinessCategory,
-  setBusinessCategory,
-  updateStructuredData,
-} from '@/lib/db/derived-facts';
+import { refreshDerivedFacts, setBusinessCategory } from '@/lib/db/derived-facts';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
   ValidationError,
@@ -310,11 +304,18 @@ const packLinksSchema = z.object({
 export async function prepareUploadsAction(input: {
   locale: string;
   id: string | null;
+  links?: PackLinks;
   files: (DocumentFileMeta & { group?: PackGroup })[];
 }): Promise<PrepareUploadsResult> {
   const admin = await requireStaff(input.locale);
   const problem = checkDocumentFiles(input.files);
   if (problem) return { ok: false, error: problem };
+  if (!input.id) {
+    const links = packLinksSchema.safeParse(input.links ?? {});
+    if (!links.success || (!links.data.website && !links.data.facebook)) {
+      return { ok: false, error: 'missing-business-link' };
+    }
+  }
   const db = await createSupabaseServerClient();
   try {
     const id =
@@ -388,10 +389,6 @@ export async function registerUploadsAction(input: {
   const outcome = input.uploads.some((u) => (u.group ?? 'pack') === 'pack')
     ? await queueReading(db, id)
     : { extraction: 'skipped' as const, applied: [] };
-  // The invoices have a read of their own (D101); a queueing failure never undoes the upload.
-  if (input.uploads.some((u) => u.group === 'invoice') && getDbdExtractor()) {
-    await enqueueInvoicesJob(db, id).catch((e) => console.error('invoices job', id, e));
-  }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   if (input.redirect) {
     const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
@@ -451,7 +448,7 @@ export async function extractDocumentAction(
 export async function saveLinksAction(_prev: ToolState, formData: FormData): Promise<ToolState> {
   const locale = String(formData.get('locale') ?? 'th');
   const id = String(formData.get('id') ?? '');
-  await requireStaff(locale);
+  const staff = await requireStaff(locale);
   const website = String(formData.get('website') ?? '').trim();
   const facebook = String(formData.get('facebook_page') ?? '').trim();
   const links = {
@@ -461,20 +458,18 @@ export async function saveLinksAction(_prev: ToolState, formData: FormData): Pro
   if ((website && !links.website) || (facebook && !links.facebook_page)) {
     return { ok: false, error: 'invalid' };
   }
+  if (!links.website && !links.facebook_page) {
+    return { ok: false, error: 'missing-business-link' };
+  }
   const db = await createSupabaseServerClient();
   const { error } = await db.from('dbd_records').update(links).eq('id', id);
   if (error) return { ok: false, error: error.message };
+  await refreshDerivedFacts(db, id, undefined, { describe: true, refreshFacebook: true }).catch(
+    (cause) => console.error('derived facts after updating links', id, cause),
+  );
+  await validateAfterChange(id, staff.id);
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   return { ok: true, error: null };
-}
-
-/** Queues the invoice read again (D101): after invoices were added or removed, or a failure. */
-export async function readInvoicesAgainAction(formData: FormData): Promise<void> {
-  const locale = String(formData.get('locale') ?? 'th');
-  const id = String(formData.get('id') ?? '');
-  await requireStaff(locale);
-  await enqueueInvoicesJob(await createSupabaseServerClient(), id);
-  revalidatePath(`/${locale}/admin/dbd-records/${id}`);
 }
 
 export async function removeDocumentAction(formData: FormData): Promise<void> {
@@ -495,53 +490,9 @@ export async function removeDocumentAction(formData: FormData): Promise<void> {
     if (!(e instanceof VectorError)) throw e;
     unavailable = true;
   }
-  if (!unavailable && document.group === 'invoice') {
-    const remaining = (await listDbdDocuments(db, id)).filter((doc) => doc.group === 'invoice');
-    if (remaining.length > 0 && getDbdExtractor()) {
-      await enqueueInvoicesJob(db, id);
-    } else if (remaining.length === 0) {
-      await updateStructuredData(db, id, (stored) => {
-        const withoutInvoices = { ...stored };
-        delete withoutInvoices.invoices;
-        return withoutInvoices;
-      });
-      await refreshDerivedFacts(db, id, undefined, { describe: true }).catch((error) =>
-        console.error('derived facts after removing invoices', id, error),
-      );
-      await validateAfterChange(id, null);
-    }
-  }
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
   if (unavailable)
     redirect(`/${locale}/admin/dbd-records/${id}?error=vector_unavailable&tab=documents`);
-}
-
-/** Level 4 answers stay editable after confirmation: they are prepared answers, not DBD facts. */
-export async function saveInterviewAnswersAction(
-  _prev: ToolState,
-  formData: FormData,
-): Promise<ToolState> {
-  const locale = String(formData.get('locale') ?? 'th');
-  const id = String(formData.get('id') ?? '');
-  const staff = await requireStaff(locale);
-  const db = await createSupabaseServerClient();
-  const record = await getDbdRecord(db, id);
-  if (!record) return { ok: false, error: 'not-found' };
-  const stored = readStructuredData(record.structured_data);
-  try {
-    const { error } = await db
-      .from('dbd_records')
-      .update({
-        structured_data: { ...stored, interview: formDataToInterview(formData, stored) } as never,
-      })
-      .eq('id', id);
-    if (error) throw error;
-    await deriveAfterSave(db, id, staff.id);
-    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return { ok: true, error: null };
-  } catch (e) {
-    return { ok: false, error: errorMessage(e) };
-  }
 }
 
 /** Puts a failed or stuck document back in the queue from page 1 (P14). */
@@ -552,7 +503,7 @@ export async function retryIndexAction(formData: FormData): Promise<void> {
   await requireStaff(locale);
   const db = await createSupabaseServerClient();
   const doc = (await listDbdDocuments(db, id)).find((d) => d.id === documentId);
-  if (!doc || !canRequestIndex(doc.index_status as IndexStatus)) return;
+  if (!doc || doc.group !== 'pack' || !canRequestIndex(doc.index_status as IndexStatus)) return;
   await enqueueIndexJob(db, { recordId: id, documentId, kind: 'reindex' });
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
 }
@@ -585,25 +536,6 @@ export async function setBusinessCategoryAction(
   const db = await createSupabaseServerClient();
   try {
     await setBusinessCategory(db, id, key);
-    await validateAfterChange(id, staff.id);
-    revalidatePath(`/${locale}/admin/dbd-records/${id}`);
-    return { ok: true, error: null };
-  } catch (e) {
-    return { ok: false, error: errorMessage(e) };
-  }
-}
-
-/** "Map again": forget the stored decision and map afresh. */
-export async function remapBusinessCategoryAction(
-  _prev: ToolState,
-  formData: FormData,
-): Promise<ToolState> {
-  const locale = String(formData.get('locale') ?? 'th');
-  const id = String(formData.get('id') ?? '');
-  const staff = await requireStaff(locale);
-  const db = await createSupabaseServerClient();
-  try {
-    await remapBusinessCategory(db, id);
     await validateAfterChange(id, staff.id);
     revalidatePath(`/${locale}/admin/dbd-records/${id}`);
     return { ok: true, error: null };
