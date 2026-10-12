@@ -23,41 +23,59 @@ export function UploadFirstForm({
   const t = useTranslations('admin.dbd');
   const router = useRouter();
   const [mode, setMode] = useState<'image' | 'zip'>('image');
+  const [imageName, setImageName] = useState<string | null>(null);
+  const [zipName, setZipName] = useState<string | null>(null);
   const [state, action, pending] = useActionState(uploadCompanyImageAction, initial);
   const zip = useDirectUpload({ locale, id: null, redirect: true });
   const zipError = UPLOAD_ERROR_KEYS.find((key) => key === zip.state.error);
   useEffect(() => {
     if (state.recordId) router.push(`/admin/dbd-records/${state.recordId}`);
   }, [router, state.recordId]);
-  const formClass = `grid gap-3 ${embedded ? 'max-w-3xl' : 'staff-card max-w-2xl'}`;
+  const formClass = `grid gap-4 ${embedded ? '' : 'staff-card max-w-2xl'}`;
   return (
     <div
       id={embedded ? 'create-dbd' : undefined}
       className="grid gap-4"
       data-testid={embedded ? 'create-dbd' : 'upload-choice'}
     >
-      <fieldset className="grid gap-2 text-sm">
-        <legend className="font-semibold text-ink-900">Choose how to add the company</legend>
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2">
+      <fieldset className="grid gap-3 text-sm">
+        <legend className="font-semibold text-ink-900">Choose what to upload</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label
+            className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-card border-2 p-4 transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 ${mode === 'image' ? 'border-brand-600 bg-brand-50' : 'border-ink-100 bg-white hover:border-brand-100'}`}
+          >
             <input
               type="radio"
               name="uploadMode"
               value="image"
               checked={mode === 'image'}
               onChange={() => setMode('image')}
-            />{' '}
-            Image
+              className="accent-brand-600"
+            />
+            <span className="grid gap-1">
+              <span className="text-base font-semibold text-ink-900">Image</span>
+              <span className="text-xs text-ink-700">
+                Upload one JPG, PNG or WebP company information image
+              </span>
+            </span>
           </label>
-          <label className="flex items-center gap-2">
+          <label
+            className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-card border-2 p-4 transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 ${mode === 'zip' ? 'border-brand-600 bg-brand-50' : 'border-ink-100 bg-white hover:border-brand-100'}`}
+          >
             <input
               type="radio"
               name="uploadMode"
               value="zip"
               checked={mode === 'zip'}
               onChange={() => setMode('zip')}
-            />{' '}
-            ZIP file
+              className="accent-brand-600"
+            />
+            <span className="grid gap-1">
+              <span className="text-base font-semibold text-ink-900">ZIP file</span>
+              <span className="text-xs text-ink-700">
+                Upload DBD documents and a website or Facebook link
+              </span>
+            </span>
           </label>
         </div>
       </fieldset>
@@ -69,14 +87,21 @@ export function UploadFirstForm({
             Upload one image showing the registration and business details. Review every extracted
             fact on the next screen; this image is not an official DBD certificate.
           </p>
-          <input
-            name="image"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            required
-            data-testid={embedded ? 'create-dbd-files' : 'upload-first-file'}
-            className="text-sm"
-          />
+          <label className="relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand-600/50 bg-brand-50 px-4 py-5 text-center transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 hover:bg-brand-100">
+            <span className="text-base font-semibold text-brand-700">
+              {imageName ?? 'Choose an image to upload'}
+            </span>
+            <span className="text-xs text-ink-700">Click to browse your files</span>
+            <input
+              name="image"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              required
+              data-testid={embedded ? 'create-dbd-files' : 'upload-first-file'}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              onChange={(event) => setImageName(event.target.files?.[0]?.name ?? null)}
+            />
+          </label>
           <p className="text-xs text-ink-500">
             JPG, PNG or WebP, up to 4 MB. Revenue and transaction figures come from the category you
             choose after upload.
@@ -114,15 +139,24 @@ export function UploadFirstForm({
             Include the DBD PDFs and a website or Facebook link file. The links will be prefilled in
             Company details after upload.
           </p>
-          <input
-            name="document"
-            type="file"
-            accept=".zip,application/zip,application/x-zip-compressed"
-            required
-            className="text-sm"
-            data-testid={embedded ? 'create-dbd-zip-files' : 'upload-zip-file'}
-            onChange={(event) => void zip.inspect([...(event.target.files ?? [])])}
-          />
+          <label className="relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand-600/50 bg-brand-50 px-4 py-5 text-center transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 hover:bg-brand-100">
+            <span className="text-base font-semibold text-brand-700">
+              {zipName ?? 'Choose a ZIP file to upload'}
+            </span>
+            <span className="text-xs text-ink-700">Click to browse your files</span>
+            <input
+              name="document"
+              type="file"
+              accept=".zip,application/zip,application/x-zip-compressed"
+              required
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              data-testid={embedded ? 'create-dbd-zip-files' : 'upload-zip-file'}
+              onChange={(event) => {
+                setZipName(event.target.files?.[0]?.name ?? null);
+                void zip.inspect([...(event.target.files ?? [])]);
+              }}
+            />
+          </label>
           {zip.preview && <PackPreviewCard preview={zip.preview} />}
           {!zipExtractionAvailable && (
             <p className="text-sm text-ink-700">

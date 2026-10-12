@@ -203,6 +203,11 @@
       "date": "2026-10-09",
       "decision": "The learner and manager interview results use the same summary and question-answer composition without the officer narrative. Dashboard modules keep Study, Name card, Quiz, Interview order on phones and desktop, with numbered mobile tiles and no mobile stepper. Company cards omit the activities list and certificate link.",
       "reason": "The supplied screenshots ask for consistent results and module placement while reducing duplicate detail. The existing portal components and tokens were reused after the 21st.dev catalog search returned HTTP 401."
+    },
+    {
+      "date": "2026-10-12",
+      "decision": "The manager's company-creation panel sits above the existing-company list. Image and ZIP are large selectable options, each followed by a prominent file picker in the portal's existing brand styles.",
+      "reason": "Creating a company should be visible before browsing existing records, and the upload affordance should be obvious on desktop and mobile. The 21st.dev catalog search returned HTTP 401, so existing project primitives were used."
     }
   ],
   "evidence": [

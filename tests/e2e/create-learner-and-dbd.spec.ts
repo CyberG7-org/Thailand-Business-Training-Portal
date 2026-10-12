@@ -29,6 +29,15 @@ test('a manager can choose image or ZIP company intake', async ({ page }) => {
   await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByTestId('tab-companies')).toContainText('0');
   await expect(page.getByTestId('companies')).toContainText('ยังไม่มีบริษัท');
+  await expect(page.getByTestId('create-company-panel')).toBeVisible();
+  expect(
+    await page.getByTestId('create-company-panel').evaluate((panel) => {
+      const list = panel.parentElement?.querySelector('#companies-heading');
+      return Boolean(
+        list && panel.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING,
+      );
+    }),
+  ).toBe(true);
   await expect(page.locator('[data-testid^="progression-"]')).toHaveCount(0);
   // "Not listed?" on the learner form opens the companies tab at its upload form.
   await page.getByTestId('tab-learner').click();
@@ -40,12 +49,14 @@ test('a manager can choose image or ZIP company intake', async ({ page }) => {
     'accept',
     'image/jpeg,image/png,image/webp',
   );
+  await expect(page.getByText('Choose an image to upload')).toBeVisible();
   await expect(page.getByTestId('create-dbd')).toContainText('Upload company information image');
   await page.getByRole('radio', { name: 'ZIP file' }).check();
   await expect(page.getByTestId('create-dbd-zip-files')).toHaveAttribute(
     'accept',
     '.zip,application/zip,application/x-zip-compressed',
   );
+  await expect(page.getByText('Choose a ZIP file to upload')).toBeVisible();
   await expect(page.getByTestId('create-dbd')).toContainText(
     'The links will be prefilled in Company details',
   );
