@@ -29,7 +29,7 @@ test('uploading a ZIP extracts certificate facts without inventing business natu
   // The certificate facts arrive; a placeholder Facebook URL is not business evidence.
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('บริษัท ตัวอย่างการสกัด จำกัด');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('0105569000134');
-  await expect(page.locator('input[name="issued_on"]')).toHaveValue('13 กรกฎาคม 2569');
+  await expect(page.locator('input[name="issued_on"]')).toHaveValue('2026-07-13');
   await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
 
   // Level 2 arrived in the business profile and Level 3 classified the document.

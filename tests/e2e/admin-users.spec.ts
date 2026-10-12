@@ -53,7 +53,7 @@ test('a learner is created inside a team, under a code typed after the team pref
   await expect(page.locator('input[name="loginId"]')).toHaveCount(0);
   // Learners are listed on their own page (D80).
   await page.goto('/th/admin/learners');
-  await expect(page.getByTestId(`company-${learner}`)).toHaveText(company);
+  await expect(page.getByTestId(`company-${learner}`)).toHaveText('E2E COMPANY CO., LTD.');
 
   await switchTo(page, learner, LEARNER_PASSWORD);
   await expect(page).toHaveURL(/\/th\/dashboard$/);
