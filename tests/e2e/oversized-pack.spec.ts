@@ -9,10 +9,11 @@ test('a 25-page pack is deferred on upload and fills itself from the transcripts
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
+  await page.getByRole('radio', { name: 'ZIP file' }).check();
   await page
-    .getByTestId('upload-first-file')
+    .getByTestId('upload-zip-file')
     .setInputFiles(companyZip('tests/fixtures/twenty-five-pages.pdf'));
-  await page.getByTestId('upload-first-submit').click();
+  await page.getByTestId('upload-zip-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=queued/);
   await expect(page.getByTestId('reading-status')).toContainText('เบื้องหลัง');
   await expect(page.locator('input[name="juristic_id"]')).toHaveValue('');

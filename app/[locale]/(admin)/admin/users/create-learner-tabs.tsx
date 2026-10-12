@@ -27,6 +27,7 @@ export function CreateLearnerTabs({
   ownLoginId,
   initialSuffix,
   extractionAvailable,
+  zipExtractionAvailable,
   initialTab,
   initialAddOpen,
 }: {
@@ -36,6 +37,7 @@ export function CreateLearnerTabs({
   ownLoginId: string | null;
   initialSuffix: string | null;
   extractionAvailable: boolean;
+  zipExtractionAvailable: boolean;
   initialTab: CreateLearnerTab;
   initialAddOpen: boolean;
 }) {
@@ -112,6 +114,7 @@ export function CreateLearnerTabs({
           rows={rows}
           showTeam={teams !== null}
           extractionAvailable={extractionAvailable}
+          zipExtractionAvailable={zipExtractionAvailable}
           addOpen={addOpen}
           onAddOpenChange={setAddOpen}
           onAssign={(companyId) => {

@@ -74,7 +74,7 @@ async function sourceFor(userId: string): Promise<{
     .single();
   // The company email the card prints: the record's when a manager typed one, otherwise the
   // learner's own, which is what the card is for (D80, D101).
-  const email = (recordEmail: string | null) => recordEmail || profile?.contact_email || null;
+  const email = (recordEmail: string | null) => profile?.contact_email || recordEmail || null;
   const r = assignment.dbd_records;
   const interview = readStructuredData(r.structured_data).interview;
   const directors = (r.directors as unknown as Director[] | null) ?? [];
@@ -109,7 +109,7 @@ async function sourceFor(userId: string): Promise<{
 }
 
 /** Renders and stores a new card; never fabricates missing DBD data (BR-008). */
-export type NameCardInput = { phone: string; holderNameTh: string } & Partial<NameCardLinks>;
+export type NameCardInput = { phone: string | null; holderNameTh: string } & Partial<NameCardLinks>;
 
 export async function generateNameCard(
   userId: string,
@@ -117,8 +117,9 @@ export async function generateNameCard(
   renderer: PdfRenderer,
 ): Promise<NameCardRow> {
   const admin = createSupabaseAdminClient();
-  const phone = normalizeThaiMobile(input.phone);
-  if (!phone) throw new NameCardError('Invalid Thai mobile number', 'invalid_phone');
+  const phone = input.phone?.trim() ? normalizeThaiMobile(input.phone) : null;
+  if (input.phone?.trim() && !phone)
+    throw new NameCardError('Invalid Thai mobile number', 'invalid_phone');
   const nameTh = input.holderNameTh.trim();
   if (!nameTh) throw new NameCardError('Holder name required', 'invalid_name');
 
@@ -193,7 +194,6 @@ export async function ensureNameCard(
       throw new NameCardError('Missing DBD fields', 'missing_fields', missing);
     }
     const phone = profile?.phone ? normalizeThaiMobile(profile.phone) : null;
-    if (!phone) throw new NameCardError('No phone given for the learner', 'no_phone');
     const name = found.defaultHolderName.trim();
     if (!name) throw new NameCardError('No holder name', 'no_name');
     // Current when it was made for this company from exactly what would be printed today.

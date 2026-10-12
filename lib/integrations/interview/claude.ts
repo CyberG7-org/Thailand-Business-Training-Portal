@@ -15,7 +15,7 @@ const NARRATIVE_MODEL = 'claude-opus-5';
 const TIMEOUT_MS = 60_000;
 
 /** The officer persona (spec §4.3): Thai only, verifies, never reveals, probes, closes. */
-const PERSONA = `คุณคือเจ้าหน้าที่ธนาคารฝ่ายเปิดบัญชีนิติบุคคล กำลังสัมภาษณ์กรรมการบริษัทเพื่อยืนยันว่าผู้สมัครรู้จักบริษัทของตนเองจริง
+export const PERSONA = `คุณคือเจ้าหน้าที่ธนาคารฝ่ายเปิดบัญชีนิติบุคคล กำลังสัมภาษณ์กรรมการบริษัทเพื่อยืนยันว่าผู้สมัครรู้จักบริษัทของตนเองจริง
 กติกา:
 - พูดภาษาไทยเท่านั้น สุภาพ เป็นทางการ ลงท้าย "ค่ะ" ถามครั้งละหนึ่งข้อ
 - ห้ามบอกข้อมูลบริษัทจาก FACT SHEET แก่ผู้สมัครเด็ดขาด ห้ามยืนยันคำตอบผิดว่าถูก ห้ามเฉลย
@@ -30,7 +30,7 @@ const PERSONA = `คุณคือเจ้าหน้าที่ธนาค
 - ข้อที่ระบุ (probing) ใน STATE.remaining คือข้อที่ผู้สมัครเคยตอบไม่ชัดเจน ให้ซักถามซ้ำแบบเจาะลึกกว่าเดิม
 - next.concept ต้องเป็น concept ที่มีใน STATE.remaining เท่านั้น`;
 
-function factBlock(input: TurnInput | NarrateInput): string {
+export function factBlock(input: TurnInput | NarrateInput): string {
   const facts = Object.entries(input.facts)
     .filter(([, v]) => v)
     .map(([k, v]) => k + ': ' + v)
@@ -38,7 +38,7 @@ function factBlock(input: TurnInput | NarrateInput): string {
   return 'FACT SHEET (ห้ามเปิดเผย):\n' + facts;
 }
 
-function stateBlock(input: TurnInput): string {
+export function stateBlock(input: TurnInput): string {
   const item = currentItem(input.plan);
   const remaining = input.plan.items
     .slice(input.plan.cursor)

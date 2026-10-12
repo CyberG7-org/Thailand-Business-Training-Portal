@@ -71,7 +71,10 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | ElevenLabs | Thai read-aloud; `TTS_PROVIDER=off` to disable |
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |
-   | `INTERVIEW_PROVIDER` | `claude` | the AI bank officer of the readiness interview (Sonnet 5 turns, Opus 5 narrative) on the same `ANTHROPIC_API_KEY` |
+   | `GEMINI_API_KEY` | Google AI Studio API key | server-side company-image extraction and readiness interview; never expose it as a `NEXT_PUBLIC_` variable |
+   | `INTERVIEW_PROVIDER` | `gemini` | selects the Google AI Studio bank officer; without a Gemini key this resolves to `off` |
+   | `GEMINI_INTERVIEW_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for interview turns and closing narrative |
+   | `GEMINI_COMPANY_IMAGE_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for reading the uploaded company image |
    | `CATEGORY_MAP_PROVIDER` | `claude` (or unset with the Anthropic key) | maps `nature_of_business` to a business category (P17a) on the same `ANTHROPIC_API_KEY`; `off` to disable — the record page then asks a person to choose |
    | `PINECONE_API_KEY`, `PINECONE_NAMESPACE` | Pinecone key; namespace `production` (staging: `staging`) | DBD retrieval index (P14); `VECTOR_PROVIDER=off` to disable; optional `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES` |
    | `DIRECT_READ_MAX_PAGES` | optional, default 20 | documents with more pages are never sent whole to the model; they fill in from their transcripts once indexed (P14c); with `VECTOR_PROVIDER=off` documents travel whole up to 100 pages instead |
@@ -107,7 +110,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 6. Uploads never pass through Vercel (D45): the browser sends each PDF straight to the `dbd-documents` bucket, so the `NEXT_PUBLIC_SUPABASE_URL` must be reachable from admins' browsers (it is, by design) and the bucket's `file_size_limit` (30 MB) is the only size cap.
 
 ### Readiness interview (the AI bank assessor)
-- No extra account: the interview runs on the Anthropic key already set for extraction. Set `INTERVIEW_PROVIDER=claude` (or leave it unset with the key present); the suites force `fake`.
+- Add the Google AI Studio key as `GEMINI_API_KEY` and set `INTERVIEW_PROVIDER=gemini`. Anthropic remains in use for extraction and other AI adapters, but no longer auto-selects the interview. The suites force `fake`.
 - On a project that ran the voice call, delete the `VAPI_*` and `NEXT_PUBLIC_APP_URL` variables in Vercel and the empty `recordings` bucket in Supabase — the call is gone (D64).
 - Have the owner read a real session's transcript on staging (Admin → Readiness interviews) before the pilot: the persona lives in `lib/integrations/interview/claude.ts`.
 

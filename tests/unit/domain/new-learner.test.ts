@@ -23,9 +23,9 @@ const doneOf = (values: NewLearnerValues, needsTeam = false) =>
   );
 
 describe('newLearnerChecklist', () => {
-  it('lists company, password, name and contact for a manager, all done when filled', () => {
+  it('lists company, password and name for a manager, all done when filled', () => {
     const list = newLearnerChecklist(filled, { needsTeam: false });
-    expect(list.map((i) => i.item)).toEqual(['company', 'password', 'name', 'contact']);
+    expect(list.map((i) => i.item)).toEqual(['company', 'password', 'name']);
     expect(list.every((i) => i.done)).toBe(true);
   });
 
@@ -45,10 +45,8 @@ describe('newLearnerChecklist', () => {
     expect(doneOf({ ...filled, name: '   ' }).name).toBe(false);
   });
 
-  it('needs both a phone and a well-formed email for contact', () => {
-    expect(doneOf({ ...filled, phone: '' }).contact).toBe(false);
-    expect(doneOf({ ...filled, email: '' }).contact).toBe(false);
-    expect(doneOf({ ...filled, email: 'not-an-email', emailValid: false }).contact).toBe(false);
+  it('does not require optional phone and email', () => {
+    expect(doneOf({ ...filled, phone: '', email: '' }).name).toBe(true);
   });
 
   it('marks nothing done on an empty form', () => {

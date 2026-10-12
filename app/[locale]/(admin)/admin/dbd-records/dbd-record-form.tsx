@@ -59,6 +59,7 @@ export function DbdRecordForm({
   interview = null,
   provenance = {},
   documentNames = [],
+  imageSource = false,
 }: {
   record: DbdRecordRow | null;
   /** Extraction results; used as defaults only where the record has no value yet. */
@@ -71,11 +72,12 @@ export function DbdRecordForm({
   provenance?: Provenance;
   /** Uploaded document names, in order, to label `source_document`. */
   documentNames?: string[];
+  imageSource?: boolean;
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
   const [state, formAction, pending] = useActionState(saveDbdRecordAction, initial);
-  const locked = record?.extraction_status === 'confirmed';
+  const locked = record?.extraction_status === 'confirmed' && !imageSource;
   const answers = interview;
   const missingAnswers = missingBusinessAnswers(answers);
   const profile = business ?? EMPTY_BUSINESS_PROFILE;
@@ -190,7 +192,7 @@ export function DbdRecordForm({
 
       <section className={section}>
         <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.identity')}</h3>
-        {IDENTITY_FIELDS.map(renderField)}
+        {IDENTITY_FIELDS.slice(0, 2).map(renderField)}
         <label className={`text-sm ${wide}`}>
           <span className={labelText}>{t('fields.directors')}</span>
           <textarea
@@ -203,6 +205,7 @@ export function DbdRecordForm({
           <span className="text-xs text-ink-500">{t('directorsHint')}</span>
           {suggestionNote('directors_text', directorsDefault.suggested)}
         </label>
+        {IDENTITY_FIELDS.slice(2).map(renderField)}
       </section>
 
       <section className={section}>
@@ -224,7 +227,6 @@ export function DbdRecordForm({
             <span className={labelText}>
               {t(`interviewFields.${field}` as 'interviewFields.account_purpose')}
             </span>
-            <span className="text-bad-600"> *</span>
             <input
               name={`interview_${field}`}
               type={field === 'contact_email' ? 'email' : 'text'}
@@ -282,7 +284,9 @@ export function DbdRecordForm({
               defaultValue={shareholdersToText(profile.shareholders)}
               className={inputClass}
             />
-            <span className="text-xs text-ink-500">{t('shareholdersHint')}</span>
+            <span className="text-xs text-ink-500">
+              Name | nationality | shares | percentage (one shareholder per line)
+            </span>
             {levelTwoNote('shareholders')}
           </label>
           {['share_structure', 'shareholders']
@@ -295,10 +299,12 @@ export function DbdRecordForm({
         </section>
       )}
 
-      <section className={section}>
-        <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.document')}</h3>
-        {DOCUMENT_FIELDS.map(renderField)}
-      </section>
+      {!imageSource && (
+        <section className={section}>
+          <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.document')}</h3>
+          {DOCUMENT_FIELDS.map(renderField)}
+        </section>
+      )}
 
       <div className="flex flex-wrap items-center justify-end gap-3 p-4 md:px-6">
         {state.error && state.error !== 'validation' && (

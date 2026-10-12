@@ -8,10 +8,11 @@ test('learners see passages from their own documents', async ({ page, request })
   // 1. An indexed, confirmed reference record (upload-first → cron → confirm).
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
+  await page.getByRole('radio', { name: 'ZIP file' }).check();
   await page
-    .getByTestId('upload-first-file')
+    .getByTestId('upload-zip-file')
     .setInputFiles(companyZip('tests/fixtures/three-pages.pdf'));
-  await page.getByTestId('upload-first-submit').click();
+  await page.getByTestId('upload-zip-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/([0-9a-f-]{36})/);
   const recordId = page.url().match(/dbd-records\/([0-9a-f-]{36})/)![1];
   const run = await request.get('/api/cron/index', {

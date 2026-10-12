@@ -117,7 +117,8 @@ export default async function CreateLearnerAndDbdPage({
         teams={teams}
         ownLoginId={teams ? null : staff.loginId}
         initialSuffix={initialSuffix}
-        extractionAvailable={getDbdExtractor() !== null}
+        extractionAvailable={Boolean(process.env.GEMINI_API_KEY)}
+        zipExtractionAvailable={getDbdExtractor() !== null}
         initialTab={query.tab === 'learner' && query.add !== '1' ? 'learner' : 'companies'}
         initialAddOpen={query.add === '1'}
       />

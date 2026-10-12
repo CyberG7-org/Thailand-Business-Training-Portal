@@ -97,7 +97,7 @@ export default async function NameCardPage({ params }: { params: Promise<{ local
                 <p className="mt-1 text-sm leading-6 text-ink-700">{t('previewHint')}</p>
               </div>
               <span data-testid="card-meta" className="text-sm text-ink-700 tabular-nums">
-                {t('meta', { phone: formatThaiMobile(card.phone_number) })}
+                {card.phone_number ? t('meta', { phone: formatThaiMobile(card.phone_number) }) : ''}
               </span>
             </div>
             <div

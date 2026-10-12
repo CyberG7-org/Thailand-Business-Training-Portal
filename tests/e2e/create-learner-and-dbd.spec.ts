@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-import { companyZip } from './company-zip';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import {
   assignLearner,
@@ -10,19 +9,14 @@ import {
   switchTo,
 } from './helpers';
 
-const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
 const MANAGER_PASSWORD = 'Manager-Password-1!';
 const LEARNER_PASSWORD = 'Learn123';
 
 /**
  * D80, D93: one page, two tabs in the order a manager works — the companies with a way to add
- * one, then the learner form. A ZIP with a page URL is accepted for reading; a page that cannot
- * be read must not cause the company to be confirmed automatically.
+ * one, then the learner form. Image intake replaces the former ZIP pack.
  */
-test('a manager uploads a DBD ZIP and an unreadable business page needs review', async ({
-  page,
-  request,
-}) => {
+test('a manager can choose image or ZIP company intake', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการสร้างครบ', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
@@ -42,29 +36,26 @@ test('a manager uploads a DBD ZIP and an unreadable business page needs review',
   await page.getByRole('button', { name: 'เพิ่มในแท็บบริษัท (DBD)' }).click();
   await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
 
-  await page.getByTestId('create-dbd-files').setInputFiles(companyZip());
-  // No details to type (D101): what the company does is read from the pack.
-  await expect(page.locator('[data-testid^="create-dbd-contact"]')).toHaveCount(0);
-  await page.getByTestId('create-dbd-submit').click();
-  await expect(page.getByTestId('create-dbd-status')).toBeVisible();
-
-  // Listed straight away while the reader works; the placeholder page has no business evidence.
-  const status = page.locator('[data-testid^="company-status-"]');
-  await expect(status).toHaveCount(1);
-  await expect(status).toHaveAttribute('data-status', 'reading');
-  const run = await request.get('/api/cron/index', CRON);
-  expect((await run.json()).extractions).toBeGreaterThanOrEqual(1);
-  await page.goto('/th/admin/users?tab=companies');
-  await expect(status).toHaveAttribute('data-status', 'attention');
-  await page.getByTestId('companies').getByRole('link').first().click();
-  await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
+  await expect(page.getByTestId('create-dbd-files')).toHaveAttribute(
+    'accept',
+    'image/jpeg,image/png,image/webp',
+  );
+  await expect(page.getByTestId('create-dbd')).toContainText('Upload company information image');
+  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await expect(page.getByTestId('create-dbd-zip-files')).toHaveAttribute(
+    'accept',
+    '.zip,application/zip,application/x-zip-compressed',
+  );
+  await expect(page.getByTestId('create-dbd')).toContainText(
+    'The links will be prefilled in Company details',
+  );
 });
 
-test('a learner needs a Thai mobile and an email', async ({ page }) => {
+test('a learner can be created without phone and email', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users?tab=learner');
-  await expect(page.locator('input[name="phone"]')).toHaveAttribute('required', '');
-  await expect(page.locator('input[name="contactEmail"]')).toHaveAttribute('required', '');
+  await expect(page.locator('input[name="phone"]')).not.toHaveAttribute('required', '');
+  await expect(page.locator('input[name="contactEmail"]')).not.toHaveAttribute('required', '');
   // The website and the Facebook page come from the company zip now (D101).
   await expect(page.locator('input[name="website"]')).toHaveCount(0);
   await expect(page.locator('input[name="facebookPage"]')).toHaveCount(0);

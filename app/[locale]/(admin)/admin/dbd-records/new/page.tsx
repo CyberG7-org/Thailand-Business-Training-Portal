@@ -1,4 +1,3 @@
-import { getTranslations } from 'next-intl/server';
 import { requireStaff } from '@/lib/auth/session';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { UploadFirstForm } from './upload-first-form';
@@ -13,11 +12,13 @@ export default async function NewDbdRecordPage({
 }) {
   const { locale } = await params;
   await requireStaff(locale);
-  const t = await getTranslations('admin.dbd');
   return (
     <section className="grid gap-6">
-      <h1 className="staff-title">{t('new')}</h1>
-      <UploadFirstForm extractionAvailable={getDbdExtractor() !== null} />
+      <h1 className="staff-title">Create company</h1>
+      <UploadFirstForm
+        extractionAvailable={Boolean(process.env.GEMINI_API_KEY)}
+        zipExtractionAvailable={getDbdExtractor() !== null}
+      />
     </section>
   );
 }

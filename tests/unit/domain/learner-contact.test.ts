@@ -11,7 +11,7 @@ describe('learnerContactSchema', () => {
     }
   });
 
-  it('requires a phone and an email, and names the field that is wrong', () => {
+  it('allows blank contact details but validates them when supplied', () => {
     const noPhone = learnerContactSchema.safeParse({ ...valid, phone: '02-123-4567' });
     expect(noPhone.success).toBe(false);
     if (!noPhone.success) expect(firstContactProblem(noPhone.error)).toBe('phone');
@@ -20,7 +20,8 @@ describe('learnerContactSchema', () => {
     expect(noEmail.success).toBe(false);
     if (!noEmail.success) expect(firstContactProblem(noEmail.error)).toBe('contactEmail');
 
-    expect(learnerContactSchema.safeParse({ ...valid, contactEmail: '' }).success).toBe(false);
+    expect(learnerContactSchema.parse({ ...valid, contactEmail: '' }).contactEmail).toBeNull();
+    expect(learnerContactSchema.parse({ ...valid, phone: '' }).phone).toBeNull();
   });
 
   it('leaves the website and Facebook page optional', () => {

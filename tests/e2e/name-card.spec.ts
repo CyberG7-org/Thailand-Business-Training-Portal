@@ -37,7 +37,7 @@ test("a learner's card is ready without typing: the step is done and the page sh
   await expect(page.getByTestId('send-card')).toHaveCount(0);
 });
 
-test('a card waits for the record and the phone, and says what is missing', async ({ page }) => {
+test('a card waits for the record, but phone is optional', async ({ page }) => {
   const noAddress = await seedLearnerWithCompany(
     'บริษัท ไม่มีที่อยู่ จำกัด',
     '2026-07-13',
@@ -54,7 +54,8 @@ test('a card waits for the record and the phone, and says what is missing', asyn
   await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
   const noPhone = await seedLearnerWithCompany('บริษัท ไม่มีเบอร์ จำกัด', '2026-07-13', ADDRESS);
   await loginAs(page, noPhone, E2E_PASSWORD);
-  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เริ่ม');
+  await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เสร็จสิ้น');
   await page.goto('/th/name-card');
-  await expect(page.getByTestId('card-blocked')).toContainText('ยังไม่มีเบอร์มือถือของคุณ');
+  await expect(page.getByTestId('card-preview')).toBeVisible();
+  await expect(page.getByTestId('card-meta')).toBeEmpty();
 });

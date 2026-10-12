@@ -102,6 +102,25 @@ export function validateFacts(input: ValidationInput): Finding[] {
     signature: string,
   ) => out.push({ kind, field, blocks, detail: { ...detail, signature } });
 
+  if (structured.source_image && !structured.source_image.reviewed) {
+    push(
+      'missing',
+      'source_image_review',
+      'acceptance',
+      { reason: 'Manager must review the facts extracted from the image' },
+      structured.source_image.path,
+    );
+  }
+  if (structured.source_image && !structured.category?.key) {
+    push(
+      'missing',
+      'business_category',
+      'acceptance',
+      { reason: 'Choose the approved category to supply the three financial estimates' },
+      'choose-category',
+    );
+  }
+
   // 1. The registration number carries a check digit.
   if (record.juristic_id && !isValidJuristicId(record.juristic_id)) {
     push(
@@ -253,7 +272,7 @@ export function validateFacts(input: ValidationInput): Finding[] {
     push(
       'missing',
       fact,
-      ACCEPTANCE_FACTS.has(fact) ? 'acceptance' : 'version',
+      structured.source_image || ACCEPTANCE_FACTS.has(fact) ? 'acceptance' : 'version',
       { concepts },
       'missing',
     );
@@ -263,7 +282,9 @@ export function validateFacts(input: ValidationInput): Finding[] {
       push('missing', field, 'acceptance', { concepts: [] }, 'missing');
     }
   }
-  if (!record.issued_on) push('missing', 'issued_on', 'version', { concepts: [] }, 'missing');
+  // A company-information image has a registration date but no certificate issue date.
+  if (!record.issued_on && !structured.source_image)
+    push('missing', 'issued_on', 'version', { concepts: [] }, 'missing');
 
   // 9. The extraction's own confidence on the fields the sheet reads (plan decision 2).
   const provenance = structured.provenance ?? {};

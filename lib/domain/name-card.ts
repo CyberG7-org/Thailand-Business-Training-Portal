@@ -6,7 +6,7 @@ import { formatThaiMobile } from './phone';
  * the phone, the company email, the head office address, and the learner's website and
  * Facebook page when given; no products and no version printed.
  */
-export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v4';
+export const NAME_CARD_TEMPLATE_VERSION = 'two-sided-v5';
 
 /**
  * The words every card carries, whatever the company (owner, 2026-09-28): a tagline on both
@@ -41,7 +41,7 @@ export type NameCardData = {
   companyInitials: string;
   holderName: string;
   address: string;
-  phoneDisplay: string;
+  phoneDisplay: string | null;
   email: string | null;
   juristicId: string | null;
   natureOfBusiness: string | null;
@@ -162,7 +162,7 @@ export function urlPieces(text: string): string[] {
 /** Builds the render model; throws when required DBD data or the holder's name is missing. */
 export function buildNameCardData(
   source: NameCardSource,
-  phoneNormalized: string,
+  phoneNormalized: string | null,
   /** The holder's Thai name: the learner's name as the documents print it (D95). */
   holderNameTh: string,
   links: NameCardLinks = { website: null, facebookPage: null },
@@ -177,7 +177,7 @@ export function buildNameCardData(
     companyInitials: companyInitials(source.company_name_en, source.company_name_th),
     holderName: nameTh,
     address: source.head_office_address!,
-    phoneDisplay: formatThaiMobile(phoneNormalized),
+    phoneDisplay: phoneNormalized ? formatThaiMobile(phoneNormalized) : null,
     email: source.contact_email?.trim() || null,
     juristicId: source.juristic_id,
     natureOfBusiness: source.nature_of_business?.trim() || null,
