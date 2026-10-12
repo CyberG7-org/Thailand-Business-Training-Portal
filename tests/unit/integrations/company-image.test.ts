@@ -74,5 +74,46 @@ describe('company image reader', () => {
     const body = JSON.parse(calls[0].init.body as string);
     expect(body.contents[0].parts[1].inlineData.data).toBe(Buffer.from(image).toString('base64'));
     expect(body.generationConfig.responseMimeType).toBe('application/json');
+    expect(body.generationConfig.maxOutputTokens).toBe(8192);
+    expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'low' });
+  });
+
+  it('reports a truncated Gemini result without exposing its partial contents', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              finishReason: 'MAX_TOKENS',
+              content: { parts: [{ text: '{"company_name_th":"private' }] },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+
+    await expect(
+      extractCompanyImage(new Uint8Array([1]), 'image/png', { apiKey: 'test-key', request }),
+    ).rejects.toMatchObject({
+      code: 'incomplete',
+      message: 'Gemini stopped before finishing the image. Please try again.',
+    });
+  });
+
+  it('reports malformed JSON as an image-reading error', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [{ finishReason: 'STOP', content: { parts: [{ text: '{"name":"broken' }] } }],
+        }),
+        { status: 200 },
+      );
+
+    await expect(
+      extractCompanyImage(new Uint8Array([1]), 'image/png', { apiKey: 'test-key', request }),
+    ).rejects.toMatchObject({
+      code: 'invalid',
+      message: 'Gemini returned an incomplete image reading. Please try again.',
+    });
   });
 });

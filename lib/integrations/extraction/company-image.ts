@@ -30,7 +30,23 @@ export const companyImageSchema = z.object({
 
 export type CompanyImageProfile = z.infer<typeof companyImageSchema>;
 
-type GeminiResponse = { candidates?: { content?: { parts?: { text?: string }[] } }[] };
+type GeminiResponse = {
+  candidates?: { finishReason?: string; content?: { parts?: { text?: string }[] } }[];
+};
+
+export class CompanyImageOutputError extends Error {
+  readonly code: 'incomplete' | 'invalid';
+
+  constructor(code: 'incomplete' | 'invalid') {
+    super(
+      code === 'incomplete'
+        ? 'Gemini stopped before finishing the image. Please try again.'
+        : 'Gemini returned an incomplete image reading. Please try again.',
+    );
+    this.name = 'CompanyImageOutputError';
+    this.code = code;
+  }
+}
 
 export async function extractCompanyImage(
   bytes: Uint8Array,
@@ -65,16 +81,28 @@ export async function extractCompanyImage(
             ],
           },
         ],
-        generationConfig: { responseMimeType: 'application/json', maxOutputTokens: 3000 },
+        generationConfig: {
+          responseMimeType: 'application/json',
+          maxOutputTokens: 8192,
+          ...(model.startsWith('gemini-3') ? { thinkingConfig: { thinkingLevel: 'low' } } : {}),
+        },
       }),
     },
   );
   if (!response.ok) throw new Error(`Company image reading failed (${response.status})`);
   const result = (await response.json()) as GeminiResponse;
-  const text = result.candidates?.[0]?.content?.parts
+  const candidate = result.candidates?.[0];
+  if (candidate?.finishReason === 'MAX_TOKENS') throw new CompanyImageOutputError('incomplete');
+  const text = candidate?.content?.parts
     ?.map((part) => part.text ?? '')
     .join('')
     .trim();
   if (!text) throw new Error('Company image reader returned no data');
-  return companyImageSchema.parse(JSON.parse(text));
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new CompanyImageOutputError('invalid');
+  }
+  return companyImageSchema.parse(parsed);
 }

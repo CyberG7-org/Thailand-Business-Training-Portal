@@ -5,7 +5,10 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { createDbdRecord } from '@/lib/db/dbd-records';
 import { validateAfterChange } from '@/lib/db/validation';
 import { companyImageToDraft } from '@/lib/domain/company-image';
-import { extractCompanyImage } from '@/lib/integrations/extraction/company-image';
+import {
+  CompanyImageOutputError,
+  extractCompanyImage,
+} from '@/lib/integrations/extraction/company-image';
 
 export type ImageUploadState = { error: string | null; recordId: string | null };
 
@@ -95,7 +98,9 @@ export async function uploadCompanyImageAction(
     }
     return {
       error:
-        'Could not read this image. Check the Gemini key, image and storage settings, then try again.',
+        error instanceof CompanyImageOutputError
+          ? error.message
+          : 'Could not read this image. Check the Gemini key, image and storage settings, then try again.',
       recordId: null,
     };
   }
