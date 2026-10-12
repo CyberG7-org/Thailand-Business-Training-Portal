@@ -134,8 +134,10 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   await page.goto('/th/admin/interviews');
   const row = page
     .locator('[data-testid^="admin-interview-"]')
-    .filter({ hasText: company })
+    .filter({ has: page.getByTestId('interview-login-id').getByText(loginId.toUpperCase()) })
     .first();
+  await expect(row.getByTestId('interview-company')).toHaveText('COMPLETE CO., LTD.');
+  await expect(row.getByTestId('interview-director')).toHaveText('นางสาวกุลธิดา พลเยี่ยม');
   await expect(row).toContainText('พร้อมแล้ว');
   await row.getByRole('link').click();
   await expect(page).toHaveURL(/\/th\/admin\/interviews\/[0-9a-f-]{36}$/);

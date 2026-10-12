@@ -223,7 +223,7 @@
       },
       "columns": {
         "loginId": "Login ID",
-        "company": "Company (English name)",
+        "company": "Company (English)",
         "director": "Director",
         "issuedOn": "DBD issued",
         "mcq": "Quiz",
@@ -296,7 +296,7 @@
       "addCompanyHint": "Upload its DBD documents — it's checked automatically in 1–3 minutes.",
       "closeAdd": "Close",
       "columns": {
-        "company": "Company (English name)",
+        "company": "Company (English)",
         "director": "Director",
         "juristicId": "Juristic person ID",
         "issuedOn": "DBD issued",

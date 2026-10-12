@@ -223,7 +223,7 @@
       },
       "columns": {
         "loginId": "登录ID",
-        "company": "公司（英文名称）",
+        "company": "公司（英文）",
         "director": "董事姓名",
         "issuedOn": "证书签发日期",
         "mcq": "测验",
@@ -296,7 +296,7 @@
       "addCompanyHint": "上传其 DBD 文件——系统会在 1–3 分钟内自动检查。",
       "closeAdd": "关闭",
       "columns": {
-        "company": "公司（英文名称）",
+        "company": "公司（英文）",
         "director": "董事姓名",
         "juristicId": "法人注册号",
         "issuedOn": "证书签发日期",

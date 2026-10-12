@@ -16,9 +16,10 @@ const verdictOf = (v: string | null) => (v === 'ready' || v === 'not_ready' ? v 
 export default async function InterviewsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   await requireStaff(locale);
-  const [db, t] = await Promise.all([
+  const [db, t, columns] = await Promise.all([
     createSupabaseServerClient(),
     getTranslations('admin.interviews'),
+    getTranslations('admin.learners.columns'),
   ]);
   const rows = await listInterviewsForStaff(db);
   const dates = new Intl.DateTimeFormat(DATE_LOCALES[locale as AppLocale], {
@@ -39,12 +40,15 @@ export default async function InterviewsPage({ params }: { params: Promise<{ loc
           <table className="staff-table">
             <thead>
               <tr>
-                <th>{t('learner')}</th>
-                <th>{t('company')}</th>
+                <th>{columns('loginId')}</th>
+                <th>{columns('company')}</th>
+                <th>{columns('director')}</th>
                 <th>{t('started')}</th>
                 <th>{t('status')}</th>
                 <th>{t('verdict')}</th>
-                <th />
+                <th>
+                  <span className="sr-only">{t('open')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -52,11 +56,17 @@ export default async function InterviewsPage({ params }: { params: Promise<{ loc
                 const verdict = verdictOf(s.verdict);
                 return (
                   <tr key={s.id} data-testid={'admin-interview-' + s.id} className="align-top">
-                    <td>
+                    <td data-testid="interview-login-id" className="whitespace-nowrap">
                       {displayLoginId(s.profiles.login_id)}
-                      {s.profiles.display_name ? ' · ' + s.profiles.display_name : ''}
                     </td>
-                    <td>{s.dbd_records?.company_name_th ?? '—'}</td>
+                    <td data-testid="interview-company">
+                      {s.dbd_records?.company_name_en ?? s.dbd_records?.company_name_th ?? '—'}
+                    </td>
+                    <td data-testid="interview-director">
+                      {s.dbd_records?.directors?.[0]?.name_th ??
+                        s.dbd_records?.directors?.[0]?.name_en ??
+                        '—'}
+                    </td>
                     <td className="pr-3 whitespace-nowrap">
                       {dates.format(new Date(s.started_at))}
                     </td>

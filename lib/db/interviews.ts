@@ -524,8 +524,12 @@ export async function getInterviewWithTurns(
 }
 
 export type StaffInterviewRow = InterviewSessionRow & {
-  profiles: { login_id: string; display_name: string | null };
-  dbd_records: { company_name_th: string | null } | null;
+  profiles: { login_id: string };
+  dbd_records: {
+    company_name_en: string | null;
+    company_name_th: string | null;
+    directors: { name_th?: string; name_en?: string }[] | null;
+  } | null;
 };
 
 /** RLS narrows a manager to their team; the admin reads everything. */
@@ -533,7 +537,7 @@ export async function listInterviewsForStaff(db: Db): Promise<StaffInterviewRow[
   const { data, error } = await db
     .from('interview_sessions')
     .select(
-      '*, profiles!interview_sessions_user_id_fkey(login_id, display_name), dbd_records(company_name_th)',
+      '*, profiles!interview_sessions_user_id_fkey(login_id), dbd_records(company_name_en, company_name_th, directors)',
     )
     .order('started_at', { ascending: false })
     .limit(200);
