@@ -6,7 +6,6 @@ import { useActionState } from 'react';
 import type { DbdRecordRow } from '@/lib/db/dbd-records';
 import {
   EMPTY_BUSINESS_PROFILE,
-  objectivesToText,
   shareholdersToText,
   type BusinessProfile,
   type Provenance,
@@ -255,16 +254,6 @@ export function DbdRecordForm({
       {record && (
         <section className={section} data-testid="business-profile">
           <h3 className={`text-base font-semibold text-ink-900 ${wide}`}>{t('levels.business')}</h3>
-          <label className={`text-sm ${wide}`}>
-            <span className={labelText}>Company objectives</span>
-            <textarea
-              name="objectives_text"
-              rows={5}
-              readOnly={locked}
-              defaultValue={objectivesToText(profile.objectives)}
-              className={inputClass}
-            />
-          </label>
           <div className={`grid gap-4 sm:grid-cols-2 ${wide}`}>
             <label className="text-sm">
               <span className={labelText}>{t('fields.totalShares')}</span>
