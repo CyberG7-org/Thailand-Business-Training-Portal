@@ -1,6 +1,12 @@
 import 'server-only';
 import { z } from 'zod';
 
+const shareholderPercent = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*[%％]?$/);
+  return match ? Number(match[1]) : value;
+}, z.number().nullable().default(null));
+
 /** A business-profile image is not a DBD certificate. Missing text stays blank for staff review. */
 export const companyImageSchema = z.object({
   company_name_th: z.string().default(''),
@@ -11,9 +17,7 @@ export const companyImageSchema = z.object({
   directors: z
     .array(z.object({ name_th: z.string(), name_en: z.string().default('') }))
     .default([]),
-  shareholders: z
-    .array(z.object({ name: z.string(), percent: z.number().nullable().default(null) }))
-    .default([]),
+  shareholders: z.array(z.object({ name: z.string(), percent: shareholderPercent })).default([]),
   objectives: z.array(z.string()).default([]),
   head_office_address: z.string().default(''),
   province: z.string().default(''),

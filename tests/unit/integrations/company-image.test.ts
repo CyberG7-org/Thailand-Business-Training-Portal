@@ -2,6 +2,41 @@ import { describe, expect, it } from 'vitest';
 import { extractCompanyImage } from '@/lib/integrations/extraction/company-image';
 
 describe('company image reader', () => {
+  it('accepts shareholder percentages returned as numeric text', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      shareholders: [
+                        { name: 'นางสาว ก', percent: '90%' },
+                        { name: 'นางสาว ข', percent: '10' },
+                      ],
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      );
+
+    const result = await extractCompanyImage(new Uint8Array([1]), 'image/png', {
+      apiKey: 'test-key',
+      request,
+    });
+
+    expect(result.shareholders).toEqual([
+      { name: 'นางสาว ก', percent: 90 },
+      { name: 'นางสาว ข', percent: 10 },
+    ]);
+  });
+
   it('sends the image to Gemini server-side and parses only stated facts', async () => {
     const calls: { url: string; init: RequestInit }[] = [];
     const request = (async (url: string, init: RequestInit) => {
