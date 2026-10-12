@@ -178,21 +178,8 @@ describe('a code is checked before it is created', () => {
     expect((lost[0] as PromiseRejectedResult).reason).toMatchObject({ code: 'duplicate' });
   });
 
-  it('refuses a suffix that is not one letter and two digits, before anything is asked', async () => {
-    // D69's shapes (G4, AB12, SALES1) included: a manager's code is one letter and two digits (D85).
-    for (const suffix of [
-      '',
-      'x',
-      'G4',
-      'AB12',
-      'SALES1',
-      'a1',
-      'a123',
-      '123',
-      'g-4',
-      'ก12',
-      'a 12',
-    ]) {
+  it('refuses a manager suffix that is not three letters or digits', async () => {
+    for (const suffix of ['', 'x', 'G4', 'AB12', 'SALES1', 'a1', 'a123', 'g-4', 'ก12', 'a 12']) {
       await expect(
         createManagerAccount(
           { suffix, password: PASSWORD },
@@ -269,17 +256,17 @@ describe('suggestions', () => {
   });
 });
 
-/** D84: a learner's code is the team's prefix and two letters and two digits. */
-describe('learner codes are two letters and two digits', () => {
+/** New learner suffixes have four alphanumeric characters in any order. */
+describe('learner suffix validation', () => {
   const created: string[] = [];
   afterAll(async () => {
     for (const id of created.reverse()) await deleteTestUser(id);
   });
 
-  it('refuses any other shape for a learner, before anything is asked', async () => {
+  it('refuses a learner suffix that is not four letters or digits', async () => {
     const manager = await createManagerAccount({ suffix: await fresh(), password: PASSWORD });
     created.push(manager.id);
-    for (const suffix of ['D42', 'L8', 'A123', 'ABC1', '1A23', 'AB1', 'AB123', 'AB-1']) {
+    for (const suffix of ['D42', 'L8', 'AB1', 'AB123', 'AB-1', 'A 23']) {
       await expect(
         createLearnerAccount(
           { suffix, password: LEARNER_PASSWORD, managerId: manager.id },
