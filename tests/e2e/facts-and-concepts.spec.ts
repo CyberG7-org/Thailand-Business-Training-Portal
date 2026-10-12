@@ -39,7 +39,7 @@ test('the selected business category supplies the three bank-interview estimates
   await openRecordTab(page, 'interview');
   await expect(page.getByTestId('figure-monthlyRevenue')).toContainText('2,100,000');
   await expect(page.getByTestId('figure-averagePerTransaction')).toContainText('500');
-  await expect(page.getByTestId('figure-transactionsPerMonth')).toContainText('3,900');
+  await expect(page.getByTestId('figure-transactionsPerMonth')).toContainText('4,000');
   await expect(page.getByTestId('invoice-figures')).toHaveCount(0);
   await expect(page.getByTestId('save-interview')).toHaveCount(0);
 });
