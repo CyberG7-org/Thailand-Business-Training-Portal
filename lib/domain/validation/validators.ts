@@ -102,15 +102,6 @@ export function validateFacts(input: ValidationInput): Finding[] {
     signature: string,
   ) => out.push({ kind, field, blocks, detail: { ...detail, signature } });
 
-  if (structured.source_image && !structured.source_image.reviewed) {
-    push(
-      'missing',
-      'source_image_review',
-      'acceptance',
-      { reason: 'Manager must review the facts extracted from the image' },
-      structured.source_image.path,
-    );
-  }
   if (structured.source_image && !structured.category?.key) {
     push(
       'missing',

@@ -123,7 +123,7 @@ function run(patch: {
 const keys = (f: Finding[]) => f.map((x) => `${x.kind}:${x.field}:${x.blocks}`).sort();
 
 describe('validateFacts (spec §5.5)', () => {
-  it('holds image-sourced companies until the manager reviews facts and chooses a category', () => {
+  it('does not require a separate save to accept an image-sourced company', () => {
     const source_image = {
       path: 'record/company-profile.jpg',
       mime_type: 'image/jpeg',
@@ -133,7 +133,7 @@ describe('validateFacts (spec §5.5)', () => {
       record: { issued_on: null },
       structured: { source_image, category: null },
     });
-    expect(keys(findings)).toContain('missing:source_image_review:acceptance');
+    expect(keys(findings)).not.toContain('missing:source_image_review:acceptance');
     expect(keys(findings)).toContain('missing:business_category:acceptance');
     expect(keys(findings)).not.toContain('missing:issued_on:version');
 
