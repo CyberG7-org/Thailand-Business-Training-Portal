@@ -204,12 +204,10 @@ export default async function DbdRecordPage({
                       className="h-auto max-h-[700px] w-auto max-w-full rounded-lg object-contain"
                     />
                   )}
-                  {!sourceImage.reviewed && (
-                    <p className="staff-notice-warn">
-                      Review the details below before this company can be used. Edits save
-                      automatically.
-                    </p>
-                  )}
+                  <p className="staff-notice-info">
+                    Check the details below and correct anything that is wrong. Edits save
+                    automatically.
+                  </p>
                 </div>
               )}
               {suggestions && <p className="staff-notice-warn">{t('reviewSuggestions')}</p>}

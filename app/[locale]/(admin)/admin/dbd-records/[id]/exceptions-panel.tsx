@@ -1,10 +1,11 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useActionState, useEffect, useRef } from 'react';
 import { conceptTitle } from '@/lib/domain/concepts/registry';
 import type { ExceptionRow } from '@/lib/db/validation';
-import { resolveExceptionAction, type ToolState } from '../actions';
+import { recheckRecordAction, resolveExceptionAction, type ToolState } from '../actions';
 
 const initial: ToolState = { ok: false, error: null };
 const GROUPS = ['acceptance', 'version', 'none'] as const;
@@ -30,6 +31,24 @@ export function ExceptionsPanel({
   const ti = useTranslations('admin.dbd.interviewFields');
   const tg = useTranslations('admin.dbd.address.issues');
   const [state, action, pending] = useActionState(resolveExceptionAction, initial);
+  const router = useRouter();
+  const legacyReviewRechecked = useRef(false);
+  const hasLegacyImageReview = exceptions.some(
+    (exception) => exception.kind === 'missing' && exception.field === 'source_image_review',
+  );
+
+  useEffect(() => {
+    if (!hasLegacyImageReview || legacyReviewRechecked.current) return;
+    legacyReviewRechecked.current = true;
+    const formData = new FormData();
+    formData.set('locale', locale);
+    formData.set('id', recordId);
+    void recheckRecordAction(initial, formData)
+      .then((result) => {
+        if (result.ok || result.error === 'blocked') router.refresh();
+      })
+      .catch((error) => console.error('automatic image review recheck', recordId, error));
+  }, [hasLegacyImageReview, locale, recordId, router]);
 
   const fieldLabel = (field: string, kind: string) => {
     // A quiz that could not start names the concept it could not ask (D100).
