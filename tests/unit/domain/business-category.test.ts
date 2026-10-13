@@ -88,4 +88,15 @@ describe('needsRemap', () => {
     expect(needsRemap(manualCategory('clothing_fashion', 'h1', at), null)).toBe(true);
     expect(needsRemap(failedCategory('no_text', null, at), null)).toBe(false);
   });
+
+  it('retries an old failed or AI-made decision when the local rules replace that mapper', () => {
+    expect(needsRemap(failedCategory('mapping_failed', 'h1', at), 'h1', 'rules-v1')).toBe(true);
+    const oldAuto = {
+      ...manualCategory('clothing_fashion', 'h1', at),
+      source: 'auto' as const,
+      model: 'gemini-2.5-flash',
+    };
+    expect(needsRemap(oldAuto, 'h1', 'rules-v1')).toBe(true);
+    expect(needsRemap({ ...oldAuto, model: 'rules-v1' }, 'h1', 'rules-v1')).toBe(false);
+  });
 });

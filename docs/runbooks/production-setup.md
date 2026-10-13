@@ -77,12 +77,12 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `GEMINI_FACT_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for one-time English/Chinese/Malay translations per pinned company fact set; apply migrations `20261012015000_company_fact_translations.sql` and `20261012020000_malay_language.sql` before deploying |
    | `GEMINI_QUIZ_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for Malay translations of frozen quiz questions; requires `GEMINI_API_KEY` |
    | `GEMINI_COMPANY_IMAGE_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for reading the uploaded company image |
-   | `CATEGORY_MAP_PROVIDER` | `claude` (or unset with the Anthropic key) | maps `nature_of_business` to a business category (P17a) on the same `ANTHROPIC_API_KEY`; `off` to disable — the record page then asks a person to choose |
+   | `CATEGORY_MAP_PROVIDER` | unset (local `rules`) | selects one of the 40 business categories from `nature_of_business` and `products_services` without an AI call; `off` disables automatic selection. Old `claude`, `gemini`, and `fake` values now resolve to `rules` too. |
    | `PINECONE_API_KEY`, `PINECONE_NAMESPACE` | Pinecone key; namespace `production` (staging: `staging`) | DBD retrieval index (P14); `VECTOR_PROVIDER=off` to disable; optional `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES` |
    | `DIRECT_READ_MAX_PAGES` | optional, default 20 | documents with more pages are never sent whole to the model; they fill in from their transcripts once indexed (P14c); with `VECTOR_PROVIDER=off` documents travel whole up to 100 pages instead |
    | `TRANSCRIPT_SWEEP_PAGES` | optional, default 10 | transcript pages per list-sweep call when filling a record from an oversized document (P14c); lower it if sweeps report `too_large` |
 
-   In production every adapter is **off** unless its key is present (never "fake"). The `/api/health` endpoint reports which provider each adapter resolved to.
+   In production external adapters are **off** unless their keys are present (never "fake"); category mapping is the local `rules` adapter by default. The `/api/health` endpoint reports which provider each adapter resolved to.
 3. Cron: `vercel.json` schedules `/api/cron/notifications` and `/api/cron/index` every minute. Confirm both appear under Project → Settings → Cron Jobs after the first deploy.
 4. Node.js: Project → Settings → General → Node.js Version = **22.x** (the Pinecone SDK requires Node ≥ 22).
 5. Domain: attach `<your-domain>`; Supabase Site URL must match.

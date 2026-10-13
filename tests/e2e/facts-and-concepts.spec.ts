@@ -32,11 +32,12 @@ test('the selected business category supplies the three bank-interview estimates
     issuedOn: '13/07/2569',
   });
   await page.goto(`/th/admin/dbd-records/${id}`);
+  await expect(page.locator('#record-panel-details').getByTestId('category-panel')).toHaveCount(0);
+  await openRecordTab(page, 'interview');
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'unmapped');
   await page.locator('select[name="categoryKey"]').selectOption('food_products');
   await page.getByTestId('category-set').click();
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'mapped');
-  await openRecordTab(page, 'interview');
   await expect(page.getByTestId('figure-monthlyRevenue')).toContainText('2,100,000');
   await expect(page.getByTestId('figure-averagePerTransaction')).toContainText('500');
   await expect(page.getByTestId('figure-transactionsPerMonth')).toContainText('4,000');

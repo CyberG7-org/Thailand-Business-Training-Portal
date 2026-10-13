@@ -27,7 +27,6 @@ export function CategoryPanel({
   const t = useTranslations('admin.dbd.category');
   const [setState, setAction, setting] = useActionState(setBusinessCategoryAction, initial);
   const label = (key: string | null) => options.find((o) => o.key === key)?.label ?? key ?? '—';
-  const pct = assignment?.confidence != null ? Math.round(assignment.confidence * 100) : 0;
   const status = assignment?.status ?? 'unmapped';
   const reason = assignment?.error;
   const reasonKey = (KNOWN_ERRORS as readonly string[]).includes(reason ?? '')
@@ -43,8 +42,7 @@ export function CategoryPanel({
       <h2 className="text-sm font-semibold">{t('title')}</h2>
       {status === 'mapped' && assignment && (
         <p className="staff-notice-ok" data-testid="category-current">
-          {label(assignment.key)} —{' '}
-          {assignment.source === 'manual' ? t('manual') : t('auto', { confidence: pct })}
+          {label(assignment.key)} — {assignment.source === 'manual' ? t('manual') : t('auto')}
         </p>
       )}
       {status === 'unmapped' && (

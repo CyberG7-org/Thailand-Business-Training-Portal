@@ -584,15 +584,15 @@
       },
       "category": {
         "title": "业务类别",
-        "auto": "自动选择（置信度 {confidence}%）",
+        "auto": "根据业务说明自动选择",
         "manual": "由人员选择",
         "unmapped": "尚无类别",
         "errors": {
-          "no_text": "未能从 Facebook 或网站页面读取业务说明",
+          "no_text": "请在公司资料中填写业务内容或销售的产品与服务",
           "not_configured": "自动匹配已关闭",
           "no_categories": "类别列表为空",
           "choose-category": "请选择业务类别以设置银行面试财务数字",
-          "failed": "自动匹配失败，请手动选择或重新匹配"
+          "failed": "自动选择失败，请检查业务说明或手动选择类别"
         },
         "choose": "选择类别",
         "none": "请选择…",
