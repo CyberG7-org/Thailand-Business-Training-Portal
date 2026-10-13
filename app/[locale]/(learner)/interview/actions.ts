@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
+import { interviewErrorDiagnostic } from '@/lib/domain/interview/diagnostic';
 import {
   InterviewError,
   endInterview,
@@ -39,6 +40,7 @@ export async function startInterviewAction(
   try {
     sessionId = (await startOrResumeInterview(user.id, locale)).session.id;
   } catch (e) {
+    console.error('interview.start.failed', interviewErrorDiagnostic(e));
     return { error: code(e) };
   }
   revalidatePath(`/${locale}/dashboard`);
