@@ -59,7 +59,10 @@ describe('Learner Record', () => {
     team = await seedTeam('บันทึกผู้เรียน');
     other = await seedTeam('ทีมอื่นบันทึก');
     await confirmRecord(team.recordId, team.manager.id);
-    await svc.from('dbd_records').update({ issued_on: '2026-04-09' }).eq('id', team.recordId);
+    await svc
+      .from('dbd_records')
+      .update({ issued_on: '2026-04-09', registered_on: '2026-03-07' })
+      .eq('id', team.recordId);
     await svc
       .from('user_dbd_assignments')
       .insert({ user_id: team.learner.id, dbd_record_id: team.recordId });
@@ -96,12 +99,12 @@ describe('Learner Record', () => {
     }
   });
 
-  it('gives the manager a row per learner of their team, with company, date and results', async () => {
+  it('gives the manager a row with the company registration date and results', async () => {
     const rows = await loadLearnerRecords(team.asManager);
     expect(rows.map((r) => r.id)).toEqual([team.learner.id]);
     expect(rows[0]).toMatchObject({
       loginId: team.learner.loginId,
-      company: { id: team.recordId, issuedOn: '2026-04-09' },
+      company: { id: team.recordId, registeredOn: '2026-03-07' },
       mcq: 'pass',
       mcqAttempts: 2,
       chatbot: 'pass',
