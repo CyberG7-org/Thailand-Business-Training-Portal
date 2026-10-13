@@ -1,7 +1,7 @@
 /** A calendar date as `YYYY-MM-DD`. The only date representation used in domain logic. */
 export type ISODate = string;
 
-export type Locale = 'th' | 'en' | 'zh';
+export type Locale = 'th' | 'en' | 'zh' | 'ms';
 
 export const BANGKOK_TZ = 'Asia/Bangkok';
 const BE_OFFSET = 543;
@@ -167,5 +167,12 @@ export function formatDate(date: ISODate, locale: Locale): string {
       return `${d} ${ENGLISH_MONTHS[m - 1]} ${y}`;
     case 'zh':
       return `${y}年${m}月${d}日`;
+    case 'ms':
+      return new Intl.DateTimeFormat('ms-MY', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: BANGKOK_TZ,
+      }).format(new Date(Date.UTC(y, m - 1, d)));
   }
 }

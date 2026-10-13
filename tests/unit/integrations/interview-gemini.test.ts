@@ -28,6 +28,7 @@ describe('GeminiInterview', () => {
       next: { concept: plan.items[0].concept },
     });
     const turn = await new GeminiInterview('secret', request).turn({
+      language: 'en',
       facts,
       plan,
       transcript: [],
@@ -40,6 +41,8 @@ describe('GeminiInterview', () => {
     expect(new Headers(calls[0].init.headers).get('x-goog-api-key')).toBe('secret');
     const body = JSON.parse(calls[0].init.body as string);
     expect(body.systemInstruction.parts[0].text).toContain('0105568233704');
+    expect(body.contents.at(-1).parts[0].text).toContain('"language":"en"');
+    expect(body.contents.at(-1).parts[0].text).toContain('full registered name');
     expect(body.generationConfig.responseMimeType).toBe('application/json');
   });
 

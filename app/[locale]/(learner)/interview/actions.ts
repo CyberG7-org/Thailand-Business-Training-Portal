@@ -37,7 +37,7 @@ export async function startInterviewAction(
   const user = await requireUser(locale);
   let sessionId: string;
   try {
-    sessionId = (await startOrResumeInterview(user.id)).session.id;
+    sessionId = (await startOrResumeInterview(user.id, locale)).session.id;
   } catch (e) {
     return { error: code(e) };
   }
@@ -52,7 +52,12 @@ export async function sendMessageAction(
 ): Promise<SendResult> {
   const user = await requireUser(locale);
   try {
-    const { turns, closed, budget } = await submitLearnerMessage(user.id, sessionId, content);
+    const { turns, closed, budget } = await submitLearnerMessage(
+      user.id,
+      sessionId,
+      content,
+      locale as AppLocale,
+    );
     if (closed) {
       revalidatePath(`/${locale}/interview/${sessionId}`);
       revalidatePath(`/${locale}/dashboard`);

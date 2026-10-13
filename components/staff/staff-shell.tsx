@@ -31,7 +31,7 @@ export async function StaffShell({
       <div className="band px-4 pt-4 pb-5 md:px-6">
         <header
           data-testid="shell-header"
-          className="glass flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card py-2.5 pr-3 pl-4 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]"
+          className="glass relative z-20 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card py-2.5 pr-3 pl-4 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]"
         >
           <Link href="/admin" className="flex items-center gap-3 rounded-control">
             <span

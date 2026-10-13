@@ -1,11 +1,11 @@
-import type { AppLocale } from '@/i18n/routing';
 import type { ConceptGroup } from '@/lib/domain/bank-interview';
 
 export type StarterCard = {
   contentKey: string;
   sortOrder: number;
   conceptGroup: ConceptGroup | null;
-  localizations: Record<AppLocale, { title: string; body: string }>;
+  localizations: Record<'th' | 'en' | 'zh', { title: string; body: string }> &
+    Partial<Record<'ms', { title: string; body: string }>>;
 };
 
 /**
@@ -69,6 +69,23 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 **记住：** 名称和数字必须与文件一致。注册地址可能与实际经营地点不同。`,
       },
+      ms: {
+        title: 'Identiti syarikat dan pengarah (1/5)',
+        body: `Hafal fakta ini seperti yang tertera dalam dokumen syarikat.
+
+| Perkara yang perlu diingat | Jawapan syarikat anda |
+|---|---|
+| Nama berdaftar penuh | **{company_name_th}** ({company_name_en}) |
+| Nombor pendaftaran 13 digit | {juristic_id} |
+| Tarikh pendaftaran | {registered_on} |
+| Alamat berdaftar | {head_office_address} |
+| Pengarah | {directors_count} — {directors} |
+| Siapa yang boleh menandatangani bagi syarikat | {signing_authority} |
+
+**Bank mungkin bertanya:** Apakah nama berdaftar penuh, nombor dan tarikh pendaftaran? Di manakah alamat berdaftar? Siapa pengarah dan siapa boleh menandatangani?
+
+**Ingat:** nama dan nombor mesti tepat seperti dalam dokumen. Alamat berdaftar mungkin berbeza daripada tempat perniagaan sebenar.`,
+      },
     },
   },
   {
@@ -129,6 +146,24 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 **银行可能会问：** 资本是多少？有几位股东？您有多少股份？职位和日常工作是什么？
 
 **记住：** 注册资本 ÷ 每股价值 = 总股份。可用自己的话说明工作，但事实必须一致。`,
+      },
+      ms: {
+        title: 'Modal, pemegang saham dan peranan anda (2/5)',
+        body: `Ketahui siapa yang memiliki syarikat dan tugas anda di dalamnya.
+
+| Perkara yang perlu diingat | Jawapan anda |
+|---|---|
+| Modal berdaftar | {registered_capital} baht |
+| Jumlah saham dan nilainya | {total_shares} saham pada {par_value} baht setiap satu |
+| Pemegang saham | {shareholders_count} — {shareholders} |
+| Saham anda | {my_shares} saham ({my_share_percent}%) |
+| Nama dan jawatan anda | {my_name} — {my_position} |
+| Tanggungjawab harian anda | {my_responsibilities} |
+| Hubungan dengan pemegang saham lain | {my_relationship} |
+
+**Bank mungkin bertanya:** Berapakah modal? Berapa orang pemegang saham? Berapa saham anda? Apakah jawatan dan tugas harian anda?
+
+**Ingat:** modal berdaftar ÷ nilai setiap saham = jumlah saham. Terangkan tugas dengan kata-kata sendiri tetapi pastikan fakta konsisten.`,
       },
     },
   },
@@ -196,6 +231,26 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 **银行会问：** 公司做什么业务？主要销售什么？客户是谁，您如何找到他们？说出一个正确的客户群体和一个获客渠道即可，不必列出全部。
 
 **记住：** 实际业务应与注册目的相符。没有网站时，不要提到网站。`,
+      },
+      ms: {
+        title: 'Perniagaan, pelanggan dan pembekal (3/5)',
+        body: `Terangkan perniagaan sebenar dalam satu atau dua ayat mudah.
+
+| Perkara yang perlu diingat | Jawapan syarikat anda |
+|---|---|
+| Apa yang syarikat sebenarnya lakukan | {nature_of_business} |
+| Produk atau perkhidmatan | {products_services} |
+| Mengapa syarikat ditubuhkan | {business_purpose} |
+| Pelanggan utama | {main_clients} — {clients_location} |
+| Cara mencari pelanggan | {customer_channels} |
+| Pembekal utama | {main_suppliers} — {suppliers_location} |
+| Tempat perniagaan sebenar | {business_address} |
+| Kategori perniagaan berdaftar | {business_categories} |
+| Sudah mula berniaga? | {operations_status} |
+
+**Bank akan bertanya:** Apakah perniagaan syarikat? Apakah produk atau perkhidmatan utama? Siapa pelanggan dan bagaimana anda mencari mereka? Sebut satu kumpulan pelanggan dan satu saluran yang betul; tidak perlu senaraikan semuanya.
+
+**Ingat:** perniagaan sebenar mesti sepadan dengan tujuan berdaftar. Jika tiada laman web, jangan sebut laman web.`,
       },
     },
   },
@@ -273,6 +328,29 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 **记住：** 这些是按业务类别确定的估算数字，可以回答接近的金额。`,
       },
+      ms: {
+        title: 'Wang dan transaksi (4/5)',
+        body: `Hafal tiga anggaran berdasarkan kategori perniagaan syarikat yang diluluskan. Angka ini tidak dikira daripada invois.
+
+| Perkara yang perlu diingat | Jawapan syarikat anda |
+|---|---|
+| Anggaran hasil bulanan | {monthly_revenue} |
+| Purata setiap transaksi | {average_transaction} |
+| Anggaran transaksi sebulan | {monthly_transactions} |
+| Anggaran aliran wang bulanan | {monthly_volume} |
+| Sumber dana permulaan | {source_of_funds} |
+| Wang pertama masuk ke akaun | {first_incoming_funds} |
+| Mengapa akaun diperlukan | {account_purpose} |
+| Mengapa perlu PromptPay atau QR | {promptpay_qr_purpose} |
+| Corak transaksi yang dijangka | {transaction_details} |
+
+**Bank akan bertanya:**
+1. Berapakah anggaran hasil bulanan syarikat? Jawapan: **{monthly_revenue}**.
+2. Berapa jumlah anggaran transaksi syarikat sebulan? Jawapan: **{monthly_transactions}**.
+3. Berapakah anggaran purata setiap transaksi? Jawapan: **{average_transaction}**.
+
+**Ingat:** angka ini ialah anggaran berdasarkan kategori perniagaan. Berikan angka yang hampir tepat.`,
+      },
     },
   },
   {
@@ -327,6 +405,22 @@ You do not need difficult words. Clear, honest and consistent answers are enough
 **四步回答：** 听完问题；先直接回答；需要时补充一句说明；不确定时请工作人员重复—不要猜。
 
 不需要复杂词语。清楚、诚实、前后一致就足够了。`,
+      },
+      ms: {
+        title: 'Keselamatan bank dan jawapan yakin (5/5)',
+        body: `Gunakan jawapan yang selamat dan mudah.
+
+| Soalan bank | Jawapan yang baik |
+|---|---|
+| Siapa mengawal perbankan internet? | Pengarah syarikat yang diberi kuasa mengawalnya. |
+| Siapa menyimpan telefon OTP? | Orang yang diberi kuasa menyimpan dan mengawalnya. |
+| Bagaimana menerangkan pindahan wang? | Nyatakan siapa membayar siapa, sebabnya, jumlah dan tarikh. |
+| Apa yang menyokong bayaran? | Invois, perjanjian, resit atau dokumen perniagaan yang berkaitan. |
+| Bagaimana jika bank menyemak? | Pastikan jawapan selaras dengan dokumen dan aktiviti sebenar. |
+
+**Jawab dalam empat langkah:** dengar soalan sampai habis; jawab secara terus; beri penjelasan ringkas jika perlu; minta pegawai mengulang jika tidak pasti—jangan meneka.
+
+Tidak perlu kata-kata yang sukar. Jawapan yang jelas, jujur dan konsisten sudah mencukupi.`,
       },
     },
   },

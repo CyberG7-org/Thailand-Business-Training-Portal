@@ -11,10 +11,14 @@ export type GeneratedLocalization = {
   explanation: string;
 };
 
+/** Admin-authored question translations are still approved in the three existing languages. */
+export type ApprovedQuestionLocale = 'th' | 'en' | 'zh';
+
 /** One question in all three languages, as the model returns it. */
 export type GeneratedQuestion = {
   kind: 'generic' | 'dbd_template';
-  localizations: Record<AppLocale, GeneratedLocalization>;
+  localizations: Record<ApprovedQuestionLocale, GeneratedLocalization> &
+    Partial<Record<'ms', GeneratedLocalization>>;
   /** 1-based numbers of the reference passages the question is grounded in ([] when none). */
   sources?: number[];
 };

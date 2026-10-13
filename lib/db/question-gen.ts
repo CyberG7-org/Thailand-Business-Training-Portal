@@ -1,7 +1,9 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { LOCALES, type AppLocale } from '@/i18n/routing';
+import type { AppLocale } from '@/i18n/routing';
 import type { OptionKey, QuestionOption } from '@/lib/domain/assessment/engine';
+
+const LOCALES = ['th', 'en', 'zh'] as const;
 import { directReadMaxPages } from '@/lib/domain/rag/jobs';
 import { getQuestionGenerator } from '@/lib/integrations/question-gen';
 import {

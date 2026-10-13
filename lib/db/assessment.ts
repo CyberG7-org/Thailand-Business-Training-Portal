@@ -20,6 +20,7 @@ import { createSupabaseAdminClient } from './admin';
 import { templateRecordFromSnapshot, type RoleSnapshot } from '@/lib/domain/facts/snapshot';
 import { getActiveAssignmentForUser } from './assignments';
 import { answerKeysFor } from './mcq-attempt';
+import { GeminiQuizTranslator } from '@/lib/integrations/translation/gemini-quiz';
 import { pinnedFactsFor } from './pinning';
 import { getVersion, readSnapshot } from './training-versions';
 import type { Database, Json } from './database.types';
@@ -38,6 +39,7 @@ export class AssessmentError extends Error {
       | 'no_version'
       | 'no_questions'
       | 'not_ready'
+      | 'translation_unavailable'
       | 'not_found'
       | 'not_in_progress'
       | 'already_answered'
@@ -263,6 +265,31 @@ export async function localizeAttemptAnswers(
       .in('language', languages),
     templateRecordForAttempt(admin, attempt),
   ]);
+  if (locale === 'ms') {
+    const missing = banked
+      .map((answer) => ({ answer, key: keys.get(answer.id) }))
+      .filter((entry) => entry.key && !entry.key.localized.ms);
+    if (missing.length > 0 && process.env.GEMINI_API_KEY) {
+      try {
+        const translated = await new GeminiQuizTranslator().translate(
+          missing.map((entry) => entry.key!.localized.en ?? entry.key!.localized.th),
+        );
+        await Promise.all(
+          missing.map(async (entry, index) => {
+            const localized = { ...entry.key!.localized, ms: translated[index] };
+            const { error } = await admin
+              .from('assessment_answer_keys')
+              .update({ localized: localized as unknown as Json })
+              .eq('answer_id', entry.answer.id);
+            if (error) throw error;
+            entry.key!.localized = localized;
+          }),
+        );
+      } catch (error) {
+        console.error('Malay quiz translation unavailable for an existing attempt', error);
+      }
+    }
+  }
   const byQuestion = new Map<string, NonNullable<typeof locs>>();
   for (const loc of locs ?? []) {
     byQuestion.set(loc.question_id, [...(byQuestion.get(loc.question_id) ?? []), loc]);

@@ -53,6 +53,27 @@ describe('the questions of one attempt (D100)', () => {
     }
   });
 
+  it('uses translated company prose without changing the correct option position', () => {
+    const translated = {
+      ...SAMPLE_CONTEXT.facts,
+      nature_of_business: 'Wholesale and retail of women’s clothing',
+    };
+    const { questions } = buildAttemptQuestions(BANK, SAMPLE_CONTEXT, 'seed-1', new Map(), {
+      en: translated,
+    });
+    const business = questions.find((q) => q.conceptKey === 'actual_business')!;
+    expect(business.localized.en?.options.some((option) => option.text.includes('Wholesale'))).toBe(
+      true,
+    );
+    expect(business.localized.th.options.some((option) => option.text.includes('ค้าส่ง'))).toBe(
+      true,
+    );
+    expect(business.localized.en?.options.map((option) => option.key)).toEqual(
+      business.localized.th.options.map((option) => option.key),
+    );
+    expect(business.correctKey).toMatch(/^[A-D]$/);
+  });
+
   it('is the same for the same seed and differs for another', () => {
     expect(build('seed-1')).toEqual(build('seed-1'));
     const order = (seed: string) => build(seed).questions.map((q) => q.conceptKey);

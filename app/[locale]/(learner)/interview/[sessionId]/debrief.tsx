@@ -74,7 +74,9 @@ export async function Debrief({
       ? readinessItem(concept)!.question[locale]
       : concept === 'juristic_id'
         ? t('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale] ?? concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
+            locale === 'ms' ? 'en' : locale
+          ] ?? concept);
 
   return (
     <div className="mx-auto grid max-w-[780px] gap-6">

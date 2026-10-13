@@ -7,7 +7,7 @@ import type {
   TranslateInput,
 } from './types';
 
-const GENERIC: Record<AppLocale, (n: number, topic: string) => GeneratedLocalization> = {
+const GENERIC: Record<'th' | 'en' | 'zh', (n: number, topic: string) => GeneratedLocalization> = {
   th: (n, topic) => ({
     prompt: `(${n}) จากเนื้อหาเรื่อง "${topic}" หน่วยงานใดออกหนังสือรับรองนิติบุคคล`,
     options: [
@@ -43,7 +43,7 @@ const GENERIC: Record<AppLocale, (n: number, topic: string) => GeneratedLocaliza
   }),
 };
 
-type Tpl = Record<AppLocale, GeneratedLocalization>;
+type Tpl = Record<'th' | 'en' | 'zh', GeneratedLocalization>;
 const opts = (a: string, b: string, c: string, d: string) => [
   { key: 'A' as const, text: a },
   { key: 'B' as const, text: b },

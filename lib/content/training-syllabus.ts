@@ -14,7 +14,7 @@ const item = (
   en: ThreePrompts,
   th: ThreePrompts,
   zh: ThreePrompts,
-): TrainingSyllabusItem => ({ conceptKey, card, quizPrompts: { en, th, zh } });
+): TrainingSyllabusItem => ({ conceptKey, card, quizPrompts: { en, th, zh, ms: en } });
 
 /**
  * The learner's single syllabus: every quiz concept belongs to one cheat sheet and has three

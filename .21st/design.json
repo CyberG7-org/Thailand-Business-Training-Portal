@@ -208,6 +208,11 @@
       "date": "2026-10-12",
       "decision": "The manager's company-creation panel sits above the existing-company list. Image and ZIP are large selectable options, each followed by a prominent file picker in the portal's existing brand styles.",
       "reason": "Creating a company should be visible before browsing existing records, and the upload affordance should be obvious on desktop and mobile. The 21st.dev catalog search returned HTTP 401, so existing project primitives were used."
+    },
+    {
+      "date": "2026-10-12",
+      "decision": "The shared login, learner, and staff language selector uses a compact dark dropdown with the selected language highlighted; Thai, English, Simplified Chinese, and Malay are selectable.",
+      "reason": "This follows the user's dropdown reference and supports the four core training languages. The 21st.dev catalog search returned HTTP 401, so the component uses the portal's existing brand tokens and accessible menu behavior."
     }
   ],
   "evidence": [

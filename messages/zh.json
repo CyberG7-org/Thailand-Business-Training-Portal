@@ -1484,7 +1484,8 @@
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。",
       "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。",
-      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。"
+      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。",
+      "translation_unavailable": "马来语测验翻译暂时不可用，请稍后重试。"
     },
     "meta": {
       "questions": "题数",
@@ -1506,13 +1507,13 @@
   "interview": {
     "title": "银行准备面试",
     "intro": "使用您学过的公司资料，进行轻松友好的模拟面试。",
-    "thaiOnly": "面试全程使用泰语。",
+    "thaiOnly": "可以用泰语、英语、简体中文或马来语回答。",
     "guide": {
       "eyebrow": "开始之前",
       "title": "按自己的节奏练习",
       "questions": "回答 13 个简短问题",
       "pass": "答对 10 题即可通过",
-      "language": "面试使用泰语（ภาษาไทย）",
+      "language": "使用您喜欢的语言",
       "repeat": "可不限次数练习（ฝึกได้ไม่จำกัด）",
       "support": "如果回答需要补充，专员会友好地再问一次。这只是练习，请从容作答。"
     },
@@ -1543,7 +1544,7 @@
       "scorePractice": "您答对了 {score}/{maximum} 题，通过要求为 {required} 题。请复习下方答案后再试一次。"
     },
     "chat": {
-      "placeholder": "请用泰语输入回答…",
+      "placeholder": "请输入您的回答…",
       "send": "发送",
       "end": "结束面试",
       "typing": "专员正在输入…",

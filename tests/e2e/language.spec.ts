@@ -8,6 +8,13 @@ test('switching language re-renders and persists; the next login lands on it', a
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page).toHaveURL(/\/th\/dashboard$/);
 
+  await page.getByTestId('language-menu-button').click();
+  await expect(page.getByTestId('lang-ms')).toContainText('Bahasa Melayu');
+  await expect(page.getByTestId('lang-th')).toHaveAttribute('aria-checked', 'true');
+  await page.getByTestId('lang-ms').click();
+  await expect(page).toHaveURL(/\/ms\/dashboard$/);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ms');
+  await page.getByTestId('language-menu-button').click();
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);
   await expect(page.getByRole('heading', { name: `Welcome, ${loginId}` })).toBeVisible();
@@ -20,14 +27,19 @@ test('switching language re-renders and persists; the next login lands on it', a
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page).toHaveURL(/\/en\/dashboard$/);
 
+  await page.getByTestId('language-menu-button').click();
   await page.getByTestId('lang-zh').click();
   await expect(page).toHaveURL(/\/zh\/dashboard$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
-  await expect(page.getByTestId('lang-zh')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('language-menu-button').click();
+  await expect(page.getByTestId('lang-zh')).toHaveAttribute('aria-checked', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('lang-zh')).toHaveCount(0);
 
   // A language chosen on the login page itself beats the stored preference and is persisted.
   await page.getByRole('button', { name: '退出登录' }).click();
   await expect(page).toHaveURL(/\/zh\/login$/);
+  await page.getByTestId('language-menu-button').click();
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/login$/);
   await page.locator('input[name="loginId"]').fill(loginId);

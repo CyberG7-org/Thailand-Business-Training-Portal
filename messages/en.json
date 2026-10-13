@@ -1484,7 +1484,8 @@
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option.",
       "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record.",
-      "not_ready": "The quiz is not ready for your company yet. Your manager has been told."
+      "not_ready": "The quiz is not ready for your company yet. Your manager has been told.",
+      "translation_unavailable": "Malay quiz translation is temporarily unavailable. Please try again shortly."
     },
     "meta": {
       "questions": "Questions",
@@ -1506,13 +1507,13 @@
   "interview": {
     "title": "Bank Readiness Interview",
     "intro": "A friendly practice interview using the same company facts you studied.",
-    "thaiOnly": "The interview is entirely in Thai.",
+    "thaiOnly": "Answer in Thai, English, Simplified Chinese or Malay.",
     "guide": {
       "eyebrow": "Before you start",
       "title": "Practise at your own pace",
       "questions": "Answer 13 short questions",
       "pass": "Get 10 correct to be ready",
-      "language": "The interview is in Thai (ภาษาไทย)",
+      "language": "Use the language you prefer",
       "repeat": "Practise as many times as you like (ฝึกได้ไม่จำกัด)",
       "support": "The officer gives you one friendly second chance when an answer needs more detail. This is practice, so take your time."
     },
@@ -1543,7 +1544,7 @@
       "scorePractice": "You got {score} out of {maximum}. You need {required}; review the answers below and try again."
     },
     "chat": {
-      "placeholder": "Type your answer in Thai…",
+      "placeholder": "Type your answer…",
       "send": "Send",
       "end": "End the interview",
       "typing": "The officer is typing…",

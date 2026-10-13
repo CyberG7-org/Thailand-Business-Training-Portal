@@ -2,8 +2,13 @@ import type { Locale } from '@/lib/domain/thai-date';
 import type { GeoName } from './context';
 import type { TokenKind } from './tokens';
 
-const NUMBER_LOCALES: Record<Locale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
-const CURRENCY: Record<Locale, string> = { th: 'บาท', en: 'THB', zh: '泰铢' };
+const NUMBER_LOCALES: Record<Locale, string> = {
+  th: 'th-TH',
+  en: 'en-US',
+  zh: 'zh-CN',
+  ms: 'ms-MY',
+};
+const CURRENCY: Record<Locale, string> = { th: 'บาท', en: 'THB', zh: '泰铢', ms: 'THB' };
 
 export function formatNumber(n: number, locale: Locale): string {
   return n.toLocaleString(NUMBER_LOCALES[locale], { maximumFractionDigits: 2 });
@@ -19,7 +24,7 @@ export function formatQuantity(kind: TokenKind, n: number, locale: Locale): stri
 /** Thai and English show their own name; Chinese has none, so it shows both (plan decision 9). */
 export function geoLabel(place: GeoName, locale: Locale): string {
   if (locale === 'th') return place.th;
-  if (locale === 'en') return place.en;
+  if (locale === 'en' || locale === 'ms') return place.en;
   return `${place.th} (${place.en})`;
 }
 

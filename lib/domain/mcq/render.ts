@@ -164,7 +164,9 @@ function resolve(p: Placeholder, ctx: RenderContext, locale: Locale, draws: Draw
     if (kind === 'names') {
       const names =
         p.token === 'directors'
-          ? facts.directors.map((d) => (locale === 'en' ? (d.name_en ?? d.name_th) : d.name_th))
+          ? facts.directors.map((d) =>
+              locale === 'en' || locale === 'ms' ? (d.name_en ?? d.name_th) : d.name_th,
+            )
           : facts.shareholders.map((s) => s.name);
       return names.length > 0 ? names.join(', ') : missing();
     }
@@ -176,7 +178,7 @@ function resolve(p: Placeholder, ctx: RenderContext, locale: Locale, draws: Draw
       const own = ctx.geo[kind];
       return own ? geoLabel(own, locale) : missing();
     }
-    if (kind === 'category') return ownCategory(ctx)[locale];
+    if (kind === 'category') return ownCategory(ctx)[locale === 'ms' ? 'en' : locale];
     const n = numberOf(p.token, facts);
     return n === null ? missing() : formatQuantity(kind, n, locale);
   }
@@ -215,7 +217,7 @@ function resolve(p: Placeholder, ctx: RenderContext, locale: Locale, draws: Draw
         ctx.categories.filter((c) => c.active && c.key !== own.key),
       );
       if (!pick) throw new RenderFailure('no_alternatives', p.raw);
-      return pick[locale];
+      return pick[locale === 'ms' ? 'en' : locale];
     }
   }
 }

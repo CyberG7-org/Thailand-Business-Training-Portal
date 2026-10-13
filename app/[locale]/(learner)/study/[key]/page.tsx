@@ -18,7 +18,9 @@ import { getMyStudyProgress, listStudyMaterials, pickLocalization } from '@/lib/
 import { getActiveAssignmentForUser } from '@/lib/db/assignments';
 import { toTemplateRecord } from '@/lib/db/assessment';
 import { pinnedFactsFor } from '@/lib/db/pinning';
+import { factTranslationsFor } from '@/lib/db/fact-translations';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
+import { translatedRecord } from '@/lib/domain/facts/localization';
 import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { getTtsProvider } from '@/lib/integrations/tts';
 import { getVectorStore } from '@/lib/integrations/vector';
@@ -114,10 +116,21 @@ export default async function StudyMaterialPage({
       : null;
   // Starter cards are maintained in code now that staff cannot edit them. Use the current
   // approved wording even if an environment has not rerun content:starter after deployment.
-  const starterBody = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === key)?.localizations[
+  const starterCard = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === key)?.localizations[
     loc
-  ].body;
-  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', templateRecord, loc);
+  ];
+  const starterBody = starterCard?.body;
+  const translations =
+    pinned && templateRecord
+      ? await factTranslationsFor(
+          createSupabaseAdminClient(),
+          pinned.version.id,
+          templateRecord,
+          loc,
+        )
+      : {};
+  const shownRecord = templateRecord ? translatedRecord(templateRecord, translations) : null;
+  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', shownRecord, loc);
 
   // "From your documents" (spec §8, D44): passages of the learner's OWN record for this card's
   // concepts. The assignment is the ownership check; names are read with the service role because
@@ -187,7 +200,7 @@ export default async function StudyMaterialPage({
             data-testid="study-title"
             className="mt-6 max-w-4xl font-display text-[26px] leading-[1.35] font-medium text-white md:text-[32px]"
           >
-            {localization.title}
+            {starterCard?.title ?? localization.title}
           </h1>
           {ttsAvailable && (
             <ReadAloudPlayer
@@ -217,7 +230,7 @@ export default async function StudyMaterialPage({
               <div className="grid gap-3">
                 <iframe
                   src={pdfUrl}
-                  title={localization.title}
+                  title={starterCard?.title ?? localization.title}
                   className="h-[70vh] w-full rounded-control border border-ink-300"
                 />
                 <a

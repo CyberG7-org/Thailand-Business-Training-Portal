@@ -18,7 +18,12 @@ import type { InterviewPlan, Verdict, VerdictReason } from '@/lib/domain/intervi
 import { displayLoginId } from '@/lib/domain/login-id';
 import { type InterviewResultItem, SessionResultTranscript } from './session-result-transcript';
 
-const DATE_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
+const DATE_LOCALES: Record<AppLocale, string> = {
+  th: 'th-TH',
+  en: 'en-GB',
+  zh: 'zh-CN',
+  ms: 'ms-MY',
+};
 const VERDICTS: Verdict[] = ['correct', 'partial', 'wrong', 'evasive', 'pasted', 'off_topic'];
 
 type StoredSummary = {
@@ -80,8 +85,9 @@ export async function InterviewSessionView({
       ? readinessItem(concept)!.question[locale as AppLocale]
       : concept === 'juristic_id'
         ? ti('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
-          concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
+            locale === 'ms' ? 'en' : (locale as 'th' | 'en' | 'zh')
+          ] ?? concept);
 
   const resultItems: InterviewResultItem[] = [];
   let officerTurn: (typeof turns)[number] | null = null;
