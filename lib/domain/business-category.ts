@@ -112,8 +112,12 @@ export function failedCategory(
   };
 }
 
-/** Re-map when the business words changed since the stored decision, and only then. */
-export function needsRemap(current: CategoryAssignment | null, inputHash: string | null): boolean {
+/** Re-map when the business words or automatic mapping rules changed. */
+export function needsRemap(
+  current: CategoryAssignment | null,
+  inputHash: string | null,
+  model?: string | null,
+): boolean {
   if (!current) return true;
-  return current.input_hash !== inputHash;
+  return current.input_hash !== inputHash || (model !== undefined && current.model !== model);
 }

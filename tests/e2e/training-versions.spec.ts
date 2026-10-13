@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
-import { loginAs, switchTo } from './helpers';
+import { loginAs, openRecordTab, switchTo } from './helpers';
 import {
   recordIdForLearner,
   seedInProgressAttempt,
@@ -41,6 +41,7 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await page.goto(`/th/admin/dbd-records/${await recordIdForLearner(learner)}`);
   await expect(page.getByTestId('training-versions')).toHaveAttribute('data-active', '1');
   await expect(page.getByTestId('version-complete')).toBeVisible();
+  await openRecordTab(page, 'interview');
   await page.locator('select[name="categoryKey"]').selectOption('fashion_accessories');
   await page.getByTestId('category-set').click();
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'mapped');

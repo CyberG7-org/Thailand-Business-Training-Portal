@@ -584,15 +584,15 @@
       },
       "category": {
         "title": "Business category",
-        "auto": "chosen automatically ({confidence}% confidence)",
+        "auto": "chosen automatically from the business answers",
         "manual": "chosen by a person",
         "unmapped": "No category yet",
         "errors": {
-          "no_text": "No business description was read from the Facebook or website page",
+          "no_text": "Enter what the business does or sells in Company details",
           "not_configured": "Automatic mapping is switched off",
           "no_categories": "The category list is empty",
           "choose-category": "Choose a category to set the bank interview figures",
-          "failed": "Automatic mapping failed; choose one or map again"
+          "failed": "Automatic mapping failed; check the business answers or choose a category"
         },
         "choose": "Choose the category",
         "none": "Choose…",

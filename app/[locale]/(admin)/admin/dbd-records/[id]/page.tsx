@@ -181,8 +181,8 @@ export default async function DbdRecordPage({
                   <p className="text-sm text-ink-700">
                     This business-profile image is not an official certificate. The first director
                     is used as the training answer for signing authority; verify it before saving.
-                    The business category is suggested from the description and products below;
-                    check it before using the illustrative financial estimates.
+                    The business category is selected from the description and products below. You
+                    can correct it in Bank Interview before using the illustrative estimates.
                   </p>
                   {signedImage?.signedUrl && (
                     <a
@@ -222,11 +222,6 @@ export default async function DbdRecordPage({
                 documentNames={documents.map((d) => d.original_name)}
                 imageSource={Boolean(sourceImage)}
               />
-              <CategoryPanel
-                recordId={record.id}
-                assignment={structured.category ?? null}
-                options={BUSINESS_NATURES.map(([key, label]) => ({ key, label }))}
-              />
               <LinksForm
                 recordId={record.id}
                 website={record.website}
@@ -242,6 +237,11 @@ export default async function DbdRecordPage({
           ),
           interview: (
             <div className="grid gap-4">
+              <CategoryPanel
+                recordId={record.id}
+                assignment={structured.category ?? null}
+                options={BUSINESS_NATURES.map(([key, label]) => ({ key, label }))}
+              />
               <InterviewForm figures={filled} />
             </div>
           ),

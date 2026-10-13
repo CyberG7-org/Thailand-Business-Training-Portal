@@ -195,7 +195,8 @@ export async function refreshDerivedFacts(
         deps.mapper &&
         (options.remapCategory ||
           (category?.source !== 'manual' &&
-            (needsRemap(category, hash) || (category?.key && !businessNature(category.key)))))
+            (needsRemap(category, hash, deps.mapper.model) ||
+              (category?.key && !businessNature(category.key)))))
       ) {
         try {
           const result = await deps.mapper.map({

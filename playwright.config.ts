@@ -17,7 +17,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     // Real provider keys in .env.local must never be used by the suite (cost, and the fixtures
-    // are blank documents); every adapter runs its fake.
+    // are blank documents); external adapters run their fakes, category selection uses local rules.
     env: {
       ...process.env,
       EXTRACTION_PROVIDER: 'fake',
@@ -26,7 +26,7 @@ export default defineConfig({
       INTERVIEW_PROVIDER: 'fake',
       QUESTION_GEN_PROVIDER: 'fake',
       VECTOR_PROVIDER: 'fake',
-      CATEGORY_MAP_PROVIDER: 'fake',
+      CATEGORY_MAP_PROVIDER: 'rules',
     },
   },
   projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
