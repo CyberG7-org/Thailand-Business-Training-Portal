@@ -181,14 +181,14 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | What the company actually does | {nature_of_business} |
 | Products or services | {products_services} |
 | Why the company was established | {business_purpose} |
-| Main customers | {main_clients} — {clients_location} |
-| Where customers are found | {customer_channels} |
+| Main customers | {main_clients} |
+| How the company finds customers | {customer_channels} |
 | Main suppliers | {main_suppliers} — {suppliers_location} |
 | Actual place of business | {business_address} |
 | Registered business categories | {business_categories} |
 | Has business started? | {operations_status} |
 
-**The bank will ask:** What business does the company do? What are its main products or services? Who are its customers, and how do you find them? You can name one correct customer group and one real channel. You do not need to list everything.
+**The bank will ask:** What business does the company do? What are its main products or services? How do you find your customers? For the last question, name one real channel. You do not need to list everything.
 
 **Remember:** the real business must make sense with the registered objectives. If there is no website, do not mention one.`,
       },
@@ -201,14 +201,14 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | บริษัททำอะไรจริง | {nature_of_business} |
 | สินค้าหรือบริการ | {products_services} |
 | เหตุผลที่จัดตั้งบริษัท | {business_purpose} |
-| ลูกค้าหลัก | {main_clients} — {clients_location} |
+| ลูกค้าหลัก | {main_clients} |
 | วิธีหาลูกค้า | {customer_channels} |
 | ซัพพลายเออร์หลัก | {main_suppliers} — {suppliers_location} |
 | สถานที่ทำธุรกิจจริง | {business_address} |
 | ประเภทธุรกิจที่จดทะเบียน | {business_categories} |
 | เริ่มทำธุรกิจแล้วหรือยัง | {operations_status} |
 
-**ธนาคารจะถาม:** บริษัททำธุรกิจอะไร ขายสินค้าหรือบริการหลักอะไร ลูกค้าเป็นใคร และหาลูกค้าอย่างไร ตอบกลุ่มลูกค้าที่ถูกต้องหนึ่งกลุ่มและช่องทางหนึ่งช่องทางก็พอ ไม่ต้องบอกทุกอย่าง
+**ธนาคารจะถาม:** บริษัททำธุรกิจอะไร ขายสินค้าหรือบริการหลักอะไร บริษัทหาลูกค้าอย่างไรคะ สำหรับคำถามสุดท้าย บอกวิธีหาลูกค้าจริงเพียงหนึ่งช่องทางก็พอ ไม่ต้องบอกทุกช่องทาง
 
 **จำไว้:** ธุรกิจจริงต้องสอดคล้องกับวัตถุประสงค์ ถ้าไม่มีเว็บไซต์ ไม่ต้องพูดถึงเว็บไซต์`,
       },
@@ -221,14 +221,14 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | 公司实际做什么 | {nature_of_business} |
 | 产品或服务 | {products_services} |
 | 公司成立的目的 | {business_purpose} |
-| 主要客户 | {main_clients} — {clients_location} |
+| 主要客户 | {main_clients} |
 | 如何寻找客户 | {customer_channels} |
 | 主要供应商 | {main_suppliers} — {suppliers_location} |
 | 实际经营地点 | {business_address} |
 | 注册业务类别 | {business_categories} |
 | 是否已开始经营 | {operations_status} |
 
-**银行会问：** 公司做什么业务？主要销售什么？客户是谁，您如何找到他们？说出一个正确的客户群体和一个获客渠道即可，不必列出全部。
+**银行会问：** 公司做什么业务？主要销售什么？公司如何寻找客户？最后一个问题只需说出一个真实的获客渠道，不必列出全部。
 
 **记住：** 实际业务应与注册目的相符。没有网站时，不要提到网站。`,
       },
@@ -241,14 +241,14 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | Apa yang syarikat sebenarnya lakukan | {nature_of_business} |
 | Produk atau perkhidmatan | {products_services} |
 | Mengapa syarikat ditubuhkan | {business_purpose} |
-| Pelanggan utama | {main_clients} — {clients_location} |
+| Pelanggan utama | {main_clients} |
 | Cara mencari pelanggan | {customer_channels} |
 | Pembekal utama | {main_suppliers} — {suppliers_location} |
 | Tempat perniagaan sebenar | {business_address} |
 | Kategori perniagaan berdaftar | {business_categories} |
 | Sudah mula berniaga? | {operations_status} |
 
-**Bank akan bertanya:** Apakah perniagaan syarikat? Apakah produk atau perkhidmatan utama? Siapa pelanggan dan bagaimana anda mencari mereka? Sebut satu kumpulan pelanggan dan satu saluran yang betul; tidak perlu senaraikan semuanya.
+**Bank akan bertanya:** Apakah perniagaan syarikat? Apakah produk atau perkhidmatan utama? Bagaimana syarikat mencari pelanggan? Untuk soalan terakhir, sebut satu saluran sebenar sahaja; tidak perlu senaraikan semuanya.
 
 **Ingat:** perniagaan sebenar mesti sepadan dengan tujuan berdaftar. Jika tiada laman web, jangan sebut laman web.`,
       },

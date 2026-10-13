@@ -134,12 +134,12 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
   {
     concept: 'customer_origin',
     question: {
-      th: 'ลูกค้าของบริษัทเป็นใคร และบริษัทหาลูกค้าอย่างไรคะ',
-      en: 'Who are your customers, and how do you find them?',
-      zh: '公司的客户是谁？您如何找到他们？',
-      ms: 'Siapa pelanggan anda dan bagaimana anda mencari mereka?',
+      th: 'บริษัทหาลูกค้าอย่างไรคะ',
+      en: 'How do you find your customers?',
+      zh: '公司如何寻找客户？',
+      ms: 'Bagaimana syarikat mencari pelanggan?',
     },
-    facts: ['customer_profile', 'client_origin'],
+    facts: ['client_origin'],
     cardKey: 'bank-interview-3-business',
   },
   {

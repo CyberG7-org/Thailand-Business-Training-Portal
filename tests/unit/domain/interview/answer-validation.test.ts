@@ -89,9 +89,11 @@ describe('readiness answers expressed in the learner’s own words', () => {
     ).toBe('correct');
   });
 
-  it('requires an identifiable customer group as well as an acquisition channel', () => {
-    const expected = 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย / Facebook และลูกค้าแนะนำ';
-    expect(mark('customer_origin', expected, 'ลูกค้า Facebook')).toBe('wrong');
-    expect(mark('customer_origin', expected, 'คนทั่วไปมาจากการบอกต่อ')).toBe('correct');
+  it('accepts one documented way of finding customers without requiring a customer group', () => {
+    const expected = 'Facebook และลูกค้าแนะนำ';
+    expect(mark('customer_origin', expected, 'หาลูกค้าผ่าน Facebook')).toBe('correct');
+    expect(mark('customer_origin', expected, 'ได้ลูกค้าจากการบอกต่อ')).toBe('correct');
+    expect(mark('customer_origin', expected, 'ส่วนใหญ่เป็นลูกค้าธุรกิจ')).toBe('wrong');
+    expect(mark('customer_origin', expected, 'จากเว็บไซต์')).toBe('wrong');
   });
 });

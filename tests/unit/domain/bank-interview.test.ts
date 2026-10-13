@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { TEMPLATE_FIELDS } from '@/lib/domain/assessment/template';
+import {
+  renderTemplateLenient,
+  TEMPLATE_FIELDS,
+  type TemplateRecord,
+} from '@/lib/domain/assessment/template';
 import {
   BANK_INTERVIEW_CONCEPTS,
   REQUIRED_INTERVIEW_FIELDS,
@@ -55,6 +59,24 @@ describe('bank-interview concepts', () => {
       expect(body).toContain('{average_transaction}');
       expect(body).not.toContain('{revenue_basis}');
     }
+  });
+
+  it('teaches how to find customers without repeating the customer profile', () => {
+    const card = BANK_INTERVIEW_CARDS.find(
+      (item) => item.contentKey === 'bank-interview-3-business',
+    )!;
+    const record = {
+      main_clients: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+      clients_location: 'ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย',
+      customer_channels: 'without_website',
+    } as TemplateRecord;
+    const thai = renderTemplateLenient(card.localizations.th.body, record, 'th');
+    const english = renderTemplateLenient(card.localizations.en.body, record, 'en');
+    expect(thai.match(/ลูกค้าธุรกิจและลูกค้าบุคคลทั่วไปในประเทศไทย/g)).toHaveLength(1);
+    expect(thai).toContain('บริษัทหาลูกค้าอย่างไร');
+    expect(thai).toContain('หาลูกค้าผ่าน Facebook และ TikTok');
+    expect(english).toContain('How do you find your customers?');
+    expect(english).not.toContain('Who are your customers, and how do you find them?');
   });
 
   it('matches the learner to a shareholder by name and derives the percentage', () => {

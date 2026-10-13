@@ -90,8 +90,8 @@ describe('buildReadinessPlan v3', () => {
     expect(plan.items.every((item) => item.core === false)).toBe(true);
     expect(plan.items.every((item) => item.question.length > 8)).toBe(true);
     expect(plan.items[9]).toMatchObject({
-      question: 'ลูกค้าของบริษัทเป็นใคร และบริษัทหาลูกค้าอย่างไรคะ',
-      expected: expect.stringContaining('ลูกค้าธุรกิจ'),
+      question: 'บริษัทหาลูกค้าอย่างไรคะ',
+      expected: 'Facebook, TikTok, เว็บไซต์, ลูกค้าแนะนำ และลูกค้าที่เข้ามาที่ร้าน',
     });
     const shopPlan = buildReadinessPlan({
       ...facts,
@@ -99,8 +99,8 @@ describe('buildReadinessPlan v3', () => {
       client_origin: 'Facebook และหน้าร้าน',
     });
     const customerItem = shopPlan.items.find((item) => item.concept === 'customer_origin')!;
-    expect(evaluateReadinessAnswer(customerItem, 'ร้านค้าปลีกผ่าน Facebook')).toBe('correct');
-    expect(evaluateReadinessAnswer(customerItem, 'Facebook')).toBe('wrong');
+    expect(evaluateReadinessAnswer(customerItem, 'หาลูกค้าผ่าน Facebook')).toBe('correct');
+    expect(evaluateReadinessAnswer(customerItem, 'ขายเสื้อผ้าให้ร้านค้าปลีก')).toBe('wrong');
   });
 
   it('has a readable label in every language and an explicit study card for every question', () => {

@@ -195,8 +195,8 @@ describe('FakeInterview', () => {
     expect(await answer('attendee_identity', 'ตัวอย่าง ทดสอบ เป็นกรรมการ')).toBe('correct');
     expect(await answer('registration_date', '10 เมษายน 2026')).toBe('correct');
     expect(await answer('account_purpose', 'รับเงินลูกค้าและจ่ายค่าใช้จ่ายบริษัท')).toBe('correct');
-    expect(await answer('customer_origin', 'ลูกค้าบุคคลทั่วไปจาก Facebook')).toBe('correct');
-    expect(await answer('customer_origin', 'Facebook')).toBe('wrong');
+    expect(await answer('customer_origin', 'หาลูกค้าจาก Facebook')).toBe('correct');
+    expect(await answer('customer_origin', 'ลูกค้าบุคคลทั่วไปในประเทศไทย')).toBe('wrong');
     expect(await answer('monthly_revenue', 'ประมาณ 600,000 บาท')).toBe('correct');
     expect(await answer('monthly_transactions', 'ประมาณ 27 รายการ')).toBe('correct');
     expect(await answer('average_transaction', 'ประมาณ 20,000 บาท')).toBe('correct');
