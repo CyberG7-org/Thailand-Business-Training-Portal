@@ -21,9 +21,30 @@ const numbers = (value: string) =>
     .map((part) => Number(part.replaceAll(',', '')))
     .filter((number) => Number.isFinite(number));
 
+const firstAmount = (value: string): number | undefined => {
+  const plain = arabicDigits(value);
+  const match = /\d[\d,]*(?:\.\d+)?/.exec(plain);
+  if (!match) return undefined;
+  const amount = Number(match[0].replaceAll(',', ''));
+  const suffix = plain
+    .slice(match.index + match[0].length)
+    .trimStart()
+    .toLowerCase();
+  const multiplier = /^(ล้าน|million\b|m\b)/.test(suffix)
+    ? 1_000_000
+    : /^(แสน)/.test(suffix)
+      ? 100_000
+      : /^(หมื่น)/.test(suffix)
+        ? 10_000
+        : /^(พัน|thousand\b|k\b)/.test(suffix)
+          ? 1_000
+          : 1;
+  return amount * multiplier;
+};
+
 const withinTwentyPercent = (answer: string, expected: string) => {
-  const actual = numbers(answer)[0];
-  const target = numbers(expected)[0];
+  const actual = firstAmount(answer);
+  const target = firstAmount(expected);
   return actual !== undefined && target !== undefined && Math.abs(actual - target) <= target * 0.2;
 };
 
@@ -48,6 +69,12 @@ const looseMeaning = (answer: string, expected: string) => {
   );
 };
 
+const businessMeaning = (answer: string, expected: string) => {
+  const stripGeneric = (value: string) =>
+    value.replace(/บริษัท|ธุรกิจ|ผลิตภัณฑ์|สินค้า|บริการ|จำหน่าย|ขาย|ทำ/g, '');
+  return looseMeaning(stripGeneric(answer), stripGeneric(expected));
+};
+
 const addressMatches = (answer: string, expected: string) => {
   const target = compact(expected);
   const parts = arabicDigits(answer)
@@ -66,11 +93,25 @@ const signingAuthorityMatches = (answer: string, expected: string) => {
   const target = compact(expected)
     .replaceAll('ลงลายมือชื่อ', 'ลงนาม')
     .replaceAll('สำคัญของบริษัท', '');
+  const [directors = '', authority = ''] = expected.split(' / ');
+  const names = directors
+    .split(',')
+    .map((name) => compact(name).replace(/^(นางสาว|นาย|นาง|ดร|คุณ)/, ''));
+  const namedInAuthority = names.filter(
+    (name) => name.length >= 4 && compact(authority).includes(name),
+  );
+  const allowedNames = namedInAuthority.length ? namedInAuthority : names;
+  const namedSigner = allowedNames.some((name) => name.length >= 4 && actual.includes(name));
+  const roleSigner = namedInAuthority.length === 0 && /กรรมการ/.test(actual);
   const oneDirectorRequired = /กรรมการหนึ่งคน/.test(target);
+  const twoDirectorsRequired = /กรรมการสองคน/.test(target);
   const sealRequired = /ตรา/.test(target);
   return (
-    (!oneDirectorRequired || /กรรมการหนึ่งคน/.test(actual)) &&
-    /ลงนาม/.test(actual) &&
+    (namedSigner || roleSigner) &&
+    (!oneDirectorRequired || namedSigner || /กรรมการ(หนึ่งคน|คนเดียว)/.test(actual)) &&
+    (!twoDirectorsRequired ||
+      /กรรมการ(สองคน|สองท่าน|2คน)/.test(actual) ||
+      names.filter((name) => name.length >= 4 && actual.includes(name)).length >= 2) &&
     (!sealRequired || /ตรา/.test(actual))
   );
 };
@@ -83,39 +124,61 @@ const attendeeMatches = (answer: string, expected: string) => {
 };
 
 const dateMatches = (answer: string, expected: string) => {
-  const actual = compact(answer);
-  const target = compact(expected);
-  const targetNumbers = numbers(expected);
-  const actualNumbers = numbers(answer);
-  const targetYear = targetNumbers.find((number) => number >= 1900);
-  const actualYear = actualNumbers.find((number) => number >= 1900);
-  if (!targetYear || !actualYear) return false;
-  const yearMatches =
-    actualYear === targetYear || actualYear === targetYear - 543 || actualYear === targetYear + 543;
-  const targetDay = targetNumbers.find((number) => number >= 1 && number <= 31);
-  const actualDay = actualNumbers.find((number) => number >= 1 && number <= 31);
-  const months = [
-    'มกราคม',
-    'กุมภาพันธ์',
-    'มีนาคม',
-    'เมษายน',
-    'พฤษภาคม',
-    'มิถุนายน',
-    'กรกฎาคม',
-    'สิงหาคม',
-    'กันยายน',
-    'ตุลาคม',
-    'พฤศจิกายน',
-    'ธันวาคม',
+  const monthNames = [
+    ['มกราคม', 'ม.ค.', 'january', 'jan'],
+    ['กุมภาพันธ์', 'ก.พ.', 'february', 'feb'],
+    ['มีนาคม', 'มี.ค.', 'march', 'mar'],
+    ['เมษายน', 'เม.ย.', 'april', 'apr'],
+    ['พฤษภาคม', 'พ.ค.', 'may'],
+    ['มิถุนายน', 'มิ.ย.', 'june', 'jun'],
+    ['กรกฎาคม', 'ก.ค.', 'july', 'jul'],
+    ['สิงหาคม', 'ส.ค.', 'august', 'aug'],
+    ['กันยายน', 'ก.ย.', 'september', 'sep'],
+    ['ตุลาคม', 'ต.ค.', 'october', 'oct'],
+    ['พฤศจิกายน', 'พ.ย.', 'november', 'nov'],
+    ['ธันวาคม', 'ธ.ค.', 'december', 'dec'],
   ];
-  const month = months.find((candidate) => target.includes(candidate));
-  return yearMatches && targetDay === actualDay && Boolean(month && actual.includes(month));
+  const dateParts = (value: string) => {
+    const numeric = arabicDigits(value).match(/\b(\d{1,4})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
+    if (numeric) {
+      const yearFirst = numeric[1].length === 4;
+      return {
+        day: Number(yearFirst ? numeric[3] : numeric[1]),
+        month: Number(numeric[2]),
+        year: Number(yearFirst ? numeric[1] : numeric[3]),
+      };
+    }
+    const values = numbers(value);
+    const lower = value.toLowerCase();
+    const index = monthNames.findIndex((aliases) =>
+      aliases.some((alias) =>
+        /^[a-z]/.test(alias) ? new RegExp(`\\b${alias}\\b`).test(lower) : lower.includes(alias),
+      ),
+    );
+    return {
+      day: values.find((number) => number >= 1 && number <= 31),
+      month: index < 0 ? null : index + 1,
+      year: values.find((number) => number >= 1900),
+    };
+  };
+  const target = dateParts(expected);
+  const actual = dateParts(answer);
+  if (!target.year || !actual.year || !target.day || !target.month) return false;
+  const yearMatches =
+    actual.year === target.year ||
+    actual.year === target.year - 543 ||
+    actual.year === target.year + 543;
+  return yearMatches && target.day === actual.day && target.month === actual.month;
 };
 
 const accountPurposeMatches = (answer: string) => {
   const actual = compact(answer);
   const receives = /รับ/.test(actual) && /(ลูกค้า|ชำระ|ยอดขาย)/.test(actual);
-  const pays = /จ่าย/.test(actual) && /(ค่าใช้จ่าย|บริษัท|กิจการ|ธุรกิจ)/.test(actual);
+  const pays =
+    /จ่าย/.test(actual) &&
+    /(ค่าใช้จ่าย|บริษัท|กิจการ|ธุรกิจ|ค่าเช่า|ค่าสินค้า|ค่าจ้าง|เงินเดือน|ค่าดำเนินการ)/.test(
+      actual,
+    );
   return receives && pays;
 };
 
@@ -142,7 +205,7 @@ const customerOriginMatches = (answer: string, expected: string) => {
   const customerMatches =
     !profileText ||
     customerTypes.some((words) => matchesGroup(profileText, words)) ||
-    looseMeaning(answer, profile);
+    looseMeaning(answer.replaceAll('ลูกค้า', ''), profile.replaceAll('ลูกค้า', ''));
   const channelMatches = channels.some((words) => matchesGroup(originText, words));
   return customerMatches && channelMatches;
 };
@@ -154,7 +217,7 @@ export function evaluateReadinessAnswer(item: PlanItem, answer: string): BinaryR
   let correct = false;
   switch (item.concept) {
     case 'company_name':
-      correct = compact(answer) === compact(expected);
+      correct = compact(answer.replace(/\([^)]*[a-z][^)]*\)/gi, '')).endsWith(compact(expected));
       break;
     case 'registration_number':
       correct =
@@ -165,7 +228,7 @@ export function evaluateReadinessAnswer(item: PlanItem, answer: string): BinaryR
       break;
     case 'actual_business':
     case 'products_services':
-      correct = looseMeaning(answer, expected);
+      correct = businessMeaning(answer, expected);
       break;
     case 'authorized_representative':
       correct = signingAuthorityMatches(answer, expected);
