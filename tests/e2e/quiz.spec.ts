@@ -73,12 +73,14 @@ test('admin authors a personalized question; learner takes the quiz with instant
 
   // Switching the UI language mid-attempt shows the same questions in that language (D50).
   const thaiPrompt = (await first.getByTestId('question-prompt').textContent())!;
-  await page.getByRole('button', { name: 'English' }).click();
+  await page.getByTestId('language-menu-button').click();
+  await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(attemptUrl.replace('/th/', '/en/'));
   const firstEn = page.getByTestId('question-card-0').getByTestId('question-prompt');
   await expect(firstEn).not.toHaveText(thaiPrompt);
   await expect(firstEn).toHaveText(/[A-Za-z]/);
-  await page.getByRole('button', { name: 'ไทย' }).click();
+  await page.getByTestId('language-menu-button').click();
+  await page.getByTestId('lang-th').click();
   await expect(page).toHaveURL(attemptUrl);
   await expect(page.getByTestId('question-card-0').getByTestId('question-prompt')).toHaveText(
     thaiPrompt,
