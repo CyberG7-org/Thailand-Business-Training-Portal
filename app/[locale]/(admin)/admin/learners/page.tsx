@@ -48,7 +48,7 @@ export default async function LearnerRecordPage({
                 <th>{t('columns.loginId')}</th>
                 <th>{t('columns.company')}</th>
                 <th>{t('columns.director')}</th>
-                <th>{t('columns.issuedOn')}</th>
+                <th>{t('columns.registeredOn')}</th>
                 <th>{t('columns.mcq')}</th>
                 <th>{t('columns.chatbot')}</th>
                 <th>{t('columns.appointment')}</th>
@@ -86,8 +86,10 @@ export default async function LearnerRecordPage({
                       )}
                     </td>
                     <td>{r.company?.director ?? '—'}</td>
-                    <td data-testid={`issued-${r.loginId}`} className="whitespace-nowrap">
-                      {r.company?.issuedOn ? formatDate(r.company.issuedOn, locale as Locale) : '—'}
+                    <td data-testid={`registered-${r.loginId}`} className="whitespace-nowrap">
+                      {r.company?.registeredOn
+                        ? formatDate(r.company.registeredOn, locale as Locale)
+                        : '—'}
                     </td>
                     <td data-testid={`mcq-${r.loginId}`}>
                       <ResultTag

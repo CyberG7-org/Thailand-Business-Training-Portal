@@ -13,8 +13,8 @@ export type CompanyRow = {
   id: string;
   name: string | null;
   director: string | null;
-  /** The certificate's issue date, already formatted for the reader's language. */
-  issuedOn: string | null;
+  /** The registration date, already formatted for the reader's language. */
+  registeredOn: string | null;
   status: CompanyStatus;
   /** The owning team's code; only the owner, who sees every team, gets the column. */
   teamCode: string | null;
@@ -152,7 +152,7 @@ export function CompaniesPanel({
                   <th className="md:pl-6">{t('columns.company')}</th>
                   {showTeam && <th>{t('columns.team')}</th>}
                   <th>{t('columns.director')}</th>
-                  <th>{t('columns.issuedOn')}</th>
+                  <th>{t('columns.registeredOn')}</th>
                   <th>{t('columns.status')}</th>
                   <th className="md:pr-6">{t('columns.learner')}</th>
                   <th>
@@ -181,7 +181,7 @@ export function CompaniesPanel({
                         </td>
                       )}
                       <td className="align-middle text-ink-700">{r.director ?? '—'}</td>
-                      <td className="align-middle whitespace-nowrap">{r.issuedOn ?? '—'}</td>
+                      <td className="align-middle whitespace-nowrap">{r.registeredOn ?? '—'}</td>
                       <td className="align-middle">
                         <span
                           data-testid={`company-status-${r.id}`}

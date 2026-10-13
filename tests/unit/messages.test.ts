@@ -32,4 +32,10 @@ describe('message catalogs', () => {
       }
     }
   });
+  it('labels both company tables with the registration date', () => {
+    expect(en.admin.learners.columns.registeredOn).toBe('Registration Date');
+    expect(en.admin.createDbd.columns.registeredOn).toBe('Registration Date');
+    expect(th.admin.learners.columns.registeredOn).toBe('วันที่จดทะเบียน');
+    expect(zh.admin.createDbd.columns.registeredOn).toBe('注册日期');
+  });
 });
