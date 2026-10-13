@@ -45,11 +45,13 @@ test('a learner with no assignment sees the no-company message and every stage l
 test('the admin sees each learner on the Learner Record, with or without a company', async ({
   page,
 }) => {
-  const assigned = await seedLearnerWithCompany('บริษัท ความคืบหน้า จำกัด', '2026-07-13');
+  const assigned = await seedLearnerWithCompany('บริษัท ความคืบหน้า จำกัด', '2026-07-13', {
+    registered_on: '2026-05-07',
+  });
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/learners');
   await expect(page.getByTestId(`company-${assigned}`)).toHaveText('บริษัท ความคืบหน้า จำกัด');
-  await expect(page.getByTestId(`issued-${assigned}`)).toHaveText('13 กรกฎาคม 2569');
+  await expect(page.getByTestId(`registered-${assigned}`)).toHaveText('7 พฤษภาคม 2569');
   // Nothing taken yet: no result and nothing to open.
   await expect(page.getByTestId(`mcq-${assigned}`)).toHaveText('—');
   await expect(page.getByTestId(`chatbot-${assigned}`)).toHaveText('—');

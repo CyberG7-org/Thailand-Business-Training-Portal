@@ -105,7 +105,7 @@ export default async function CreateLearnerAndDbdPage({
     director: Array.isArray(r.directors)
       ? ((r.directors[0] as { name_th?: string } | undefined)?.name_th ?? null)
       : null,
-    issuedOn: r.issued_on ? formatDate(r.issued_on, locale as Locale) : null,
+    registeredOn: r.registered_on ? formatDate(r.registered_on, locale as Locale) : null,
     status: companyStatus(r, reading.get(r.id) ?? null),
     teamCode: r.team_id ? (teamCodeOf?.get(r.team_id) ?? null) : null,
     learner: learnerOf(r.id),

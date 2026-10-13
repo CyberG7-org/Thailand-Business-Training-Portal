@@ -4,14 +4,16 @@ import { loginAs } from './helpers';
 import { seedExamWithAnswer, seedInterviewWithTurns, seedLearnerWithCompany } from './seed';
 
 /**
- * D82: the Learner Record — Login ID, company (to its DBD record), DBD issue date, MCQ and
+ * D82: the Learner Record — Login ID, company (to its DBD record), registration date, MCQ and
  * Chatbot results (to their histories and full reviews), appointment — and no Back or Home.
  */
 test('a learner’s MCQ attempts and Chatbot conversations open from the Learner Record', async ({
   page,
 }) => {
   const company = `บริษัท บันทึกผลสอบ ${Date.now()} จำกัด`;
-  const learner = await seedLearnerWithCompany(company, '2026-04-09');
+  const learner = await seedLearnerWithCompany(company, '2026-06-09', {
+    registered_on: '2026-05-07',
+  });
   await seedExamWithAnswer(learner, 1, 'fail');
   const prompt = await seedExamWithAnswer(learner, 2, 'pass');
   await seedInterviewWithTurns(learner, 'not_ready', 'ไม่ทราบค่ะ');
@@ -26,7 +28,7 @@ test('a learner’s MCQ attempts and Chatbot conversations open from the Learner
     'href',
     /\/th\/admin\/users\/[0-9a-f-]{36}$/,
   );
-  await expect(page.getByTestId(`issued-${learner}`)).toHaveText('9 เมษายน 2569');
+  await expect(page.getByTestId(`registered-${learner}`)).toHaveText('7 พฤษภาคม 2569');
   await expect(page.getByTestId(`mcq-${learner}`)).toHaveText('ผ่าน');
   await expect(page.getByTestId(`chatbot-${learner}`)).toHaveText('ผ่าน');
   await expect(page.getByTestId(`appointment-${learner}`)).toHaveText('—');
