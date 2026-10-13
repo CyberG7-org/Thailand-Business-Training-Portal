@@ -1,22 +1,29 @@
-import { describe, expect, it } from 'vitest';
-import { resolveInterviewProvider } from '@/lib/integrations/interview';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getInterviewProvider, resolveInterviewProvider } from '@/lib/integrations/interview';
 
 describe('resolveInterviewProvider', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   it('uses fake locally when no key is configured, even if Anthropic is configured elsewhere', () => {
-    expect(resolveInterviewProvider({ NODE_ENV: 'development', ANTHROPIC_API_KEY: 'key' })).toBe(
-      'fake',
-    );
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('GEMINI_API_KEY', '');
+    vi.stubEnv('ANTHROPIC_API_KEY', 'key');
+    expect(resolveInterviewProvider()).toBe('fake');
   });
 
-  it('selects Gemini when the AI Studio key is present', () => {
-    expect(resolveInterviewProvider({ GEMINI_API_KEY: 'key', NODE_ENV: 'production' })).toBe(
-      'gemini',
-    );
+  it('uses the local officer in production even when an AI Studio key is present', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('GEMINI_API_KEY', 'key');
+    vi.stubEnv('INTERVIEW_PROVIDER', 'gemini');
+    expect(resolveInterviewProvider()).toBe('fake');
+    expect(getInterviewProvider().name).toBe('fake');
   });
 
-  it('turns off a requested Gemini interview when its key is missing', () => {
-    expect(resolveInterviewProvider({ INTERVIEW_PROVIDER: 'gemini', NODE_ENV: 'production' })).toBe(
-      'off',
-    );
+  it('keeps the local officer available in production without any AI key', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('GEMINI_API_KEY', '');
+    vi.stubEnv('INTERVIEW_PROVIDER', '');
+    expect(resolveInterviewProvider()).toBe('fake');
+    expect(getInterviewProvider().name).toBe('fake');
   });
 });

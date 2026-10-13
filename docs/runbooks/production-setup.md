@@ -71,9 +71,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | ElevenLabs | Thai read-aloud; `TTS_PROVIDER=off` to disable |
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |
-   | `GEMINI_API_KEY` | Google AI Studio API key | server-side company-image extraction, cached company-fact translations, and readiness interview; never expose it as a `NEXT_PUBLIC_` variable |
-   | `INTERVIEW_PROVIDER` | `gemini` | selects the Google AI Studio bank officer; without a Gemini key this resolves to `off` |
-   | `GEMINI_INTERVIEW_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for interview turns and closing narrative |
+   | `GEMINI_API_KEY` | Google AI Studio API key | server-side company-image extraction and cached company-fact translations; the readiness interview does not use it. Never expose it as a `NEXT_PUBLIC_` variable |
    | `GEMINI_FACT_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for one-time English/Chinese/Malay translations per pinned company fact set; apply migrations `20261012015000_company_fact_translations.sql` and `20261012020000_malay_language.sql` before deploying |
    | `GEMINI_QUIZ_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for Malay translations of frozen quiz questions; requires `GEMINI_API_KEY` |
    | `GEMINI_COMPANY_IMAGE_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for reading the uploaded company image |
@@ -82,7 +80,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `DIRECT_READ_MAX_PAGES` | optional, default 20 | documents with more pages are never sent whole to the model; they fill in from their transcripts once indexed (P14c); with `VECTOR_PROVIDER=off` documents travel whole up to 100 pages instead |
    | `TRANSCRIPT_SWEEP_PAGES` | optional, default 10 | transcript pages per list-sweep call when filling a record from an oversized document (P14c); lower it if sweeps report `too_large` |
 
-   In production external adapters are **off** unless their keys are present (never "fake"); category mapping is the local `rules` adapter by default. The `/api/health` endpoint reports which provider each adapter resolved to.
+   In production external adapters are **off** unless their keys are present. The readiness interview always uses its local deterministic officer, and category mapping uses the local `rules` adapter by default. The `/api/health` endpoint reports which provider each adapter resolved to.
 3. Cron: `vercel.json` schedules `/api/cron/notifications` and `/api/cron/index` every minute. Confirm both appear under Project → Settings → Cron Jobs after the first deploy.
 4. Node.js: Project → Settings → General → Node.js Version = **22.x** (the Pinecone SDK requires Node ≥ 22).
 5. Domain: attach `<your-domain>`; Supabase Site URL must match.
@@ -111,10 +109,10 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
 5. After an upload the fields fill in within about 1–3 minutes (D46: the cron reads the pack; reload the record page) — the page says *reading in the background* meanwhile.
 6. Uploads never pass through Vercel (D45): the browser sends each PDF straight to the `dbd-documents` bucket, so the `NEXT_PUBLIC_SUPABASE_URL` must be reachable from admins' browsers (it is, by design) and the bucket's `file_size_limit` (30 MB) is the only size cap.
 
-### Readiness interview (the AI bank assessor)
-- Add the Google AI Studio key as `GEMINI_API_KEY` and set `INTERVIEW_PROVIDER=gemini`. Anthropic remains in use for extraction and other AI adapters, but no longer auto-selects the interview. The suites force `fake`.
+### Readiness interview (local Thai officer)
+- No interview API key is required. The interview uses the same local, rules-based officer in development and production, even if `GEMINI_API_KEY` or an old `INTERVIEW_PROVIDER` value is set. Questions, follow-ups, scoring and the closing summary are produced without an external AI call.
 - On a project that ran the voice call, delete the `VAPI_*` and `NEXT_PUBLIC_APP_URL` variables in Vercel and the empty `recordings` bucket in Supabase — the call is gone (D64).
-- Have the owner read a real session's transcript on staging (Admin → Readiness interviews) before the pilot: the persona lives in `lib/integrations/interview/claude.ts`.
+- Have the owner read a real session's transcript on staging (Admin → Readiness interviews) before the pilot: the local officer and answer rules live in `lib/integrations/interview/fake.ts` and `lib/domain/interview/answer-validation.ts`.
 
 ## 4. Content before go-live
 

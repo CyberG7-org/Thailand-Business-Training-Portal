@@ -38,7 +38,7 @@ export async function startInterviewAction(
   const user = await requireUser(locale);
   let sessionId: string;
   try {
-    sessionId = (await startOrResumeInterview(user.id, locale)).session.id;
+    sessionId = (await startOrResumeInterview(user.id)).session.id;
   } catch (e) {
     console.error('interview.start.failed', interviewErrorDiagnostic(e));
     return { error: code(e) };
@@ -54,12 +54,7 @@ export async function sendMessageAction(
 ): Promise<SendResult> {
   const user = await requireUser(locale);
   try {
-    const { turns, closed, budget } = await submitLearnerMessage(
-      user.id,
-      sessionId,
-      content,
-      locale as AppLocale,
-    );
+    const { turns, closed, budget } = await submitLearnerMessage(user.id, sessionId, content);
     if (closed) {
       revalidatePath(`/${locale}/interview/${sessionId}`);
       revalidatePath(`/${locale}/dashboard`);

@@ -1507,13 +1507,13 @@
   "interview": {
     "title": "Bank Readiness Interview",
     "intro": "A friendly practice interview using the same company facts you studied.",
-    "thaiOnly": "Answer in Thai, English, Simplified Chinese or Malay.",
+    "thaiOnly": "The officer speaks Thai. Please answer in Thai.",
     "guide": {
       "eyebrow": "Before you start",
       "title": "Practise at your own pace",
       "questions": "Answer 13 short questions",
       "pass": "Get 10 correct to be ready",
-      "language": "Use the language you prefer",
+      "language": "The interview is in Thai",
       "repeat": "Practise as many times as you like (ฝึกได้ไม่จำกัด)",
       "support": "The officer gives you one friendly second chance when an answer needs more detail. This is practice, so take your time."
     },

@@ -183,13 +183,13 @@
   "interview": {
     "title": "Temu Duga Kesediaan Bank",
     "intro": "Latihan temu duga yang mesra menggunakan fakta syarikat yang telah anda pelajari.",
-    "thaiOnly": "Jawab dalam bahasa pilihan anda: Thai, Inggeris, Cina atau Melayu.",
+    "thaiOnly": "Pegawai bercakap dalam bahasa Thai. Sila jawab dalam bahasa Thai.",
     "guide": {
       "eyebrow": "Sebelum bermula",
       "title": "Berlatih mengikut kemampuan anda",
       "questions": "Jawab 13 soalan ringkas",
       "pass": "Jawab 10 dengan betul untuk bersedia",
-      "language": "Gunakan bahasa pilihan anda",
+      "language": "Temu duga dijalankan dalam bahasa Thai",
       "repeat": "Berlatih seberapa kerap yang anda mahu",
       "support": "Pegawai akan memberi satu peluang kedua yang mesra jika jawapan memerlukan butiran lanjut. Luangkan masa anda."
     },

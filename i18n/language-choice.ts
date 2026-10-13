@@ -4,3 +4,8 @@
  * module's exports become client references when imported from server code.
  */
 export const LANGUAGE_CHOICE_COOKIE = 'portal_lang_choice';
+
+/** Malay translations remain stored, but the selector only offers the three supported languages. */
+export function isLanguageOptionAvailable(locale: string): boolean {
+  return locale === 'th' || locale === 'en' || locale === 'zh';
+}

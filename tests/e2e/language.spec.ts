@@ -10,11 +10,9 @@ test('switching language re-renders and persists; the next login lands on it', a
 
   await page.getByTestId('language-menu-button').click();
   await expect(page.getByTestId('lang-ms')).toContainText('Bahasa Melayu');
+  await expect(page.getByTestId('lang-ms')).toBeDisabled();
+  await expect(page.getByTestId('lang-ms')).toHaveAttribute('aria-disabled', 'true');
   await expect(page.getByTestId('lang-th')).toHaveAttribute('aria-checked', 'true');
-  await page.getByTestId('lang-ms').click();
-  await expect(page).toHaveURL(/\/ms\/dashboard$/);
-  await expect(page.locator('html')).toHaveAttribute('lang', 'ms');
-  await page.getByTestId('language-menu-button').click();
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);
   await expect(page.getByRole('heading', { name: `Welcome, ${loginId}` })).toBeVisible();

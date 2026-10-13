@@ -13,7 +13,10 @@ import {
   probingItems,
   questionFor,
 } from '@/lib/domain/interview/plan';
-import { interviewReplyLanguage } from '@/lib/domain/interview/language';
+import {
+  OFFICER_CONVERSATION_LANGUAGE,
+  interviewReplyLanguage,
+} from '@/lib/domain/interview/language';
 import { detectPasted } from '@/lib/domain/interview/pasted';
 import type {
   Assessment,
@@ -323,7 +326,6 @@ function guard(
  */
 export async function startOrResumeInterview(
   userId: string,
-  locale: AppLocale = 'th',
 ): Promise<{ session: InterviewSessionRow; turns: InterviewTurnRow[] }> {
   const officer = provider();
   const gate = await gateFor(userId);
@@ -351,7 +353,7 @@ export async function startOrResumeInterview(
   // The officer speaks before the session exists: a provider failure leaves nothing behind.
   const opening = guard(
     await officer.turn({
-      language: locale,
+      language: OFFICER_CONVERSATION_LANGUAGE,
       facts,
       plan,
       transcript: [],
@@ -362,7 +364,7 @@ export async function startOrResumeInterview(
     plan.items[0] ?? null,
     facts,
     true,
-    locale,
+    OFFICER_CONVERSATION_LANGUAGE,
   );
   const { data: session, error } = await admin
     .from('interview_sessions')
@@ -370,7 +372,7 @@ export async function startOrResumeInterview(
       user_id: userId,
       dbd_record_id: assignment.dbd_record_id,
       status: 'in_progress',
-      language: locale,
+      language: OFFICER_CONVERSATION_LANGUAGE,
       plan: plan as unknown as Json,
       provider: officer.name,
     })
@@ -417,12 +419,12 @@ async function close(
     .eq('id', session.id);
   if (error) throw error;
   try {
-    const sessionLocale: AppLocale =
-      session.language === 'en' || session.language === 'zh' || session.language === 'ms'
-        ? session.language
-        : 'th';
-    const language = interviewReplyLanguage('', transcript, sessionLocale);
-    const narrative = await provider().narrate({ facts, verdict: core, transcript, language });
+    const narrative = await provider().narrate({
+      facts,
+      verdict: core,
+      transcript,
+      language: OFFICER_CONVERSATION_LANGUAGE,
+    });
     if (narrative) {
       await admin
         .from('interview_sessions')
@@ -443,7 +445,6 @@ export async function submitLearnerMessage(
   userId: string,
   sessionId: string,
   content: string,
-  pageLocale?: AppLocale,
 ): Promise<{ turns: InterviewTurnRow[]; closed: boolean; budget: Budget }> {
   const text = content.trim();
   if (text.length === 0 || text.length > MAX_INPUT_CHARS) {
@@ -456,11 +457,7 @@ export async function submitLearnerMessage(
   const { facts } = await factsFor(userId);
   const rows = await turnsOf(sessionId);
   const transcript = toTurns(rows);
-  const sessionLocale: AppLocale =
-    session.language === 'en' || session.language === 'zh' || session.language === 'ms'
-      ? session.language
-      : 'th';
-  const language = interviewReplyLanguage(text, transcript, pageLocale ?? sessionLocale);
+  const language = OFFICER_CONVERSATION_LANGUAGE;
   let plan = session.plan as unknown as InterviewPlan;
   const item = currentItem(plan);
   // Spec §4.2, the second phase: when the last facts item is on the table, the risk officer's

@@ -1,6 +1,9 @@
 import type { AppLocale } from '@/i18n/routing';
 import type { Turn } from './types';
 
+/** The officer speaks Thai even when the page UI or learner message uses another language. */
+export const OFFICER_CONVERSATION_LANGUAGE: AppLocale = 'th';
+
 /** Use the learner's latest written language; numbers and names inherit the page language. */
 export function interviewReplyLanguage(
   message: string,
