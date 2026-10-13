@@ -74,7 +74,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `GEMINI_API_KEY` | Google AI Studio API key | server-side company-image extraction, cached company-fact translations, and readiness interview; never expose it as a `NEXT_PUBLIC_` variable |
    | `INTERVIEW_PROVIDER` | `gemini` | selects the Google AI Studio bank officer; without a Gemini key this resolves to `off` |
    | `GEMINI_INTERVIEW_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for interview turns and closing narrative |
-   | `GEMINI_FACT_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for one-time English/Chinese/Malay translations per pinned company fact set; apply migrations `20261012010000_company_fact_translations.sql` and `20261012020000_malay_language.sql` before deploying |
+   | `GEMINI_FACT_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for one-time English/Chinese/Malay translations per pinned company fact set; apply migrations `20261012015000_company_fact_translations.sql` and `20261012020000_malay_language.sql` before deploying |
    | `GEMINI_QUIZ_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for Malay translations of frozen quiz questions; requires `GEMINI_API_KEY` |
    | `GEMINI_COMPANY_IMAGE_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for reading the uploaded company image |
    | `CATEGORY_MAP_PROVIDER` | `claude` (or unset with the Anthropic key) | maps `nature_of_business` to a business category (P17a) on the same `ANTHROPIC_API_KEY`; `off` to disable — the record page then asks a person to choose |
