@@ -6,7 +6,7 @@ import { formatDate, type ISODate } from '@/lib/domain/thai-date';
 import { bookForLearnerAction } from './actions';
 import { StaffForm } from './staff-form';
 
-const LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
+const LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN', ms: 'ms-MY' };
 
 export async function MonthCalendar({
   learnerId,

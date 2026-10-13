@@ -16,7 +16,7 @@ export type SignInState = { error: 'invalid' | 'disabled' | null };
 const schema = z.object({
   loginId: z.string().trim().refine(isValidLoginId),
   password: z.string().min(1),
-  locale: z.enum(['th', 'en', 'zh']),
+  locale: z.enum(['th', 'en', 'zh', 'ms']),
 });
 
 export async function signInAction(_prev: SignInState, formData: FormData): Promise<SignInState> {

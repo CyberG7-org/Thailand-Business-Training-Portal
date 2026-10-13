@@ -41,7 +41,13 @@ export function pickLocalization(
   material: StudyMaterialWithLocalizations,
   locale: AppLocale,
 ): StudyLocalizationRow | null {
-  return material.study_material_localizations.find((l) => l.language === locale) ?? null;
+  return (
+    material.study_material_localizations.find((l) => l.language === locale) ??
+    (locale === 'ms'
+      ? material.study_material_localizations.find((l) => l.language === 'en')
+      : undefined) ??
+    null
+  );
 }
 
 export type StudyMaterialInput = {
@@ -203,6 +209,7 @@ export async function loadStarterCards(
     }
     for (const language of Object.keys(card.localizations) as AppLocale[]) {
       const loc = card.localizations[language];
+      if (!loc) continue;
       await upsertLocalization(db, materialId, {
         language,
         title: loc.title,

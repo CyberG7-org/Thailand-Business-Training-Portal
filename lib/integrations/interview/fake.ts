@@ -1,4 +1,4 @@
-import { currentItem, isReadinessPlan } from '@/lib/domain/interview/plan';
+import { currentItem, isReadinessPlan, questionFor } from '@/lib/domain/interview/plan';
 import { evaluateReadinessAnswer } from '@/lib/domain/interview/answer-validation';
 import type { Assessment, OfficerTurn } from '@/lib/domain/interview/types';
 import type { InterviewProvider, NarrateInput, TurnInput } from './types';
@@ -58,13 +58,48 @@ export class FakeInterview implements InterviewProvider {
   readonly name = 'fake' as const;
 
   async turn(input: TurnInput): Promise<OfficerTurn> {
+    const language = input.language ?? 'th';
+    const phrases = {
+      th: {
+        hello: 'สวัสดีค่ะ ดิฉันเป็นเจ้าหน้าที่ธนาคาร ขอสอบถามข้อมูลบริษัทนะคะ ',
+        reask: 'ขอถามอีกครั้งนะคะ ',
+        pasted: 'กรุณาตอบด้วยคำพูดของคุณเองนะคะ ',
+        next: 'รับทราบค่ะ ',
+        probing: 'ขอกลับมาที่ข้อนี้อีกครั้งนะคะ ',
+        done: 'ขอบคุณค่ะ ครบทุกข้อแล้ว ธนาคารจะสรุปผลให้นะคะ',
+      },
+      en: {
+        hello: 'Hello, I am the bank officer. I will ask about your company. ',
+        reask: 'Let me ask that again. ',
+        pasted: 'Please answer in your own words. ',
+        next: 'Thank you. ',
+        probing: 'Let us return to this question. ',
+        done: 'Thank you. That is all the questions. The bank will summarise your result.',
+      },
+      zh: {
+        hello: '您好，我是银行工作人员。请回答几个关于您公司的问题。',
+        reask: '请再回答一次。',
+        pasted: '请用您自己的话回答。',
+        next: '谢谢。',
+        probing: '我们再回到这个问题。',
+        done: '谢谢，问题已全部问完。银行将汇总您的结果。',
+      },
+      ms: {
+        hello: 'Helo, saya pegawai bank. Saya akan bertanya tentang syarikat anda. ',
+        reask: 'Boleh saya tanya sekali lagi? ',
+        pasted: 'Sila jawab dengan kata-kata anda sendiri. ',
+        next: 'Terima kasih. ',
+        probing: 'Mari kembali kepada soalan ini. ',
+        done: 'Terima kasih. Semua soalan telah selesai. Pihak bank akan merumuskan keputusan anda.',
+      },
+    }[language];
+    const question = (concept: string, fallback: string) =>
+      questionFor(concept, language, fallback);
     const item = currentItem(input.plan);
     if (input.learnerMessage === null || !item) {
       const first = input.plan.items[0];
       return {
-        say:
-          'สวัสดีค่ะ ดิฉันเป็นเจ้าหน้าที่ธนาคาร ขอสอบถามข้อมูลบริษัทนะคะ ' +
-          (first?.question ?? ''),
+        say: phrases.hello + (first ? question(first.concept, first.question) : ''),
         assessment: null,
         next: first ? { concept: first.concept } : { close: 'plan_complete' },
       };
@@ -100,22 +135,27 @@ export class FakeInterview implements InterviewProvider {
     }
     const stay = verdict !== 'correct' && item.attempts < 1;
     if (stay) {
-      const ask =
-        input.pastedDetected || verdict === 'pasted'
-          ? 'กรุณาตอบด้วยคำพูดของคุณเองนะคะ '
-          : 'ขอถามอีกครั้งนะคะ ';
-      return { say: ask + item.question, assessment, next: { concept: item.concept } };
+      const ask = input.pastedDetected || verdict === 'pasted' ? phrases.pasted : phrases.reask;
+      return {
+        say: ask + question(item.concept, item.question),
+        assessment,
+        next: { concept: item.concept },
+      };
     }
     const next = input.plan.items[input.plan.cursor + 1];
     if (!next) {
       return {
-        say: 'ขอบคุณค่ะ ครบทุกข้อแล้ว ธนาคารจะสรุปผลให้นะคะ',
+        say: phrases.done,
         assessment,
         next: { close: 'plan_complete' },
       };
     }
-    const lead = next.phase === 'probing' ? 'ขอกลับมาที่ข้อนี้อีกครั้งนะคะ ' : 'รับทราบค่ะ ';
-    return { say: lead + next.question, assessment, next: { concept: next.concept } };
+    const lead = next.phase === 'probing' ? phrases.probing : phrases.next;
+    return {
+      say: lead + question(next.concept, next.question),
+      assessment,
+      next: { concept: next.concept },
+    };
   }
 
   async narrate(input: NarrateInput): Promise<string> {

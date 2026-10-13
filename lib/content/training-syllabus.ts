@@ -14,7 +14,7 @@ const item = (
   en: ThreePrompts,
   th: ThreePrompts,
   zh: ThreePrompts,
-): TrainingSyllabusItem => ({ conceptKey, card, quizPrompts: { en, th, zh } });
+): TrainingSyllabusItem => ({ conceptKey, card, quizPrompts: { en, th, zh, ms: en } });
 
 /**
  * The learner's single syllabus: every quiz concept belongs to one cheat sheet and has three
@@ -152,12 +152,16 @@ export const TRAINING_SYLLABUS: readonly TrainingSyllabusItem[] = [
     'learner_shareholding',
     2,
     [
-      'How many shares do you own?',
+      'How much of the company do you own, as a percentage?',
       'What percentage of the company do you own?',
-      'Which shareholding belongs to you?',
+      'What is your ownership percentage in the company?',
     ],
-    ['คุณถือหุ้นกี่หุ้น', 'คุณถือหุ้นคิดเป็นกี่เปอร์เซ็นต์ของบริษัท', 'จำนวนหุ้นใดเป็นของคุณ'],
-    ['您持有多少股份？', '您拥有公司多少百分比？', '哪项持股属于您？'],
+    [
+      'คุณเป็นเจ้าของบริษัทคิดเป็นกี่เปอร์เซ็นต์',
+      'คุณถือหุ้นคิดเป็นกี่เปอร์เซ็นต์ของบริษัท',
+      'สัดส่วนการถือหุ้นของคุณในบริษัทคือเท่าใด',
+    ],
+    ['您持有公司多少百分比的股份？', '您拥有公司多少百分比？', '您在公司的持股比例是多少？'],
   ),
   item(
     'actual_business',

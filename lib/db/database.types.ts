@@ -366,6 +366,38 @@ export type Database = {
         }
         Relationships: []
       }
+      company_fact_translations: {
+        Row: {
+          training_version_id: string
+          locale: string
+          source_hash: string
+          translations: Json
+          created_at: string
+        }
+        Insert: {
+          training_version_id: string
+          locale: string
+          source_hash: string
+          translations: Json
+          created_at?: string
+        }
+        Update: {
+          training_version_id?: string
+          locale?: string
+          source_hash?: string
+          translations?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_fact_translations_training_version_id_fkey"
+            columns: ["training_version_id"]
+            isOneToOne: false
+            referencedRelation: "company_training_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_training_versions: {
         Row: {
           activated_at: string | null

@@ -1,5 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { AppLocale } from '@/i18n/routing';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
 import { binaryReadinessAssessment } from '@/lib/domain/interview/answer-validation';
 import { revealedFact } from '@/lib/domain/interview/leak';
@@ -10,7 +11,9 @@ import {
   isReadinessPlan,
   nextReadinessStep,
   probingItems,
+  questionFor,
 } from '@/lib/domain/interview/plan';
+import { interviewReplyLanguage } from '@/lib/domain/interview/language';
 import { detectPasted } from '@/lib/domain/interview/pasted';
 import type {
   Assessment,
@@ -60,6 +63,52 @@ const CLOSING = {
   turn_limit: 'ขอบคุณค่ะ การสัมภาษณ์ครบจำนวนข้อความที่กำหนดแล้ว ธนาคารจะสรุปผลให้นะคะ',
   too_many_evasions: 'ขออภัยค่ะ วันนี้ธนาคารยังไม่สามารถดำเนินการต่อได้ ขอบคุณที่มาค่ะ',
 } as const;
+const OFFICER_COPY: Record<
+  AppLocale,
+  {
+    greeting: string;
+    reask: string;
+    next: string;
+    complete: string;
+    limit: string;
+    evasions: string;
+  }
+> = {
+  th: {
+    greeting: GREETING,
+    reask: REASK,
+    next: 'รับทราบค่ะ ',
+    complete: 'ขอบคุณค่ะ ครบทุกข้อแล้ว ระบบจะสรุปผลให้นะคะ',
+    limit: CLOSING.turn_limit,
+    evasions: CLOSING.too_many_evasions,
+  },
+  en: {
+    greeting: 'Hello, I am the bank officer. I will ask about your company. ',
+    reask: 'Let me ask that again. ',
+    next: 'Thank you. ',
+    complete: 'Thank you. That is all the questions. Your result will be summarised now.',
+    limit:
+      'Thank you. The interview has reached its message limit. Your result will be summarised now.',
+    evasions: 'I am sorry, the bank cannot continue today. Thank you.',
+  },
+  zh: {
+    greeting: '您好，我是银行工作人员。请回答几个关于您公司的问题。',
+    reask: '请再回答一次。',
+    next: '谢谢。',
+    complete: '谢谢，问题已全部问完。现在将汇总您的结果。',
+    limit: '谢谢，面试已达到消息数量上限。现在将汇总您的结果。',
+    evasions: '抱歉，银行今天无法继续。谢谢。',
+  },
+  ms: {
+    greeting: 'Helo, saya pegawai bank. Saya akan bertanya tentang syarikat anda. ',
+    reask: 'Boleh saya tanya sekali lagi? ',
+    next: 'Terima kasih. ',
+    complete: 'Terima kasih. Semua soalan telah selesai. Keputusan anda akan dirumuskan sekarang.',
+    limit:
+      'Terima kasih. Temu duga telah mencapai had mesej. Keputusan anda akan dirumuskan sekarang.',
+    evasions: 'Maaf, pihak bank tidak dapat meneruskan hari ini. Terima kasih.',
+  },
+};
 
 export type InterviewErrorCode =
   | 'not_open'
@@ -248,17 +297,23 @@ function guard(
   item: PlanItem | null,
   facts: FactSheet,
   opening: boolean,
+  language: AppLocale = 'th',
 ): OfficerTurn {
   const assessment =
     reply.assessment && item ? { ...reply.assessment, concept: item.concept } : reply.assessment;
-  if (revealedFact(reply.say, facts) === null) return { ...reply, assessment };
-  console.warn('interview: the officer stated a fact; the turn was replaced');
-  const say = item ? (opening ? GREETING : REASK) + item.question : CLOSING.turn_limit;
+  const leaked = revealedFact(reply.say, facts) !== null;
+  const wrongLanguage = language !== interviewReplyLanguage(reply.say, [], language);
+  if (!leaked && !wrongLanguage) return { ...reply, assessment };
+  console.warn('interview: an unsafe or wrong-language officer turn was replaced');
+  const copy = OFFICER_COPY[language];
+  const say = item
+    ? (opening ? copy.greeting : copy.reask) + questionFor(item.concept, language, item.question)
+    : copy.complete;
   return {
     say,
-    // Do not accept a judgment attached to an unsafe officer reply. Ask the same question again.
-    assessment: item ? null : assessment,
-    next: item ? { concept: item.concept } : reply.next,
+    // A leaked answer invalidates judgment; wrong-language speech alone does not.
+    assessment: item && leaked ? null : assessment,
+    next: item && leaked ? { concept: item.concept } : reply.next,
   };
 }
 
@@ -268,6 +323,7 @@ function guard(
  */
 export async function startOrResumeInterview(
   userId: string,
+  locale: AppLocale = 'th',
 ): Promise<{ session: InterviewSessionRow; turns: InterviewTurnRow[] }> {
   const officer = provider();
   const gate = await gateFor(userId);
@@ -295,6 +351,7 @@ export async function startOrResumeInterview(
   // The officer speaks before the session exists: a provider failure leaves nothing behind.
   const opening = guard(
     await officer.turn({
+      language: locale,
       facts,
       plan,
       transcript: [],
@@ -305,6 +362,7 @@ export async function startOrResumeInterview(
     plan.items[0] ?? null,
     facts,
     true,
+    locale,
   );
   const { data: session, error } = await admin
     .from('interview_sessions')
@@ -312,6 +370,7 @@ export async function startOrResumeInterview(
       user_id: userId,
       dbd_record_id: assignment.dbd_record_id,
       status: 'in_progress',
+      language: locale,
       plan: plan as unknown as Json,
       provider: officer.name,
     })
@@ -358,7 +417,12 @@ async function close(
     .eq('id', session.id);
   if (error) throw error;
   try {
-    const narrative = await provider().narrate({ facts, verdict: core, transcript });
+    const sessionLocale: AppLocale =
+      session.language === 'en' || session.language === 'zh' || session.language === 'ms'
+        ? session.language
+        : 'th';
+    const language = interviewReplyLanguage('', transcript, sessionLocale);
+    const narrative = await provider().narrate({ facts, verdict: core, transcript, language });
     if (narrative) {
       await admin
         .from('interview_sessions')
@@ -379,6 +443,7 @@ export async function submitLearnerMessage(
   userId: string,
   sessionId: string,
   content: string,
+  pageLocale?: AppLocale,
 ): Promise<{ turns: InterviewTurnRow[]; closed: boolean; budget: Budget }> {
   const text = content.trim();
   if (text.length === 0 || text.length > MAX_INPUT_CHARS) {
@@ -391,6 +456,11 @@ export async function submitLearnerMessage(
   const { facts } = await factsFor(userId);
   const rows = await turnsOf(sessionId);
   const transcript = toTurns(rows);
+  const sessionLocale: AppLocale =
+    session.language === 'en' || session.language === 'zh' || session.language === 'ms'
+      ? session.language
+      : 'th';
+  const language = interviewReplyLanguage(text, transcript, pageLocale ?? sessionLocale);
   let plan = session.plan as unknown as InterviewPlan;
   const item = currentItem(plan);
   // Spec §4.2, the second phase: when the last facts item is on the table, the risk officer's
@@ -408,6 +478,7 @@ export async function submitLearnerMessage(
   // the Claude adapter's messages alternate.
   const reply = guard(
     await provider().turn({
+      language,
       facts,
       plan,
       transcript,
@@ -418,6 +489,7 @@ export async function submitLearnerMessage(
     item,
     facts,
     false,
+    language,
   );
   const assessment = binaryReadinessAssessment(plan, reply.assessment);
   const evasionsNow = evasions + (assessment?.verdict === 'evasive' ? 1 : 0);
@@ -430,25 +502,28 @@ export async function submitLearnerMessage(
     next = step.next;
     if (step.kind === 'follow_up') {
       const providerReasked = 'concept' in reply.next && reply.next.concept === item.concept;
-      say = providerReasked ? reply.say : REASK + item.question;
+      say = providerReasked
+        ? reply.say
+        : OFFICER_COPY[language].reask + questionFor(item.concept, language, item.question);
     }
     if (step.kind === 'next') {
       const following = plan.items[plan.cursor + 1];
-      say = 'รับทราบค่ะ ' + following.question;
+      say =
+        OFFICER_COPY[language].next + questionFor(following.concept, language, following.question);
     }
     if (step.kind === 'complete') {
-      say = 'ขอบคุณค่ะ ครบทุกข้อแล้ว ระบบจะสรุปผลให้นะคะ';
+      say = OFFICER_COPY[language].complete;
     }
   }
   // Hard limits belong to the code, whatever the officer decided; they close with a closing
   // line, not with a question the learner can no longer answer.
   if ('concept' in next && learnerTurns >= turnBudget(plan)) {
     next = { close: 'turn_limit' };
-    say = CLOSING.turn_limit;
+    say = OFFICER_COPY[language].limit;
   }
   if ('concept' in next && !isReadinessPlan(plan) && evasionsNow >= MAX_EVASIONS) {
     next = { close: 'too_many_evasions' };
-    say = CLOSING.too_many_evasions;
+    say = OFFICER_COPY[language].evasions;
   }
   const seq = rows.length + 1;
   await record(sessionId, seq, 'learner', text, null);

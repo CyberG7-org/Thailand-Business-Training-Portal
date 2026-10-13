@@ -14,7 +14,12 @@ import {
   type InterviewResultItem,
 } from '@/app/[locale]/(admin)/admin/interviews/session-result-transcript';
 
-const DATE_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
+const DATE_LOCALES: Record<AppLocale, string> = {
+  th: 'th-TH',
+  en: 'en-GB',
+  zh: 'zh-CN',
+  ms: 'ms-MY',
+};
 
 export async function LearnerResult({
   verdict,

@@ -21,6 +21,16 @@ describe('FakeInterview', () => {
     expect(turn.next).toEqual({ concept: 'company_name' });
   });
 
+  it('asks the same readiness concept in English and Simplified Chinese', async () => {
+    const officer = new FakeInterview();
+    const plan = buildReadinessPlan(facts);
+    const english = await officer.turn({ ...base, plan, learnerMessage: null, language: 'en' });
+    const chinese = await officer.turn({ ...base, plan, learnerMessage: null, language: 'zh' });
+    expect(english.say).toContain('full registered name');
+    expect(chinese.say).toContain('公司');
+    expect(english.next).toEqual(chinese.next);
+  });
+
   it('marks an answer containing the expected value correct and moves on', async () => {
     const officer = new FakeInterview();
     const plan = buildPlan(facts);

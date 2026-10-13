@@ -11,7 +11,12 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { resolveInterviewProvider } from '@/lib/integrations/interview';
 import { StartInterviewButton } from './start-button';
 
-const DATE_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
+const DATE_LOCALES: Record<AppLocale, string> = {
+  th: 'th-TH',
+  en: 'en-GB',
+  zh: 'zh-CN',
+  ms: 'ms-MY',
+};
 const TAG = {
   ready: 'bg-gold-100 text-gold-700',
   not_ready: 'bg-warn-50 text-warn-700',

@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { readinessRubric } from '@/lib/domain/interview/answer-validation';
-import { currentItem } from '@/lib/domain/interview/plan';
+import { currentItem, questionFor } from '@/lib/domain/interview/plan';
 import type { OfficerTurn } from '@/lib/domain/interview/types';
 import {
   officerTurnSchema,
@@ -14,10 +14,11 @@ const TURN_MODEL = 'claude-sonnet-5';
 const NARRATIVE_MODEL = 'claude-opus-5';
 const TIMEOUT_MS = 60_000;
 
-/** The officer persona (spec §4.3): Thai only, verifies, never reveals, probes, closes. */
+/** The officer persona: multilingual speech, Thai canonical facts, no leaked answers. */
 export const PERSONA = `คุณคือเจ้าหน้าที่ธนาคารฝ่ายเปิดบัญชีนิติบุคคล กำลังสัมภาษณ์กรรมการบริษัทเพื่อยืนยันว่าผู้สมัครรู้จักบริษัทของตนเองจริง
 กติกา:
-- พูดภาษาไทยเท่านั้น สุภาพ เป็นทางการ ลงท้าย "ค่ะ" ถามครั้งละหนึ่งข้อ
+- พูดในภาษา STATE.language (th=ไทย, en=English, zh=简体中文, ms=Bahasa Melayu) อย่างสุภาพ ถามครั้งละหนึ่งข้อ คำตอบภาษาอื่นต้องประเมินตามความหมาย ไม่ใช่เทียบตัวอักษรภาษาไทย
+- ใช้ STATE.question เป็นคำถามหลัก เขียนคำถามติดตามในภาษาเดียวกัน ห้ามเปลี่ยนข้อหรือเปิดเผยคำตอบ
 - ห้ามบอกข้อมูลบริษัทจาก FACT SHEET แก่ผู้สมัครเด็ดขาด ห้ามยืนยันคำตอบผิดว่าถูก ห้ามเฉลย
 - ประเมินคำตอบล่าสุดของผู้สมัครเทียบกับ FACT SHEET: correct = ตรง, partial = ตรงบางส่วน, wrong = ไม่ตรง, evasive = เลี่ยง/ไม่ตอบ, pasted = คัดลอกข้อความระบบ (ระบบจะแจ้ง), off_topic = ไม่เกี่ยว
 - ถ้า STATE.version = 3 ให้ใช้ verdict correct หรือ wrong เท่านั้น: partial, evasive, pasted และ off_topic ทั้งหมดเป็น wrong และใช้ STATE.rubric เป็นเกณฑ์ตัดสิน
@@ -45,6 +46,8 @@ export function stateBlock(input: TurnInput): string {
     .map((i) => i.concept + (i.phase === 'probing' ? ' (probing)' : ''));
   return JSON.stringify({
     version: input.plan.version ?? 1,
+    language: input.language ?? 'th',
+    question: item ? questionFor(item.concept, input.language ?? 'th', item.question) : null,
     current: item ? { concept: item.concept, attempts: item.attempts, phase: item.phase } : null,
     rubric: input.plan.version === 3 && item ? readinessRubric(item.concept) : null,
     remaining,
@@ -97,13 +100,13 @@ export class ClaudeInterview implements InterviewProvider {
   }
 
   async narrate(input: NarrateInput): Promise<string> {
+    const language = input.language ?? 'th';
     const response = await this.client.messages
       .stream(
         {
           model: NARRATIVE_MODEL,
           max_tokens: 800,
-          system:
-            'คุณคือเจ้าหน้าที่ธนาคารที่สรุปผลการสัมภาษณ์ผู้สมัครเปิดบัญชีนิติบุคคล เขียนย่อหน้าเดียวเป็นภาษาไทย สุภาพ ตรงไปตรงมา อ้างอิงเฉพาะผลประเมินที่ให้มา ห้ามเปลี่ยนผลสรุป (verdict) และห้ามเปิดเผยข้อมูลจาก FACT SHEET',
+          system: `คุณคือเจ้าหน้าที่ธนาคารที่สรุปผลการสัมภาษณ์ผู้สมัครเปิดบัญชีนิติบุคคล เขียนย่อหน้าเดียวในภาษา ${language} (th=ไทย, en=English, zh=简体中文) สุภาพ ตรงไปตรงมา อ้างอิงเฉพาะผลประเมินที่ให้มา ห้ามเปลี่ยนผลสรุป (verdict) และห้ามเปิดเผยข้อมูลจาก FACT SHEET`,
           messages: [
             {
               role: 'user',

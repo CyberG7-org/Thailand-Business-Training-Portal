@@ -81,11 +81,12 @@ export class GeminiInterview implements InterviewProvider {
   }
 
   async narrate(input: NarrateInput): Promise<string> {
+    const language = input.language ?? 'th';
     return this.generate({
       systemInstruction: {
         parts: [
           {
-            text: 'คุณคือเจ้าหน้าที่ธนาคารที่สรุปผลการสัมภาษณ์ผู้สมัครเปิดบัญชีนิติบุคคล เขียนย่อหน้าเดียวเป็นภาษาไทย สุภาพ ตรงไปตรงมา อ้างอิงเฉพาะผลประเมินที่ให้มา ห้ามเปลี่ยนผลสรุป (verdict) และห้ามเปิดเผยข้อมูลจาก FACT SHEET',
+            text: `คุณคือเจ้าหน้าที่ธนาคารที่สรุปผลการสัมภาษณ์ผู้สมัครเปิดบัญชีนิติบุคคล เขียนย่อหน้าเดียวในภาษา ${language} (th=ไทย, en=English, zh=简体中文, ms=Bahasa Melayu) สุภาพ ตรงไปตรงมา อ้างอิงเฉพาะผลประเมินที่ให้มา ห้ามเปลี่ยนผลสรุป (verdict) และห้ามเปิดเผยข้อมูลจาก FACT SHEET`,
           },
         ],
       },

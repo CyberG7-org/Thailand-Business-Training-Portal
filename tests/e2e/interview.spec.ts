@@ -70,7 +70,7 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   const guide = page.getByTestId('interview-guide');
   await expect(guide).toContainText('13');
   await expect(guide).toContainText('10');
-  await expect(guide).toContainText('ภาษาไทย');
+  await expect(guide).toContainText('ใช้ภาษาที่คุณสะดวก');
   await expect(guide).toContainText('ฝึกได้ไม่จำกัด');
   await page.getByTestId('interview-start').click();
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);

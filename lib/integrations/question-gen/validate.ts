@@ -1,6 +1,7 @@
-import { LOCALES, type AppLocale } from '@/i18n/routing';
 import { TemplateSyntaxError, placeholderFields } from '@/lib/domain/assessment/template';
 import type { GeneratedLocalization, GeneratedQuestion } from './types';
+
+const LOCALES = ['th', 'en', 'zh'] as const;
 
 const KEYS = ['A', 'B', 'C', 'D'] as const;
 const PLACEHOLDER_RE = /\{[a-z_]+(?:\|[^}]+)?\}/g;
@@ -88,7 +89,7 @@ function literalLeak(q: GeneratedQuestion, banned: string[]): string | null {
 }
 
 function trim(q: GeneratedQuestion): GeneratedQuestion {
-  const localizations = {} as Record<AppLocale, GeneratedLocalization>;
+  const localizations = {} as GeneratedQuestion['localizations'];
   for (const lang of LOCALES) {
     const loc = q.localizations[lang];
     localizations[lang] = {

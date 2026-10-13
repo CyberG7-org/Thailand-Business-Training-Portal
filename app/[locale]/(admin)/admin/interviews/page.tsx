@@ -6,7 +6,12 @@ import { listInterviewsForStaff } from '@/lib/db/interviews';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { displayLoginId } from '@/lib/domain/login-id';
 
-const DATE_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
+const DATE_LOCALES: Record<AppLocale, string> = {
+  th: 'th-TH',
+  en: 'en-GB',
+  zh: 'zh-CN',
+  ms: 'ms-MY',
+};
 
 const statusOf = (s: string) =>
   s === 'in_progress' || s === 'completed' || s === 'abandoned' ? s : 'abandoned';

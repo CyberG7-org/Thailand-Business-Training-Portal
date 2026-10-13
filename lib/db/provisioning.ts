@@ -29,7 +29,7 @@ export const newAccountSchema = z.object({
   password: z.string().min(6),
   role: z.enum(['learner', 'manager', 'admin']).default('learner'),
   displayName: z.string().trim().max(120).optional(),
-  preferredLanguage: z.enum(['th', 'en', 'zh']).default('th'),
+  preferredLanguage: z.enum(['th', 'en', 'zh', 'ms']).default('th'),
 });
 export type NewAccountInput = z.input<typeof newAccountSchema>;
 
@@ -87,7 +87,7 @@ export async function createAccount(
 type NewPerson = {
   password: string;
   displayName?: string;
-  preferredLanguage?: 'th' | 'en' | 'zh';
+  preferredLanguage?: 'th' | 'en' | 'zh' | 'ms';
 };
 
 /** The auth call behind a code; tests substitute it to make the auth service refuse. */

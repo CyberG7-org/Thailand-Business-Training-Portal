@@ -23,7 +23,12 @@ import { ProgressCard } from './progress-card';
 import { STAGE_ROUTES, type StageRow } from './stage-row';
 import { StepsList } from './steps-list';
 
-const NUMBER_LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-US', zh: 'zh-CN' };
+const NUMBER_LOCALES: Record<AppLocale, string> = {
+  th: 'th-TH',
+  en: 'en-US',
+  zh: 'zh-CN',
+  ms: 'ms-MY',
+};
 const DASHBOARD_STAGES = LEARNER_STAGES.filter((key) => key !== 'appointment');
 
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {

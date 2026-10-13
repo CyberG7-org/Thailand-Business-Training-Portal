@@ -1,6 +1,7 @@
 import { createRng, shuffleWith } from '@/lib/domain/assessment/random';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import type { Locale } from '@/lib/domain/thai-date';
+import type { FactSheet } from '@/lib/domain/facts/fact-sheet';
 import type { RenderContext } from './context';
 import { pickVariant, type ConceptCheck } from './preflight';
 import { renderVariant, type Rendered } from './render';
@@ -36,6 +37,7 @@ export function buildAttemptQuestions(
   ctx: RenderContext,
   seed: string,
   useCounts: ReadonlyMap<string, number> = new Map(),
+  localizedFacts: Partial<Record<Locale, FactSheet>> = {},
 ): { questions: AttemptQuestion[]; missing: ConceptCheck[] } {
   const checks = MCQ_CONCEPTS.map((concept) =>
     pickVariant(concept.key, variants, ctx, seed, useCounts),
@@ -58,7 +60,12 @@ export function buildAttemptQuestions(
     const localized: LocalizedQuestion = { th: present(check.rendered!) };
     for (const locale of VARIANT_LOCALES) {
       if (locale === 'th') continue;
-      const view = renderVariant(variant, ctx, variantSeed, locale);
+      const view = renderVariant(
+        variant,
+        localizedFacts[locale] ? { ...ctx, facts: localizedFacts[locale] } : ctx,
+        variantSeed,
+        locale,
+      );
       // A translation that cannot be rendered shows the Thai question: the one that was approved.
       localized[locale] = view.ok ? present(view.rendered) : localized.th;
     }

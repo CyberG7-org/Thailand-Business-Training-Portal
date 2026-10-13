@@ -494,5 +494,9 @@ export const CRITICAL_CONCEPT_KEYS: readonly string[] = MCQ_CONCEPTS.filter((c) 
 export function conceptTitle(key: string, locale: string): string {
   const def = EVALUATION_CONCEPTS.find((c) => c.key === key);
   if (!def) return key;
-  return locale === 'en' ? def.title.en : locale === 'zh' ? def.title.zh : def.title.th;
+  return locale === 'en' || locale === 'ms'
+    ? def.title.en
+    : locale === 'zh'
+      ? def.title.zh
+      : def.title.th;
 }

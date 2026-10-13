@@ -15,7 +15,12 @@ import {
 } from './actions';
 
 const initial: QuestionState = { ok: false, error: null };
-const LANGUAGE_LABELS: Record<AppLocale, string> = { th: 'ไทย', en: 'English', zh: '中文' };
+const LANGUAGE_LABELS: Record<AppLocale, string> = {
+  th: 'ไทย',
+  en: 'English',
+  zh: '中文',
+  ms: 'Bahasa Melayu',
+};
 const KEYS = ['A', 'B', 'C', 'D'] as const;
 const PLACEHOLDER_EXAMPLES =
   '{company_name_th} {juristic_id} {registered_capital} {issued_on} {registered_on} {directors} {head_office_address} · {registered_capital|x2} {issued_on|+1m} {juristic_id|shuffle}';
