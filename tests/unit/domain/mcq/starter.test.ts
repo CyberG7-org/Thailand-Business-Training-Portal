@@ -107,4 +107,21 @@ describe('the starter drafts', () => {
     expect(picked('monthly_transactions')).toBe('mcq-v2-monthly-transactions-1');
     expect(picked('actual_business_location')).toBe('mcq-v2-actual-business-location-1');
   });
+
+  it('renders every learner shareholding question when only the ownership percentage is known', () => {
+    const ctx: RenderContext = {
+      ...SAMPLE_CONTEXT,
+      facts: { ...SAMPLE_CONTEXT.facts, my_shares: null, my_share_percent: 90 },
+    };
+    for (const starter of MCQ_STARTER.filter((s) => s.conceptKey === 'learner_shareholding')) {
+      const variant = { ...starter, id: starter.key, status: 'approved' as const };
+      for (const locale of ['th', 'en', 'zh'] as const) {
+        const result = renderVariant(variant, ctx, 'seed', locale);
+        expect(result.ok, `${starter.key} ${locale}`).toBe(true);
+        if (!result.ok) continue;
+        expect(result.rendered.options.find((option) => option.key === 'A')?.text).toBe('90%');
+        expect(result.rendered.prompt).not.toMatch(/shares|หุ้นกี่หุ้น|多少股份/i);
+      }
+    }
+  });
 });
