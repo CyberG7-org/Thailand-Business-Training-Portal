@@ -1,26 +1,26 @@
 /**
  * Account codes (D69). Staff type the part after a fixed prefix: the owner gives a manager
- * `T-` + a suffix (T-A12: one letter and two digits, D85), a manager gives a learner their own
- * code + `-` + a suffix (T-A12-DA42: two letters and two digits, D84).
- * Codes are case-insensitive — stored lower-case, as every login id in this project is, and
- * shown upper-case — so `t-a12` can never reach a screen.
+ * `T` + a three-character suffix, and a manager gives a learner their whole code plus a
+ * four-character suffix. Each new suffix may contain ASCII letters and digits in any order.
+ * Codes are case-insensitive and stored lower-case, then shown upper-case. Existing IDs,
+ * including older formats, are left unchanged.
  */
 export const MANAGER_PREFIX = 't';
 
 /** Whose code is being chosen: a manager's (the owner) or a learner's (staff). */
 export type LoginIdKind = 'manager' | 'learner';
 
-/** A typed part is some letters then some digits, by whose code it is. */
+/** Suggested codes keep the familiar readable shapes; manually typed codes may use any order. */
 const SHAPES: Record<LoginIdKind, { letters: number; digits: number }> = {
   manager: { letters: 1, digits: 2 },
   learner: { letters: 2, digits: 2 },
 };
 
-/** A manager's typed part (D85): exactly one letter then two digits, e.g. A12. */
-export const MANAGER_SUFFIX_PATTERN = /^[a-z][0-9]{2}$/i;
+/** A new manager's typed part: any three ASCII letters or digits. */
+export const MANAGER_SUFFIX_PATTERN = /^[a-z0-9]{3}$/i;
 
-/** A learner's typed part (D84): exactly two letters then two digits, e.g. DA42. */
-export const LEARNER_SUFFIX_PATTERN = /^[a-z]{2}[0-9]{2}$/i;
+/** A new learner's typed part: any four ASCII letters or digits. */
+export const LEARNER_SUFFIX_PATTERN = /^[a-z0-9]{4}$/i;
 
 export function isValidSuffixFor(kind: LoginIdKind, suffix: string): boolean {
   return (kind === 'learner' ? LEARNER_SUFFIX_PATTERN : MANAGER_SUFFIX_PATTERN).test(suffix);

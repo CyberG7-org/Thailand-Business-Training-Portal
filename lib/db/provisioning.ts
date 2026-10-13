@@ -18,8 +18,8 @@ import { serverEnv } from './env';
 
 /** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
 export const LOGIN_ID_TAKEN = 'This login ID is already taken — choose another';
-export const MANAGER_SUFFIX_INVALID = 'A manager login ID is one letter and two digits, e.g. A12';
-export const LEARNER_SUFFIX_INVALID = 'A learner login ID is two letters and two digits, e.g. DA42';
+export const MANAGER_SUFFIX_INVALID = 'Use exactly 3 letters or digits for a manager login ID';
+export const LEARNER_SUFFIX_INVALID = 'Use exactly 4 letters or digits for a learner login ID';
 
 export const newAccountSchema = z.object({
   loginId: z
@@ -115,7 +115,7 @@ function parsePerson(
 
 /**
  * Staff type only the part after the prefix; the prefix is always the server's (D69). A
- * learner's part is two letters and two digits (D84), a manager's one letter and two (D85).
+ * learner's part is four letters or digits, a manager's three letters or digits.
  */
 function parseSuffix(kind: LoginIdKind, suffix: string): string {
   const trimmed = suffix.trim();

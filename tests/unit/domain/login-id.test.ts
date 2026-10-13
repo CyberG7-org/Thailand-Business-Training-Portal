@@ -51,55 +51,31 @@ describe('displayLoginId', () => {
   });
 });
 
-/** D85: a manager's typed part is exactly one letter and two digits. */
+/** Newly typed manager suffixes allow any three ASCII letters or digits. */
 describe('isValidSuffixFor a manager', () => {
-  it('takes one letter then two digits, in either case', () => {
-    for (const ok of ['A12', 'a12', 'Z99', 'g04', 'I00']) {
+  it('accepts any order of three letters or digits, in either case', () => {
+    for (const ok of ['A12', 'a12', 'ABC', '123', '1A2', 'AB1', 'I00']) {
       expect(isValidSuffixFor('manager', ok), ok).toBe(true);
     }
   });
 
-  it("refuses any other shape, D69's 2–6 letters or digits included", () => {
-    for (const bad of [
-      '',
-      'G4',
-      '01',
-      'AB12',
-      'SALES1',
-      'A1',
-      'A123',
-      '123',
-      'AB1',
-      'A-1',
-      'ก12',
-    ]) {
+  it('refuses the wrong length or non-alphanumeric characters', () => {
+    for (const bad of ['', 'G4', '01', 'AB12', 'SALES1', 'A1', 'A123', 'A-1', 'A 1', 'ก12']) {
       expect(isValidSuffixFor('manager', bad), bad).toBe(false);
     }
   });
 });
 
-/** D84: a learner's typed part is exactly two letters and two digits. */
+/** Newly typed learner suffixes allow any four ASCII letters or digits. */
 describe('isValidSuffixFor a learner', () => {
-  it('takes two letters then two digits, in either case', () => {
-    for (const ok of ['DA42', 'da42', 'Da42', 'AA01', 'zz99', 'IO00']) {
+  it('accepts any order of four letters or digits, in either case', () => {
+    for (const ok of ['DA42', 'da42', 'ABCD', '1234', 'A1B2', '1A23', 'IO00']) {
       expect(isValidSuffixFor('learner', ok), ok).toBe(true);
     }
   });
 
   it('refuses any other shape', () => {
-    for (const bad of [
-      '',
-      'D42',
-      'L8',
-      'DA4',
-      'DA420',
-      'ABC1',
-      'A123',
-      '1A23',
-      'DA-4',
-      'กข42',
-      'DAB42',
-    ]) {
+    for (const bad of ['', 'D42', 'L8', 'DA4', 'DA420', 'DA-4', 'กข42', 'DAB42']) {
       expect(isValidSuffixFor('learner', bad), bad).toBe(false);
     }
   });

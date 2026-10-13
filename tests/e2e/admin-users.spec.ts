@@ -87,11 +87,13 @@ test('a taken code is flagged as it is typed and refused at create', async ({ pa
   );
   await page.getByTestId('login-suffix').fill('QA-7');
   await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
-  // A learner's code is two letters and two digits (D84): D83's one-letter shape is refused.
+  // A learner's typed suffix must have exactly four letters or digits.
   await page.getByTestId('login-suffix').fill('Q07');
   await expect(page.getByTestId('login-id-status')).toHaveText(
-    'ใช้ตัวอักษรภาษาอังกฤษ 2 ตัวตามด้วยตัวเลข 2 ตัว เช่น DA42',
+    'ใช้ตัวอักษรภาษาอังกฤษหรือตัวเลขให้ครบ 4 ตัว',
   );
+  await page.getByTestId('login-suffix').fill('1234');
+  await expect(page.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
 
   // Sent anyway, the server refuses it in the same words and creates nobody.
   await page.getByTestId('login-suffix').fill('QA07');

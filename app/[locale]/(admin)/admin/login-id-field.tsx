@@ -89,7 +89,7 @@ export function LoginIdField({
     checking: t('checking'),
     available: t(compact ? 'availableKeep' : 'available'),
     taken: t('taken'),
-    // A learner's code is two letters and two digits (D84); a manager's one letter and two (D85).
+    // New learner codes accept any four letters or digits; manager codes accept any three.
     invalid: t(kind === 'learner' ? 'invalidLearner' : 'invalid'),
     'no-team': t('noTeam'),
   };

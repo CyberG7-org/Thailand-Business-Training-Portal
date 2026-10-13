@@ -51,8 +51,10 @@ test('the admin types a manager code after T, and a taken one is refused', async
   await form.getByTestId('login-suffix').fill('G4');
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
   await expect(form.getByTestId('login-id-status')).toHaveText(
-    'ใช้ตัวอักษรภาษาอังกฤษ 1 ตัวตามด้วยตัวเลข 2 ตัว เช่น A12',
+    'ใช้ตัวอักษรภาษาอังกฤษหรือตัวเลขให้ครบ 3 ตัว',
   );
+  await form.getByTestId('login-suffix').fill('123');
+  await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
 
   // A code typed in any case is stored as typed and shown upper-case.
   const suffix = offered.toLowerCase();
