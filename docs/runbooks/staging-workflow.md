@@ -1,13 +1,13 @@
 # Staging workflow
 
-The portal has two long-lived Git branches and separate Supabase projects:
+The portal has two long-lived Git branches, separate Vercel projects, and separate Supabase projects:
 
-| Environment | Git branch | Website | Database |
-| --- | --- | --- | --- |
-| Production | `main` | `https://thailand-business-training-portal-cyberg7.vercel.app` | Existing production Supabase project |
-| Staging | `staging` | `https://thailand-business-training-portal-staging.vercel.app` | `Thailand-Business-Training-Portal-Staging` (`coykyocibwaxvamsgccq`) |
+| Environment | Git branch | Vercel project | Website | Database |
+| --- | --- | --- | --- | --- |
+| Production | `main` | `thailand-business-training-portal` | `https://thailand-business-training-portal-cyberg7.vercel.app` | Existing production Supabase project |
+| Staging | `staging` | `thailand-business-training-portal-staging` | `https://thailand-business-training-portal-staging.vercel.app` | `Thailand-Business-Training-Portal-Staging` (`coykyocibwaxvamsgccq`) |
 
-The staging address is a Vercel project domain assigned only to the `staging` branch. A new push to `staging` replaces its deployment, while `main` and its production website stay unchanged. Vercel's Preview deployment protection may require a Vercel account to open the staging address.
+The staging Vercel project's Production Branch is `staging`; the production project's Production Branch is `main`. A new push to `staging` creates a production-class deployment **inside the staging project**, allowing its `vercel.json` cron jobs to run. It does not deploy to the customer-facing production project. The staging address is assigned only to the staging project. Vercel deployment protection may require a Vercel account to open generated deployment URLs.
 
 The initial staging Owner has portal Login ID `owner`. Its password was chosen privately during staging setup and is not stored in this repository. This account exists only in the staging Supabase project.
 
@@ -35,6 +35,6 @@ The initial staging Owner has portal Login ID `owner`. Its password was chosen p
 
 ## Environment separation
 
-Vercel's `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` must be scoped to **Preview branch `staging`** with values from the staging Supabase project. Production has its own values, scoped to Production. Never widen either service-role key to All Environments. The Gemini key currently spans All Environments, so staging calls may consume the same Google AI Studio quota as production. Other optional integrations (Apify, Pinecone, etc.) need staging-scoped keys/configuration before those flows can be tested. For Pinecone, use a separate `staging` namespace.
+In the staging Vercel project, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` belong to that project's **Production** environment and must refer only to the staging Supabase project. The production Vercel project retains its own production database variables. Never copy a production Supabase service-role key into staging. Other integrations (Gemini, Anthropic, Apify, Pinecone) require credentials in the staging project before those flows can be tested and may consume the corresponding provider accounts' quotas. `PINECONE_NAMESPACE` must be `staging` so vector writes do not mix with production. Use a separate staging `CRON_SECRET` to authorize its scheduled endpoints.
 
 Staging needs its own first owner account; the database migrations deliberately do not copy production accounts or company data. Follow `production-setup.md` section 1 for one-time Auth setup, and create only test users and companies.
