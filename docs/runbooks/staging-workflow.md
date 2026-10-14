@@ -5,9 +5,11 @@ The portal has two long-lived Git branches and separate Supabase projects:
 | Environment | Git branch | Website | Database |
 | --- | --- | --- | --- |
 | Production | `main` | `https://thailand-business-training-portal-cyberg7.vercel.app` | Existing production Supabase project |
-| Staging | `staging` | `https://thailand-business-training-portal-git-staging-cyberg7.vercel.app` | `Thailand-Business-Training-Portal-Staging` (`coykyocibwaxvamsgccq`) |
+| Staging | `staging` | `https://thailand-business-training-portal-staging.vercel.app` | `Thailand-Business-Training-Portal-Staging` (`coykyocibwaxvamsgccq`) |
 
-The staging address is Vercel's stable branch alias. A new push to `staging` replaces its deployment, while `main` and its production website stay unchanged. Vercel's Preview deployment protection may require a Vercel account to open the staging address.
+The staging address is a Vercel project domain assigned only to the `staging` branch. A new push to `staging` replaces its deployment, while `main` and its production website stay unchanged. Vercel's Preview deployment protection may require a Vercel account to open the staging address.
+
+The initial staging Owner has portal Login ID `owner`. Its password was chosen privately during staging setup and is not stored in this repository. This account exists only in the staging Supabase project.
 
 ## Make and test a change
 
