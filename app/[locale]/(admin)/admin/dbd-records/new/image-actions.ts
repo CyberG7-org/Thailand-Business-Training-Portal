@@ -10,8 +10,11 @@ import {
   CompanyImageOutputError,
   extractCompanyImage,
 } from '@/lib/integrations/extraction/company-image';
-import { getDbdExtractor } from '@/lib/integrations/extraction';
-import { resolveVectorProvider } from '@/lib/integrations/vector';
+import {
+  CompanyPdfOutputError,
+  companyPdfAvailable,
+  extractCompanyPdf,
+} from '@/lib/integrations/extraction/company-pdf';
 import { countPages } from '@/lib/pdf/slice';
 
 export type ImageUploadState = { error: string | null; recordId: string | null };
@@ -58,9 +61,9 @@ async function uploadCompanyProfile(
       recordId: null,
     };
   }
-  if (kind === 'pdf' && (resolveVectorProvider() === 'off' || !getDbdExtractor())) {
+  if (kind === 'pdf' && !companyPdfAvailable()) {
     return {
-      error: 'PDF indexing needs Pinecone and document reading configured on the server.',
+      error: 'PDF reading needs Claude and Pinecone configured on the server.',
       recordId: null,
     };
   }
@@ -92,7 +95,8 @@ async function uploadCompanyProfile(
         };
       }
     }
-    const extracted = await extractCompanyImage(bytes, mime);
+    const extracted =
+      kind === 'pdf' ? await extractCompanyPdf(bytes) : await extractCompanyImage(bytes, mime);
     const draft = companyImageToDraft(extracted);
     const db = await createSupabaseServerClient();
     const row = await createDbdRecord(
@@ -167,10 +171,10 @@ async function uploadCompanyProfile(
     }
     return {
       error:
-        error instanceof CompanyImageOutputError
+        error instanceof CompanyImageOutputError || error instanceof CompanyPdfOutputError
           ? error.message
           : kind === 'pdf'
-            ? 'Could not read this PDF. Check the Gemini key, PDF and storage settings, then try again.'
+            ? 'Could not read this PDF. Check the Claude key, PDF and storage settings, then try again.'
             : 'Could not read this image. Check the Gemini key, image and storage settings, then try again.',
       recordId: null,
     };

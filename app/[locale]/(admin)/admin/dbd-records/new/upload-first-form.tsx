@@ -16,10 +16,12 @@ const initial: ImageUploadState = { error: null, recordId: null };
 
 export function UploadFirstForm({
   extractionAvailable,
+  pdfExtractionAvailable,
   zipExtractionAvailable,
   embedded = false,
 }: {
   extractionAvailable: boolean;
+  pdfExtractionAvailable: boolean;
   zipExtractionAvailable: boolean;
   embedded?: boolean;
 }) {
@@ -179,9 +181,9 @@ export function UploadFirstForm({
           <p className="text-xs text-ink-500">
             PDF, up to 4 MB. Pinecone indexing runs in the background after upload.
           </p>
-          {!extractionAvailable && (
+          {!pdfExtractionAvailable && (
             <p role="alert" className="text-sm text-bad-600">
-              PDF reading needs GEMINI_API_KEY on the server.
+              PDF reading needs Claude and Pinecone configured on the server.
             </p>
           )}
           {pdfState.error && (
@@ -191,7 +193,7 @@ export function UploadFirstForm({
           )}
           <button
             type="submit"
-            disabled={pdfPending || !extractionAvailable}
+            disabled={pdfPending || !pdfExtractionAvailable}
             data-testid={embedded ? 'create-dbd-pdf-submit' : 'upload-pdf-submit'}
             className="staff-btn justify-self-start"
           >

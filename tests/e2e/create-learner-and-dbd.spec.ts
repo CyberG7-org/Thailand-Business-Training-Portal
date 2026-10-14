@@ -59,6 +59,7 @@ test('a manager can choose image, PDF or ZIP company intake', async ({ page }) =
   );
   await expect(page.getByText('Choose a PDF poster to upload')).toBeVisible();
   await expect(page.getByTestId('create-dbd')).toContainText('Upload company information PDF');
+  await expect(page.getByTestId('upload-pdf')).not.toContainText('GEMINI_API_KEY');
   await page.getByRole('radio', { name: 'ZIP file' }).check();
   await expect(page.getByTestId('create-dbd-zip-files')).toHaveAttribute(
     'accept',
