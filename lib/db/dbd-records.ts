@@ -161,7 +161,14 @@ export async function uploadDbdDocument(
 export async function registerDbdDocument(
   db: Db,
   id: string,
-  input: { path: string; originalName: string; group?: PackGroup },
+  input: {
+    path: string;
+    originalName: string;
+    group?: PackGroup;
+    /** A profile poster is evidence for search, not the company's DBD certificate. */
+    primary?: boolean;
+    documentType?: 'other';
+  },
 ): Promise<string> {
   const { path } = input;
   // Only DBD pack documents are indexed; invoices and agreements are retained without reading.
@@ -201,7 +208,7 @@ export async function registerDbdDocument(
       size_bytes: bytes.byteLength,
       position,
       group,
-      document_type: group === 'pack' ? null : group,
+      document_type: group === 'pack' ? (input.documentType ?? null) : group,
       uploaded_by: auth.user?.id ?? null,
       page_count: pageCount,
       index_status: pageCount === null ? 'failed' : indexing ? 'queued' : 'skipped',
@@ -213,7 +220,7 @@ export async function registerDbdDocument(
   if (pageCount !== null && indexing) {
     await enqueueIndexJob(db, { recordId: id, documentId: doc.id });
   }
-  if (position === 1) {
+  if (position === 1 && input.primary !== false) {
     const { error: updateError } = await db
       .from('dbd_records')
       .update({ document_path: path })

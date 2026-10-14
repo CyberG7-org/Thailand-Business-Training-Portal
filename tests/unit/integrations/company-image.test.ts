@@ -78,6 +78,46 @@ describe('company image reader', () => {
     expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'low' });
   });
 
+  it('reads a PDF poster through the same structured Gemini extraction', async () => {
+    let sentMime = '';
+    const request = (async (_url: string, init: RequestInit) => {
+      const body = JSON.parse(init.body as string);
+      sentMime = body.contents[0].parts[1].inlineData.mimeType;
+      return new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      company_name_en: 'POSTER CO., LTD.',
+                      nature_of_business: 'Salon services',
+                      products_services: 'Hair care',
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+
+    const result = await extractCompanyImage(
+      new TextEncoder().encode('%PDF-1.7'),
+      'application/pdf',
+      {
+        apiKey: 'test-key',
+        request,
+      },
+    );
+    expect(sentMime).toBe('application/pdf');
+    expect(result.company_name_en).toBe('POSTER CO., LTD.');
+    expect(result.products_services).toBe('Hair care');
+  });
+
   it('reports a truncated Gemini result without exposing its partial contents', async () => {
     const request: typeof fetch = async () =>
       new Response(
