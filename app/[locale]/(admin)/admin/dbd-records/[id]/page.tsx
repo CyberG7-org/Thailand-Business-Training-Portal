@@ -49,6 +49,10 @@ export default async function DbdRecordPage({
   if (!loaded) notFound();
   const { db, record, structured, documents, exceptions, address } = loaded;
   const sourceImage = structured.source_image;
+  const sourcePdf = sourceImage?.mime_type === 'application/pdf';
+  const posterDocument = sourcePdf
+    ? documents.find((document) => document.path === sourceImage.path)
+    : null;
   const { data: signedImage } = sourceImage
     ? await db.storage.from('dbd-documents').createSignedUrl(sourceImage.path, 300)
     : { data: null };
@@ -177,12 +181,15 @@ export default async function DbdRecordPage({
             <>
               {sourceImage && (
                 <div className="staff-card grid gap-3">
-                  <h2 className="font-semibold">Source image · check every extracted fact</h2>
+                  <h2 className="font-semibold">
+                    Source {sourcePdf ? 'PDF poster' : 'image'} · check every extracted fact
+                  </h2>
                   <p className="text-sm text-ink-700">
-                    This business-profile image is not an official certificate. The first director
-                    is used as the training answer for signing authority; verify it before saving.
-                    The business category is selected from the description and products below. You
-                    can correct it in Bank Interview before using the illustrative estimates.
+                    This business-profile {sourcePdf ? 'PDF poster' : 'image'} is not an official
+                    certificate. The first director is used as the training answer for signing
+                    authority; verify it before saving. The business category is selected from the
+                    description and products below. You can correct it in Bank Interview before
+                    using the illustrative estimates.
                   </p>
                   {signedImage?.signedUrl && (
                     <a
@@ -191,10 +198,17 @@ export default async function DbdRecordPage({
                       rel="noreferrer"
                       className="staff-link w-fit"
                     >
-                      Open original image
+                      Open original {sourcePdf ? 'PDF' : 'image'}
                     </a>
                   )}
-                  {signedImage?.signedUrl && (
+                  {signedImage?.signedUrl && sourcePdf && (
+                    <iframe
+                      src={signedImage.signedUrl}
+                      title="Uploaded company information PDF"
+                      className="h-[700px] w-full rounded-lg border border-ink-100"
+                    />
+                  )}
+                  {signedImage?.signedUrl && !sourcePdf && (
                     <Image
                       src={signedImage.signedUrl}
                       alt="Uploaded company information"
@@ -203,6 +217,12 @@ export default async function DbdRecordPage({
                       unoptimized
                       className="h-auto max-h-[700px] w-auto max-w-full rounded-lg object-contain"
                     />
+                  )}
+                  {posterDocument && (
+                    <p className="text-sm text-ink-700" data-testid="poster-index-status">
+                      Pinecone indexing: {posterDocument.index_status}
+                      {posterDocument.index_error ? ` (${posterDocument.index_error})` : ''}
+                    </p>
                   )}
                   <p className="staff-notice-info">
                     Check the details below and correct anything that is wrong. Edits save

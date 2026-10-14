@@ -292,7 +292,7 @@
       "companiesIntro": "Each learner studies one company's DBD record — its study material, questions and bank date. Only confirmed companies can be given to a learner.",
       "search": "Search company or director",
       "noMatch": "No company matches “{query}”.",
-      "addCompany": "Add a company that isn't listed",
+      "addCompany": "Create New DBD",
       "addCompanyHint": "Upload its DBD documents — it's checked automatically in 1–3 minutes.",
       "closeAdd": "Close",
       "columns": {

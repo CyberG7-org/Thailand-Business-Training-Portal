@@ -45,6 +45,7 @@ export function CompaniesPanel({
   rows,
   showTeam,
   extractionAvailable,
+  pdfExtractionAvailable,
   zipExtractionAvailable,
   addOpen,
   onAddOpenChange,
@@ -53,6 +54,7 @@ export function CompaniesPanel({
   rows: CompanyRow[];
   showTeam: boolean;
   extractionAvailable: boolean;
+  pdfExtractionAvailable: boolean;
   zipExtractionAvailable: boolean;
   addOpen: boolean;
   onAddOpenChange: (open: boolean) => void;
@@ -96,6 +98,7 @@ export function CompaniesPanel({
           <div id="create-company-form" className="mt-5">
             <CreateDbdForm
               extractionAvailable={extractionAvailable}
+              pdfExtractionAvailable={pdfExtractionAvailable}
               zipExtractionAvailable={zipExtractionAvailable}
               embedded
             />

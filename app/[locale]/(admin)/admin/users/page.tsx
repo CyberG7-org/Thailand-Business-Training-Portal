@@ -9,9 +9,12 @@ import { companyStatus } from '@/lib/domain/auto-confirm';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
 import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
+import { companyPdfAvailable } from '@/lib/integrations/extraction/company-pdf';
 import type { CompanyRow } from './companies-panel';
 import { CreateLearnerTabs } from './create-learner-tabs';
 import type { CompanyOption, TeamOption } from './new-user-form';
+
+export const maxDuration = 180;
 
 /**
  * "Create learner & DBD" (D80): the two things a manager creates, in one place, as two tabs, in
@@ -121,6 +124,7 @@ export default async function CreateLearnerAndDbdPage({
         ownLoginId={teams ? null : staff.loginId}
         initialSuffix={initialSuffix}
         extractionAvailable={Boolean(process.env.GEMINI_API_KEY)}
+        pdfExtractionAvailable={companyPdfAvailable()}
         zipExtractionAvailable={getDbdExtractor() !== null}
         initialTab={query.tab === 'learner' && query.add !== '1' ? 'learner' : 'companies'}
         initialAddOpen={query.add === '1'}

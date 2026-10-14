@@ -78,6 +78,21 @@ describe('company image reader', () => {
     expect(body.generationConfig.thinkingConfig).toEqual({ thinkingLevel: 'low' });
   });
 
+  it('refuses PDF input so the PDF path cannot consume Gemini credits', async () => {
+    let called = false;
+    const request = (async () => {
+      called = true;
+      throw new Error('Gemini must not be called for PDFs');
+    }) as typeof fetch;
+    await expect(
+      extractCompanyImage(new TextEncoder().encode('%PDF-1.7'), 'application/pdf', {
+        apiKey: 'test-key',
+        request,
+      }),
+    ).rejects.toThrow(/PDF.*Claude/);
+    expect(called).toBe(false);
+  });
+
   it('reports a truncated Gemini result without exposing its partial contents', async () => {
     const request: typeof fetch = async () =>
       new Response(

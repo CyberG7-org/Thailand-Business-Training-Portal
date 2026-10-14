@@ -711,7 +711,12 @@ export async function processIndexJobs(deps: IndexWorkerDeps): Promise<IndexRunS
           .eq('id', doc.id)
           .single();
         let finalType = fresh?.document_type ?? doc.document_type;
-        if (finalType === null || finalType === 'other') {
+        // A profile poster is searchable evidence, never a DBD certificate. Keep its explicit
+        // 'other' type even when the poster happens to repeat certificate-like details.
+        if (
+          finalType === null ||
+          (finalType === 'other' && !doc.path.endsWith('/company-profile.pdf'))
+        ) {
           // A cover sheet or a failed call left the document untyped: try again with more pages.
           const { data: firstPages } = await admin
             .from('dbd_pages')

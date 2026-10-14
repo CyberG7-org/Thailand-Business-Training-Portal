@@ -14,9 +14,9 @@ const LEARNER_PASSWORD = 'Learn123';
 
 /**
  * D80, D93: one page, two tabs in the order a manager works — the companies with a way to add
- * one, then the learner form. Image intake replaces the former ZIP pack.
+ * one, then the learner form. Image, poster PDF and ZIP intake share the same panel.
  */
-test('a manager can choose image or ZIP company intake', async ({ page }) => {
+test('a manager can choose image, PDF or ZIP company intake', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการสร้างครบ', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
@@ -30,6 +30,7 @@ test('a manager can choose image or ZIP company intake', async ({ page }) => {
   await expect(page.getByTestId('tab-companies')).toContainText('0');
   await expect(page.getByTestId('companies')).toContainText('ยังไม่มีบริษัท');
   await expect(page.getByTestId('create-company-panel')).toBeVisible();
+  await expect(page.getByTestId('add-company')).toHaveText(/สร้าง DBD ใหม่/);
   expect(
     await page.getByTestId('create-company-panel').evaluate((panel) => {
       const list = panel.parentElement?.querySelector('#companies-heading');
@@ -51,6 +52,14 @@ test('a manager can choose image or ZIP company intake', async ({ page }) => {
   );
   await expect(page.getByText('Choose an image to upload')).toBeVisible();
   await expect(page.getByTestId('create-dbd')).toContainText('Upload company information image');
+  await page.getByRole('radio', { name: 'PDF poster' }).check();
+  await expect(page.getByTestId('create-dbd-pdf-files')).toHaveAttribute(
+    'accept',
+    '.pdf,application/pdf',
+  );
+  await expect(page.getByText('Choose a PDF poster to upload')).toBeVisible();
+  await expect(page.getByTestId('create-dbd')).toContainText('Upload company information PDF');
+  await expect(page.getByTestId('upload-pdf')).not.toContainText('GEMINI_API_KEY');
   await page.getByRole('radio', { name: 'ZIP file' }).check();
   await expect(page.getByTestId('create-dbd-zip-files')).toHaveAttribute(
     'accept',
