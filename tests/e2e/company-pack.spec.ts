@@ -46,7 +46,7 @@ test('a manager uploads one ZIP: documents and page links are sorted without inv
   const code = await createManager(page, 'ผู้จัดการแพ็กบริษัท', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   await page.goto('/th/admin/users?tab=companies');
-  await page.getByRole('button', { name: 'เพิ่มบริษัทที่ไม่มีในรายการ' }).click();
+  await page.getByTestId('add-company').click();
 
   // What the zip holds, before anything is sent.
   const zipName = `pack-${Date.now()}`;
