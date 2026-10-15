@@ -197,7 +197,9 @@
     },
     "start": "Mulakan temu duga",
     "resume": "Sambung temu duga",
-    "history": "Temu duga terdahulu",
+    "history": "Percubaan terdahulu",
+    "attemptLine": "Percubaan {no}: {score} / {max}",
+    "attemptInProgressLine": "Percubaan {no}",
     "verdict": {
       "ready": "Bersedia",
       "not_ready": "Belum bersedia",

@@ -1524,7 +1524,9 @@
     },
     "start": "开始面试",
     "resume": "继续面试",
-    "history": "过往面试",
+    "history": "历史记录",
+    "attemptLine": "第 {no} 次：{score} / {max}",
+    "attemptInProgressLine": "第 {no} 次",
     "verdict": {
       "ready": "已准备好",
       "not_ready": "尚未准备好",

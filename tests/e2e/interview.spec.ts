@@ -110,6 +110,12 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   }
 
   await page.goto('/th/interview');
+  await expect(page.getByTestId('interview-history').getByRole('heading')).toHaveText(
+    'ครั้งที่ผ่านมา',
+  );
+  await expect(
+    page.getByTestId('interview-history').locator('[data-verdict="not_ready"]'),
+  ).toContainText(/ครั้งที่ 1: \d+ \/ 13/);
   await expect(
     page.getByTestId('interview-history').locator('[data-verdict="not_ready"]'),
   ).toHaveCount(1);
@@ -182,9 +188,16 @@ test('the chat fits a phone', async ({ page }) => {
     .getByTestId('interview-history')
     .locator('[data-verdict="in_progress"]');
   await expect(activeSession).toHaveCount(1);
+  await expect(activeSession).toContainText('ครั้งที่ 1');
   await expect(activeSession).toContainText('กำลังดำเนินการ');
+  await page.goto('/en/interview');
+  await expect(page.getByTestId('interview-history').getByRole('heading')).toHaveText(
+    'Previous attempts',
+  );
+  await expect(activeSession).toContainText('Attempt 1');
+  await expect(activeSession).toContainText('In Progress');
   await activeSession.getByRole('link').click();
-  await expect(page).toHaveURL(sessionUrl);
+  await expect(page).toHaveURL(sessionUrl.replace('/th/', '/en/'));
   await expect(page.getByTestId('chat-input')).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

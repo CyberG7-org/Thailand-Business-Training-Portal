@@ -1525,6 +1525,8 @@
     "start": "เริ่มการสัมภาษณ์",
     "resume": "สัมภาษณ์ต่อ",
     "history": "ครั้งที่ผ่านมา",
+    "attemptLine": "ครั้งที่ {no}: {score} / {max}",
+    "attemptInProgressLine": "ครั้งที่ {no}",
     "verdict": {
       "ready": "พร้อมแล้ว",
       "not_ready": "ยังไม่พร้อม",

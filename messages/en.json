@@ -1524,7 +1524,9 @@
     },
     "start": "Start the interview",
     "resume": "Continue the interview",
-    "history": "Past interviews",
+    "history": "Previous attempts",
+    "attemptLine": "Attempt {no}: {score} / {max}",
+    "attemptInProgressLine": "Attempt {no}",
     "verdict": {
       "ready": "Ready",
       "not_ready": "Not yet ready",
