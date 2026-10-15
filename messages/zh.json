@@ -572,7 +572,7 @@
           "province_not_found": "找不到该府",
           "district_not_found": "在该府找不到该县/区",
           "subdistrict_not_found": "在该县/区找不到该乡/分区",
-          "postcode_mismatch": "文件上的邮编与乡/分区不符"
+          "postcode_mismatch": "文件邮编与地区参考资料不一致；系统采用文件上的邮编。"
         },
         "parts": {
           "house_no": "门牌号",

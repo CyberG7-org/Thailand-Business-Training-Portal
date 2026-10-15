@@ -572,7 +572,7 @@
           "province_not_found": "The province could not be found",
           "district_not_found": "The district could not be found in that province",
           "subdistrict_not_found": "The subdistrict could not be found in that district",
-          "postcode_mismatch": "The printed postcode does not match the subdistrict"
+          "postcode_mismatch": "The document's postcode differs from the geography reference. The document's postcode is used."
         },
         "parts": {
           "house_no": "House no.",

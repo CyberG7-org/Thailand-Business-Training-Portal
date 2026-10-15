@@ -8,11 +8,11 @@ const PARTS = ['house_no', 'subdistrict', 'district', 'province'] as const;
 export function AddressPanel({ address, stored }: { address: RegisteredAddress; stored: boolean }) {
   const t = useTranslations('admin.dbd.address');
   const tone =
-    address.status === 'resolved'
+    address.status === 'resolved' && address.issues.length === 0
       ? 'staff-notice-ok'
-      : address.status === 'partial'
-        ? 'staff-notice-warn'
-        : 'staff-notice-bad';
+      : address.status === 'unresolved'
+        ? 'staff-notice-bad'
+        : 'staff-notice-warn';
   return (
     <section
       className="staff-card grid max-w-2xl gap-3"
