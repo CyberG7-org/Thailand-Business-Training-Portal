@@ -8,6 +8,7 @@ import { refreshNameCard } from '@/lib/db/name-cards';
 import { loadProgressionFacts } from '@/lib/db/progression';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { pinnedFactsFor } from '@/lib/db/pinning';
+import { prepareQuizFactsAfter } from '@/lib/db/quiz-preparation';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
@@ -104,6 +105,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   // while the record has no version yet. What it does and sells is the manager's answer, not a
   // certificate fact (Level 4).
   const pinned = mine ? await pinnedFactsFor(createSupabaseAdminClient(), mine) : null;
+  if (pinned) prepareQuizFactsAfter(user.id);
   const structured = record ? readStructuredData(record.structured_data) : null;
   const liveInterview = structured?.interview ?? EMPTY_INTERVIEW_PROFILE;
   const liveBusiness = structured?.business ?? EMPTY_BUSINESS_PROFILE;

@@ -7,6 +7,7 @@ import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
 import { listMyAttempts } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { prepareQuizFactsAfter } from '@/lib/db/quiz-preparation';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { mcqRule } from '@/lib/domain/mcq/result';
 import { StartExamButton } from './start-button';
@@ -21,6 +22,7 @@ const RESULT_CHIP = {
 export default async function ExamHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
+  prepareQuizFactsAfter(user.id);
   const [attempts, passScore] = await Promise.all([
     listMyAttempts(await createSupabaseServerClient(), user.id, 'exam'),
     getPolicy('mcq_pass_score'),

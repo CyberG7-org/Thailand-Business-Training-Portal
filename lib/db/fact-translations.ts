@@ -8,6 +8,31 @@ import type { Database, Json } from './database.types';
 
 type Source = Parameters<typeof translatableFacts>[0];
 
+/** Read a prepared translation without making a model request on a learner's critical path. */
+export async function cachedFactTranslationsFor(
+  admin: SupabaseClient<Database>,
+  versionId: string,
+  source: Source,
+  locale: AppLocale,
+): Promise<FactTranslations> {
+  if (locale === 'th') return {};
+  const originals = translatableFacts(source);
+  if (Object.keys(originals).length === 0) return {};
+  const hash = createHash('sha256').update(JSON.stringify(originals)).digest('hex');
+  const { data, error } = await admin
+    .from('company_fact_translations')
+    .select('translations')
+    .eq('training_version_id', versionId)
+    .eq('locale', locale)
+    .eq('source_hash', hash)
+    .maybeSingle();
+  if (error) {
+    console.error('Company fact translation cache unavailable', error);
+    return {};
+  }
+  return (data?.translations as FactTranslations | undefined) ?? {};
+}
+
 /**
  * One translation per version, locale and exact source set. A different learner role gets its
  * own hash; an unchanged version reuses the result across study cards and new quiz attempts.
