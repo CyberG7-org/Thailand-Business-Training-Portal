@@ -50,7 +50,9 @@ export default async function ExceptionsPage({ params }: { params: Promise<{ loc
                 >
                   <td>
                     <Link href={`/admin/dbd-records/${r.dbd_record_id}`} className="staff-link">
-                      {r.dbd_records?.company_name_th ?? '—'}
+                      {r.dbd_records?.company_name_en?.trim() ||
+                        r.dbd_records?.company_name_th?.trim() ||
+                        '—'}
                     </Link>
                   </td>
                   <td>{tk(r.kind as 'missing')}</td>

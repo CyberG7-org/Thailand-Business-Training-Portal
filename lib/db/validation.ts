@@ -248,6 +248,7 @@ export async function resolveException(
 
 export type QueueRow = ExceptionRow & {
   dbd_records: {
+    company_name_en: string | null;
     company_name_th: string | null;
     team_id: string | null;
     extraction_status: string;
@@ -258,7 +259,7 @@ export type QueueRow = ExceptionRow & {
 export async function listExceptionQueue(db: Db): Promise<QueueRow[]> {
   const { data, error } = await db
     .from('training_fact_exceptions')
-    .select('*, dbd_records(company_name_th, team_id, extraction_status)')
+    .select('*, dbd_records(company_name_en, company_name_th, team_id, extraction_status)')
     .eq('status', 'open')
     .order('blocks')
     .order('created_at');
