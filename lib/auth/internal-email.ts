@@ -1,5 +1,5 @@
 /** Login IDs are case-insensitive and stored lower-case. */
-export const LOGIN_ID_PATTERN = /^[a-z0-9][a-z0-9._-]{2,63}$/i;
+export const LOGIN_ID_PATTERN = /^[a-z0-9][a-z0-9._-]{1,63}$/i;
 
 export function isValidLoginId(loginId: string): boolean {
   return LOGIN_ID_PATTERN.test(loginId);

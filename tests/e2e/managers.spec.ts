@@ -34,32 +34,34 @@ test('the admin creates a manager, sees the team, and can suspend it', async ({ 
   expect((suspended.after as { status?: string }).status).toBe('disabled');
 });
 
-test('the admin types a manager code after T, and a taken one is refused', async ({ page }) => {
+test('the admin types a two-character manager code without T, and a taken one is refused', async ({
+  page,
+}) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/managers');
   const form = page.locator('form:has([data-testid="create-manager"])');
-  await expect(form.getByTestId('login-id-prefix')).toHaveText('T');
-  // A free code is filled in (D69): one letter and two digits (D85); ↻ offers another.
+  await expect(form.getByTestId('login-id-prefix')).toHaveCount(0);
+  // A free code is filled in: one letter and one digit; ↻ offers another.
   const first = await form.getByTestId('login-suffix').inputValue();
-  expect(first).toMatch(/^[A-Z][0-9]{2}$/);
+  expect(first).toMatch(/^[A-Z][0-9]$/);
   await form.getByTestId('suggest-login-id').click();
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
   const offered = await form.getByTestId('login-suffix').inputValue();
-  expect(offered).toMatch(/^[A-Z][0-9]{2}$/);
+  expect(offered).toMatch(/^[A-Z][0-9]$/);
 
-  // D69's two-character shape is refused as it is typed, in the manager's words (D85).
-  await form.getByTestId('login-suffix').fill('G4');
+  // A one-character code is refused as it is typed, in the manager's words.
+  await form.getByTestId('login-suffix').fill('G');
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'invalid');
   await expect(form.getByTestId('login-id-status')).toHaveText(
-    'ใช้ตัวอักษรภาษาอังกฤษหรือตัวเลขให้ครบ 3 ตัว',
+    'ใช้ตัวอักษรภาษาอังกฤษหรือตัวเลขให้ครบ 2 ตัว',
   );
-  await form.getByTestId('login-suffix').fill('123');
+  await form.getByTestId('login-suffix').fill('12');
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
 
   // A code typed in any case is stored as typed and shown upper-case.
-  const suffix = offered.toLowerCase();
+  const suffix = 'ab';
   const code = await createManager(page, 'ผู้จัดการพิมพ์รหัส', MANAGER_PASSWORD, suffix);
-  expect(code).toBe(`T${offered}`);
+  expect(code).toBe('AB');
 
   await page.goto('/th/admin/managers');
   // Typed before the page hydrates, the input never reaches React; type until it answers.

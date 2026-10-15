@@ -1,23 +1,23 @@
 /**
  * Account codes (D69). Staff type the part after a fixed prefix: the owner gives a manager
- * `T` + a three-character suffix, and a manager gives a learner their whole code plus a
- * four-character suffix. Each new suffix may contain ASCII letters and digits in any order.
+ * a two-character code without a prefix, and a manager gives a learner their whole code plus a
+ * four-character suffix. Each new code may contain ASCII letters and digits in any order.
  * Codes are case-insensitive and stored lower-case, then shown upper-case. Existing IDs,
  * including older formats, are left unchanged.
  */
-export const MANAGER_PREFIX = 't';
+export const MANAGER_PREFIX = '';
 
 /** Whose code is being chosen: a manager's (the owner) or a learner's (staff). */
 export type LoginIdKind = 'manager' | 'learner';
 
 /** Suggested codes keep the familiar readable shapes; manually typed codes may use any order. */
 const SHAPES: Record<LoginIdKind, { letters: number; digits: number }> = {
-  manager: { letters: 1, digits: 2 },
+  manager: { letters: 1, digits: 1 },
   learner: { letters: 2, digits: 2 },
 };
 
-/** A new manager's typed part: any three ASCII letters or digits. */
-export const MANAGER_SUFFIX_PATTERN = /^[a-z0-9]{3}$/i;
+/** A new manager's code: any two ASCII letters or digits. */
+export const MANAGER_SUFFIX_PATTERN = /^[a-z0-9]{2}$/i;
 
 /** A new learner's typed part: any four ASCII letters or digits. */
 export const LEARNER_SUFFIX_PATTERN = /^[a-z0-9]{4}$/i;
@@ -26,7 +26,7 @@ export function isValidSuffixFor(kind: LoginIdKind, suffix: string): boolean {
   return (kind === 'learner' ? LEARNER_SUFFIX_PATTERN : MANAGER_SUFFIX_PATTERN).test(suffix);
 }
 
-/** How many characters a typed part has: 3 for a manager, 4 for a learner. */
+/** How many characters a typed part has: 2 for a manager, 4 for a learner. */
 export function suffixLength(kind: LoginIdKind): number {
   return SHAPES[kind].letters + SHAPES[kind].digits;
 }
@@ -57,7 +57,7 @@ const LETTERS = 'abcdefghjklmnpqrstuvwxyz';
 const DIGITS = '0123456789';
 
 /**
- * Suffixes to offer, all distinct, never I or O: 2,400 for managers (D85) and 57,600 per team
+ * Suffixes to offer, all distinct, never I or O: 240 for managers and 57,600 per team
  * for learners (D84). Fewer come back than asked for only when the space is smaller.
  */
 export function suggestionCandidates(
@@ -78,7 +78,7 @@ export function suggestionCandidates(
   return [...found];
 }
 
-/** Every suffix the suggestion can offer, in order (a00 … z99, aa00 … zz99), never I or O. */
+/** Every suffix the suggestion can offer, in order (a0 … z9, aa00 … zz99), never I or O. */
 export function allSuffixes(kind: LoginIdKind): string[] {
   const { letters, digits } = SHAPES[kind];
   let codes = [''];

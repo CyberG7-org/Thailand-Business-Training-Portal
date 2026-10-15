@@ -23,10 +23,10 @@ function seeded(seed: number): () => number {
 }
 
 describe('composing a code', () => {
-  it('prefixes a manager with T and stores it lower-case', () => {
-    expect(MANAGER_PREFIX).toBe('t');
-    expect(managerLoginId('A12')).toBe('ta12');
-    expect(managerLoginId(' a12 ')).toBe('ta12');
+  it('stores a new two-character manager code without a T prefix', () => {
+    expect(MANAGER_PREFIX).toBe('');
+    expect(managerLoginId('A1')).toBe('a1');
+    expect(managerLoginId(' a1 ')).toBe('a1');
   });
 
   it("puts a learner under their manager's whole code", () => {
@@ -51,16 +51,16 @@ describe('displayLoginId', () => {
   });
 });
 
-/** Newly typed manager suffixes allow any three ASCII letters or digits. */
+/** Newly typed manager codes allow any two ASCII letters or digits. */
 describe('isValidSuffixFor a manager', () => {
-  it('accepts any order of three letters or digits, in either case', () => {
-    for (const ok of ['A12', 'a12', 'ABC', '123', '1A2', 'AB1', 'I00']) {
+  it('accepts any order of two letters or digits, in either case', () => {
+    for (const ok of ['A1', 'a1', 'AB', '12', '1A', 'I0']) {
       expect(isValidSuffixFor('manager', ok), ok).toBe(true);
     }
   });
 
   it('refuses the wrong length or non-alphanumeric characters', () => {
-    for (const bad of ['', 'G4', '01', 'AB12', 'SALES1', 'A1', 'A123', 'A-1', 'A 1', 'ก12']) {
+    for (const bad of ['', 'A', 'A12', 'AB12', 'SALES1', 'A-1', 'A 1', 'ก1']) {
       expect(isValidSuffixFor('manager', bad), bad).toBe(false);
     }
   });
@@ -82,19 +82,19 @@ describe('isValidSuffixFor a learner', () => {
 });
 
 describe('suffixLength', () => {
-  it('is 3 for a manager and 4 for a learner, the field lengths', () => {
-    expect(suffixLength('manager')).toBe(3);
+  it('is 2 for a manager and 4 for a learner, the field lengths', () => {
+    expect(suffixLength('manager')).toBe(2);
     expect(suffixLength('learner')).toBe(4);
   });
 });
 
 describe('suggestionCandidates', () => {
-  it('offers a manager one letter and two digits, never I or O, all distinct and valid', () => {
+  it('offers a manager one letter and one digit, never I or O, all distinct and valid', () => {
     const codes = suggestionCandidates('manager', 200, seeded(7));
     expect(codes).toHaveLength(200);
     expect(new Set(codes).size).toBe(200);
     for (const code of codes) {
-      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(code).toMatch(/^[a-hj-np-z][0-9]$/);
       expect(isValidSuffixFor('manager', code)).toBe(true);
     }
   });
@@ -110,22 +110,22 @@ describe('suggestionCandidates', () => {
   });
 
   it('stops at the size of the space rather than looping for ever', () => {
-    // 24 letters × 100 for managers; 24 × 24 letters × 100 for learners.
-    expect(suggestionCandidates('manager', 5_000, seeded(5)).length).toBeLessThanOrEqual(2_400);
+    // 24 letters × 10 for suggested managers; manually typed codes may use any two characters.
+    expect(suggestionCandidates('manager', 5_000, seeded(5)).length).toBeLessThanOrEqual(240);
     expect(suggestionCandidates('learner', 60_000, seeded(2)).length).toBeLessThanOrEqual(57_600);
   });
 });
 
 describe('allSuffixes', () => {
-  it('lists all 2,400 manager codes the suggestion can offer, in order, never I or O', () => {
+  it('lists all 240 manager codes the suggestion can offer, in order, never I or O', () => {
     const codes = allSuffixes('manager');
-    expect(codes).toHaveLength(2_400);
-    expect(new Set(codes).size).toBe(2_400);
-    expect(codes.slice(0, 3)).toEqual(['a00', 'a01', 'a02']);
-    expect(codes[100]).toBe('b00');
-    expect(codes.at(-1)).toBe('z99');
+    expect(codes).toHaveLength(240);
+    expect(new Set(codes).size).toBe(240);
+    expect(codes.slice(0, 3)).toEqual(['a0', 'a1', 'a2']);
+    expect(codes[10]).toBe('b0');
+    expect(codes.at(-1)).toBe('z9');
     for (const code of codes) {
-      expect(code).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+      expect(code).toMatch(/^[a-hj-np-z][0-9]$/);
       expect(isValidSuffixFor('manager', code)).toBe(true);
     }
   });

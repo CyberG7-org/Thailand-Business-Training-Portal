@@ -31,7 +31,7 @@ export function LoginIdField({
   compact = false,
 }: {
   kind: LoginIdKind;
-  /** The stored prefix, e.g. `t-` or `t-g4-`; null while the admin has not chosen a team. */
+  /** Empty for a new manager; the manager's code for a learner; null until a team is chosen. */
   prefix: string | null;
   /** The team the admin chose; a manager's own team is implied by the server. */
   managerId?: string;
@@ -89,7 +89,7 @@ export function LoginIdField({
     checking: t('checking'),
     available: t(compact ? 'availableKeep' : 'available'),
     taken: t('taken'),
-    // New learner codes accept any four letters or digits; manager codes accept any three.
+    // New learner codes accept any four letters or digits; manager codes accept any two.
     invalid: t(kind === 'learner' ? 'invalidLearner' : 'invalid'),
     'no-team': t('noTeam'),
   };
@@ -103,9 +103,11 @@ export function LoginIdField({
       </label>
       <div className="mt-1 flex items-stretch gap-2">
         <div className="staff-input-group">
-          <span data-testid="login-id-prefix" className="staff-input-affix font-mono">
-            {prefix ? displayLoginId(prefix) : '—'}
-          </span>
+          {prefix !== '' && (
+            <span data-testid="login-id-prefix" className="staff-input-affix font-mono">
+              {prefix === null ? '—' : displayLoginId(prefix)}
+            </span>
+          )}
           <input
             id={id}
             name="loginSuffix"
@@ -117,12 +119,12 @@ export function LoginIdField({
               check(value.trim());
             }}
             required
-            disabled={!prefix || busy}
+            disabled={prefix === null || busy}
             maxLength={suffixLength(kind)}
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
-            placeholder={prefix ? undefined : t('chooseTeam')}
+            placeholder={prefix === null ? t('chooseTeam') : undefined}
             aria-invalid={state === 'taken' || state === 'invalid'}
             aria-describedby={`${id}-status ${id}-hint`}
             className="staff-input font-mono"
@@ -131,7 +133,7 @@ export function LoginIdField({
         <button
           type="button"
           onClick={suggest}
-          disabled={!prefix || busy}
+          disabled={prefix === null || busy}
           data-testid="suggest-login-id"
           aria-label={t('suggest')}
           title={t('suggest')}

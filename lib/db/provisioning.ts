@@ -18,14 +18,14 @@ import { serverEnv } from './env';
 
 /** One wording for a taken code, whether the pre-check or the auth service found it (D69). */
 export const LOGIN_ID_TAKEN = 'This login ID is already taken — choose another';
-export const MANAGER_SUFFIX_INVALID = 'Use exactly 3 letters or digits for a manager login ID';
+export const MANAGER_SUFFIX_INVALID = 'Use exactly 2 letters or digits for a manager login ID';
 export const LEARNER_SUFFIX_INVALID = 'Use exactly 4 letters or digits for a learner login ID';
 
 export const newAccountSchema = z.object({
   loginId: z
     .string()
     .trim()
-    .refine(isValidLoginId, 'Login ID must be 3–64 letters, digits, ".", "_" or "-"'),
+    .refine(isValidLoginId, 'Login ID must be 2–64 letters, digits, ".", "_" or "-"'),
   password: z.string().min(6),
   role: z.enum(['learner', 'manager', 'admin']).default('learner'),
   displayName: z.string().trim().max(120).optional(),
@@ -114,8 +114,7 @@ function parsePerson(
 }
 
 /**
- * Staff type only the part after the prefix; the prefix is always the server's (D69). A
- * learner's part is four letters or digits, a manager's three letters or digits.
+ * Staff type the manager's whole two-character code or the four-character learner suffix.
  */
 function parseSuffix(kind: LoginIdKind, suffix: string): string {
   const trimmed = suffix.trim();
@@ -173,7 +172,7 @@ export async function learnerPrefixOf(managerId: string): Promise<string> {
 
 /**
  * Every code held under a prefix with a suffix of this many characters, read a page at a time:
- * under `t-` that is the managers' codes and none of their learners'. The prefix's own `_` and
+ * with an empty manager prefix that is two-character codes and none of their learners'. The prefix's own `_` and
  * `%` are matched literally, though no prefix the portal makes contains either.
  */
 async function heldUnder(prefix: string, length: number): Promise<Set<string>> {
@@ -194,7 +193,7 @@ async function heldUnder(prefix: string, length: number): Promise<Set<string>> {
 }
 
 /**
- * A free suffix to prefill under a prefix: a manager's (one letter and two digits, D85) or a
+ * A free suffix to prefill under a prefix: a manager's (one letter and one digit) or a
  * learner's under their team (two letters and two digits, D84). A couple of random batches, each
  * checked in one query, find one wherever there is room; a nearly full space can defeat them, so
  * then the codes held under the prefix are read and a free one picked, and "none free" means
@@ -241,7 +240,7 @@ async function createUnderCode(
   }
 }
 
-/** A manager is a team: `T-` plus the suffix the owner typed, which prefixes every learner. */
+/** A manager is a team: the two-character code the owner typed prefixes every learner. */
 export async function createManagerAccount(
   input: NewPerson & { suffix: string },
   deps: Deps = { createAccount },

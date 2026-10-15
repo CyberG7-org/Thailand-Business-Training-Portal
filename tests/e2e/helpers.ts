@@ -72,7 +72,7 @@ export async function selectTeam(page: Page, code: string) {
 }
 
 /**
- * Creates a manager on the Managers page and returns their code as displayed, e.g. "TA12": the
+ * Creates a manager on the Managers page and returns their code as displayed, e.g. "A1": the
  * suggestion unless `suffix` is given.
  */
 export async function createManager(
@@ -92,7 +92,8 @@ export async function createManager(
   // The create waits for the Managers page to render again, which lists every team with its
   // counts: seconds on a local database that many runs have filled.
   await expect(created).toBeVisible({ timeout: 15_000 });
-  const code = (await created.textContent())?.match(/T[A-Z][0-9]{2}/)?.[0];
+  const code = (await created.textContent())?.trim();
+  if (code && !/^[A-Z0-9]{2}$/.test(code)) throw new Error(`Unexpected manager login ID: ${code}`);
   if (!code) throw new Error('Created manager did not show a login ID');
   return code;
 }

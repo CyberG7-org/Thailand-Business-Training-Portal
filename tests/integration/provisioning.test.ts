@@ -19,19 +19,19 @@ const PASSWORD = 'Test-Password-123!';
 const LEARNER_PASSWORD = 'Test1234';
 
 /**
- * A manager suffix no account holds. There are only 2,400 (one letter and two digits, D85), so a
+ * A manager code no account holds. Suggestions use one letter and one digit, so a
  * persistent local database is asked rather than a random one invented.
  */
 const fresh = () => suggestSuffix('manager', MANAGER_PREFIX);
 
-/** D69: staff type the code after a fixed prefix; the server composes and checks it. */
+/** New manager IDs have no prefix; the server still checks uniqueness. */
 describe('provisioning takes the typed code', () => {
   const created: string[] = [];
   afterAll(async () => {
     for (const id of created.reverse()) await deleteTestUser(id);
   });
 
-  it('gives a manager T- plus the suffix typed, stored lower-case', async () => {
+  it('gives a manager the two-character code typed, stored lower-case', async () => {
     const suffix = await fresh();
     const manager = await createManagerAccount({
       suffix: suffix.toUpperCase(),
@@ -39,14 +39,14 @@ describe('provisioning takes the typed code', () => {
       displayName: 'หนึ่ง',
     });
     created.push(manager.id);
-    expect(manager.loginId).toBe(`t${suffix}`);
+    expect(manager.loginId).toBe(suffix);
 
     const { data } = await svc
       .from('profiles')
       .select('login_id, role, manager_id')
       .eq('id', manager.id)
       .single();
-    expect(data).toEqual({ login_id: `t${suffix}`, role: 'manager', manager_id: null });
+    expect(data).toEqual({ login_id: suffix, role: 'manager', manager_id: null });
   });
 
   it("gives a learner their manager's code, a hyphen and the suffix, in that team", async () => {
@@ -159,9 +159,9 @@ describe('a code is checked before it is created', () => {
     const manager = await createManagerAccount({ suffix, password: PASSWORD });
     created.push(manager.id);
     await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
-    expect(await isLoginIdTaken(`t${suffix}`)).toBe(true);
-    expect(await isLoginIdTaken(`T${suffix.toUpperCase()}`)).toBe(true);
-    expect(await isLoginIdTaken(`t${await fresh()}`)).toBe(false);
+    expect(await isLoginIdTaken(suffix)).toBe(true);
+    expect(await isLoginIdTaken(suffix.toUpperCase())).toBe(true);
+    expect(await isLoginIdTaken(await fresh())).toBe(false);
   });
 
   it('lets exactly one of two simultaneous creations have a code', async () => {
@@ -178,8 +178,8 @@ describe('a code is checked before it is created', () => {
     expect((lost[0] as PromiseRejectedResult).reason).toMatchObject({ code: 'duplicate' });
   });
 
-  it('refuses a manager suffix that is not three letters or digits', async () => {
-    for (const suffix of ['', 'x', 'G4', 'AB12', 'SALES1', 'a1', 'a123', 'g-4', 'ก12', 'a 12']) {
+  it('refuses a manager code that is not two letters or digits', async () => {
+    for (const suffix of ['', 'x', 'A12', 'AB12', 'SALES1', 'a123', 'g-4', 'ก1', 'a 1']) {
       await expect(
         createManagerAccount(
           { suffix, password: PASSWORD },
@@ -232,16 +232,16 @@ describe('suggestions', () => {
     const taken = await fresh();
     const manager = await createManagerAccount({ suffix: taken, password: PASSWORD });
     created.push(manager.id);
-    // The batches offer only a held code; the full read of every T- code skips what is held.
+    // The batches offer only a held code; the full read of two-character IDs skips what is held.
     const offered = await suggestSuffix('manager', MANAGER_PREFIX, () => [taken]);
     expect(offered).not.toBe(taken);
-    expect(offered).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+    expect(offered).toMatch(/^[a-hj-np-z][0-9]$/);
     expect(await isLoginIdTaken(MANAGER_PREFIX + offered)).toBe(false);
   });
 
-  it('suggests one letter and two digits for a manager by default (D85)', async () => {
+  it('suggests one letter and one digit for a manager by default', async () => {
     const suffix = await suggestSuffix('manager', MANAGER_PREFIX);
-    expect(suffix).toMatch(/^[a-hj-np-z][0-9]{2}$/);
+    expect(suffix).toMatch(/^[a-hj-np-z][0-9]$/);
     expect(await isLoginIdTaken(MANAGER_PREFIX + suffix)).toBe(false);
   });
 
@@ -288,10 +288,10 @@ describe('learner suffix validation', () => {
     expect(learner.loginId).toBe(`${manager.loginId}da42`);
   });
 
-  it('gives a manager one letter and two digits after T- (D85)', async () => {
+  it('gives a manager a two-character code without T', async () => {
     const manager = await createManagerAccount({ suffix: await fresh(), password: PASSWORD });
     created.push(manager.id);
-    expect(manager.loginId).toMatch(/^t[a-z][0-9]{2}$/);
+    expect(manager.loginId).toMatch(/^[a-z][0-9]$/);
   });
 
   it('suggests two letters and two digits under the team, skipping a taken one', async () => {
