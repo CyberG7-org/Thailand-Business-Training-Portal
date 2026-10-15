@@ -100,9 +100,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | What to remember | Your answer |
 |---|---|
 | Registered capital | {registered_capital} Baht |
+| How many shares do you hold? | {my_shares} shares ({my_share_percent}%) |
 | Total shares and value | {total_shares} shares at {par_value} Baht each |
 | Shareholders | {shareholders_count} — {shareholders} |
-| Your shares | {my_shares} shares ({my_share_percent}%) |
 | Your name and position | {my_name} — {my_position} |
 | Your daily responsibilities | {my_responsibilities} |
 | Relationship to other shareholders | {my_relationship} |
@@ -118,9 +118,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | สิ่งที่ต้องจำ | คำตอบของคุณ |
 |---|---|
 | ทุนจดทะเบียน | {registered_capital} บาท |
+| คุณถือหุ้นกี่หุ้น? | {my_shares} หุ้น ({my_share_percent}%) |
 | จำนวนหุ้นและมูลค่าหุ้น | {total_shares} หุ้น หุ้นละ {par_value} บาท |
 | ผู้ถือหุ้น | {shareholders_count} คน — {shareholders} |
-| หุ้นของคุณ | {my_shares} หุ้น ({my_share_percent}%) |
 | ชื่อและตำแหน่ง | {my_name} — {my_position} |
 | หน้าที่ประจำวัน | {my_responsibilities} |
 | ความสัมพันธ์กับผู้ถือหุ้นอื่น | {my_relationship} |
@@ -136,9 +136,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | 要记住的内容 | 您的答案 |
 |---|---|
 | 注册资本 | {registered_capital} 泰铢 |
+| 您持有多少股？ | {my_shares} 股（{my_share_percent}%） |
 | 总股份和每股价值 | {total_shares} 股，每股 {par_value} 泰铢 |
 | 股东 | {shareholders_count} 位 — {shareholders} |
-| 您的股份 | {my_shares} 股（{my_share_percent}%） |
 | 您的姓名和职位 | {my_name} — {my_position} |
 | 您的日常职责 | {my_responsibilities} |
 | 与其他股东的关系 | {my_relationship} |
@@ -154,9 +154,9 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 | Perkara yang perlu diingat | Jawapan anda |
 |---|---|
 | Modal berdaftar | {registered_capital} baht |
+| Berapa saham yang anda pegang? | {my_shares} saham ({my_share_percent}%) |
 | Jumlah saham dan nilainya | {total_shares} saham pada {par_value} baht setiap satu |
 | Pemegang saham | {shareholders_count} — {shareholders} |
-| Saham anda | {my_shares} saham ({my_share_percent}%) |
 | Nama dan jawatan anda | {my_name} — {my_position} |
 | Tanggungjawab harian anda | {my_responsibilities} |
 | Hubungan dengan pemegang saham lain | {my_relationship} |
