@@ -35,7 +35,7 @@ test('the selected business category supplies the three bank-interview estimates
   await expect(page.locator('#record-panel-details').getByTestId('category-panel')).toHaveCount(0);
   await openRecordTab(page, 'interview');
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'unmapped');
-  await page.locator('select[name="categoryKey"]').selectOption('food_products');
+  await page.locator('select[name="categoryKey"]').selectOption('food_agricultural_trading');
   await page.getByTestId('category-set').click();
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'mapped');
   await expect(page.getByTestId('figure-monthlyRevenue')).toContainText('2,100,000');
