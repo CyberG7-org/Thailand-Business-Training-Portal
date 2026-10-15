@@ -92,11 +92,9 @@ describe('resolving against the real tables', () => {
       status: 'partial' as const,
       issues: ['postcode_mismatch' as const],
     };
-    const current = await currentAddress(
-      svc,
-      { head_office_address: printed },
-      { address: oldAddress } as StructuredData,
-    );
+    const current = await currentAddress(svc, { head_office_address: printed }, {
+      address: oldAddress,
+    } as StructuredData);
     expect(current).toMatchObject({
       status: 'resolved',
       issues: ['postcode_mismatch'],
