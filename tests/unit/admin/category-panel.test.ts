@@ -39,7 +39,7 @@ describe('CategoryPanel', () => {
     ]);
   });
 
-  it('marks the saved category in the open dropdown while preserving its selected value', () => {
+  it('gives the saved category a grey background without a checkmark', () => {
     const html = renderToStaticMarkup(
       createElement(
         Provider,
@@ -54,7 +54,10 @@ describe('CategoryPanel', () => {
         }),
       ),
     );
-    expect(html).toMatch(/<option value="beauty" selected="">✓ 01\. Beauty Products<\/option>/);
+    expect(html).toMatch(
+      /<option value="beauty"(?=[^>]*selected="")(?=[^>]*style="background-color:#e5e7eb;color:#111827")[^>]*>01\. Beauty Products<\/option>/,
+    );
     expect(html).toContain('<option value="food">02. Food Products</option>');
+    expect(html).not.toContain('✓');
   });
 });

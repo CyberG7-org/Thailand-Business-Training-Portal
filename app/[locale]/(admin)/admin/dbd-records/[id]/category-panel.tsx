@@ -90,8 +90,15 @@ export function CategoryPanel({
           >
             <option value="">{t('none')}</option>
             {sortedOptions.map((o, index) => (
-              <option key={o.key} value={o.key}>
-                {o.key === assignment?.key ? '✓ ' : ''}
+              <option
+                key={o.key}
+                value={o.key}
+                style={
+                  o.key === assignment?.key
+                    ? { backgroundColor: '#e5e7eb', color: '#111827' }
+                    : undefined
+                }
+              >
                 {String(index + 1).padStart(2, '0')}. {o.label}
               </option>
             ))}
