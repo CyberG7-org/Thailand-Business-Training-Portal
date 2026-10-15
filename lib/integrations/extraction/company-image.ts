@@ -7,13 +7,23 @@ const shareholderPercent = z.preprocess((value) => {
   return match ? Number(match[1]) : value;
 }, z.number().nullable().default(null));
 
+const registeredCapital = z.preprocess((value) => {
+  if (typeof value !== 'string') return value;
+  const text = value.trim();
+  if (!text) return null;
+  const match = text.match(
+    /^(?:฿\s*|THB\s*)?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*(?:บาท|THB|฿)?$/i,
+  );
+  return match ? Number(match[1].replaceAll(',', '')) : value;
+}, z.number().nonnegative().nullable().default(null));
+
 /** A business-profile image is not a DBD certificate. Missing text stays blank for staff review. */
 export const companyImageSchema = z.object({
   company_name_th: z.string().default(''),
   company_name_en: z.string().default(''),
   juristic_id: z.string().default(''),
   registered_on: z.string().default(''),
-  registered_capital: z.number().nonnegative().nullable().default(null),
+  registered_capital: registeredCapital,
   directors: z
     .array(z.object({ name_th: z.string(), name_en: z.string().default('') }))
     .default([]),
@@ -109,5 +119,7 @@ export async function extractCompanyImage(
   } catch {
     throw new CompanyImageOutputError('invalid', source);
   }
-  return companyImageSchema.parse(parsed);
+  const profile = companyImageSchema.safeParse(parsed);
+  if (!profile.success) throw new CompanyImageOutputError('invalid', source);
+  return profile.data;
 }

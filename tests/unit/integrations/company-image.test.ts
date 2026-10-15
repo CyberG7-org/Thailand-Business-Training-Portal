@@ -1,7 +1,52 @@
 import { describe, expect, it } from 'vitest';
 import { extractCompanyImage } from '@/lib/integrations/extraction/company-image';
+import { companyImageToDraft } from '@/lib/domain/company-image';
 
 describe('company image reader', () => {
+  it('accepts a formatted capital amount from Gemini and creates a numeric draft', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: JSON.stringify({ registered_capital: '4,000,000 บาท' }) }],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+
+    const profile = await extractCompanyImage(new Uint8Array([1]), 'image/png', {
+      apiKey: 'test-key',
+      request,
+    });
+
+    expect(profile.registered_capital).toBe(4_000_000);
+    expect(companyImageToDraft(profile).record.registered_capital).toBe(4_000_000);
+  });
+
+  it('reports unreadable capital text as an invalid image reading', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: JSON.stringify({ registered_capital: 'about four million' }) }],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+
+    await expect(
+      extractCompanyImage(new Uint8Array([1]), 'image/png', { apiKey: 'test-key', request }),
+    ).rejects.toMatchObject({ code: 'invalid' });
+  });
+
   it('accepts shareholder percentages returned as numeric text', async () => {
     const request: typeof fetch = async () =>
       new Response(
