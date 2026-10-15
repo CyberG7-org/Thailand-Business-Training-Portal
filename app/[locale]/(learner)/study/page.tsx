@@ -8,8 +8,18 @@ import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
+import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
+import { studyPreview } from '@/lib/content/study-preview';
+import { toTemplateRecord } from '@/lib/db/assessment';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
+import { getActiveAssignmentForUser } from '@/lib/db/assignments';
+import { cachedFactTranslationsFor } from '@/lib/db/fact-translations';
+import { pinnedFactsFor } from '@/lib/db/pinning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { getMyStudyProgress, listStudyMaterials, pickLocalization } from '@/lib/db/study';
+import { renderTemplateLenient } from '@/lib/domain/assessment/template';
+import { translatedRecord } from '@/lib/domain/facts/localization';
+import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { isCardDone } from '@/lib/domain/study-progress';
 
 type State = 'new' | 'viewed' | 'completed';
@@ -20,14 +30,6 @@ const TAG: Record<State, string> = {
   new: 'bg-ink-100 text-ink-700',
 };
 const SEGMENT = { done: 'bg-gold-500', viewed: 'bg-brand-600', new: 'bg-ink-100' } as const;
-
-const COPY_KEY = {
-  'bank-interview-1-identity': 'identity',
-  'bank-interview-2-ownership': 'ownership',
-  'bank-interview-3-business': 'business',
-  'bank-interview-4-role': 'role',
-  'bank-interview-5-tips': 'answers',
-} as const;
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 
@@ -41,32 +43,48 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
   const { locale } = await params;
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
-  const [materials, progress, tracking, statuses, t] = await Promise.all([
+  const [materials, progress, tracking, statuses, t, assignment] = await Promise.all([
     listStudyMaterials(db),
     getMyStudyProgress(db, user.id),
     getPolicy('study_completion_tracking'),
     cachedStageStatuses(user.id),
     getTranslations('study'),
+    getActiveAssignmentForUser(db, user.id),
   ]);
+  const loc = locale as AppLocale;
+  const admin = assignment ? createSupabaseAdminClient() : null;
+  const pinned = assignment && admin ? await pinnedFactsFor(admin, assignment) : null;
+  const templateRecord = pinned
+    ? templateRecordFromSnapshot(pinned.snapshot, pinned.role)
+    : assignment
+      ? toTemplateRecord(assignment.dbd_records, assignment)
+      : null;
+  const translations =
+    pinned && templateRecord && admin
+      ? await cachedFactTranslationsFor(admin, pinned.version.id, templateRecord, loc)
+      : {};
+  const shownRecord = templateRecord ? translatedRecord(templateRecord, translations) : null;
   const progressById = new Map(progress.map((p) => [p.material_id, p]));
 
   const rows = materials.map((m, i) => {
-    const loc = pickLocalization(m, locale as AppLocale);
+    const localization = pickLocalization(m, loc);
     const p = progressById.get(m.id);
     const state: State = p?.completed_at ? 'completed' : p ? 'viewed' : 'new';
-    const copyKey = COPY_KEY[m.content_key as keyof typeof COPY_KEY];
+    const starterCard = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === m.content_key)
+      ?.localizations[loc];
+    const preview =
+      localization && m.type === 'card'
+        ? studyPreview(
+            renderTemplateLenient(starterCard?.body ?? localization.body ?? '', shownRecord, loc),
+          )
+        : null;
     return {
       key: m.content_key,
       index: i + 1,
-      title: loc ? (copyKey ? t(`lessons.${copyKey}.title`) : loc.title) : null,
-      description: loc
-        ? copyKey
-          ? t(`lessons.${copyKey}.description`)
-          : m.type === 'pdf'
-            ? 'PDF'
-            : t('card')
-        : null,
-      href: loc ? `/study/${m.content_key}` : null,
+      title: localization ? (starterCard?.title ?? localization.title) : null,
+      description: localization && m.type === 'pdf' ? 'PDF' : null,
+      preview,
+      href: localization ? `/study/${m.content_key}` : null,
       state,
       // The same rule the steps use to call study Done.
       done: isCardDone(p, tracking),
@@ -150,7 +168,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
                       data-testid={`study-item-${row.key}`}
                       data-study-item={row.key}
                       data-current={current || undefined}
-                      className={`grid min-h-[104px] grid-cols-[58px_minmax(0,1fr)_auto] items-center gap-3 rounded-sheet bg-white px-4 py-4 shadow-glass transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 active:translate-y-0 md:min-h-[112px] md:grid-cols-[70px_minmax(0,1fr)_auto] md:gap-5 md:px-6 ${current ? 'ring-2 ring-brand-100' : ''}`}
+                      className={`grid min-h-[104px] grid-cols-[58px_minmax(0,1fr)_auto] items-start gap-3 rounded-sheet bg-white px-4 py-4 shadow-glass transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-50 hover:shadow-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-600 active:translate-y-0 md:min-h-[112px] md:grid-cols-[70px_minmax(0,1fr)_auto] md:gap-5 md:px-6 ${current ? 'ring-2 ring-brand-100' : ''}`}
                     >
                       <span
                         className={`grid size-14 place-items-center rounded-full bg-gold-100 font-display text-xl font-semibold tabular-nums md:size-16 md:text-2xl ${row.done ? 'text-gold-700' : current ? 'text-brand-900' : 'text-ink-500'}`}
@@ -158,9 +176,30 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
                         {row.index}/{total}
                       </span>
                       <div className="min-w-0">
-                        <div className="text-base leading-[1.45] font-semibold text-brand-900">
+                        <div
+                          data-testid={`study-overview-title-${row.key}`}
+                          className="text-base leading-[1.45] font-semibold text-brand-900"
+                        >
                           {row.title}
                         </div>
+                        {row.preview?.introduction && (
+                          <p className="mt-2 line-clamp-2 text-sm leading-[1.5] text-ink-700">
+                            {row.preview.introduction}
+                          </p>
+                        )}
+                        {row.preview && row.preview.facts.length > 0 && (
+                          <dl className="mt-3 grid gap-2 border-t border-ink-100 pt-3 text-sm leading-[1.45]">
+                            {row.preview.facts.map((fact) => (
+                              <div
+                                key={fact.label}
+                                className="grid min-w-0 gap-0.5 sm:grid-cols-[minmax(0,150px)_minmax(0,1fr)] sm:gap-3"
+                              >
+                                <dt className="font-medium text-ink-500">{fact.label}</dt>
+                                <dd className="line-clamp-2 min-w-0 text-ink-900">{fact.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        )}
                         {row.description && (
                           <div className="mt-1 line-clamp-2 text-sm leading-[1.45] text-ink-500">
                             {row.description}
