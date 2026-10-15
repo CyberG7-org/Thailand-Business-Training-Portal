@@ -41,9 +41,9 @@ async function render(
     return {
       message: {
         ...base,
-        subject: `[Name card] ${who}`,
+        subject: `[Namecard] ${who}`,
         text: `นามบัตร: ${p.company_name_th ?? '-'}
-Name card for ${who}`,
+Namecard for ${who}`,
       },
       document: {
         filename: `name-card-${p.login_id}.pdf`,

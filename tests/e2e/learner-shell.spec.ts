@@ -22,6 +22,18 @@ test('primary learner pages share the focused navigation on desktop', async ({ p
   await expect(
     page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
   ).toHaveCount(5);
+  expect(
+    await page
+      .getByTestId('learner-stage-tabs')
+      .locator('[data-testid^="learner-stage-tab-"]')
+      .evaluateAll((items) => items.map((item) => item.getAttribute('data-testid'))),
+  ).toEqual([
+    'learner-stage-tab-home',
+    'learner-stage-tab-study',
+    'learner-stage-tab-exam',
+    'learner-stage-tab-interview',
+    'learner-stage-tab-nameCard',
+  ]);
   await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
   await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('เอกสารเรียนรู้');
@@ -29,7 +41,7 @@ test('primary learner pages share the focused navigation on desktop', async ({ p
   await expect(page.getByTestId('learner-nav')).toHaveCount(0);
   await page.getByTestId('learner-stage-tab-nameCard').click();
   await expect(page).toHaveURL(/\/th\/name-card$/);
-  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 2 จาก 5');
+  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 4 จาก 5');
   await expect(page.getByTestId('step-segments').locator('[data-state]')).toHaveCount(5);
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
   await expect(page.getByTestId('shell-header')).toHaveAttribute('data-variant', 'study');

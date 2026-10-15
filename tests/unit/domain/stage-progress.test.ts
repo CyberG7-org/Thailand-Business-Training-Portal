@@ -11,26 +11,42 @@ const statuses = (o: Partial<Record<StageKey, StageStatus>>): Record<StageKey, S
   appointment: { status: o.appointment ?? 'locked' },
 });
 
-/** The owner's five learner steps (2026-10-01): the practice round is not one of them. */
+/** The learner-facing steps; the practice round is not one of them. */
 describe('LEARNER_STAGES', () => {
-  it('lists study, name card, the quiz, the interview and the appointment, in that order', () => {
-    expect(LEARNER_STAGES).toEqual(['study', 'nameCard', 'exam', 'interview', 'appointment']);
+  it('lists Study, Quiz, Interview, Namecard and the appointment, in that order', () => {
+    expect(LEARNER_STAGES).toEqual(['study', 'exam', 'interview', 'nameCard', 'appointment']);
     expect(LEARNER_STAGES).not.toContain('quiz');
   });
 });
 
-/** The dashboard's "next step" is the step after the last one done, whatever lies before it. */
+/** The dashboard's next step follows milestones without treating an early Namecard as progress. */
 describe('currentStage', () => {
   it('is the first step for a learner who has done nothing', () => {
     expect(currentStage(statuses({}))).toBe('study');
   });
 
-  it('is the quiz once the name card is made', () => {
-    expect(currentStage(statuses({ nameCard: 'done' }))).toBe('exam');
+  it('still points at Study when the Namecard was generated early', () => {
+    expect(currentStage(statuses({ nameCard: 'done' }))).toBe('study');
   });
 
-  it('moves past a name card not yet made once the quiz is passed: the card is standalone', () => {
+  it('points at Quiz after Study even if the Namecard is already done', () => {
+    expect(currentStage(statuses({ study: 'done', nameCard: 'done' }))).toBe('exam');
+  });
+
+  it('points at Interview after Quiz even if the Namecard is already done', () => {
+    expect(currentStage(statuses({ exam: 'done', nameCard: 'done' }))).toBe('interview');
+  });
+
+  it('moves to Interview once the Quiz is passed even when Study is incomplete', () => {
     expect(currentStage(statuses({ exam: 'done' }))).toBe('interview');
+  });
+
+  it('points at Namecard after Interview when it has not been made', () => {
+    expect(currentStage(statuses({ interview: 'done' }))).toBe('nameCard');
+  });
+
+  it('moves to the appointment after Interview when the Namecard is already done', () => {
+    expect(currentStage(statuses({ interview: 'done', nameCard: 'done' }))).toBe('appointment');
   });
 
   it('ignores the practice round, which is not a learner step', () => {

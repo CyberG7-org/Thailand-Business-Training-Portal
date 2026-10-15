@@ -25,7 +25,7 @@ const passed: ProgressionFacts = { ...base, examSubmitted: 1, examPassed: true }
 
 describe('STAGE_KEYS', () => {
   it('is the six steps in order', () => {
-    expect(STAGE_KEYS).toEqual(['study', 'quiz', 'exam', 'nameCard', 'interview', 'appointment']);
+    expect(STAGE_KEYS).toEqual(['study', 'quiz', 'exam', 'interview', 'nameCard', 'appointment']);
   });
 });
 

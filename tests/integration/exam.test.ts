@@ -101,7 +101,7 @@ describe('exam + notifications', () => {
     expect(summary.sent).toBeGreaterThanOrEqual(1);
     expect(summary.retried).toBeGreaterThanOrEqual(1);
     expect(telegram.sent[0]?.destination).toBe('123456');
-    expect(telegram.sent[0]?.subject).toMatch(/^\[Business Knowledge Quiz (PASS|RETEST|FAIL)\]/);
+    expect(telegram.sent[0]?.subject).toMatch(/^\[Quiz (PASS|RETEST|FAIL)\]/);
 
     const { data: rows } = await asAdmin
       .from('notifications')

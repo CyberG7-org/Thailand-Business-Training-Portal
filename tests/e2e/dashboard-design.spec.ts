@@ -95,12 +95,12 @@ test('the dashboard fits a phone with four direct training actions', async ({ pa
       .getByTestId('dashboard-steps')
       .locator('li')
       .evaluateAll((items) => items.map((item) => item.getAttribute('data-testid'))),
-  ).toEqual(['stage-study', 'stage-nameCard', 'stage-exam', 'stage-interview']);
+  ).toEqual(['stage-study', 'stage-exam', 'stage-interview', 'stage-nameCard']);
   for (const [stage, number] of [
     ['study', '1'],
-    ['nameCard', '2'],
-    ['exam', '3'],
-    ['interview', '4'],
+    ['exam', '2'],
+    ['interview', '3'],
+    ['nameCard', '4'],
   ]) {
     await expect(page.getByTestId(`stage-${stage}`)).toContainText(number);
   }

@@ -11,9 +11,7 @@ test('a learner sees their company with the interview locked and no appointment 
   await expect(page.getByTestId('company-name')).toHaveText('บริษัท แดชบอร์ด จำกัด');
   // Default policy: exam pass required before the interview (decision D9, renamed in P16).
   await expect(page.getByTestId('stage-interview-status')).toHaveText('ล็อก');
-  await expect(page.getByTestId('stage-interview')).toContainText(
-    'ต้องผ่านแบบทดสอบความรู้ธุรกิจก่อน',
-  );
+  await expect(page.getByTestId('stage-interview')).toContainText('ต้องผ่านแบบทดสอบก่อน');
   await expect(page.getByTestId('stage-appointment')).toHaveCount(0);
   // The dashboard contains the four learner-owned stages; practice and booking stay elsewhere.
   await expect(page.getByTestId('stage-quiz')).toHaveCount(0);
@@ -36,7 +34,7 @@ test('a learner with no assignment sees the no-company message and every stage l
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
   await expect(page.getByTestId('no-company')).toBeVisible();
   // Only the four learner-owned stages appear; manager-owned booking is not in this dashboard.
-  for (const stage of ['study', 'nameCard', 'exam', 'interview']) {
+  for (const stage of ['study', 'exam', 'interview', 'nameCard']) {
     await expect(page.getByTestId(`stage-${stage}-status`)).toHaveText('ล็อก');
   }
   await expect(page.getByTestId('stage-appointment')).toHaveCount(0);

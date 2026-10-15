@@ -1,31 +1,30 @@
 import type { StageInfo, StageKey } from './progression';
 
 /**
- * The five steps a learner sees, in the order they see them (the owner, 2026-10-01): Study
- * material, Name card, Business Knowledge Quiz, Bank Readiness Interview, Bank appointment. The
- * practice round is still computed (`stageStatuses` keeps every key) but is not one of their
- * steps, and the name card is listed second without becoming a gate — it stays standalone
- * (D88).
+ * The learner-facing order: Study, Quiz, Interview, Namecard, then the manager-owned bank
+ * appointment. The practice round is still computed (`stageStatuses` keeps every key) but is
+ * not one of these steps. Namecard remains standalone rather than gating the interview (D88).
  */
 export const LEARNER_STAGES: readonly StageKey[] = [
   'study',
-  'nameCard',
   'exam',
   'interview',
+  'nameCard',
   'appointment',
 ];
 
 /**
- * The step the dashboard points the learner at: the one after the last step done, whatever
- * lies before it (a learner who passed the quiz is not sent back to the study list). Null once
- * every step is done. A locked step can be current — the dashboard then says why it is closed.
+ * Point to the step after the last completed milestone, without sending a learner who passed
+ * the Quiz back to Study. Namecard may be generated before the learner reaches it, so its
+ * completion must never skip an unfinished Quiz or Interview. A locked step can be current;
+ * the dashboard then explains why it is closed.
  */
 export function currentStage(statuses: Record<StageKey, StageInfo>): StageKey | null {
   let lastDone = -1;
   LEARNER_STAGES.forEach((key, i) => {
-    if (statuses[key].status === 'done') lastDone = i;
+    if (key !== 'nameCard' && statuses[key].status === 'done') lastDone = i;
   });
-  return LEARNER_STAGES[lastDone + 1] ?? null;
+  return LEARNER_STAGES.slice(lastDone + 1).find((key) => statuses[key].status !== 'done') ?? null;
 }
 
 /** How many of the learner's steps are done, for the progress ring. */
