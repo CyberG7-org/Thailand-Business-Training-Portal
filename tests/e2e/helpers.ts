@@ -130,7 +130,7 @@ export async function assignLearner(page: Page, recordId: string) {
 }
 
 /**
- * Creates a learner on the Users page and returns their stored code, e.g. "ta12da42": the team's
+ * Creates a learner on the Users page and returns their stored code, e.g. "a1da42": the team's
  * code plus the suggestion unless `suffix` is given (D69). `team` is required when the
  * caller is the admin.
  */
@@ -162,12 +162,13 @@ export async function createLearner(
   if (fields.facebookPage) {
     await page.locator('input[name="facebookPage"]').fill(fields.facebookPage);
   }
+  const code =
+    `${(await page.getByTestId('login-id-prefix').textContent())?.trim() ?? ''}${await page.getByTestId('login-suffix').inputValue()}`.toUpperCase();
   // The button wakes once the "Before you create" list is complete.
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   const status = page.getByTestId('create-user-status');
   await expect(status).toBeVisible();
-  const code = (await status.textContent())?.match(/T[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}/)?.[0];
-  if (!code) throw new Error('Created learner did not show a login ID');
+  await expect(status).toContainText(code);
   return code.toLowerCase();
 }
 
