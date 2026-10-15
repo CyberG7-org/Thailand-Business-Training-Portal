@@ -49,8 +49,9 @@ describe('company PDF poster reader', () => {
                 juristic_id: '0105568233704',
                 registered_on: '7 เมษายน 2569',
                 registered_capital: 1000000,
+                total_shares: 40_000,
                 directors: [{ name_th: 'นางสาว ก', name_en: '' }],
-                shareholders: [{ name: 'นางสาว ก', percent: 90 }],
+                shareholders: [{ name: 'นางสาว ก', shares: 36_000, percent: 90 }],
                 objectives: ['จำหน่ายสินค้า'],
                 head_office_address: 'Bangkok',
                 province: 'Bangkok',
@@ -69,7 +70,8 @@ describe('company PDF poster reader', () => {
     const result = await extractCompanyPdf(pdf, { client });
 
     expect(result.company_name_en).toBe('EXAMPLE CO., LTD.');
-    expect(result.shareholders).toEqual([{ name: 'นางสาว ก', percent: 90 }]);
+    expect(result.shareholders).toEqual([{ name: 'นางสาว ก', shares: 36_000, percent: 90 }]);
+    expect(result.total_shares).toBe(40_000);
     expect(result.products_services).toBe('Hair care services');
     expect(sentContent).toEqual(
       expect.arrayContaining([

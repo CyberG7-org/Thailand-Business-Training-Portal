@@ -108,12 +108,24 @@ describe('the starter drafts', () => {
     expect(picked('actual_business_location')).toBe('mcq-v2-actual-business-location-1');
   });
 
-  it('renders every learner shareholding question when only the ownership percentage is known', () => {
+  it('asks the number of shares when known and keeps percentage questions for older records', () => {
+    const count = MCQ_STARTER.find((s) => s.key === 'mcq-v2-learner-shareholding-1')!;
+    const countVariant = { ...count, id: count.key, status: 'approved' as const };
+    const english = renderVariant(countVariant, SAMPLE_CONTEXT, 'seed', 'en');
+    expect(english.ok).toBe(true);
+    if (english.ok) {
+      expect(english.rendered.prompt).toBe('How many shares do you have?');
+      expect(english.rendered.options.find((option) => option.key === 'A')?.text).toBe(
+        '12,000 shares',
+      );
+    }
     const ctx: RenderContext = {
       ...SAMPLE_CONTEXT,
       facts: { ...SAMPLE_CONTEXT.facts, my_shares: null, my_share_percent: 90 },
     };
-    for (const starter of MCQ_STARTER.filter((s) => s.conceptKey === 'learner_shareholding')) {
+    for (const starter of MCQ_STARTER.filter(
+      (s) => s.conceptKey === 'learner_shareholding' && s.key !== count.key,
+    )) {
       const variant = { ...starter, id: starter.key, status: 'approved' as const };
       for (const locale of ['th', 'en', 'zh'] as const) {
         const result = renderVariant(variant, ctx, 'seed', locale);
@@ -123,5 +135,13 @@ describe('the starter drafts', () => {
         expect(result.rendered.prompt).not.toMatch(/shares|หุ้นกี่หุ้น|多少股份/i);
       }
     }
+    expect(preflightVariant(countVariant, ctx, 'seed')).toMatchObject({
+      ok: false,
+      code: 'missing_fact',
+    });
+    expect(
+      checkBank(approved(), ctx, 'seed').find((c) => c.conceptKey === 'learner_shareholding')
+        ?.variant?.key,
+    ).not.toBe(count.key);
   });
 });

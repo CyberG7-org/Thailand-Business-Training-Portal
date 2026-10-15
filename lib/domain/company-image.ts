@@ -39,7 +39,10 @@ export function companyImageToDraft(profile: CompanyImageProfile): {
     objectives_count: profile.objectives.length || null,
   });
   const business = businessProfileSchema.parse({
-    share_structure: { paid_up_capital: record.registered_capital },
+    share_structure: {
+      paid_up_capital: record.registered_capital,
+      total_shares: profile.total_shares,
+    },
     objectives: profile.objectives
       .filter((item) => item.trim())
       .map((text, index) => ({
@@ -50,6 +53,7 @@ export function companyImageToDraft(profile: CompanyImageProfile): {
       .filter((item) => item.name.trim())
       .map((item) => ({
         name: item.name.trim(),
+        shares: item.shares,
         percent: item.percent,
       })),
   });

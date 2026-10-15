@@ -392,6 +392,52 @@ const SHAREHOLDING_BASE: StarterVariant = {
   },
 };
 
+/** Share-count wording is only eligible when the uploaded shareholder list states a count. */
+const SHARE_COUNT_BASE: StarterVariant = {
+  key: 'mcq-v2-learner-shareholding-1',
+  conceptKey: 'learner_shareholding',
+  correctKey: 'A',
+  optionRecipes: recipes(
+    'COMPOSITE_TEMPLATE',
+    'COMPOSITE_TEMPLATE',
+    'COMPOSITE_TEMPLATE',
+    'STATIC',
+  ),
+  appliesWhen: null,
+  texts: {
+    th: text(
+      'คุณถือหุ้นในบริษัทกี่หุ้น',
+      [
+        '{my_shares} หุ้น',
+        '{my_shares|numeric(+1)} หุ้น',
+        '{my_shares|numeric(+2)} หุ้น',
+        'ไม่จำเป็นต้องรู้จำนวนหุ้นของตนเอง',
+      ],
+      'ตรวจจากบัญชีรายชื่อผู้ถือหุ้น: คุณถือ {my_shares} หุ้น',
+    ),
+    en: text(
+      'How many shares do you have?',
+      [
+        '{my_shares} shares',
+        '{my_shares|numeric(+1)} shares',
+        '{my_shares|numeric(+2)} shares',
+        'I do not need to know my share count',
+      ],
+      'Check the shareholder list: you have {my_shares} shares.',
+    ),
+    zh: text(
+      '您在公司持有多少股？',
+      [
+        '{my_shares} 股',
+        '{my_shares|numeric(+1)} 股',
+        '{my_shares|numeric(+2)} 股',
+        '我不需要知道自己的持股数',
+      ],
+      '请查看股东名册：您持有 {my_shares} 股。',
+    ),
+  },
+};
+
 /**
  * The approved v2 bank: exactly three plain-language variants for every concept. The final
  * legacy variant is used as the option base because it contains the robust one-share/one-sale
@@ -405,23 +451,27 @@ export const MCQ_STARTER: readonly StarterVariant[] = TRAINING_SYLLABUS.flatMap(
     syllabus.conceptKey === 'learner_shareholding' ? SHAREHOLDING_BASE : candidates.at(-1);
   if (!base) throw new Error(`Missing MCQ option base for ${syllabus.conceptKey}`);
 
-  return ([0, 1, 2] as const).map((index): StarterVariant => ({
-    ...base,
-    key: `mcq-v2-${syllabus.conceptKey.replaceAll('_', '-')}-${index + 1}`,
-    appliesWhen: null,
-    optionRecipes: { ...base.optionRecipes },
-    texts: Object.fromEntries(
-      (['th', 'en', 'zh'] as const).map((locale) => {
-        const source = base.texts[locale]!;
-        return [
-          locale,
-          {
-            ...source,
-            prompt: syllabus.quizPrompts[locale][index],
-            options: { ...source.options },
-          },
-        ];
-      }),
-    ),
-  }));
+  return ([0, 1, 2] as const).map((index): StarterVariant => {
+    const selected =
+      syllabus.conceptKey === 'learner_shareholding' && index === 0 ? SHARE_COUNT_BASE : base;
+    return {
+      ...selected,
+      key: `mcq-v2-${syllabus.conceptKey.replaceAll('_', '-')}-${index + 1}`,
+      appliesWhen: null,
+      optionRecipes: { ...selected.optionRecipes },
+      texts: Object.fromEntries(
+        (['th', 'en', 'zh'] as const).map((locale) => {
+          const source = selected.texts[locale]!;
+          return [
+            locale,
+            {
+              ...source,
+              prompt: syllabus.quizPrompts[locale][index],
+              options: { ...source.options },
+            },
+          ];
+        }),
+      ),
+    };
+  });
 });

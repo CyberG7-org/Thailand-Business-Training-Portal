@@ -175,11 +175,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
             ? company.shareholders.map((shareholder) => (
                 <div key={`${shareholder.name}-${shareholder.shares ?? ''}`}>
                   {shareholder.name}
+                  {shareholder.shares !== null
+                    ? ` — ${shareholder.shares.toLocaleString(NUMBER_LOCALES[loc])} ${t('company.shares')}`
+                    : ''}
                   {shareholder.percent !== null
-                    ? ` — ${shareholder.percent.toLocaleString(NUMBER_LOCALES[loc])}%`
-                    : shareholder.shares !== null
-                      ? ` — ${shareholder.shares.toLocaleString(NUMBER_LOCALES[loc])} ${t('company.shares')}`
-                      : ''}
+                    ? ` (${shareholder.percent.toLocaleString(NUMBER_LOCALES[loc])}%)`
+                    : ''}
                 </div>
               ))
             : '—',

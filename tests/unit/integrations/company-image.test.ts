@@ -77,9 +77,38 @@ describe('company image reader', () => {
     });
 
     expect(result.shareholders).toEqual([
-      { name: 'นางสาว ก', percent: 90 },
-      { name: 'นางสาว ข', percent: 10 },
+      { name: 'นางสาว ก', shares: null, percent: 90 },
+      { name: 'นางสาว ข', shares: null, percent: 10 },
     ]);
+  });
+
+  it('reads printed share counts and total shares without deriving missing counts', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      shareholders: [{ name: 'นางสาว ก', shares: '36,000 หุ้น', percent: '90%' }],
+                      total_shares: '40,000 หุ้น',
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    const profile = await extractCompanyImage(new Uint8Array([1]), 'image/png', {
+      apiKey: 'test-key',
+      request,
+    });
+    expect(profile.shareholders[0]).toEqual({ name: 'นางสาว ก', shares: 36_000, percent: 90 });
+    expect(profile.total_shares).toBe(40_000);
   });
 
   it('sends the image to Gemini server-side and parses only stated facts', async () => {
