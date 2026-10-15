@@ -584,7 +584,10 @@
       },
       "category": {
         "title": "业务类别",
-        "auto": "根据业务说明自动选择",
+        "auto": "根据业务证据自动选择",
+        "fallback": "备用类别",
+        "fallbackReason": "业务说明不足以匹配具体类别；此类别未经核实。",
+        "evidence": "匹配依据",
         "manual": "由人员选择",
         "unmapped": "尚无类别",
         "errors": {

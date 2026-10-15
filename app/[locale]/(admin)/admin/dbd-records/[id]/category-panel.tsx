@@ -41,9 +41,31 @@ export function CategoryPanel({
     >
       <h2 className="text-sm font-semibold">{t('title')}</h2>
       {status === 'mapped' && assignment && (
-        <p className="staff-notice-ok" data-testid="category-current">
-          {label(assignment.key)} — {assignment.source === 'manual' ? t('manual') : t('auto')}
-        </p>
+        <div
+          className={assignment.method === 'fallback' ? 'staff-notice-info' : 'staff-notice-ok'}
+          data-testid="category-current"
+        >
+          <p>
+            {label(assignment.key)} —{' '}
+            {assignment.source === 'manual'
+              ? t('manual')
+              : assignment.method === 'fallback'
+                ? t('fallback')
+                : t('auto')}
+          </p>
+          {assignment.method === 'fallback' && <p>{t('fallbackReason')}</p>}
+          {assignment.source === 'auto' &&
+          assignment.method !== 'fallback' &&
+          assignment.matched_evidence?.length ? (
+            <p className="mt-1 text-xs">
+              {t('evidence')}:{' '}
+              {assignment.matched_evidence
+                .filter((hit) => hit.categoryKey === assignment.key)
+                .map((hit) => `${hit.phrase} (${hit.sourceField})`)
+                .join(', ')}
+            </p>
+          ) : null}
+        </div>
       )}
       {status === 'unmapped' && (
         <p className="staff-notice-info" data-testid="category-unmapped">

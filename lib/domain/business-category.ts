@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { CategoryMapResult } from '@/lib/integrations/category-map/types';
 
 /**
  * The record's business category (spec 2026-09-30 §5.3, D73), stored under
@@ -16,8 +17,35 @@ export const categoryAssignmentSchema = z.object({
   input_hash: z.string().nullable(),
   error: z.string().nullable(),
   decided_at: z.string().nullable(),
+  method: z.enum(['rules', 'tie_break', 'fallback']).optional(),
+  score: z.number().optional(),
+  evidence_level: z.enum(['strong', 'moderate', 'weak', 'none']).optional(),
+  matched_evidence: z
+    .array(
+      z.object({
+        categoryKey: z.string(),
+        phrase: z.string(),
+        sourceField: z.string(),
+        points: z.number(),
+        concept: z.string(),
+      }),
+    )
+    .optional(),
+  secondary_category_keys: z.array(z.string()).optional(),
+  taxonomy_version: z.string().optional(),
+  rules_version: z.string().optional(),
+  fallback_reason: z.string().nullable().optional(),
+  explanation: z.string().optional(),
+  /** Preserves the pre-backfill illustrative figures when 40 old categories merge to 25. */
+  legacy_figures_key: z.string().optional(),
 });
 export type CategoryAssignment = z.output<typeof categoryAssignmentSchema>;
+
+export function categoryFiguresKey(
+  category: Pick<CategoryAssignment, 'key' | 'legacy_figures_key'> | null | undefined,
+): string | null {
+  return category?.legacy_figures_key ?? category?.key ?? null;
+}
 
 /**
  * FNV-1a over the business text, so the category is re-mapped only when the words change.
@@ -26,11 +54,17 @@ export type CategoryAssignment = z.output<typeof categoryAssignmentSchema>;
 export function categoryInputHash(
   natureOfBusiness: string | null,
   productsServices: string | null,
+  objectiveTexts: readonly string[] = [],
+  registeredCategories: readonly string[] = [],
 ): string | null {
   const nature = (natureOfBusiness ?? '').replace(/\s+/g, ' ').trim();
   const products = (productsServices ?? '').replace(/\s+/g, ' ').trim();
-  if (!nature && !products) return null;
-  const text = `${nature}\n${products}`;
+  const objectives = objectiveTexts.map((item) => item.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const registered = registeredCategories
+    .map((item) => item.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  if (!nature && !products && objectives.length === 0 && registered.length === 0) return null;
+  const text = `${nature}\n${products}\n${objectives.join('\n')}\n${registered.join('\n')}`;
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i);
@@ -45,7 +79,7 @@ export function categoryInputHash(
  * is discarded.
  */
 export function decideCategory(input: {
-  result: { key: string | null; confidence: number };
+  result: CategoryMapResult;
   activeKeys: ReadonlySet<string>;
   model: string | null;
   inputHash: string;
@@ -60,6 +94,19 @@ export function decideCategory(input: {
     input_hash: input.inputHash,
     error: null,
     decided_at: input.at,
+    ...(result.method
+      ? {
+          method: result.method,
+          score: result.score ?? 0,
+          evidence_level: result.evidenceLevel ?? 'none',
+          matched_evidence: result.matchedEvidence ?? [],
+          secondary_category_keys: result.secondaryCategoryKeys ?? [],
+          taxonomy_version: result.taxonomyVersion ?? '',
+          rules_version: result.rulesVersion ?? '',
+          fallback_reason: result.fallbackReason ?? null,
+          explanation: result.explanation ?? '',
+        }
+      : {}),
   };
   if (!known) return { ...base, key: null, candidate_key: null, status: 'unmapped' };
   return { ...base, key: result.key, candidate_key: null, status: 'mapped' };

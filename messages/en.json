@@ -584,7 +584,10 @@
       },
       "category": {
         "title": "Business category",
-        "auto": "chosen automatically from the business answers",
+        "auto": "Auto-selected from business evidence",
+        "fallback": "Fallback selection",
+        "fallbackReason": "Insufficient matching business description; this is not a verified business category.",
+        "evidence": "Matched evidence",
         "manual": "chosen by a person",
         "unmapped": "No category yet",
         "errors": {

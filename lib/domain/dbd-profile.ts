@@ -111,6 +111,8 @@ export type StructuredData = {
   address?: RegisteredAddress | null;
   /** The mapped business category (P17a, D73). */
   category?: CategoryAssignment | null;
+  /** Original decision saved by the reversible v2 backfill. */
+  category_backfill_previous?: CategoryAssignment | null;
   /** The invoices as read (P18a, D101); every money figure is computed from these rows. */
   invoices?: InvoiceRead | null;
   /** What the business description rests on (D101): a hash of objectives and items, and the reader's confidence. */
@@ -130,6 +132,9 @@ export function readStructuredData(raw: unknown): StructuredData {
   const interview = interviewProfileSchema.safeParse(data.interview ?? {});
   const address = registeredAddressSchema.safeParse(data.address);
   const category = categoryAssignmentSchema.safeParse(data.category);
+  const categoryBackfillPrevious = categoryAssignmentSchema.safeParse(
+    data.category_backfill_previous,
+  );
   const invoices = invoiceReadSchema.safeParse(data.invoices);
   const described = describedSchema.safeParse(data.described);
   const facebookSource = facebookSourceSchema.safeParse(data.facebook_source);
@@ -160,6 +165,9 @@ export function readStructuredData(raw: unknown): StructuredData {
             ? { ...category.data, key: 'beauty_products' }
             : category.data,
         )
+      : null,
+    category_backfill_previous: categoryBackfillPrevious.success
+      ? categoryBackfillPrevious.data
       : null,
   };
 }

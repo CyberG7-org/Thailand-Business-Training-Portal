@@ -1,145 +1,208 @@
-import type { CategoryMapInput, CategoryMapResult, CategoryMapper } from './types';
+import {
+  CATEGORY_RULES_VERSION,
+  CATEGORY_TAXONOMY_VERSION,
+  PRIMARY_CATEGORIES,
+} from '@/lib/domain/category-taxonomy';
+import type {
+  CategoryMapInput,
+  CategoryMapResult,
+  CategoryMapper,
+  CategoryEvidence,
+} from './types';
 
-/** Specific Thai and English phrases only; generic words such as "sell" never decide a category. */
-const TERMS: Record<string, readonly string[]> = {
-  animal_feed: ['อาหารสัตว์', 'animal feed', 'pet food distributor'],
-  household_products: ['ของใช้ในครัวเรือน', 'household products', 'household goods'],
-  cleaning_products: ['ผลิตภัณฑ์ทำความสะอาด', 'น้ำยาทำความสะอาด', 'cleaning products', 'detergent'],
-  pet_shop: ['สัตว์เลี้ยง', 'pet shop', 'pet supplies'],
-  hardware_industrial: [
-    'อุปกรณ์ฮาร์ดแวร์',
-    'วัสดุอุตสาหกรรม',
-    'hardware supplies',
-    'industrial supplies',
-  ],
-  baby_children: [
-    'สินค้าเด็ก',
-    'สินค้าทารก',
-    'ผลิตภัณฑ์เด็ก',
-    'baby products',
-    'children products',
-  ],
-  fashion_accessories: ['เครื่องประดับแฟชั่น', 'fashion accessories', 'fashion jewelry'],
-  beauty_products: [
-    'เครื่องสำอาง',
-    'สกินแคร์',
-    'แชมพู',
-    'cosmetics',
-    'skincare',
-    'beauty products',
-    'shampoo',
-  ],
-  motorcycle_parts: [
-    'อะไหล่มอเตอร์ไซค์',
-    'อะไหล่รถจักรยานยนต์',
-    'motorcycle parts',
-    'motorbike parts',
-  ],
-  food_products: ['อาหารแปรรูป', 'ผลิตภัณฑ์อาหาร', 'food products', 'processed food'],
-  seafood: ['อาหารทะเล', 'seafood', 'กุ้งสด', 'ปลาทะเล'],
-  car_accessories: [
-    'อะไหล่รถยนต์',
-    'อุปกรณ์ตกแต่งรถ',
-    'car parts',
-    'auto parts',
-    'car accessories',
-  ],
-  educational_toys: [
-    'ของเล่นเพื่อการศึกษา',
-    'ของเล่นเสริมพัฒนาการ',
-    'educational toys',
-    'learning toys',
-  ],
-  stationery_office: ['เครื่องเขียน', 'stationery', 'office stationery'],
-  it_house: ['คอมพิวเตอร์', 'เครื่องใช้ไฟฟ้า', 'computer equipment', 'electrical appliances'],
-  restaurant_catering: ['ร้านอาหาร', 'จัดเลี้ยง', 'restaurant', 'catering'],
-  software_it_services: ['ซอฟต์แวร์', 'พัฒนาแอป', 'software', 'it services', 'app development'],
-  construction_renovation: ['ก่อสร้าง', 'ปรับปรุงอาคาร', 'construction', 'renovation'],
-  furniture_home: ['เฟอร์นิเจอร์', 'โซฟา', 'furniture', 'home furnishings'],
-  medical_health_products: ['เวชภัณฑ์', 'อุปกรณ์การแพทย์', 'medical supplies', 'health products'],
-  tourism_travel: ['ท่องเที่ยว', 'tourism', 'travel agency', 'travel services'],
-  education_training: [
-    'ฝึกอบรม',
-    'สอนพิเศษ',
-    'training services',
-    'education services',
-    'tutoring',
-  ],
-  business_consulting: [
-    'คำปรึกษาธุรกิจ',
-    'ที่ปรึกษาทางธุรกิจ',
-    'business consulting',
-    'professional services',
-  ],
-  fruit_vegetables: ['ผักผลไม้', 'ผลไม้สด', 'ผักสด', 'fresh fruit', 'fresh vegetables'],
-  hair_salon: [
-    'ตัดผม',
-    'ทำสีผม',
-    'ร้านเสริมสวย',
-    'บริการเสริมสวย',
-    'hair salon',
-    'haircut',
-    'hair coloring',
-  ],
-  home_kitchen_supplies: ['เครื่องครัว', 'อุปกรณ์เครื่องครัว', 'kitchen supplies', 'kitchenware'],
-  mobile_repair: ['ซ่อมโทรศัพท์', 'ซ่อมมือถือ', 'phone repair', 'mobile repair'],
-  clothing_apparel: ['เสื้อผ้า', 'ชุดเดรส', 'clothing', 'apparel', 'garments', 'dresses'],
-  convenience_store: ['ร้านสะดวกซื้อ', 'มินิมาร์ท', 'convenience store', 'mini mart'],
-  coffee_beverage: ['ร้านกาแฟ', 'คาเฟ่', 'coffee shop', 'cafe', 'beverage shop'],
-  bakery_dessert: ['เบเกอรี่', 'ขนมหวาน', 'bakery', 'dessert shop'],
-  logistics_delivery: [
-    'ขนส่งสินค้า',
-    'โลจิสติกส์',
-    'logistics',
-    'delivery services',
-    'freight transport',
-  ],
-  import_export: ['นำเข้า', 'ส่งออก', 'import', 'export'],
-  packaging_materials: ['บรรจุภัณฑ์', 'กล่องบรรจุ', 'packaging', 'packing materials'],
-  printing_signage: ['งานพิมพ์', 'ป้ายโฆษณา', 'printing', 'signage'],
-  manufacturing: ['โรงงาน', 'รับผลิตสินค้า', 'manufacturing', 'factory production'],
-  car_repair: ['ซ่อมรถยนต์', 'อู่ซ่อมรถ', 'car repair', 'auto repair', 'vehicle maintenance'],
-  laundry_dry_cleaning: ['ซักรีด', 'ซักแห้ง', 'laundry', 'dry cleaning'],
-  digital_marketing: ['การตลาดดิจิทัล', 'โฆษณาออนไลน์', 'digital marketing', 'online advertising'],
-  agriculture_farming: ['เกษตรกรรม', 'ทำการเกษตร', 'agriculture', 'farming'],
+type Field = 'primary_activity' | 'business_description' | 'products_services' | 'dbd_objectives';
+const FIELD_WEIGHT: Record<Field, number> = {
+  primary_activity: 5,
+  business_description: 4,
+  products_services: 2,
+  dbd_objectives: 1,
 };
+const FIELD_ORDER: Field[] = [
+  'primary_activity',
+  'business_description',
+  'products_services',
+  'dbd_objectives',
+];
 
-const normal = (value: string) =>
-  value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
+/** NFKC preserves Thai combining marks; normalize punctuation/spacing without splitting Thai words. */
+export function normalizeCategoryText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .normalize('NFKC')
+    .toLocaleLowerCase('en-US')
+    .replace(/[\u200b-\u200d]/g, '')
+    .replace(/[\p{P}\p{S}]+/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-
-function includesPhrase(text: string, phrase: string): boolean {
-  const term = normal(phrase);
-  if (!term) return false;
-  if (!/[a-z0-9]/.test(term)) return text.includes(term);
-  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`(^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`).test(text);
 }
 
-/** Deterministic category matching from the manager's two business answers. */
+function positions(text: string, phrase: string): number[] {
+  const result: number[] = [];
+  const term = normalizeCategoryText(phrase);
+  if (!term) return result;
+  let index = text.indexOf(term);
+  while (index >= 0) {
+    const before = index ? text[index - 1] : '';
+    const after = text[index + term.length] ?? '';
+    if (
+      (!/[a-z0-9]/.test(term[0]) || !/[a-z0-9]/.test(before)) &&
+      (!/[a-z0-9]/.test(term[term.length - 1]) || !/[a-z0-9]/.test(after))
+    )
+      result.push(index);
+    index = text.indexOf(term, index + term.length);
+  }
+  return result;
+}
+
+function explicitPrimary(text: string, phrase: string): boolean {
+  const normalized = normalizeCategoryText(text);
+  const term = normalizeCategoryText(phrase);
+  const marker = /(?:ธุรกิจหลัก|กิจการหลัก|สินค้าหลัก|primary business|main business|primarily)/gu;
+  for (const match of normalized.matchAll(marker)) {
+    const window = normalized.slice(
+      match.index + match[0].length,
+      match.index + match[0].length + 60,
+    );
+    if (positions(window, term).length > 0) return true;
+  }
+  return false;
+}
+
+type Candidate = {
+  key: string;
+  score: number;
+  primary: boolean;
+  strong: number;
+  concepts: Set<string>;
+};
+
+/** Pure, local, reproducible category decision; no provider credentials or network access. */
 export class RulesCategoryMapper implements CategoryMapper {
   readonly name = 'rules' as const;
-  readonly model = 'rules-v1';
+  readonly model = CATEGORY_RULES_VERSION;
 
   async map(input: CategoryMapInput): Promise<CategoryMapResult> {
-    const nature = normal(input.natureOfBusiness);
-    const products = normal(input.productsServices ?? '');
-    const matches = input.categories
-      .map((category) => {
-        const phrases = [...(TERMS[category.key] ?? []), category.label_en, category.label_th];
-        const main = phrases.some((phrase) => includesPhrase(nature, phrase));
-        const sold = phrases.some((phrase) => includesPhrase(products, phrase));
-        return { key: category.key, score: (main ? 3 : 0) + (sold ? 1 : 0), main };
-      })
-      .filter((candidate) => candidate.score > 0)
-      .sort((a, b) => b.score - a.score);
-    if (matches.length === 0 || matches[0].score === matches[1]?.score) {
-      return { key: null, confidence: 0 };
+    const fields: Record<Field, string> = {
+      primary_activity: normalizeCategoryText(input.primaryActivity),
+      business_description: normalizeCategoryText(input.natureOfBusiness),
+      products_services: normalizeCategoryText(input.productsServices),
+      dbd_objectives: normalizeCategoryText(input.dbdObjectives?.join(' ')),
+    };
+    const evidence: CategoryEvidence[] = [];
+    const candidates: Candidate[] = PRIMARY_CATEGORIES.filter(
+      (category) => category.key !== 'general_other',
+    ).map((category) => {
+      const concepts = new Set<string>();
+      let score = 0;
+      let primary = false;
+      let strong = 0;
+      for (const field of FIELD_ORDER) {
+        const text = fields[field];
+        if (!text) continue;
+        for (const term of category.terms) {
+          // One semantic concept per source field; the longest matching synonym wins.
+          const found = term.phrases
+            .filter((phrase) => positions(text, phrase).length > 0)
+            .sort(
+              (a, b) =>
+                normalizeCategoryText(b).length - normalizeCategoryText(a).length ||
+                a.localeCompare(b),
+            )[0];
+          if (!found) continue;
+          const matchedPrimary =
+            field === 'primary_activity' ||
+            (field === 'business_description' && explicitPrimary(text, found));
+          primary ||= matchedPrimary;
+          const points = term.weight * FIELD_WEIGHT[field] + (matchedPrimary ? 30 : 0);
+          evidence.push({
+            categoryKey: category.key,
+            phrase: found,
+            sourceField: field,
+            points,
+            concept: term.concept,
+          });
+          score += points;
+          concepts.add(term.concept);
+          if (term.weight === 10) strong++;
+        }
+      }
+      return { key: category.key, score, primary, strong, concepts };
+    });
+    evidence.sort(
+      (a, b) =>
+        a.categoryKey.localeCompare(b.categoryKey) ||
+        FIELD_ORDER.indexOf(a.sourceField as Field) - FIELD_ORDER.indexOf(b.sourceField as Field) ||
+        a.concept.localeCompare(b.concept),
+    );
+    const ranked = candidates.filter((candidate) => candidate.score > 0);
+    if (!ranked.length)
+      return {
+        key: 'general_other',
+        confidence: null,
+        method: 'fallback',
+        score: 0,
+        evidenceLevel: 'none',
+        matchedEvidence: [],
+        secondaryCategoryKeys: [],
+        taxonomyVersion: CATEGORY_TAXONOMY_VERSION,
+        rulesVersion: CATEGORY_RULES_VERSION,
+        fallbackReason: 'no_distinctive_evidence',
+        explanation: 'No distinctive business product or activity matched the local rules.',
+      };
+
+    // Versioned mixed-activity precedence: diverse non-furniture goods beat an
+    // incidental furniture mention unless furniture is explicitly primary.
+    const furniture = ranked.find((candidate) => candidate.key === 'furniture_furnishings');
+    const supplies = ranked.find((candidate) => candidate.key === 'household_office_kitchen');
+    if (furniture && supplies && !furniture.primary && supplies.concepts.size >= 2)
+      supplies.score += 30;
+
+    // Real service activity outranks a secondary product mention.
+    const collisionPairs = [
+      ['electronics_device_repair', 'electronics_device_trading'],
+      ['automotive_repair_services', 'automotive_parts_trading'],
+      ['construction_installation_services', 'hardware_industrial_materials'],
+      ['hair_beauty_services', 'beauty_cosmetics_products'],
+      ['restaurant_cafe_catering', 'food_agricultural_trading'],
+    ] as const;
+    for (const [serviceKey, productKey] of collisionPairs) {
+      const service = ranked.find((candidate) => candidate.key === serviceKey);
+      const product = ranked.find((candidate) => candidate.key === productKey);
+      if (service?.strong && product && !product.primary) service.score += 20;
     }
-    return { key: matches[0].key, confidence: matches[0].main ? 0.95 : 0.8 };
+
+    ranked.sort(
+      (a, b) =>
+        b.score - a.score ||
+        Number(b.primary) - Number(a.primary) ||
+        b.strong - a.strong ||
+        b.concepts.size - a.concepts.size ||
+        a.key.localeCompare(b.key),
+    );
+    const first = ranked[0];
+    const second = ranked[1];
+    const lastResort = Boolean(
+      second &&
+      first.score === second.score &&
+      first.primary === second.primary &&
+      first.strong === second.strong &&
+      first.concepts.size === second.concepts.size,
+    );
+    return {
+      key: first.key,
+      confidence: null,
+      method: lastResort ? 'tie_break' : 'rules',
+      score: first.score,
+      evidenceLevel:
+        first.primary || first.strong ? 'strong' : first.concepts.size > 1 ? 'moderate' : 'weak',
+      matchedEvidence: evidence,
+      secondaryCategoryKeys: ranked.slice(1, 4).map((candidate) => candidate.key),
+      taxonomyVersion: CATEGORY_TAXONOMY_VERSION,
+      rulesVersion: CATEGORY_RULES_VERSION,
+      fallbackReason: null,
+      explanation: lastResort
+        ? `Equal evidence resolved by stable key order: ${first.key}.`
+        : `Selected ${first.key} from ${first.concepts.size} independent matched concept(s).`,
+    };
   }
 }

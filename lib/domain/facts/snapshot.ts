@@ -15,6 +15,7 @@ import {
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
 import { withBusinessNatureFigures } from '@/lib/domain/invoices/answers';
+import { categoryFiguresKey } from '@/lib/domain/business-category';
 import type { InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
 import { clientOriginAnswer, withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
@@ -79,7 +80,7 @@ export function buildTrainingSnapshot(input: {
       address: input.address?.full || input.record.head_office_address,
       website: input.record.website,
     }),
-    input.structured.category?.key,
+    categoryFiguresKey(input.structured.category),
   );
   return {
     facts: buildFactSheet({

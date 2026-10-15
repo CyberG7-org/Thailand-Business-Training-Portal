@@ -7,11 +7,11 @@ import {
 } from '@/lib/db/derived-facts';
 import { manualCategory } from '@/lib/domain/business-category';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
-import { FakeCategoryMapper } from '@/lib/integrations/category-map/fake';
+import { RulesCategoryMapper } from '@/lib/integrations/category-map/rules';
 import { adminClient, createTestUser, deleteTestUser, type TestUser } from './helpers';
 
 const svc = adminClient();
-const deps = { mapper: new FakeCategoryMapper() };
+const deps = { mapper: new RulesCategoryMapper() };
 const ROI_ET = 'เลขที่ 87 หมู่ที่ 9 ตำบลหนองใหญ่ อำเภอโพนทอง จังหวัดร้อยเอ็ด';
 
 async function stored(id: string) {
@@ -59,15 +59,112 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('updated');
     const s = await stored(recordId);
     expect(s.address).toMatchObject({ status: 'resolved', postcode: '45110' });
-    expect(s.category).toMatchObject({ status: 'mapped', key: 'clothing_apparel', source: 'auto' });
+    expect(s.category).toMatchObject({
+      status: 'mapped',
+      key: 'clothing_fashion_accessories',
+      source: 'auto',
+    });
     expect(await refreshDerivedFacts(svc, recordId, deps)).toBe('unchanged');
+  });
+
+  it('stores the 25-key fallback for a successfully processed record with no distinctive text', async () => {
+    const { data, error } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท ทดสอบหมวดทั่วไป จำกัด',
+        head_office_address: ROI_ET,
+        created_by: owner.id,
+        structured_data: {
+          interview: { nature_of_business: 'ค้าขาย', products_services: null },
+        } as never,
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    try {
+      await refreshDerivedFacts(svc, data.id, { mapper: new RulesCategoryMapper() });
+      expect((await stored(data.id)).category).toMatchObject({
+        key: 'general_other',
+        status: 'mapped',
+        source: 'auto',
+        method: 'fallback',
+        evidence_level: 'none',
+        taxonomy_version: 'primary-25-v1',
+      });
+    } finally {
+      await svc.from('dbd_records').delete().eq('id', data.id);
+    }
+  });
+
+  it('retains legacy planning figures when an old automatic category is remapped on save', async () => {
+    const { data, error } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท ทดสอบตัวเลขเดิม จำกัด',
+        head_office_address: ROI_ET,
+        created_by: owner.id,
+        structured_data: {
+          interview: { nature_of_business: 'จำหน่ายอาหารทะเล', products_services: 'อาหารทะเล' },
+          category: {
+            key: 'seafood',
+            candidate_key: null,
+            confidence: 0.95,
+            source: 'auto',
+            status: 'mapped',
+            model: 'rules-v1',
+            input_hash: 'old',
+            error: null,
+            decided_at: '2026-10-01T00:00:00Z',
+          },
+        } as never,
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    try {
+      await refreshDerivedFacts(svc, data.id, { mapper: new RulesCategoryMapper() });
+      expect((await stored(data.id)).category).toMatchObject({
+        key: 'food_agricultural_trading',
+        legacy_figures_key: 'seafood',
+      });
+    } finally {
+      await svc.from('dbd_records').delete().eq('id', data.id);
+    }
+  });
+
+  it('uses stored DBD objectives when interview answers are empty, without touching a manual override', async () => {
+    const { data, error } = await svc
+      .from('dbd_records')
+      .insert({
+        company_name_th: 'บริษัท ทดสอบวัตถุประสงค์ จำกัด',
+        head_office_address: ROI_ET,
+        created_by: owner.id,
+        structured_data: {
+          business: { objectives: [{ no: 1, text: 'รับเหมาก่อสร้างและปรับปรุงอาคาร' }] },
+        } as never,
+      })
+      .select('id')
+      .single();
+    if (error) throw error;
+    try {
+      await refreshDerivedFacts(svc, data.id, { mapper: new RulesCategoryMapper() });
+      expect((await stored(data.id)).category?.key).toBe('construction_installation_services');
+      await setBusinessCategory(svc, data.id, 'furniture_furnishings');
+      await refreshDerivedFacts(svc, data.id, { mapper: new RulesCategoryMapper() });
+      expect((await stored(data.id)).category).toMatchObject({
+        key: 'furniture_furnishings',
+        source: 'manual',
+      });
+    } finally {
+      await svc.from('dbd_records').delete().eq('id', data.id);
+    }
   });
 
   it('keeps both through a save that spreads the stored data back', async () => {
     await setInterview(recordId, { main_clients: 'ร้านค้าปลีกในร้อยเอ็ด' });
     const s = await stored(recordId);
     expect(s.address?.status).toBe('resolved');
-    expect(s.category?.key).toBe('clothing_apparel');
+    expect(s.category?.key).toBe('clothing_fashion_accessories');
   });
 
   it('re-derives the address when the printed address changes', async () => {
@@ -136,13 +233,13 @@ describe('refreshDerivedFacts (spec §5.2–5.3)', () => {
     await remapBusinessCategory(svc, recordId, deps);
     expect((await stored(recordId)).category).toMatchObject({
       status: 'mapped',
-      key: 'clothing_apparel',
+      key: 'clothing_fashion_accessories',
     });
   });
 
   it('never lets a failing mapper cost the address or throw (D73: category is metadata)', async () => {
     const broken = {
-      name: 'fake' as const,
+      name: 'rules' as const,
       model: null,
       map: async () => {
         throw new Error('mapper down');
