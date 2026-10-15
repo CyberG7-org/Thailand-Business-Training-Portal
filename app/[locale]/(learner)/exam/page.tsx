@@ -17,6 +17,7 @@ const RESULT_CHIP = {
   pass: 'bg-gold-100 text-gold-700',
   retest: 'bg-brand-50 text-brand-700',
   fail: 'bg-warn-50 text-warn-700',
+  in_progress: 'bg-ink-100 text-ink-700',
 } as const;
 
 export default async function ExamHome({ params }: { params: Promise<{ locale: string }> }) {
@@ -29,7 +30,7 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
   ]);
   const rule = mcqRule(passScore);
   const inProgress = attempts.find((a) => a.status === 'in_progress') ?? null;
-  const submitted = attempts.filter((a) => a.status === 'submitted');
+  const history = attempts.filter((a) => a.status === 'submitted' || a.status === 'in_progress');
   const t = await getTranslations('exam');
   const resultOf = (result: string | null) =>
     result === 'pass' ? 'pass' : result === 'retest' ? 'retest' : 'fail';
@@ -65,7 +66,7 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
             <StartExamButton resume={inProgress !== null} />
           </div>
         </section>
-        {submitted.length > 0 && (
+        {history.length > 0 && (
           <section
             className="rise overflow-hidden rounded-card bg-white shadow-raised"
             style={{ '--rise-delay': '80ms' } as CSSProperties}
@@ -76,8 +77,8 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
               </h2>
             </div>
             <ul>
-              {submitted.map((a) => {
-                const result = resultOf(a.result);
+              {history.map((a) => {
+                const result = a.status === 'in_progress' ? 'in_progress' : resultOf(a.result);
                 return (
                   <li
                     key={a.id}
@@ -86,15 +87,17 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
                     className="border-b border-ink-100 last:border-b-0"
                   >
                     <Link
-                      href={'/exam/' + a.id + '/result'}
+                      href={'/exam/' + a.id + (result === 'in_progress' ? '' : '/result')}
                       className="flex min-h-14 items-center justify-between gap-3 px-5 text-base font-medium text-brand-700 tabular-nums transition-colors hover:bg-brand-50 md:px-6"
                     >
                       <span data-testid={`exam-attempt-summary-${a.attempt_no}`}>
-                        {t('attemptLine', {
-                          no: a.attempt_no,
-                          score: a.score ?? 0,
-                          max: a.max_score ?? 0,
-                        })}
+                        {result === 'in_progress'
+                          ? t('attemptInProgressLine', { no: a.attempt_no })
+                          : t('attemptLine', {
+                              no: a.attempt_no,
+                              score: a.score ?? 0,
+                              max: a.max_score ?? 0,
+                            })}
                       </span>
                       <span className="flex items-center gap-3">
                         <span
@@ -102,7 +105,7 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
                             'rounded-full px-2.5 py-px text-sm font-medium ' + RESULT_CHIP[result]
                           }
                         >
-                          {t(result)}
+                          {result === 'in_progress' ? t('inProgress') : t(result)}
                         </span>
                         <ChevronIcon className="text-ink-500" />
                       </span>

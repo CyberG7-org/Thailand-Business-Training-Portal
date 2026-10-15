@@ -1466,6 +1466,8 @@
     "resume": "Resume the Business Knowledge Quiz",
     "history": "Previous attempts",
     "attemptLine": "Attempt {no}: {score} / {max}",
+    "attemptInProgressLine": "Attempt {no}",
+    "inProgress": "In Progress",
     "noFeedbackNote": "Answers are saved as you go; results are shown only after you submit.",
     "feedbackNote": "Each answer is marked as soon as you choose it and cannot be changed. Submit when every question is answered.",
     "submit": "Submit the Business Knowledge Quiz",
@@ -1526,7 +1528,8 @@
     "verdict": {
       "ready": "Ready",
       "not_ready": "Not yet ready",
-      "abandoned": "Not finished"
+      "abandoned": "Not finished",
+      "in_progress": "In Progress"
     },
     "outcome": {
       "readyTitle": "Ready for the next step",

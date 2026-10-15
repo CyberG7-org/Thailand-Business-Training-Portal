@@ -139,6 +139,8 @@
     "resume": "Sambung Kuiz Pengetahuan Perniagaan",
     "history": "Percubaan terdahulu",
     "attemptLine": "Percubaan {no}: {score} / {max}",
+    "attemptInProgressLine": "Percubaan {no}",
+    "inProgress": "Sedang Berlangsung",
     "noFeedbackNote": "Jawapan disimpan semasa anda menjawab; keputusan dipaparkan selepas dihantar.",
     "feedbackNote": "Setiap jawapan ditanda sebaik sahaja dipilih dan tidak boleh diubah.",
     "submit": "Hantar Kuiz Pengetahuan Perniagaan",
@@ -196,7 +198,12 @@
     "start": "Mulakan temu duga",
     "resume": "Sambung temu duga",
     "history": "Temu duga terdahulu",
-    "verdict": { "ready": "Bersedia", "not_ready": "Belum bersedia", "abandoned": "Belum selesai" },
+    "verdict": {
+      "ready": "Bersedia",
+      "not_ready": "Belum bersedia",
+      "abandoned": "Belum selesai",
+      "in_progress": "Sedang Berlangsung"
+    },
     "outcome": {
       "readyTitle": "Sedia untuk langkah seterusnya",
       "practiceTitle": "Terus berlatih — anda hampir berjaya",

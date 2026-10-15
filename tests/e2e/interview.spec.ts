@@ -176,6 +176,15 @@ test('the chat fits a phone', async ({ page }) => {
   await page.goto('/th/interview');
   await page.getByTestId('interview-start').click();
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
+  const sessionUrl = page.url();
+  await page.goto('/th/interview');
+  const activeSession = page
+    .getByTestId('interview-history')
+    .locator('[data-verdict="in_progress"]');
+  await expect(activeSession).toHaveCount(1);
+  await expect(activeSession).toContainText('กำลังดำเนินการ');
+  await activeSession.getByRole('link').click();
+  await expect(page).toHaveURL(sessionUrl);
   await expect(page.getByTestId('chat-input')).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

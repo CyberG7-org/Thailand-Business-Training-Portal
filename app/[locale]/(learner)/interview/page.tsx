@@ -21,6 +21,7 @@ const TAG = {
   ready: 'bg-gold-100 text-gold-700',
   not_ready: 'bg-warn-50 text-warn-700',
   abandoned: 'bg-ink-100 text-ink-700',
+  in_progress: 'bg-ink-100 text-ink-700',
 } as const;
 
 /**
@@ -41,7 +42,7 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
   const configured = resolveInterviewProvider() !== 'off';
   const sessions = open ? await listMyInterviews(db, user.id) : [];
   const resume = sessions.some((s) => s.status === 'in_progress');
-  const history = sessions.filter((s) => s.status !== 'in_progress');
+  const history = sessions;
   const dates = new Intl.DateTimeFormat(DATE_LOCALES[locale as AppLocale], {
     dateStyle: 'medium',
     timeStyle: 'short',
@@ -115,7 +116,11 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
             <ul>
               {history.map((s) => {
                 const tag =
-                  s.verdict === 'ready' || s.verdict === 'not_ready' ? s.verdict : 'abandoned';
+                  s.status === 'in_progress'
+                    ? 'in_progress'
+                    : s.verdict === 'ready' || s.verdict === 'not_ready'
+                      ? s.verdict
+                      : 'abandoned';
                 return (
                   <li
                     key={s.id}

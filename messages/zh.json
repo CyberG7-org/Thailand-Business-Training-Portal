@@ -1466,6 +1466,8 @@
     "resume": "继续业务知识测验",
     "history": "历史记录",
     "attemptLine": "第 {no} 次：{score} / {max}",
+    "attemptInProgressLine": "第 {no} 次",
+    "inProgress": "进行中",
     "noFeedbackNote": "答案会即时保存；结果仅在提交后显示。",
     "feedbackNote": "选择后立即显示对错，且不可更改。全部作答后再提交。",
     "submit": "提交业务知识测验",
@@ -1526,7 +1528,8 @@
     "verdict": {
       "ready": "已准备好",
       "not_ready": "尚未准备好",
-      "abandoned": "未完成"
+      "abandoned": "未完成",
+      "in_progress": "进行中"
     },
     "outcome": {
       "readyTitle": "已准备好进入下一步",
