@@ -80,11 +80,19 @@ describe('resolveRegisteredAddress', () => {
     });
   });
 
-  it('keeps a printed postcode and flags one that disagrees', async () => {
+  it('keeps a printed postcode without blocking a resolved subdistrict when geography disagrees', async () => {
     const ok = await resolveRegisteredAddress(`${ROI_ET} 45110`, memoryLookup());
     expect(ok).toMatchObject({ status: 'resolved', postcode_source: 'printed' });
     const bad = await resolveRegisteredAddress(`${ROI_ET} 45000`, memoryLookup());
-    expect(bad).toMatchObject({ status: 'partial', issues: ['postcode_mismatch'] });
+    expect(bad).toMatchObject({
+      status: 'resolved',
+      issues: ['postcode_mismatch'],
+      subdistrict: 'หนองใหญ่',
+      subdistrict_id: 450705,
+      postcode: '45000',
+      postcode_source: 'printed',
+      full: `${ROI_ET} 45000`,
+    });
   });
 
   it('reports a district it cannot find instead of guessing, keeping the province', async () => {

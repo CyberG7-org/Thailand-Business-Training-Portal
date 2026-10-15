@@ -54,6 +54,15 @@ test('the Business Knowledge Quiz shows the meta chip and marks an answer like t
   await expect(first.getByTestId('saved')).toHaveCount(0);
   await expect(page.locator('[data-state="correct"]')).toHaveCount(1);
   await expect(first.locator('[data-state="correct"] svg')).toHaveCount(1);
+
+  const attemptUrl = page.url();
+  await page.goto('/th/exam');
+  const activeAttempt = page.getByTestId('exam-attempt-1');
+  await expect(activeAttempt).toHaveAttribute('data-result', 'in_progress');
+  await expect(activeAttempt).toContainText('กำลังดำเนินการ');
+  await expect(page.getByTestId('exam-attempt-summary-1')).toHaveText('ครั้งที่ 1');
+  await activeAttempt.getByRole('link').click();
+  await expect(page).toHaveURL(attemptUrl);
 });
 
 test('the quiz fits a phone with the progress panel in reach', async ({ page }) => {

@@ -183,6 +183,10 @@ describe('the MCQ bank (P17d)', () => {
     expect(ctx.geo.districts.map((d) => d.th)).not.toContain('โพนทอง');
     expect(ctx.geo.subdistricts.length).toBeGreaterThan(0);
     expect(ctx.categories.find((c) => c.key === 'clothing_fashion')?.active).toBe(true);
+    expect(ctx.categories.find((c) => c.key === 'household_office_kitchen')).toMatchObject({
+      en: 'Household, Office & Kitchen Supplies',
+      active: true,
+    });
     expect(ctx.categories.find((c) => c.key === 'fashion_accessories')).toMatchObject({
       th: 'ค้าปลีกและค้าส่งเครื่องประดับแฟชั่น',
       en: 'Fashion Accessories Retail & Wholesale',

@@ -102,6 +102,8 @@ export async function resolveRegisteredAddress(
   respell('ตำบล|แขวง|ต\\.', parsed.subdistrict, subdistrict.nameTh);
 
   const issues: AddressIssue[] = [];
+  // The document's postcode is authoritative for training. A discrepancy with the reference
+  // table is worth showing to staff, but does not make a matched subdistrict unresolved.
   if (parsed.postcode && parsed.postcode !== subdistrict.postcode) issues.push('postcode_mismatch');
   return {
     ...withDistrict(),
@@ -109,7 +111,7 @@ export async function resolveRegisteredAddress(
     subdistrict_id: subdistrict.id,
     postcode: parsed.postcode ?? subdistrict.postcode,
     postcode_source: parsed.postcode ? 'printed' : 'geography',
-    status: issues.length === 0 ? 'resolved' : 'partial',
+    status: 'resolved',
     issues,
   };
 }

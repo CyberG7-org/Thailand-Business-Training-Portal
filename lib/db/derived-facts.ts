@@ -2,6 +2,7 @@ import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { BUSINESS_NATURES, businessNature } from '@/lib/domain/business-natures';
+import { PRIMARY_CATEGORIES } from '@/lib/domain/category-taxonomy';
 import {
   categoryInputHash,
   decideCategory,
@@ -188,10 +189,15 @@ export async function refreshDerivedFacts(
         }
       }
 
-      const hash = categoryInputHash(interview.nature_of_business, interview.products_services);
+      const objectives = [
+        ...(stored.business?.objectives.map((objective) => objective.text) ?? []),
+        ...(stored.business?.business_categories ?? []),
+      ];
+      const hash =
+        categoryInputHash(interview.nature_of_business, interview.products_services, objectives) ??
+        'empty';
       let category = stored.category ?? null;
       if (
-        hash &&
         deps.mapper &&
         (options.remapCategory ||
           (category?.source !== 'manual' &&
@@ -202,28 +208,32 @@ export async function refreshDerivedFacts(
           const result = await deps.mapper.map({
             natureOfBusiness: interview.nature_of_business ?? '',
             productsServices: interview.products_services,
-            categories: BUSINESS_NATURES.map(([key, label_th, , , , thai]) => ({
+            dbdObjectives: objectives,
+            categories: PRIMARY_CATEGORIES.map(({ key, en, th }) => ({
               key,
-              label_th: thai,
-              label_en: label_th,
+              label_th: th,
+              label_en: en,
             })),
           });
-          category = decideCategory({
-            result,
-            activeKeys: new Set(BUSINESS_NATURES.map(([key]) => key)),
-            model: deps.mapper.model,
-            inputHash: hash,
-            at,
-          });
+          const previousFiguresKey =
+            category?.legacy_figures_key ??
+            (BUSINESS_NATURES.some(([key]) => key === category?.key) ? category?.key : null);
+          category = {
+            ...decideCategory({
+              result,
+              activeKeys: new Set(PRIMARY_CATEGORIES.map(({ key }) => key)),
+              model: deps.mapper.model,
+              inputHash: hash,
+              at,
+            }),
+            ...(previousFiguresKey ? { legacy_figures_key: previousFiguresKey } : {}),
+          };
         } catch (error) {
           console.error('category mapping', recordId, error);
           category = failedCategory('mapping_failed', hash, at);
         }
         changed = true;
-      } else if (!hash && (category?.key || category?.error !== 'no_text')) {
-        category = failedCategory('no_text', null, at);
-        changed = true;
-      } else if (hash && !deps.mapper && !category?.key && category?.error !== 'not_configured') {
+      } else if (!deps.mapper && !category?.key && category?.error !== 'not_configured') {
         category = failedCategory('not_configured', hash, at);
         changed = true;
       }
@@ -247,10 +257,14 @@ export async function setBusinessCategory(
   key: string,
   now: Date = new Date(),
 ): Promise<void> {
-  if (!businessNature(key)) throw new Error('unknown-category');
+  if (!businessNature(key) && key !== 'general_other') throw new Error('unknown-category');
   const result = await updateStructuredData(db, recordId, (stored) => {
     const interview = stored.interview ?? EMPTY_INTERVIEW_PROFILE;
-    const hash = categoryInputHash(interview.nature_of_business, interview.products_services);
+    const hash =
+      categoryInputHash(interview.nature_of_business, interview.products_services, [
+        ...(stored.business?.objectives.map((objective) => objective.text) ?? []),
+        ...(stored.business?.business_categories ?? []),
+      ]) ?? 'empty';
     return { ...stored, category: manualCategory(key, hash, now.toISOString()) };
   });
   if (result === 'not_found') throw new Error('not-found');

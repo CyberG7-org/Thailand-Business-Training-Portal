@@ -16,9 +16,9 @@
     "titles": {
       "study": "Bahan pembelajaran",
       "quiz": "Kuiz latihan",
-      "exam": "Kuiz Pengetahuan Perniagaan",
+      "exam": "Kuiz",
       "nameCard": "Kad nama",
-      "interview": "Temu Duga Kesediaan Bank",
+      "interview": "Temu duga",
       "appointment": "Janji temu bank"
     },
     "status": {
@@ -71,7 +71,7 @@
       "home": "Utama",
       "study": "Belajar",
       "exam": "Kuiz",
-      "interview": "Kesediaan",
+      "interview": "Temu duga",
       "nameCard": "Kad nama"
     },
     "lessons": {
@@ -125,7 +125,7 @@
     "reviewIncorrect": "Salah"
   },
   "exam": {
-    "title": "Kuiz Pengetahuan Perniagaan",
+    "title": "Kuiz",
     "intro": "Tunjukkan bahawa anda mengenali syarikat anda seperti yang akan ditanya oleh bank.",
     "about": {
       "title": "Cara kuiz ini berfungsi",
@@ -135,14 +135,16 @@
       "retest": "Percubaan lama mungkin menunjukkan keputusan ujian semula.",
       "fail": "Di bawah {pass}: semak jawapan dan kad pembelajaran, kemudian cuba lagi."
     },
-    "start": "Mulakan Kuiz Pengetahuan Perniagaan",
-    "resume": "Sambung Kuiz Pengetahuan Perniagaan",
+    "start": "Mulakan Kuiz",
+    "resume": "Sambung Kuiz",
     "history": "Percubaan terdahulu",
     "attemptLine": "Percubaan {no}: {score} / {max}",
+    "attemptInProgressLine": "Percubaan {no}",
+    "inProgress": "Sedang Berlangsung",
     "noFeedbackNote": "Jawapan disimpan semasa anda menjawab; keputusan dipaparkan selepas dihantar.",
     "feedbackNote": "Setiap jawapan ditanda sebaik sahaja dipilih dan tidak boleh diubah.",
-    "submit": "Hantar Kuiz Pengetahuan Perniagaan",
-    "resultTitle": "Keputusan Kuiz Pengetahuan Perniagaan",
+    "submit": "Hantar Kuiz",
+    "resultTitle": "Keputusan Kuiz",
     "pass": "Lulus",
     "fail": "Belum lulus",
     "retest": "Cuba lagi",
@@ -156,14 +158,14 @@
       "attempt": "Percubaan"
     },
     "reviewHeading": "Jawapan anda",
-    "passedNext": "Anda lulus. Temu Duga Kesediaan Bank kini dibuka.",
+    "passedNext": "Anda lulus. Temu duga kini dibuka.",
     "notPassedNext": "Belum lulus kali ini. Semak jawapan dan cuba lagi apabila bersedia.",
     "retestNext": "Hampir: {score} daripada {max}. Anda memerlukan {pass} untuk lulus — cuba lagi.",
     "failNext": "Belum lulus kali ini. Ulang kaji bahan pembelajaran dan cuba lagi.",
     "failCriticalNext": "Belum lulus: satu fakta penting syarikat tersilap. Ulang kaji dan cuba lagi.",
     "criticalWrong": "Fakta penting yang salah: {list}",
     "toStudy": "Ulang kaji bahan pembelajaran",
-    "toInterview": "Pergi ke Temu Duga Kesediaan Bank",
+    "toInterview": "Pergi ke Temu duga",
     "retake": "Ambil kuiz sekali lagi",
     "errors": {
       "max_attempts": "Anda telah menggunakan semua percubaan yang dibenarkan.",
@@ -181,7 +183,7 @@
     }
   },
   "interview": {
-    "title": "Temu Duga Kesediaan Bank",
+    "title": "Temu duga",
     "intro": "Latihan temu duga yang mesra menggunakan fakta syarikat yang telah anda pelajari.",
     "thaiOnly": "Pegawai bercakap dalam bahasa Thai. Sila jawab dalam bahasa Thai.",
     "guide": {
@@ -195,8 +197,15 @@
     },
     "start": "Mulakan temu duga",
     "resume": "Sambung temu duga",
-    "history": "Temu duga terdahulu",
-    "verdict": { "ready": "Bersedia", "not_ready": "Belum bersedia", "abandoned": "Belum selesai" },
+    "history": "Percubaan terdahulu",
+    "attemptLine": "Percubaan {no}: {score} / {max}",
+    "attemptInProgressLine": "Percubaan {no}",
+    "verdict": {
+      "ready": "Bersedia",
+      "not_ready": "Belum bersedia",
+      "abandoned": "Belum selesai",
+      "in_progress": "Sedang Berlangsung"
+    },
     "outcome": {
       "readyTitle": "Sedia untuk langkah seterusnya",
       "practiceTitle": "Terus berlatih — anda hampir berjaya",

@@ -1,4 +1,7 @@
-/** Illustrative planning estimates from the supplied 40-category reference (THB). */
+import { primaryCategory } from './category-taxonomy';
+
+/** Illustrative planning estimates from the supplied 40-category reference (THB).
+ * Keep these IDs and figures intact for old records and training versions. */
 export const BUSINESS_NATURES = [
   [
     'animal_feed',
@@ -347,5 +350,19 @@ export const BUSINESS_NATURES = [
 ] as const;
 
 export function businessNature(key: string | null | undefined) {
-  return BUSINESS_NATURES.find((row) => row[0] === key) ?? null;
+  const legacy = BUSINESS_NATURES.find((row) => row[0] === key);
+  if (legacy) return legacy;
+  const primary = primaryCategory(key);
+  if (!primary?.legacyFiguresKey) return null;
+  const reference = BUSINESS_NATURES.find((row) => row[0] === primary.legacyFiguresKey);
+  if (!reference) return null;
+  return [
+    primary.key,
+    primary.en,
+    reference[2],
+    reference[3],
+    reference[4],
+    primary.th,
+    reference[6],
+  ] as const;
 }

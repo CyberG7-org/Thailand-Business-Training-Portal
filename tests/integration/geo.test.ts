@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { geoLookup } from '@/lib/db/geo';
+import { currentAddress } from '@/lib/db/training-sheet';
 import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
+import type { StructuredData } from '@/lib/domain/dbd-profile';
 import {
   adminClient,
   anonClient,
@@ -83,6 +85,26 @@ describe('Thai geography', () => {
 });
 
 describe('resolving against the real tables', () => {
+  it('reads an older postcode-only mismatch as resolved without changing the supplied address', async () => {
+    const printed = '17/1 หมู่ที่ 6 ตำบลบ้านปึก อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000';
+    const oldAddress = {
+      ...(await resolveRegisteredAddress(printed, geoLookup(svc))),
+      status: 'partial' as const,
+      issues: ['postcode_mismatch' as const],
+    };
+    const current = await currentAddress(svc, { head_office_address: printed }, {
+      address: oldAddress,
+    } as StructuredData);
+    expect(current).toMatchObject({
+      status: 'resolved',
+      issues: ['postcode_mismatch'],
+      subdistrict: 'บ้านปึก',
+      postcode: '20000',
+      postcode_source: 'printed',
+      full: printed,
+    });
+  });
+
   it('resolves provincial and Bangkok addresses to the dataset postcodes', async () => {
     const lookup = geoLookup(svc);
     const roiEt = await resolveRegisteredAddress(

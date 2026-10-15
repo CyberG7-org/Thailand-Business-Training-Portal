@@ -26,7 +26,20 @@ export async function currentAddress(
   record: Pick<DbdRecordRow, 'head_office_address'>,
   stored: StructuredData,
 ): Promise<RegisteredAddress> {
-  return stored.address ?? resolveRegisteredAddress(record.head_office_address, geoLookup(db));
+  const address = stored.address;
+  // Older records classified a postcode-only disagreement as partial. Re-read those against
+  // the current rule so validation and training versions use the document's address immediately;
+  // the next save persists the refreshed resolution.
+  if (
+    address &&
+    !(
+      address.status === 'partial' &&
+      address.issues.length === 1 &&
+      address.issues[0] === 'postcode_mismatch'
+    )
+  )
+    return address;
+  return resolveRegisteredAddress(record.head_office_address, geoLookup(db));
 }
 
 /** Content identity of a sheet: the facts and the extras, never the provenance. */

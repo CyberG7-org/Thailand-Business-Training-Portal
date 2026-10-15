@@ -27,6 +27,10 @@ export function CategoryPanel({
   const t = useTranslations('admin.dbd.category');
   const [setState, setAction, setting] = useActionState(setBusinessCategoryAction, initial);
   const label = (key: string | null) => options.find((o) => o.key === key)?.label ?? key ?? '—';
+  const sortedOptions = [...options].sort(
+    (a, b) =>
+      a.label.localeCompare(b.label, 'en', { sensitivity: 'base' }) || a.key.localeCompare(b.key),
+  );
   const status = assignment?.status ?? 'unmapped';
   const reason = assignment?.error;
   const reasonKey = (KNOWN_ERRORS as readonly string[]).includes(reason ?? '')
@@ -41,9 +45,31 @@ export function CategoryPanel({
     >
       <h2 className="text-sm font-semibold">{t('title')}</h2>
       {status === 'mapped' && assignment && (
-        <p className="staff-notice-ok" data-testid="category-current">
-          {label(assignment.key)} — {assignment.source === 'manual' ? t('manual') : t('auto')}
-        </p>
+        <div
+          className={assignment.method === 'fallback' ? 'staff-notice-info' : 'staff-notice-ok'}
+          data-testid="category-current"
+        >
+          <p>
+            {label(assignment.key)} —{' '}
+            {assignment.source === 'manual'
+              ? t('manual')
+              : assignment.method === 'fallback'
+                ? t('fallback')
+                : t('auto')}
+          </p>
+          {assignment.method === 'fallback' && <p>{t('fallbackReason')}</p>}
+          {assignment.source === 'auto' &&
+          assignment.method !== 'fallback' &&
+          assignment.matched_evidence?.length ? (
+            <p className="mt-1 text-xs">
+              {t('evidence')}:{' '}
+              {assignment.matched_evidence
+                .filter((hit) => hit.categoryKey === assignment.key)
+                .map((hit) => `${hit.phrase} (${hit.sourceField})`)
+                .join(', ')}
+            </p>
+          ) : null}
+        </div>
       )}
       {status === 'unmapped' && (
         <p className="staff-notice-info" data-testid="category-unmapped">
@@ -63,9 +89,17 @@ export function CategoryPanel({
             className="staff-input"
           >
             <option value="">{t('none')}</option>
-            {options.map((o) => (
-              <option key={o.key} value={o.key}>
-                {o.label}
+            {sortedOptions.map((o, index) => (
+              <option
+                key={o.key}
+                value={o.key}
+                style={
+                  o.key === assignment?.key
+                    ? { backgroundColor: '#e5e7eb', color: '#111827' }
+                    : undefined
+                }
+              >
+                {String(index + 1).padStart(2, '0')}. {o.label}
               </option>
             ))}
           </select>

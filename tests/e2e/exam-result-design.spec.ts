@@ -24,7 +24,7 @@ test('a passed exam gets the gold band, the medallion and the way to the intervi
   await expect(badge).toContainText('ผ่านแล้ว');
   await expect(badge.getByTestId('medallion')).toBeVisible();
   await expect(page.getByTestId('exam-score')).toHaveText('1 / 1');
-  await expect(page.getByTestId('exam-next')).toHaveText(/ไปสัมภาษณ์ความพร้อมกับธนาคาร/);
+  await expect(page.getByTestId('exam-next')).toHaveText(/ไปสัมภาษณ์/);
   await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/interview');
   // The band's own way home (the steps column beside the page has one too).
   await expect(page.locator('.band').getByRole('link', { name: 'หน้าหลัก' })).toHaveAttribute(
@@ -49,7 +49,7 @@ test('a failed exam keeps the blue band, shows the warn tag and offers a retake'
   await expect(badge).toHaveAttribute('data-result', 'fail');
   await expect(badge).toContainText('ยังไม่ผ่าน');
   await expect(badge.getByTestId('medallion')).toHaveCount(0);
-  await expect(page.getByTestId('exam-next')).toHaveText(/ทำแบบทดสอบความรู้ธุรกิจอีกครั้ง/);
+  await expect(page.getByTestId('exam-next')).toHaveText(/ทำแบบทดสอบอีกครั้ง/);
   await expect(page.getByTestId('exam-next')).toHaveAttribute('href', '/th/exam');
 });
 

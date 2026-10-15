@@ -10,6 +10,7 @@ import { deleteDbdRecord } from '@/lib/db/dbd-records';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 import { updateStructuredData } from '@/lib/db/derived-facts';
 import { refreshNameCardAfter } from '@/lib/db/name-cards';
+import { prepareQuizFactsAfter } from '@/lib/db/quiz-preparation';
 import { createLearnerAccount, deleteLearnerAccount } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import {
@@ -159,6 +160,7 @@ export async function createUserAction(
   }
   // The name card is made now, from what was just entered (D96): the learner types nothing.
   refreshNameCardAfter(created.id);
+  prepareQuizFactsAfter(created.id);
   revalidatePath(`/${locale}/admin/users`);
   return {
     ok: true,

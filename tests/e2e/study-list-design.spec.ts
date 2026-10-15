@@ -29,12 +29,17 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(rows.first()).toContainText(`1/${total}`);
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
   await expect(rows.first()).toHaveAttribute('href', /\/th\/study\//);
+  const overviewTitle = await page
+    .getByTestId('study-overview-title-bank-interview-1-identity')
+    .innerText();
+  await expect(rows.first()).toContainText('0105568233704');
 
   const recorded = page.waitForResponse(
     (response) => response.request().method() === 'POST' && /\/th\/study\//.test(response.url()),
   );
   await rows.first().click();
   await expect(page).toHaveURL(/\/th\/study\/[^/]+$/);
+  await expect(page.getByTestId('study-title')).toHaveText(overviewTitle);
   expect((await recorded).ok()).toBe(true);
   await page.goto('/th/study');
   await expect(page.getByTestId('study-summary')).toContainText(`1 จาก ${total}`);

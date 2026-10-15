@@ -49,8 +49,8 @@ export const STAGE_KEYS: readonly StageKey[] = [
   'study',
   'quiz',
   'exam',
-  'nameCard',
   'interview',
+  'nameCard',
   'appointment',
 ];
 

@@ -38,14 +38,14 @@ export function examResultMessage(p: ExamResultPayload): { subject: string; text
     ? `pass at ${p.pass_score}/${p.max_score}, key facts wrong: ${p.critical_wrong ?? 0}`
     : `passing mark ${p.passing_mark_percent}%`;
   return {
-    subject: `[Business Knowledge Quiz ${resultEn}] ${who} — ${p.score}/${p.max_score} (${pct}%)`,
+    subject: `[Quiz ${resultEn}] ${who} — ${p.score}/${p.max_score} (${pct}%)`,
     text: [
-      `ผลแบบทดสอบความรู้ธุรกิจ: ${resultTh} — ${who}`,
+      `ผลแบบทดสอบ: ${resultTh} — ${who}`,
       `บริษัท: ${p.company_name_th ?? '-'}`,
       `คะแนน: ${p.score}/${p.max_score} (${pct}%) ${markTh} ครั้งที่ ${p.attempt_no}`,
       `วันที่ส่ง: ${formatDate(p.submitted_on, 'th')}`,
       '',
-      `Business Knowledge Quiz result: ${resultEn} — ${who}`,
+      `Quiz result: ${resultEn} — ${who}`,
       `Company: ${p.company_name_th ?? '-'}`,
       `Score: ${p.score}/${p.max_score} (${pct}%), ${markEn}, attempt ${p.attempt_no}`,
       `Submitted: ${formatDate(p.submitted_on, 'en')}`,

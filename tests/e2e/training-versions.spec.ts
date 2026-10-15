@@ -42,7 +42,7 @@ test('a learner is pinned to version 1, stays there when the facts change, and i
   await expect(page.getByTestId('training-versions')).toHaveAttribute('data-active', '1');
   await expect(page.getByTestId('version-complete')).toBeVisible();
   await openRecordTab(page, 'interview');
-  await page.locator('select[name="categoryKey"]').selectOption('fashion_accessories');
+  await page.locator('select[name="categoryKey"]').selectOption('clothing_fashion_accessories');
   await page.getByTestId('category-set').click();
   await expect(page.getByTestId('category-panel')).toHaveAttribute('data-status', 'mapped');
   await page.reload();

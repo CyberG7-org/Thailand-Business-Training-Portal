@@ -4,6 +4,8 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { BUSINESS_NATURES } from '@/lib/domain/business-natures';
+import { categoryFiguresKey } from '@/lib/domain/business-category';
+import { PRIMARY_CATEGORIES } from '@/lib/domain/category-taxonomy';
 import { parseStoredExtraction } from '@/lib/db/extraction';
 import { companyStatus } from '@/lib/domain/auto-confirm';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
@@ -105,7 +107,7 @@ export default async function DbdRecordPage({
       address: address.full || record.head_office_address,
       website: record.website,
     }),
-    structured.category?.key,
+    categoryFiguresKey(structured.category),
   );
   const answered = [
     filled.monthly_revenue,
@@ -258,7 +260,12 @@ export default async function DbdRecordPage({
               <CategoryPanel
                 recordId={record.id}
                 assignment={structured.category ?? null}
-                options={BUSINESS_NATURES.map(([key, label]) => ({ key, label }))}
+                options={[
+                  ...PRIMARY_CATEGORIES.map(({ key, en }) => ({ key, label: en })),
+                  ...BUSINESS_NATURES.filter(([key]) => key === structured.category?.key).map(
+                    ([key, label]) => ({ key, label }),
+                  ),
+                ]}
               />
               <InterviewForm figures={filled} />
             </div>

@@ -14,7 +14,7 @@ import type { Database, Json } from './database.types';
 import { listVariants } from './mcq-bank';
 import { loadRenderContext } from './mcq-context';
 import { pinnedFactsFor } from './pinning';
-import { factTranslationsFor } from './fact-translations';
+import { cachedFactTranslationsFor } from './fact-translations';
 import { GeminiQuizTranslator } from '@/lib/integrations/translation/gemini-quiz';
 
 type Db = SupabaseClient<Database>;
@@ -107,9 +107,11 @@ export async function startMcqAttempt(args: {
     getPolicy('mcq_pass_score'),
   ]);
   const source = templateRecordFromSnapshot(pinned.snapshot, pinned.role);
+  // English/Chinese fact rendering never waits on Gemini. The manager/learner flows warm
+  // these caches before the attempt; an unexpected miss retains the approved Thai facts.
   const [en, zh] = await Promise.all([
-    factTranslationsFor(admin, pinned.version.id, source, 'en'),
-    factTranslationsFor(admin, pinned.version.id, source, 'zh'),
+    cachedFactTranslationsFor(admin, pinned.version.id, source, 'en'),
+    cachedFactTranslationsFor(admin, pinned.version.id, source, 'zh'),
   ]);
   const localizedFacts = {
     en: translatedRecord(ctx.facts, en),

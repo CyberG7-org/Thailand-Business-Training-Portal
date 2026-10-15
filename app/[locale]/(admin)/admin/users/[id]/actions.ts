@@ -15,6 +15,7 @@ import {
 } from '@/lib/db/assignments';
 import { learnerRoleSchema } from '@/lib/domain/bank-interview';
 import { refreshNameCardAfter } from '@/lib/db/name-cards';
+import { prepareQuizFactsAfter } from '@/lib/db/quiz-preparation';
 import { dbdPeople, isDbdPerson } from '@/lib/domain/standard-role';
 import { PinError, evaluationInProgress, moveAssignmentToVersion } from '@/lib/db/pinning';
 import {
@@ -117,6 +118,7 @@ export async function assignRecordAction(
   try {
     await assignDbdRecord(db, { userId, dbdRecordId });
     refreshNameCardAfter(userId);
+    prepareQuizFactsAfter(userId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'assigned', error: null };
   } catch (e) {
@@ -230,6 +232,7 @@ export async function updateAssignmentRoleAction(
       relationship_to_shareholders: current.relationship_to_shareholders,
     });
     refreshNameCardAfter(userId);
+    prepareQuizFactsAfter(userId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'role-saved', error: null };
   } catch (e) {
@@ -263,6 +266,7 @@ export async function moveAssignmentAction(
       versionId,
     });
     refreshNameCardAfter(userId);
+    prepareQuizFactsAfter(userId);
     revalidatePath(`/${locale}/admin/users/${userId}`);
     return { message: 'moved', n: moved.to, error: null };
   } catch (e) {

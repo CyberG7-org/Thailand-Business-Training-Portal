@@ -14,6 +14,7 @@ import {
 import type { Director } from '@/lib/domain/dbd-record';
 import type { RegisteredAddress } from '@/lib/domain/geo/resolve';
 import { withBusinessNatureFigures } from '@/lib/domain/invoices/answers';
+import { categoryFiguresKey } from '@/lib/domain/business-category';
 import { withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
 
@@ -99,7 +100,7 @@ export function buildFactSheet(input: {
       address: input.address?.full || input.record.head_office_address || null,
       website: input.record.website,
     }),
-    input.structured.category?.key,
+    categoryFiguresKey(input.structured.category),
   );
   const directors = Array.isArray(input.record.directors)
     ? (input.record.directors as Director[])

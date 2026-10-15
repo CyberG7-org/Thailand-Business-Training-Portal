@@ -4,23 +4,17 @@ import { ChevronIcon } from '@/components/icons';
 import { LearnerShell } from '@/components/shell/learner-shell';
 import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
-import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { listMyInterviews } from '@/lib/db/interviews';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { resolveInterviewProvider } from '@/lib/integrations/interview';
 import { StartInterviewButton } from './start-button';
 
-const DATE_LOCALES: Record<AppLocale, string> = {
-  th: 'th-TH',
-  en: 'en-GB',
-  zh: 'zh-CN',
-  ms: 'ms-MY',
-};
 const TAG = {
   ready: 'bg-gold-100 text-gold-700',
   not_ready: 'bg-warn-50 text-warn-700',
   abandoned: 'bg-ink-100 text-ink-700',
+  in_progress: 'bg-ink-100 text-ink-700',
 } as const;
 
 /**
@@ -41,12 +35,7 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
   const configured = resolveInterviewProvider() !== 'off';
   const sessions = open ? await listMyInterviews(db, user.id) : [];
   const resume = sessions.some((s) => s.status === 'in_progress');
-  const history = sessions.filter((s) => s.status !== 'in_progress');
-  const dates = new Intl.DateTimeFormat(DATE_LOCALES[locale as AppLocale], {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'Asia/Bangkok',
-  });
+  const history = sessions;
 
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="interview">
@@ -113,9 +102,20 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
               </h2>
             </div>
             <ul>
-              {history.map((s) => {
+              {history.map((s, index) => {
+                const attemptNo = history.length - index;
                 const tag =
-                  s.verdict === 'ready' || s.verdict === 'not_ready' ? s.verdict : 'abandoned';
+                  s.status === 'in_progress'
+                    ? 'in_progress'
+                    : s.verdict === 'ready' || s.verdict === 'not_ready'
+                      ? s.verdict
+                      : 'abandoned';
+                const summary =
+                  s.summary && typeof s.summary === 'object' && !Array.isArray(s.summary)
+                    ? s.summary
+                    : null;
+                const score = summary?.score;
+                const maxScore = summary?.maxScore;
                 return (
                   <li
                     key={s.id}
@@ -127,7 +127,15 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
                       href={'/interview/' + s.id}
                       className="flex min-h-14 items-center justify-between gap-3 px-5 text-base font-medium text-brand-700 tabular-nums transition-colors hover:bg-brand-50 md:px-6"
                     >
-                      <span>{dates.format(new Date(s.started_at))}</span>
+                      <span>
+                        {typeof score === 'number' && typeof maxScore === 'number'
+                          ? t('attemptLine', {
+                              no: attemptNo,
+                              score,
+                              max: maxScore,
+                            })
+                          : t('attemptInProgressLine', { no: attemptNo })}
+                      </span>
                       <span className="flex items-center gap-3">
                         <span
                           className={

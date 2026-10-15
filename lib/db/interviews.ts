@@ -328,19 +328,22 @@ export async function startOrResumeInterview(
   userId: string,
 ): Promise<{ session: InterviewSessionRow; turns: InterviewTurnRow[] }> {
   const officer = provider();
-  const gate = await gateFor(userId);
+  const admin = createSupabaseAdminClient();
+  const [gate, { data: open, error: openError }] = await Promise.all([
+    gateFor(userId),
+    admin
+      .from('interview_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'in_progress')
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
   if (gate.status !== 'available' && gate.status !== 'in_progress' && gate.status !== 'done') {
     throw new InterviewError('The interview is not open', 'not_open', gate);
   }
-  const admin = createSupabaseAdminClient();
-  const { data: open } = await admin
-    .from('interview_sessions')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'in_progress')
-    .order('started_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  if (openError) throw openError;
   if (open) {
     if (!isIdle(open)) return { session: open, turns: await turnsOf(open.id) };
     await abandon(open.id);
