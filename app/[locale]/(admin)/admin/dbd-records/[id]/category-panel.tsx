@@ -27,6 +27,10 @@ export function CategoryPanel({
   const t = useTranslations('admin.dbd.category');
   const [setState, setAction, setting] = useActionState(setBusinessCategoryAction, initial);
   const label = (key: string | null) => options.find((o) => o.key === key)?.label ?? key ?? '—';
+  const sortedOptions = [...options].sort(
+    (a, b) =>
+      a.label.localeCompare(b.label, 'en', { sensitivity: 'base' }) || a.key.localeCompare(b.key),
+  );
   const status = assignment?.status ?? 'unmapped';
   const reason = assignment?.error;
   const reasonKey = (KNOWN_ERRORS as readonly string[]).includes(reason ?? '')
@@ -85,9 +89,10 @@ export function CategoryPanel({
             className="staff-input"
           >
             <option value="">{t('none')}</option>
-            {options.map((o) => (
+            {sortedOptions.map((o, index) => (
               <option key={o.key} value={o.key}>
-                {o.label}
+                {o.key === assignment?.key ? '✓ ' : ''}
+                {String(index + 1).padStart(2, '0')}. {o.label}
               </option>
             ))}
           </select>
