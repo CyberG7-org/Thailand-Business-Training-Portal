@@ -22,6 +22,9 @@ test('a low-confidence fact waits for a person; confirming it accepts the record
   await expect(
     page.locator(`[data-testid="queue-${recordId}"][data-kind="low_confidence"]`),
   ).toHaveAttribute('data-kind', 'low_confidence');
+  await expect(page.getByTestId(`queue-${recordId}`).getByRole('link')).toHaveText(
+    'COMPLETE CO., LTD.',
+  );
 
   await page.goto(`/th/admin/dbd-records/${recordId}?tab=exceptions`);
   const row = page.getByTestId('exception-low_confidence-registered_capital');
