@@ -112,6 +112,7 @@ test('the dashboard fits a phone with four direct training actions', async ({ pa
   await expect(page.getByTestId('company-detail-address')).toBeVisible();
   await expect(page.getByTestId('company-detail-directors')).toContainText('นางสาวตัวอย่าง ทดสอบ');
   await expect(page.getByTestId('company-detail-shareholders')).toContainText('85%');
+  await expect(page.getByTestId('company-detail-shareholders')).toContainText('850 หุ้น');
   await expect(page.getByTestId('company-detail-objectives')).toContainText('2 รายการ');
   await expect(page.getByTestId('company-products')).toHaveCount(0);
   await expect(page.getByRole('link', { name: /เปิดหนังสือรับรอง|Open certificate/i })).toHaveCount(

@@ -107,10 +107,12 @@ test("the owner's Assign learner chooses the company's team too; a company takes
   await expect(page.locator('input[name="displayName"]')).toHaveValue('E2E Learner');
   await page.locator('input[name="phone"]').fill('081-234-5678');
   await page.locator('input[name="contactEmail"]').fill('first@example.co.th');
+  const first =
+    `${(await page.getByTestId('login-id-prefix').textContent())?.trim() ?? ''}${await page.getByTestId('login-suffix').inputValue()}`.toUpperCase();
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   const created = page.getByTestId('create-user-status');
   await expect(created).toBeVisible();
-  const first = (await created.textContent())!.match(/T[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}/)![0];
+  await expect(created).toContainText(first);
   await page.getByTestId('tab-companies').click();
   await expect(page.getByTestId(`company-learner-${recordId}`)).toHaveText(first);
 

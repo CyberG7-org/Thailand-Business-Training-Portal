@@ -35,14 +35,14 @@ async function prefixFor({ locale, kind, managerId }: LoginIdQuery): Promise<str
 }
 
 /**
- * A free suffix to prefill (D69) — a manager's is one letter and two digits (D85), a learner's
+ * A free suffix to prefill — a manager's is one letter and one digit, a learner's
  * two letters and two digits (D84). Nothing is reserved; the create action checks again.
  */
 export async function suggestLoginIdAction(
   query: LoginIdQuery,
 ): Promise<{ suffix: string | null }> {
   const prefix = await prefixFor(query);
-  if (!prefix) return { suffix: null };
+  if (prefix === null) return { suffix: null };
   return { suffix: await suggestSuffix(query.kind, prefix) };
 }
 
@@ -53,6 +53,6 @@ export async function checkLoginIdAction(
   const suffix = query.suffix.trim();
   if (!isValidSuffixFor(query.kind, suffix)) return { state: 'invalid' };
   const prefix = await prefixFor(query);
-  if (!prefix) return { state: 'no-team' };
+  if (prefix === null) return { state: 'no-team' };
   return { state: (await isLoginIdTaken(prefix + suffix)) ? 'taken' : 'available' };
 }

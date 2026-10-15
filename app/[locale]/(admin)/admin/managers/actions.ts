@@ -16,7 +16,7 @@ export type ManagerState = { ok: boolean; error: string | null; createdLoginId: 
 
 const fail = (error: string): ManagerState => ({ ok: false, error, createdLoginId: null });
 
-/** Only the admin creates managers (spec §4); they type the code after T- (D69). */
+/** Only the admin creates managers (spec §4); new codes have two characters and no prefix. */
 export async function createManagerAction(
   _prev: ManagerState,
   formData: FormData,

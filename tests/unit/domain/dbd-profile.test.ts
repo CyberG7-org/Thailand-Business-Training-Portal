@@ -75,6 +75,13 @@ describe('categoryInputHash', () => {
 });
 
 describe('shareholder editor', () => {
+  it('round-trips share counts and percentages without dropping existing counts', () => {
+    const holders = [
+      { name: 'นางสาว ก', nationality: null, shares: 36_000, percent: 90 },
+      { name: 'นาย ข', nationality: null, shares: 4_000, percent: 10 },
+    ];
+    expect(parseShareholdersText(shareholdersToText(holders))).toEqual(holders);
+  });
   it('shows and accepts name with percentage, without extra columns', () => {
     const holders = parseShareholdersText('นางสาวสิริรัตน์ ดวงจันทร์, 90%\nนายสมชาย ใจดี, 10%');
     expect(holders.map(({ name, percent }) => [name, percent])).toEqual([

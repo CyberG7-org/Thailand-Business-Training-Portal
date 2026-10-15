@@ -72,7 +72,7 @@ export async function selectTeam(page: Page, code: string) {
 }
 
 /**
- * Creates a manager on the Managers page and returns their code as displayed, e.g. "TA12": the
+ * Creates a manager on the Managers page and returns their code as displayed, e.g. "A1": the
  * suggestion unless `suffix` is given.
  */
 export async function createManager(
@@ -92,7 +92,8 @@ export async function createManager(
   // The create waits for the Managers page to render again, which lists every team with its
   // counts: seconds on a local database that many runs have filled.
   await expect(created).toBeVisible({ timeout: 15_000 });
-  const code = (await created.textContent())?.match(/T[A-Z][0-9]{2}/)?.[0];
+  const code = (await created.textContent())?.trim();
+  if (code && !/^[A-Z0-9]{2}$/.test(code)) throw new Error(`Unexpected manager login ID: ${code}`);
   if (!code) throw new Error('Created manager did not show a login ID');
   return code;
 }
@@ -129,7 +130,7 @@ export async function assignLearner(page: Page, recordId: string) {
 }
 
 /**
- * Creates a learner on the Users page and returns their stored code, e.g. "ta12da42": the team's
+ * Creates a learner on the Users page and returns their stored code, e.g. "a1da42": the team's
  * code plus the suggestion unless `suffix` is given (D69). `team` is required when the
  * caller is the admin.
  */
@@ -161,12 +162,13 @@ export async function createLearner(
   if (fields.facebookPage) {
     await page.locator('input[name="facebookPage"]').fill(fields.facebookPage);
   }
+  const code =
+    `${(await page.getByTestId('login-id-prefix').textContent())?.trim() ?? ''}${await page.getByTestId('login-suffix').inputValue()}`.toUpperCase();
   // The button wakes once the "Before you create" list is complete.
   await page.getByRole('button', { name: 'สร้างผู้เรียน' }).click();
   const status = page.getByTestId('create-user-status');
   await expect(status).toBeVisible();
-  const code = (await status.textContent())?.match(/T[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}/)?.[0];
-  if (!code) throw new Error('Created learner did not show a login ID');
+  await expect(status).toContainText(code);
   return code.toLowerCase();
 }
 

@@ -318,7 +318,7 @@ export function DbdRecordForm({
               className={inputClass}
             />
             <span className="text-xs text-ink-500">
-              Name, percentage (one shareholder per line)
+              One shareholder per line: name, percentage or name | nationality | shares | percentage
             </span>
             {levelTwoNote('shareholders')}
           </label>

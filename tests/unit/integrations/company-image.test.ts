@@ -1,7 +1,52 @@
 import { describe, expect, it } from 'vitest';
 import { extractCompanyImage } from '@/lib/integrations/extraction/company-image';
+import { companyImageToDraft } from '@/lib/domain/company-image';
 
 describe('company image reader', () => {
+  it('accepts a formatted capital amount from Gemini and creates a numeric draft', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: JSON.stringify({ registered_capital: '4,000,000 บาท' }) }],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+
+    const profile = await extractCompanyImage(new Uint8Array([1]), 'image/png', {
+      apiKey: 'test-key',
+      request,
+    });
+
+    expect(profile.registered_capital).toBe(4_000_000);
+    expect(companyImageToDraft(profile).record.registered_capital).toBe(4_000_000);
+  });
+
+  it('reports unreadable capital text as an invalid image reading', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: JSON.stringify({ registered_capital: 'about four million' }) }],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+
+    await expect(
+      extractCompanyImage(new Uint8Array([1]), 'image/png', { apiKey: 'test-key', request }),
+    ).rejects.toMatchObject({ code: 'invalid' });
+  });
+
   it('accepts shareholder percentages returned as numeric text', async () => {
     const request: typeof fetch = async () =>
       new Response(
@@ -32,9 +77,38 @@ describe('company image reader', () => {
     });
 
     expect(result.shareholders).toEqual([
-      { name: 'นางสาว ก', percent: 90 },
-      { name: 'นางสาว ข', percent: 10 },
+      { name: 'นางสาว ก', shares: null, percent: 90 },
+      { name: 'นางสาว ข', shares: null, percent: 10 },
     ]);
+  });
+
+  it('reads printed share counts and total shares without deriving missing counts', async () => {
+    const request: typeof fetch = async () =>
+      new Response(
+        JSON.stringify({
+          candidates: [
+            {
+              content: {
+                parts: [
+                  {
+                    text: JSON.stringify({
+                      shareholders: [{ name: 'นางสาว ก', shares: '36,000 หุ้น', percent: '90%' }],
+                      total_shares: '40,000 หุ้น',
+                    }),
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+        { status: 200 },
+      );
+    const profile = await extractCompanyImage(new Uint8Array([1]), 'image/png', {
+      apiKey: 'test-key',
+      request,
+    });
+    expect(profile.shareholders[0]).toEqual({ name: 'นางสาว ก', shares: 36_000, percent: 90 });
+    expect(profile.total_shares).toBe(40_000);
   });
 
   it('sends the image to Gemini server-side and parses only stated facts', async () => {

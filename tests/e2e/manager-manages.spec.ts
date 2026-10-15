@@ -48,10 +48,10 @@ test('a manager cannot open a learner of another team', async ({ page }) => {
     team: teamA,
     issuedOn: '13/07/2569',
   });
-  await createLearner(page, { password: LEARNER_PASSWORD, company });
+  const learner = await createLearner(page, { password: LEARNER_PASSWORD, company });
   await page.goto('/th/admin/learners');
   const href = await page
-    .getByRole('link', { name: /^T[A-Z][0-9]{2}[A-Z]{2}[0-9]{2}$/ })
+    .getByRole('link', { name: learner.toUpperCase(), exact: true })
     .getAttribute('href');
 
   await switchTo(page, teamB.toLowerCase(), MANAGER_PASSWORD);

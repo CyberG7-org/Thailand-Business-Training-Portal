@@ -201,11 +201,15 @@ export function parseObjectivesText(text: string): Objective[] {
 
 export function shareholdersToText(shareholders: Shareholder[]): string {
   return shareholders
-    .map((s) => `${s.name}, ${s.percent === null ? '' : `${s.percent}%`}`.trimEnd())
+    .map((s) =>
+      s.shares === null
+        ? `${s.name}, ${s.percent === null ? '' : `${s.percent}%`}`.trimEnd()
+        : `${s.name} | ${s.nationality ?? ''} | ${s.shares} | ${s.percent === null ? '' : `${s.percent}%`}`,
+    )
     .join('\n');
 }
 
-/** "Name, percentage" per line; legacy pipe-delimited rows remain accepted. */
+/** "Name, percentage" or "name | nationality | shares | percentage" per line. */
 export function parseShareholdersText(text: string): Shareholder[] {
   return lines(text).map((line) => {
     if (!line.includes('|')) {

@@ -40,6 +40,23 @@ describe('company image intake', () => {
     expect(draft.facebookPage).toBe('https://www.facebook.com/ufongtai');
   });
 
+  it('preserves the poster share counts and printed total alongside percentages', () => {
+    const profile = companyImageSchema.parse({
+      ...salon,
+      shareholders: [
+        { name: 'นางสาวสิริรัตน์ ดวงจันทร์', shares: '36,000 หุ้น', percent: '90%' },
+        { name: 'นางสุรรณา มอบบำรุง', shares: '4,000', percent: '10%' },
+      ],
+      total_shares: '40,000 หุ้น',
+    });
+    const business = companyImageToDraft(profile).business;
+    expect(business.shareholders.map(({ shares, percent }) => [shares, percent])).toEqual([
+      [36_000, 90],
+      [4_000, 10],
+    ]);
+    expect(business.share_structure.total_shares).toBe(40_000);
+  });
+
   it('leaves absent links blank and uses the renamed category without changing figures', () => {
     const draft = companyImageToDraft({ ...salon, website: '', facebook_page: '' });
     expect(draft.website).toBeNull();

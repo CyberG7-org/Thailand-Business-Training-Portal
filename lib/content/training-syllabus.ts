@@ -152,16 +152,16 @@ export const TRAINING_SYLLABUS: readonly TrainingSyllabusItem[] = [
     'learner_shareholding',
     2,
     [
-      'How much of the company do you own, as a percentage?',
+      'How many shares do you have?',
       'What percentage of the company do you own?',
       'What is your ownership percentage in the company?',
     ],
     [
-      'คุณเป็นเจ้าของบริษัทคิดเป็นกี่เปอร์เซ็นต์',
+      'คุณถือหุ้นในบริษัทกี่หุ้น',
       'คุณถือหุ้นคิดเป็นกี่เปอร์เซ็นต์ของบริษัท',
       'สัดส่วนการถือหุ้นของคุณในบริษัทคือเท่าใด',
     ],
-    ['您持有公司多少百分比的股份？', '您拥有公司多少百分比？', '您在公司的持股比例是多少？'],
+    ['您在公司持有多少股？', '您拥有公司多少百分比？', '您在公司的持股比例是多少？'],
   ),
   item(
     'actual_business',

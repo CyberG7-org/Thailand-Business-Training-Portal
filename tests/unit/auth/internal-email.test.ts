@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
 
 describe('isValidLoginId', () => {
-  it('accepts 3–64 chars of letters, digits, dot, underscore, dash', () => {
+  it('accepts 2–64 chars of letters, digits, dot, underscore, dash', () => {
+    expect(isValidLoginId('a1')).toBe(true);
     expect(isValidLoginId('siam001')).toBe(true);
     expect(isValidLoginId('learner.a_b-c')).toBe(true);
   });
   it('rejects too short, spaces, @ and leading punctuation', () => {
-    expect(isValidLoginId('ab')).toBe(false);
+    expect(isValidLoginId('a')).toBe(false);
     expect(isValidLoginId('has space')).toBe(false);
     expect(isValidLoginId('a@b')).toBe(false);
     expect(isValidLoginId('.abc')).toBe(false);
