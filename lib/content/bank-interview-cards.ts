@@ -101,7 +101,8 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 |---|---|
 | Registered capital | {registered_capital} Baht |
 | How many shares do you hold? | {my_shares} shares ({my_share_percent}%) |
-| Total shares and value | {total_shares} shares at {par_value} Baht each |
+| Total shares | {total_shares} shares |
+| Value per share | {par_value} Baht |
 | Shareholders | {shareholders_count} — {shareholders} |
 | Your name and position | {my_name} — {my_position} |
 | Your daily responsibilities | {my_responsibilities} |
@@ -119,7 +120,8 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 |---|---|
 | ทุนจดทะเบียน | {registered_capital} บาท |
 | คุณถือหุ้นกี่หุ้น? | {my_shares} หุ้น ({my_share_percent}%) |
-| จำนวนหุ้นและมูลค่าหุ้น | {total_shares} หุ้น หุ้นละ {par_value} บาท |
+| จำนวนหุ้นทั้งหมด | {total_shares} หุ้น |
+| มูลค่าต่อหุ้น | {par_value} บาท |
 | ผู้ถือหุ้น | {shareholders_count} คน — {shareholders} |
 | ชื่อและตำแหน่ง | {my_name} — {my_position} |
 | หน้าที่ประจำวัน | {my_responsibilities} |
@@ -137,7 +139,8 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 |---|---|
 | 注册资本 | {registered_capital} 泰铢 |
 | 您持有多少股？ | {my_shares} 股（{my_share_percent}%） |
-| 总股份和每股价值 | {total_shares} 股，每股 {par_value} 泰铢 |
+| 总股份 | {total_shares} 股 |
+| 每股价值 | {par_value} 泰铢 |
 | 股东 | {shareholders_count} 位 — {shareholders} |
 | 您的姓名和职位 | {my_name} — {my_position} |
 | 您的日常职责 | {my_responsibilities} |
@@ -155,7 +158,8 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 |---|---|
 | Modal berdaftar | {registered_capital} baht |
 | Berapa saham yang anda pegang? | {my_shares} saham ({my_share_percent}%) |
-| Jumlah saham dan nilainya | {total_shares} saham pada {par_value} baht setiap satu |
+| Jumlah saham | {total_shares} saham |
+| Nilai setiap saham | {par_value} baht |
 | Pemegang saham | {shareholders_count} — {shareholders} |
 | Nama dan jawatan anda | {my_name} — {my_position} |
 | Tanggungjawab harian anda | {my_responsibilities} |

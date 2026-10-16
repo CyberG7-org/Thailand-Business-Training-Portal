@@ -52,6 +52,13 @@ describe('studyPreview', () => {
       const body = renderTemplateLenient(card.localizations[locale]!.body, record, locale);
       const { facts } = studyPreview(body);
       expect(facts[1], locale).toEqual({ label: labels[locale][0], value: labels[locale][1] });
+      expect(body).toContain(
+        `| ${
+          { en: 'Value per share', th: 'มูลค่าต่อหุ้น', zh: '每股价值', ms: 'Nilai setiap saham' }[
+            locale
+          ]
+        } | ${{ en: '100 Baht', th: '100 บาท', zh: '100 泰铢', ms: '100 baht' }[locale]} |`,
+      );
     }
   });
 });
