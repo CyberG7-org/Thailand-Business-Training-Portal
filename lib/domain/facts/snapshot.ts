@@ -19,6 +19,7 @@ import { categoryFiguresKey } from '@/lib/domain/business-category';
 import type { InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
 import { clientOriginAnswer, withStandardAnswers } from '@/lib/domain/standard-answers';
 import { withStandardRole } from '@/lib/domain/standard-role';
+import { valuePerShare } from '@/lib/domain/share-value';
 import { buildFactSheet, type FactSheet, type RecordColumns } from './fact-sheet';
 
 /** The record columns a snapshot reads beyond the fact sheet's. */
@@ -98,7 +99,11 @@ export function buildTrainingSnapshot(input: {
       objectives: business.objectives,
       business_categories: business.business_categories,
       promoters: business.promoters,
-      par_value: business.share_structure.par_value,
+      par_value: valuePerShare(
+        business.share_structure.par_value,
+        input.record.registered_capital,
+        business.share_structure.total_shares,
+      ),
       monthly_volume: interview.monthly_volume,
       clients_location: interview.clients_location,
       suppliers_location: interview.suppliers_location,
@@ -183,7 +188,7 @@ export function templateRecordFromSnapshot(
     shareholders: f.shareholders.length ? f.shareholders : null,
     promoters: x.promoters.length ? x.promoters : null,
     total_shares: f.total_shares,
-    par_value: x.par_value,
+    par_value: valuePerShare(x.par_value, f.registered_capital, f.total_shares),
     directors_count: f.director_count,
     shareholders_count: f.shareholder_count,
     nature_of_business: f.nature_of_business,
@@ -259,7 +264,11 @@ export function templateRecordFromRecord(
     shareholders: business.shareholders.length ? business.shareholders : null,
     promoters: business.promoters.length ? business.promoters : null,
     total_shares: business.share_structure.total_shares,
-    par_value: business.share_structure.par_value,
+    par_value: valuePerShare(
+      business.share_structure.par_value,
+      record.registered_capital,
+      business.share_structure.total_shares,
+    ),
     directors_count: directors && directors.length > 0 ? directors.length : null,
     shareholders_count: business.shareholders.length > 0 ? business.shareholders.length : null,
     nature_of_business: interview.nature_of_business,

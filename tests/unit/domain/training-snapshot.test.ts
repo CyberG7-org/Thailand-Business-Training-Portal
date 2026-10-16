@@ -91,6 +91,27 @@ describe('the training snapshot (spec §5.6, §7.2)', () => {
     });
   });
 
+  it('shows a calculated share value for existing poster records without changing frozen facts', () => {
+    const poster = {
+      ...structured,
+      business: {
+        ...structured.business,
+        share_structure: { ...structured.business.share_structure, par_value: null },
+      },
+    };
+    const snapshot = buildTrainingSnapshot({ record, structured: poster, address: null });
+
+    expect(snapshot.extras.par_value).toBe(100);
+    expect(templateRecordFromSnapshot(snapshot, null).par_value).toBe(100);
+    expect(templateRecordFromRecord({ ...record, structured_data: poster }).par_value).toBe(100);
+
+    const olderSnapshot = {
+      ...snapshot,
+      extras: { ...snapshot.extras, par_value: null },
+    };
+    expect(templateRecordFromSnapshot(olderSnapshot, null).par_value).toBe(100);
+  });
+
   it('derives the learner’s shareholding against the frozen sheet', () => {
     const s = buildTrainingSnapshot({ record, structured, address: null });
     expect(buildRoleSnapshot(role, s)).toEqual({
