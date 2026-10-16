@@ -27,6 +27,9 @@
     "title": "Your profile",
     "intro": "Manage the password for your own account.",
     "account": "Account",
+    "lastPasswordUpdate": "Last password update",
+    "lastPasswordUpdateUnknown": "Not recorded (before tracking began)",
+    "bangkokTime": "(Bangkok time)",
     "changePassword": "Change password",
     "logOut": "Log out",
     "hint": "Enter your current password and choose any 6–8 characters for the new one.",
@@ -36,6 +39,13 @@
     "save": "Save new password",
     "saving": "Saving…",
     "success": "Your password has been changed.",
+    "requirements": {
+      "min": "At least 6 characters",
+      "max": "No more than 8 characters",
+      "confirmPending": "Enter the new password again to confirm it.",
+      "match": "Passwords match",
+      "noMatch": "Passwords do not match"
+    },
     "errors": {
       "missing": "Fill in all password fields.",
       "tooShort": "The new password must have at least 6 characters.",

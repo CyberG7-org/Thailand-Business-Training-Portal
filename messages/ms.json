@@ -17,6 +17,9 @@
     "title": "Profil anda",
     "intro": "Urus kata laluan untuk akaun anda sendiri.",
     "account": "Akaun",
+    "lastPasswordUpdate": "Kemas kini kata laluan terakhir",
+    "lastPasswordUpdateUnknown": "Tidak direkodkan sebelum penjejakan bermula",
+    "bangkokTime": "(waktu Bangkok)",
     "changePassword": "Tukar kata laluan",
     "logOut": "Log keluar",
     "hint": "Masukkan kata laluan semasa dan pilih mana-mana 6–8 aksara untuk yang baharu.",
@@ -26,6 +29,13 @@
     "save": "Simpan kata laluan baharu",
     "saving": "Menyimpan…",
     "success": "Kata laluan anda telah ditukar.",
+    "requirements": {
+      "min": "Sekurang-kurangnya 6 aksara",
+      "max": "Tidak melebihi 8 aksara",
+      "confirmPending": "Masukkan semula kata laluan baharu untuk pengesahan.",
+      "match": "Kata laluan sepadan",
+      "noMatch": "Kata laluan tidak sepadan"
+    },
     "errors": {
       "missing": "Isi semua ruangan kata laluan.",
       "tooShort": "Kata laluan baharu mesti mempunyai sekurang-kurangnya 6 aksara.",

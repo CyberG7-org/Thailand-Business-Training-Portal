@@ -82,4 +82,24 @@ describe('staff self-service password action', () => {
     expect(result).toEqual({ error: 'invalidCurrent', success: false });
     expect(mocks.updateUser).not.toHaveBeenCalled();
   });
+
+  it('rejects invalid length and a mismatched confirmation before checking credentials', async () => {
+    const short = await changePasswordAction(
+      { error: null, success: false },
+      form('Old123!', '12345'),
+    );
+    const long = await changePasswordAction(
+      { error: null, success: false },
+      form('Old123!', '123456789'),
+    );
+    const mismatch = form('Old123!', 'New123!');
+    mismatch.set('confirmPassword', 'Other12');
+    const unmatched = await changePasswordAction({ error: null, success: false }, mismatch);
+
+    expect(short).toEqual({ error: 'tooShort', success: false });
+    expect(long).toEqual({ error: 'tooLong', success: false });
+    expect(unmatched).toEqual({ error: 'mismatch', success: false });
+    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+  });
 });

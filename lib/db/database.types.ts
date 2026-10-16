@@ -1271,6 +1271,7 @@ export type Database = {
           id: string
           login_id: string
           manager_id: string | null
+          password_changed_at: string | null
           phone: string | null
           preferred_language: string
           role: string
@@ -1286,6 +1287,7 @@ export type Database = {
           id: string
           login_id: string
           manager_id?: string | null
+          password_changed_at?: string | null
           phone?: string | null
           preferred_language?: string
           role: string
@@ -1301,6 +1303,7 @@ export type Database = {
           id?: string
           login_id?: string
           manager_id?: string | null
+          password_changed_at?: string | null
           phone?: string | null
           preferred_language?: string
           role?: string

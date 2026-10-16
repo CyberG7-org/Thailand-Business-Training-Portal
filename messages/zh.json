@@ -27,6 +27,9 @@
     "title": "个人资料",
     "intro": "管理您账户的密码。",
     "account": "账户",
+    "lastPasswordUpdate": "上次修改密码时间",
+    "lastPasswordUpdateUnknown": "开始记录前的时间未知",
+    "bangkokTime": "（曼谷时间）",
     "changePassword": "修改密码",
     "logOut": "退出登录",
     "hint": "输入当前密码，并设置任意 6–8 个字符的新密码。",
@@ -36,6 +39,13 @@
     "save": "保存新密码",
     "saving": "正在保存…",
     "success": "密码已修改。",
+    "requirements": {
+      "min": "至少 6 个字符",
+      "max": "不超过 8 个字符",
+      "confirmPending": "再次输入新密码以确认。",
+      "match": "密码一致",
+      "noMatch": "密码不一致"
+    },
     "errors": {
       "missing": "请填写所有密码字段。",
       "tooShort": "新密码至少需要 6 个字符。",
