@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createLearner, createManager, loginAs, switchTo } from './helpers';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 const LEARNER_PASSWORD = 'Learn123';
 
 /** Spec §4: a manager may suspend and reset the password of their own team's learners. */

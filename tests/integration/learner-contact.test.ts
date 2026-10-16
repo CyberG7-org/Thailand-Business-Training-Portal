@@ -16,7 +16,7 @@ import {
 } from './helpers';
 
 const svc = adminClient();
-const PASSWORD = 'Test-Password-123!';
+const PASSWORD = 'Test123!';
 /** A free manager suffix: only 2,400 exist (D85), so one is asked for rather than invented. */
 const fresh = () => suggestSuffix('manager', MANAGER_PREFIX);
 

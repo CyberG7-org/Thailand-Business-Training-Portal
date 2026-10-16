@@ -15,7 +15,7 @@ import { MANAGER_PREFIX } from '@/lib/domain/login-id';
 import { adminClient, deleteTestUser } from './helpers';
 
 const svc = adminClient();
-const PASSWORD = 'Test-Password-123!';
+const PASSWORD = 'Test123!';
 const LEARNER_PASSWORD = 'Test1234';
 
 /**

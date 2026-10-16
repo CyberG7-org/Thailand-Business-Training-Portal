@@ -12,6 +12,29 @@
     "showPassword": "Tunjuk kata laluan",
     "hidePassword": "Sembunyikan kata laluan"
   },
+  "profile": {
+    "menu": "Menu profil",
+    "title": "Profil anda",
+    "intro": "Urus kata laluan untuk akaun anda sendiri.",
+    "account": "Akaun",
+    "changePassword": "Tukar kata laluan",
+    "logOut": "Log keluar",
+    "hint": "Masukkan kata laluan semasa dan pilih mana-mana 6–8 aksara untuk yang baharu.",
+    "currentPassword": "Kata laluan semasa",
+    "newPassword": "Kata laluan baharu",
+    "confirmPassword": "Sahkan kata laluan baharu",
+    "save": "Simpan kata laluan baharu",
+    "saving": "Menyimpan…",
+    "success": "Kata laluan anda telah ditukar.",
+    "errors": {
+      "missing": "Isi semua ruangan kata laluan.",
+      "tooShort": "Kata laluan baharu mesti mempunyai sekurang-kurangnya 6 aksara.",
+      "tooLong": "Kata laluan baharu tidak boleh melebihi 8 aksara.",
+      "mismatch": "Kata laluan baharu tidak sepadan.",
+      "invalidCurrent": "Kata laluan semasa tidak betul.",
+      "updateFailed": "Tidak dapat menukar kata laluan. Sila cuba lagi."
+    }
+  },
   "stages": {
     "titles": {
       "study": "Bahan pembelajaran",

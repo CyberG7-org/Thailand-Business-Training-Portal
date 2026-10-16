@@ -22,6 +22,29 @@
     "showPassword": "显示密码",
     "hidePassword": "隐藏密码"
   },
+  "profile": {
+    "menu": "个人资料菜单",
+    "title": "个人资料",
+    "intro": "管理您账户的密码。",
+    "account": "账户",
+    "changePassword": "修改密码",
+    "logOut": "退出登录",
+    "hint": "输入当前密码，并设置任意 6–8 个字符的新密码。",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "save": "保存新密码",
+    "saving": "正在保存…",
+    "success": "密码已修改。",
+    "errors": {
+      "missing": "请填写所有密码字段。",
+      "tooShort": "新密码至少需要 6 个字符。",
+      "tooLong": "新密码不能超过 8 个字符。",
+      "mismatch": "两次输入的新密码不一致。",
+      "invalidCurrent": "当前密码不正确。",
+      "updateFailed": "无法修改密码，请重试。"
+    }
+  },
   "dashboard": {
     "title": "首页",
     "welcome": "欢迎，{name}",
@@ -179,7 +202,7 @@
       "tabCompanies": "公司（DBD）",
       "signIn": "登录信息",
       "signInIntro": "学员首次登录时使用这些信息。",
-      "passwordPlaceholder": "6–8 位字母或数字",
+      "passwordPlaceholder": "任意 6–8 个字符",
       "generatePassword": "生成",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",

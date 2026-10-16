@@ -11,7 +11,7 @@ import {
   switchTo,
 } from './helpers';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 const LEARNER_PASSWORD = 'Learn123';
 
 test('a learner is created inside a team, under a code typed after the team prefix', async ({

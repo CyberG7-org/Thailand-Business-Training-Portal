@@ -37,7 +37,7 @@ export async function createTestUser(
   } = {},
 ): Promise<TestUser> {
   const loginId = overrides.loginId ?? `${role}-${randomUUID().slice(0, 8)}`;
-  const password = 'Test-Password-123!';
+  const password = 'Test123!';
   const { data, error } = await adminClient().auth.admin.createUser({
     email: `${loginId}@${INTERNAL_DOMAIN}`,
     password,

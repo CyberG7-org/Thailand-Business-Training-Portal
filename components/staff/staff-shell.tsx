@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { LanguageToggle } from '@/components/language-toggle';
-import { SignOutButton } from '@/components/sign-out-button';
 import { Link } from '@/i18n/navigation';
 import type { CurrentUser } from '@/lib/auth/session';
 import { initialsOf } from '@/lib/domain/initials';
 import { displayLoginId } from '@/lib/domain/login-id';
+import { ProfileDropdown } from './profile-dropdown';
 import { StaffNav } from './staff-nav';
 
 /**
@@ -24,7 +24,12 @@ export async function StaffShell({
   side?: ReactNode;
   children: ReactNode;
 }) {
-  const [t, ta] = await Promise.all([getTranslations('app'), getTranslations('admin')]);
+  const [locale, t, ta, tp] = await Promise.all([
+    getLocale(),
+    getTranslations('app'),
+    getTranslations('admin'),
+    getTranslations('profile'),
+  ]);
   const role = user.role === 'admin' ? 'admin' : 'manager';
   return (
     <div className="bg-dotgrid min-h-screen">
@@ -49,17 +54,18 @@ export async function StaffShell({
             {ta(`roles.${role}`)}
           </span>
           <LanguageToggle label={t('language')} />
-          <div className="flex items-center gap-2.5 border-l border-brand-700/20 pl-4">
-            <span
-              aria-hidden="true"
-              className="grid size-9 shrink-0 place-items-center rounded-full bg-gold-100 text-sm font-semibold text-brand-900"
-            >
-              {initialsOf(user.displayName, user.loginId)}
-            </span>
-            <span className="hidden text-sm font-medium sm:inline">
-              {user.displayName ?? displayLoginId(user.loginId)}
-            </span>
-            <SignOutButton />
+          <div className="min-w-0 border-l border-brand-700/20 pl-3">
+            <ProfileDropdown
+              name={user.displayName ?? displayLoginId(user.loginId)}
+              loginId={displayLoginId(user.loginId)}
+              initials={initialsOf(user.displayName, user.loginId)}
+              locale={locale}
+              labels={{
+                profile: tp('menu'),
+                changePassword: tp('changePassword'),
+                signOut: tp('logOut'),
+              }}
+            />
           </div>
         </header>
       </div>

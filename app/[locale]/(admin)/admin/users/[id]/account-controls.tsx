@@ -30,7 +30,6 @@ export function AccountControls({
             required
             minLength={6}
             maxLength={8}
-            pattern="[A-Za-z0-9]{6,8}"
             autoComplete="off"
             className="staff-input mt-1"
           />

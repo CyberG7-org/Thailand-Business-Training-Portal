@@ -3,7 +3,7 @@ import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createManager, loginAs, switchTo } from './helpers';
 import { disableProfileOnly } from './seed';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 
 test('a manager lands in the admin area and sees only their own doors', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);

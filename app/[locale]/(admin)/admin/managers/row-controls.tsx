@@ -2,6 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '@/lib/domain/password-policy';
 import {
   renameManagerAction,
   resetManagerPasswordAction,
@@ -68,7 +69,8 @@ export function ManagerRowControls({
         <input
           name="newPassword"
           type="password"
-          minLength={10}
+          minLength={MIN_PASSWORD_LENGTH}
+          maxLength={MAX_PASSWORD_LENGTH}
           placeholder={t('resetPassword')}
           className="staff-input staff-input-sm w-36"
         />

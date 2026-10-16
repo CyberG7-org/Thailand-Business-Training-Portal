@@ -22,6 +22,29 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password"
   },
+  "profile": {
+    "menu": "Profile menu",
+    "title": "Your profile",
+    "intro": "Manage the password for your own account.",
+    "account": "Account",
+    "changePassword": "Change password",
+    "logOut": "Log out",
+    "hint": "Enter your current password and choose any 6–8 characters for the new one.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "save": "Save new password",
+    "saving": "Saving…",
+    "success": "Your password has been changed.",
+    "errors": {
+      "missing": "Fill in all password fields.",
+      "tooShort": "The new password must have at least 6 characters.",
+      "tooLong": "The new password must have no more than 8 characters.",
+      "mismatch": "The new passwords do not match.",
+      "invalidCurrent": "The current password is incorrect.",
+      "updateFailed": "Could not change your password. Please try again."
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {name}",
@@ -179,7 +202,7 @@
       "tabCompanies": "Companies (DBD)",
       "signIn": "Sign-in",
       "signInIntro": "The learner uses these to log in the first time.",
-      "passwordPlaceholder": "6–8 letters or numbers",
+      "passwordPlaceholder": "Any 6–8 characters",
       "generatePassword": "Generate",
       "showPassword": "Show password",
       "hidePassword": "Hide password",

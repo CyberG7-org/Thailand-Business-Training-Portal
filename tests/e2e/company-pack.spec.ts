@@ -5,7 +5,7 @@ import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createManager, loginAs, openRecordTab, switchTo } from './helpers';
 
 const CRON = { headers: { Authorization: 'Bearer local-cron-secret-for-dev' } };
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 const pdf = readFileSync('tests/fixtures/three-pages.pdf');
 
 /** A company zip as a manager would make it: the pack, invoices and agreements in folders, a link file. */
