@@ -26,6 +26,7 @@ test('Submanager sees team company names as text and cannot open their editors',
   const code = `e2esub${Date.now()}`;
   const ids: string[] = [];
   let recordId: string | undefined;
+  let ownRecordId: string | undefined;
   try {
     const { data: m, error: me } = await db.auth.admin.createUser({
       email: `${code}@${domain}`,
@@ -51,6 +52,20 @@ test('Submanager sees team company names as text and cannot open their editors',
         team_id: m.user!.id,
         created_by: m.user!.id,
         company_name_en: 'Manager uploaded company',
+        company_name_th: 'Manager company',
+        juristic_id: '0105568233704',
+        directors: [{ name_th: 'E2E Director' }],
+        extraction_status: 'confirmed',
+        confirmed_by: m.user!.id,
+        confirmed_at: new Date().toISOString(),
+        structured_data: {
+          interview: {
+            contact_email: 'test@example.com',
+            contact_phone: '0812345678',
+            nature_of_business: 'Test',
+            products_services: 'Test',
+          },
+        },
       })
       .select('id')
       .single();
@@ -61,12 +76,60 @@ test('Submanager sees team company names as text and cannot open their editors',
     await expect(page.getByText('Manager uploaded company', { exact: true })).toBeVisible();
     await expect(page.locator(`a[href*="dbd-records/${recordId}"]`)).toHaveCount(0);
     await expect(page.getByTestId(`delete-company-${recordId}`)).toHaveCount(0);
+    await page.getByTestId(`assign-learner-${recordId}`).click();
+    await expect(
+      page.getByRole('alert').filter({ hasText: 'This DBD has not been created by you.' }),
+    ).toHaveText('This DBD has not been created by you.');
+    await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
+    await page.getByTestId('tab-learner').click();
+    await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue('');
+    await page.getByTestId('tab-companies').click();
     await page.getByTestId('add-company').click();
     await expect(page.getByRole('radio', { name: 'PDF poster' })).toBeVisible();
     await expect(page.getByRole('radio', { name: 'ZIP file' })).toBeVisible();
     await page.goto(`/en/admin/dbd-records/${recordId}`);
     await expect(page).toHaveURL(/\/en\/admin\/users$/);
+    // A separate record retains the Submanager as creator after Manager confirmation.
+    const { data: source } = await db
+      .from('dbd_records')
+      .select(
+        'team_id, company_name_en, company_name_th, juristic_id, directors, extraction_status, confirmed_by, confirmed_at, structured_data',
+      )
+      .eq('id', recordId)
+      .single();
+    const { data: own, error: ownError } = await db
+      .from('dbd_records')
+      .insert({
+        ...source!,
+        created_by: s.user!.id,
+        company_name_en: 'Submanager uploaded company',
+      })
+      .select('id')
+      .single();
+    if (ownError) throw ownError;
+    ownRecordId = own.id;
+    await page.reload();
+    await page.getByTestId(`assign-learner-${ownRecordId}`).click();
+    await expect(page.getByTestId('tab-learner')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('select[name="dbdRecordId"]')).toHaveValue(ownRecordId!);
+    await expect(page.getByTestId('login-id-prefix')).toHaveText(code.toUpperCase());
+    await fillLoginSuffix(page);
+    await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
+    await page.getByRole('button', { name: 'Create learner', exact: true }).click();
+    await expect(page.getByTestId('create-user-status')).toBeVisible();
+    const { data: assignment } = await db
+      .from('user_dbd_assignments')
+      .select('user_id')
+      .eq('dbd_record_id', ownRecordId!)
+      .single();
+    expect(assignment).toBeTruthy();
+    ids.push(assignment!.user_id);
+    expect(
+      (await db.from('profiles').select('manager_id').eq('id', assignment!.user_id).single()).data
+        ?.manager_id,
+    ).toBe(m.user!.id);
   } finally {
+    if (ownRecordId) await db.from('dbd_records').delete().eq('id', ownRecordId);
     if (recordId) await db.from('dbd_records').delete().eq('id', recordId);
     for (const id of ids.reverse()) await db.auth.admin.deleteUser(id);
   }

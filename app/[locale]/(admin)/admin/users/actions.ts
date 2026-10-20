@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache';
 import { getTranslations } from 'next-intl/server';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaff, requireStaffOrSubmanager } from '@/lib/auth/session';
+import { assertSubmanagerMayAssign } from '@/lib/db/submanager-learner';
 import { assignDbdRecord, learnersOfRecords } from '@/lib/db/assignments';
 import { recordAccountAction } from '@/lib/db/account-audit';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
@@ -78,17 +79,30 @@ export async function createUserAction(
   formData: FormData,
 ): Promise<CreateUserState> {
   const locale = String(formData.get('locale') ?? 'th');
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
   const fail = (error: string): CreateUserState => ({
     ok: false,
     error,
     createdLoginId: null,
     company: null,
   });
-  const db = await createSupabaseServerClient();
+  const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
+  let managerId: string;
+  if (staff.role === 'submanager') {
+    try {
+      ({ managerId } = await assertSubmanagerMayAssign(staff.id, dbdRecordId));
+    } catch {
+      return fail('not-allowed');
+    }
+  } else {
+    managerId = staff.role === 'manager' ? staff.id : String(formData.get('managerId') ?? '');
+  }
+  // Service access is confined to this pre-authorized creation pipeline; Submanager RLS
+  // continues to deny generic company updates and assignment writes.
+  const db =
+    staff.role === 'submanager' ? createSupabaseAdminClient() : await createSupabaseServerClient();
 
   // A manager creates inside their own team; the admin says which team it is (spec §7).
-  const managerId = staff.role === 'manager' ? staff.id : String(formData.get('managerId') ?? '');
   if (!managerId) return fail('Choose the team this learner belongs to');
 
   // The learner is created with their name (D66) and the code the staff member typed after the
@@ -101,7 +115,6 @@ export async function createUserAction(
     return fail(t(firstContactProblem(contact.error)));
   }
 
-  const dbdRecordId = String(formData.get('dbdRecordId') ?? '');
   if (!dbdRecordId) return fail('Choose the company the learner belongs to');
   const { data: record, error: recordError } = await db
     .from('dbd_records')

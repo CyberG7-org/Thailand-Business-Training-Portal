@@ -1,6 +1,7 @@
 'use server';
 
-import { requireAdmin, requireStaff } from '@/lib/auth/session';
+import { requireAdmin, requireStaffOrSubmanager } from '@/lib/auth/session';
+import { submanagerUploadContext } from '@/lib/db/submanager-upload';
 import {
   ProvisioningError,
   isLoginIdTaken,
@@ -23,8 +24,13 @@ async function prefixFor({ locale, kind, managerId }: LoginIdQuery): Promise<str
     await requireAdmin(locale);
     return MANAGER_PREFIX;
   }
-  const staff = await requireStaff(locale);
-  const team = staff.role === 'manager' ? staff.id : managerId;
+  const staff = await requireStaffOrSubmanager(locale);
+  const team =
+    staff.role === 'submanager'
+      ? (await submanagerUploadContext(staff.id)).teamId
+      : staff.role === 'manager'
+        ? staff.id
+        : managerId;
   if (!team) return null;
   try {
     return await learnerPrefixOf(team);
