@@ -310,28 +310,50 @@ export async function deleteLearnerAccount(actorId: string, learnerId: string): 
   if (error) throw error;
 }
 
-export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {
+/** Legacy account mutations must never become another entry point for Submanager lifecycle. */
+async function legacyAccount(userId: string, expectedRole?: 'manager'): Promise<void> {
   const admin = createSupabaseAdminClient();
   const { data: profile, error: profileError } = await admin
     .from('profiles')
     .select('role')
     .eq('id', userId)
     .maybeSingle();
-  if (profileError || !profile) throw new ProvisioningError('Account not found', 'invalid');
+  if (
+    profileError ||
+    !profile ||
+    profile.role === 'submanager' ||
+    (expectedRole && profile.role !== expectedRole)
+  ) {
+    throw new ProvisioningError('Account not found', 'invalid');
+  }
+}
+
+async function changeAccountPassword(userId: string, newPassword: string): Promise<void> {
   if (!isValidPassword(newPassword)) {
     throw new ProvisioningError('Password must be 6–8 characters', 'invalid');
   }
-  const { error } = await admin.auth.admin.updateUserById(userId, {
+  const { error } = await createSupabaseAdminClient().auth.admin.updateUserById(userId, {
     password: newPassword,
   });
   if (error) throw new ProvisioningError(error.message, 'unknown');
+}
+
+export async function setAccountPassword(
+  userId: string,
+  newPassword: string,
+  expectedRole?: 'manager',
+): Promise<void> {
+  await legacyAccount(userId, expectedRole);
+  await changeAccountPassword(userId, newPassword);
 }
 
 /** Disabling bans the auth user (blocks sign-in and token refresh) and marks the profile. */
 export async function setAccountStatus(
   userId: string,
   status: 'active' | 'disabled',
+  expectedRole?: 'manager',
 ): Promise<void> {
+  await legacyAccount(userId, expectedRole);
   const admin = createSupabaseAdminClient();
   const { error: authError } = await admin.auth.admin.updateUserById(userId, {
     ban_duration: status === 'disabled' ? '876600h' : 'none',
@@ -426,7 +448,7 @@ export async function resetSubmanagerPassword(
   password: string,
 ): Promise<void> {
   await ownedSubmanager(managerActorId, submanagerId);
-  await setAccountPassword(submanagerId, password);
+  await changeAccountPassword(submanagerId, password);
 }
 
 /** Identity is retained because DBD creator references and the login code are permanent. */

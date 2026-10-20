@@ -36,20 +36,24 @@ import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
 export type AccountActionState = { message: string | null; error: string | null };
 
 /**
- * Staff may act on an account only when it is theirs: the admin on anyone, a manager on their own
- * learners. setAccountStatus and setAccountPassword run as service role, so RLS cannot do this.
+ * Legacy account screens exclude Submanagers: only their owning Manager's dedicated lifecycle
+ * actions may manage them. Other roles retain the existing Owner/team rules.
  */
 async function requireManageable(locale: string, userId: string): Promise<CurrentUser> {
   const staff = await requireStaff(locale);
-  if (staff.role === 'admin') return staff;
   const db = await createSupabaseServerClient();
   const { data } = await db
     .from('profiles')
-    .select('id')
+    .select('id, role, manager_id')
     .eq('id', userId)
-    .eq('manager_id', staff.id)
     .maybeSingle();
-  if (!data) redirect(`/${locale}/admin/learners`);
+  if (
+    !data ||
+    data.role === 'submanager' ||
+    (staff.role !== 'admin' && data.manager_id !== staff.id)
+  ) {
+    redirect(`/${locale}/admin/learners`);
+  }
   return staff;
 }
 
