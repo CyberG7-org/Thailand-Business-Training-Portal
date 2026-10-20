@@ -12,7 +12,7 @@ A Manager can delegate DBD uploads and learner creation without handing over edi
 
 - Add the role `submanager` between `manager` and `learner`. Each Submanager belongs to exactly one Manager's existing team; no nested team is created.
 - Its login ID is the Manager's full login ID + `s` + exactly two ASCII alphanumeric characters in any combination, e.g. `tf38s01` or `tf38sA7`. The typed suffix has no sequential or letter/digit-mix rule. Follow the portal's existing case-insensitive login convention and reject duplicate full IDs.
-- Only that Manager can create, reset the password of, suspend/reactivate, and remove their Submanagers on a dedicated **Submanagers** page. Multiple accounts per Manager are allowed. Submanagers can use the existing own-profile password change flow.
+- That Manager can create, reset the password of, suspend/reactivate, and remove their Submanagers on a dedicated **Submanagers** page. The Owner sees every team's Submanagers on the same page and can do the same for any team, choosing the Manager when creating one (owner request, 2026-10-20). No other Manager can manage them. Multiple accounts per Manager are allowed. Submanagers can use the existing own-profile password change flow.
 - The **Delete** action removes login access and hides the Submanager from the normal management list, but retains the profile identity and login ID as an archived account. DBDs, learners, assignments, results, and creator/audit references remain intact. Suspended accounts stay visible and can be reactivated; archived accounts cannot log in or be reactivated through the normal page. No login ID is reused.
 - A Manager suspended by the Owner must not leave active Submanagers with access to that Manager's team.
 

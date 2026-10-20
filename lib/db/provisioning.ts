@@ -376,9 +376,17 @@ async function submanagerParent(managerId: string) {
   return data;
 }
 
-async function ownedSubmanager(managerActorId: string, submanagerId: string) {
-  await submanagerParent(managerActorId);
-  const { data, error } = await createSupabaseAdminClient()
+/** The Owner may manage any team's Submanager; a Manager only their own. */
+async function ownedSubmanager(actorId: string, submanagerId: string) {
+  const db = createSupabaseAdminClient();
+  const { data: actor } = await db
+    .from('profiles')
+    .select('role, status')
+    .eq('id', actorId)
+    .maybeSingle();
+  const owner = actor?.role === 'admin' && actor.status === 'active';
+  if (!owner) await submanagerParent(actorId);
+  const { data, error } = await db
     .from('profiles')
     .select('id, role, manager_id, archived_at')
     .eq('id', submanagerId)
@@ -387,7 +395,7 @@ async function ownedSubmanager(managerActorId: string, submanagerId: string) {
     error ||
     !data ||
     data.role !== 'submanager' ||
-    data.manager_id !== managerActorId ||
+    (!owner && data.manager_id !== actorId) ||
     data.archived_at
   ) {
     throw new ProvisioningError('Submanager not found', 'invalid');
@@ -397,7 +405,7 @@ async function ownedSubmanager(managerActorId: string, submanagerId: string) {
 
 export async function createSubmanagerAccount(
   input: NewPerson & { managerId: string; suffix: string },
-): Promise<{ id: string; loginId: string }> {
+): Promise<{ id: string; loginId: string; managerId: string }> {
   const person = parsePerson(input);
   const manager = await submanagerParent(input.managerId);
   let loginId: string;
@@ -409,19 +417,20 @@ export async function createSubmanagerAccount(
       'invalid-login-id',
     );
   }
-  return createUnderCode(
+  const created = await createUnderCode(
     loginId,
     { ...person, role: 'submanager', managerId: manager.id },
     { createAccount },
   );
+  return { id: created.id, loginId: created.loginId, managerId: manager.id };
 }
 
 export async function setSubmanagerStatus(
-  managerActorId: string,
+  actorId: string,
   submanagerId: string,
   status: 'active' | 'disabled',
 ): Promise<void> {
-  await ownedSubmanager(managerActorId, submanagerId);
+  await ownedSubmanager(actorId, submanagerId);
   if (status !== 'active' && status !== 'disabled')
     throw new ProvisioningError('Invalid status', 'invalid');
   // The database gate cannot reactivate an archived identity, including a concurrent archive.
@@ -443,20 +452,20 @@ export async function setSubmanagerStatus(
 }
 
 export async function resetSubmanagerPassword(
-  managerActorId: string,
+  actorId: string,
   submanagerId: string,
   password: string,
 ): Promise<void> {
-  await ownedSubmanager(managerActorId, submanagerId);
+  await ownedSubmanager(actorId, submanagerId);
   await changeAccountPassword(submanagerId, password);
 }
 
 /** Identity is retained because DBD creator references and the login code are permanent. */
 export async function archiveSubmanager(
-  managerActorId: string,
+  actorId: string,
   submanagerId: string,
 ): Promise<void> {
-  await ownedSubmanager(managerActorId, submanagerId);
+  await ownedSubmanager(actorId, submanagerId);
   // Persist the access gate first; a failed auth ban must never leave a stale session usable.
   const { error } = await createSupabaseAdminClient()
     .from('profiles')

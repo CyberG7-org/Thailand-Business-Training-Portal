@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, type ReactNode } from 'react';
+import { useActionState, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from '@/lib/domain/password-policy';
@@ -68,15 +68,47 @@ function PasswordField() {
   );
 }
 
-export function NewSubmanagerForm({ prefix }: { prefix: string }) {
+/** A Manager creates under their own ID; the Owner (given `managers`) picks the team first. */
+export function NewSubmanagerForm({
+  prefix,
+  managers,
+}: {
+  prefix?: string;
+  managers?: { id: string; loginId: string; name: string | null }[];
+}) {
   const t = useTranslations('admin.submanagers');
+  const [managerId, setManagerId] = useState('');
+  const chosen = managers?.find((m) => m.id === managerId);
+  const shownPrefix = managers ? (chosen ? `${chosen.loginId}s` : '') : (prefix ?? '');
   return (
     <AccountForm operation="create" className="staff-card grid max-w-md gap-3">
       <h2 className="text-sm font-semibold">{t('new')}</h2>
+      {managers && (
+        <label className="text-sm">
+          {t('manager')}
+          <select
+            className="staff-input mt-1 block w-full"
+            name="managerId"
+            required
+            value={managerId}
+            onChange={(event) => setManagerId(event.target.value)}
+          >
+            <option value="">{t('chooseManager')}</option>
+            {managers.map((m) => (
+              <option key={m.id} value={m.id}>
+                {displayLoginId(m.loginId)}
+                {m.name ? ` — ${m.name}` : ''}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="text-sm">
         {t('loginId')}
         <span className="mt-1 flex items-center gap-2">
-          <span className="font-mono">{displayLoginId(prefix)}</span>
+          <span className="font-mono" data-testid="submanager-prefix">
+            {shownPrefix ? displayLoginId(shownPrefix) : '—'}
+          </span>
           <input
             aria-label={t('suffix')}
             className="staff-input"

@@ -7,7 +7,7 @@ import { NewSubmanagerForm, SubmanagerControls } from './forms';
 export default async function SubmanagersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const actor = await requireStaff(locale);
-  // The Owner sees every team's Submanagers read-only; only the parent Manager manages them.
+  // The Owner sees and manages every team's Submanagers; a Manager only their own.
   const owner = actor.role === 'admin';
   const t = await getTranslations('admin.submanagers');
   const db = createSupabaseAdminClient();
@@ -21,27 +21,34 @@ export default async function SubmanagersPage({ params }: { params: Promise<{ lo
   if (!owner) query = query.eq('manager_id', actor.id);
   const { data: accounts, error } = await query;
   if (error) throw error;
-  const managerIds = [...new Set((accounts ?? []).map((a) => a.manager_id).filter(Boolean))];
-  const managerCodes = new Map<string, string>();
-  if (owner && managerIds.length) {
-    const { data: managers, error: managersError } = await db
-      .from('profiles')
-      .select('id, login_id')
-      .in('id', managerIds as string[]);
-    if (managersError) throw managersError;
-    for (const m of managers) managerCodes.set(m.id, m.login_id);
-  }
+  // The Owner's team column and Manager picker; suspended Managers keep their code in the list.
+  const managers = owner
+    ? await db
+        .from('profiles')
+        .select('id, login_id, display_name, status')
+        .eq('role', 'manager')
+        .is('archived_at', null)
+        .order('login_id')
+        .then(({ data, error: managersError }) => {
+          if (managersError) throw managersError;
+          return data;
+        })
+    : [];
+  const managerCodes = new Map(managers.map((m) => [m.id, m.login_id]));
   return (
     <section className="grid gap-6">
       <h1 className="staff-title">{t('title')}</h1>
+      {owner && <p className="staff-intro">{t('ownerHint')}</p>}
       {owner ? (
-        <p className="staff-intro">{t('ownerHint')}</p>
+        <NewSubmanagerForm
+          managers={managers
+            .filter((m) => m.status === 'active')
+            .map((m) => ({ id: m.id, loginId: m.login_id, name: m.display_name }))}
+        />
       ) : (
-        <>
-          <NewSubmanagerForm prefix={`${actor.loginId}s`} />
-          <p className="text-sm text-ink-500">{t('archiveHint')}</p>
-        </>
+        <NewSubmanagerForm prefix={`${actor.loginId}s`} />
       )}
+      <p className="text-sm text-ink-500">{t('archiveHint')}</p>
       {!accounts?.length ? (
         <p>{t('empty')}</p>
       ) : (
@@ -53,7 +60,7 @@ export default async function SubmanagersPage({ params }: { params: Promise<{ lo
                 <th>{t('displayName')}</th>
                 {owner && <th>{t('manager')}</th>}
                 <th>{t('status')}</th>
-                {!owner && <th>{t('actions')}</th>}
+                <th>{t('actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -67,11 +74,9 @@ export default async function SubmanagersPage({ params }: { params: Promise<{ lo
                     </td>
                   )}
                   <td data-testid="account-status">{account.status}</td>
-                  {!owner && (
-                    <td>
-                      <SubmanagerControls id={account.id} status={account.status} />
-                    </td>
-                  )}
+                  <td>
+                    <SubmanagerControls id={account.id} status={account.status} />
+                  </td>
                 </tr>
               ))}
             </tbody>

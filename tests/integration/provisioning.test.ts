@@ -20,6 +20,7 @@ import {
   adminClient,
   deleteTestUser,
   createTestManager,
+  createTestUser,
   clientFor,
   INTERNAL_DOMAIN,
   anonClient,
@@ -65,6 +66,29 @@ describe('Manager-owned Submanager lifecycle', () => {
     expect(
       (await clientFor({ ...s, role: 'submanager', password: 'Test123!' })).auth,
     ).toBeDefined();
+  });
+  it('lets the Owner manage any team’s Submanager, and no other role', async () => {
+    const m = await manager();
+    const s = await sub(m.id, 'o1');
+    const owner = await createTestUser('admin');
+    ids.push(owner.id);
+    const sibling = await sub(m.id, 'o2');
+    // A Submanager is neither the parent nor the Owner.
+    await expect(setSubmanagerStatus(sibling.id, s.id, 'disabled')).rejects.toThrow();
+
+    await setSubmanagerStatus(owner.id, s.id, 'disabled');
+    await setSubmanagerStatus(owner.id, s.id, 'active');
+    await resetSubmanagerPassword(owner.id, s.id, 'Own123!');
+    expect((await clientFor({ ...s, role: 'submanager', password: 'Own123!' })).auth).toBeDefined();
+    await archiveSubmanager(owner.id, s.id);
+    const { data } = await adminClient()
+      .from('profiles')
+      .select('status, archived_at, manager_id')
+      .eq('id', s.id)
+      .single();
+    expect(data?.status).toBe('disabled');
+    expect(data?.archived_at).not.toBeNull();
+    expect(data?.manager_id).toBe(m.id);
   });
   it('suspends sign-in and stale-session access, then permits reactivation and password reset', async () => {
     const m = await manager();

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireManager } from '@/lib/auth/session';
+import { requireStaff } from '@/lib/auth/session';
 import { recordAccountAction } from '@/lib/db/account-audit';
 import {
   archiveSubmanager,
@@ -13,20 +13,23 @@ import {
 
 export type SubmanagerState = { ok: boolean; error: string | null; createdLoginId: string | null };
 
-/** All submitted IDs are targets only; the acting Manager comes from the session. */
+/**
+ * All submitted IDs are targets only; the actor comes from the session. A Manager manages their
+ * own Submanagers; the Owner manages any team's and picks the team when creating one.
+ */
 export async function submanagerAction(
   _prev: SubmanagerState,
   form: FormData,
 ): Promise<SubmanagerState> {
   const locale = String(form.get('locale') ?? 'th');
-  const actor = await requireManager(locale);
+  const actor = await requireStaff(locale);
   const id = String(form.get('id') ?? '');
   const operation = String(form.get('operation') ?? '');
   let createdLoginId: string | null = null;
   try {
     if (operation === 'create') {
       const created = await createSubmanagerAccount({
-        managerId: actor.id,
+        managerId: actor.role === 'admin' ? String(form.get('managerId') ?? '') : actor.id,
         suffix: String(form.get('suffix') ?? ''),
         password: String(form.get('password') ?? ''),
         displayName: String(form.get('displayName') ?? '') || undefined,
@@ -34,7 +37,7 @@ export async function submanagerAction(
       createdLoginId = created.loginId;
       await recordAccountAction(actor.id, 'create', created.id, {
         role: 'submanager',
-        manager_id: actor.id,
+        manager_id: created.managerId,
         login_id: created.loginId,
       });
     } else if (operation === 'status') {
