@@ -23,6 +23,7 @@ export default async function ManagersPage({ params }: { params: Promise<{ local
   const { data: learners } = await db
     .from('profiles')
     .select('manager_id')
+    .eq('role', 'learner')
     .not('manager_id', 'is', null);
   const { data: records } = await db
     .from('dbd_records')

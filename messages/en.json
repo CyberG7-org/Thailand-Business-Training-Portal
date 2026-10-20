@@ -133,6 +133,7 @@
   "admin": {
     "title": "Sections",
     "nav": {
+      "submanagers": "Submanagers",
       "users": "Create learner & DBD",
       "questions": "Question bank",
       "interviews": "Interviews",
@@ -1008,6 +1009,26 @@
       "nameNotInDbd": "Choose a name that is printed in the DBD documents.",
       "noPeople": "No director or shareholder has been read from the documents yet."
     },
+    "submanagers": {
+      "title": "Submanagers",
+      "new": "New Submanager",
+      "loginId": "Login ID",
+      "suffix": "Two-character suffix",
+      "suffixHint": "Enter exactly two English letters or digits in any combination.",
+      "displayName": "Display name",
+      "password": "Password (6–8 characters)",
+      "create": "Create Submanager",
+      "status": "Status",
+      "actions": "Actions",
+      "disable": "Suspend",
+      "enable": "Re-enable",
+      "resetPassword": "Reset password",
+      "delete": "Delete",
+      "saved": "Saved",
+      "empty": "No Submanagers yet.",
+      "archiveHint": "Deleting stops access and removes the account from this list. Its records and login ID are retained permanently.",
+      "confirmArchive": "Delete this Submanager's access? Their records and login ID will be retained."
+    },
     "managers": {
       "title": "Managers",
       "new": "New manager",
@@ -1115,6 +1136,7 @@
       "system": "System"
     },
     "roles": {
+      "submanager": "Submanager",
       "admin": "Owner",
       "manager": "Manager"
     },

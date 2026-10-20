@@ -3,8 +3,8 @@
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 
-type Role = 'admin' | 'manager';
-type Item = { href: string; key: string; adminOnly?: boolean };
+type Role = 'admin' | 'manager' | 'submanager';
+type Item = { href: string; key: string; adminOnly?: boolean; managerOnly?: boolean };
 
 /** The sections in the order a manager reads them; the admin-only doors are marked. */
 const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }[] = [
@@ -14,6 +14,7 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
       // The owner starts a team before anything goes in it, so Managers leads; a manager does
       // not see it and starts at "Create learner & DBD".
       { href: '/admin/managers', key: 'managers', adminOnly: true },
+      { href: '/admin/submanagers', key: 'submanagers', managerOnly: true },
       // "Create learner & DBD" (D80): a company's record pages sit under it too.
       { href: '/admin/users', key: 'users' },
       { href: '/admin/learners', key: 'learners' },
@@ -77,7 +78,13 @@ export function StaffNav({ role }: { role: Role }) {
     >
       <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-4 md:overflow-visible">
         {GROUPS.map((group) => {
-          const items = group.items.filter((item) => !item.adminOnly || role === 'admin');
+          const items = group.items.filter((item) => {
+            if (role === 'submanager')
+              return ['/admin/users', '/admin/learners'].includes(item.href);
+            return (
+              (!item.adminOnly || role === 'admin') && (!item.managerOnly || role === 'manager')
+            );
+          });
           if (items.length === 0) return null;
           return (
             <li key={group.key} className="shrink-0 md:shrink">

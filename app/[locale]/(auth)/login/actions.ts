@@ -38,12 +38,19 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, status, preferred_language')
+    .select('role, status, preferred_language, archived_at')
     .eq('id', data.user.id)
     .single();
-  if (!profile || profile.status === 'disabled') {
+  if (!profile || profile.status === 'disabled' || profile.archived_at) {
     await supabase.auth.signOut();
     return { error: 'disabled' };
+  }
+  if (profile.role === 'submanager') {
+    const { data: allowed, error: parentError } = await supabase.rpc('is_submanager');
+    if (parentError || allowed !== true) {
+      await supabase.auth.signOut();
+      return { error: 'disabled' };
+    }
   }
   // A language picked on the login page is a deliberate choice: it wins over the stored
   // preference and becomes the new preference. Otherwise the stored preference wins.
@@ -57,7 +64,7 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
       language = chosen;
     }
   }
-  redirect(homePathFor(profile.role as 'learner' | 'manager' | 'admin', language));
+  redirect(homePathFor(profile.role as 'learner' | 'submanager' | 'manager' | 'admin', language));
 }
 
 export async function signOutAction(formData: FormData) {

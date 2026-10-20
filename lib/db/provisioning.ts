@@ -14,6 +14,7 @@ import {
   learnerPrefix,
   suffixLength,
   suggestionCandidates,
+  submanagerLoginId,
   type LoginIdKind,
 } from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
@@ -31,7 +32,8 @@ export const newAccountSchema = z.object({
     .trim()
     .refine(isValidLoginId, 'Login ID must be 2–64 letters, digits, ".", "_" or "-"'),
   password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
-  role: z.enum(['learner', 'manager', 'admin']).default('learner'),
+  role: z.enum(['learner', 'submanager', 'manager', 'admin']).default('learner'),
+  managerId: z.uuid().optional(),
   displayName: z.string().trim().max(120).optional(),
   preferredLanguage: z.enum(['th', 'en', 'zh', 'ms']).default('th'),
 });
@@ -55,7 +57,10 @@ export async function createAccount(
   if (!parsed.success) {
     throw new ProvisioningError(parsed.error.issues[0]?.message ?? 'Invalid input', 'invalid');
   }
-  const { loginId, password, role, displayName, preferredLanguage } = parsed.data;
+  const { loginId, password, role, managerId, displayName, preferredLanguage } = parsed.data;
+  if (role === 'submanager' && !managerId) {
+    throw new ProvisioningError('A Submanager requires a parent Manager', 'no-manager');
+  }
   const normalizedLoginId = loginId.toLowerCase();
 
   const { data, error } = await createSupabaseAdminClient().auth.admin.createUser({
@@ -68,7 +73,7 @@ export async function createAccount(
       preferred_language: preferredLanguage,
       role,
     },
-    app_metadata: { role },
+    app_metadata: { role, ...(role === 'submanager' ? { manager_id: managerId } : {}) },
   });
   if (error || !data.user) {
     const message = error?.message ?? 'createUser returned no user';
@@ -91,7 +96,7 @@ type NewPerson = {
 /** The auth call behind a code; tests substitute it to make the auth service refuse. */
 type Deps = { createAccount: typeof createAccount };
 
-const newPersonSchema = newAccountSchema.omit({ loginId: true, role: true });
+const newPersonSchema = newAccountSchema.omit({ loginId: true, role: true, managerId: true });
 
 /** Everything the form can get wrong is checked before the auth service is asked. */
 function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
@@ -214,7 +219,10 @@ export async function suggestSuffix(
  */
 async function createUnderCode(
   loginId: string,
-  person: z.infer<typeof newPersonSchema> & { role: 'manager' | 'learner' },
+  person: z.infer<typeof newPersonSchema> & {
+    role: 'manager' | 'learner' | 'submanager';
+    managerId?: string;
+  },
   deps: Deps,
 ): Promise<{ id: string; loginId: string }> {
   if (await isLoginIdTaken(loginId)) throw new ProvisioningError(LOGIN_ID_TAKEN, 'duplicate');
@@ -331,4 +339,113 @@ export async function setAccountStatus(
   if (authError) throw new ProvisioningError(authError.message, 'unknown');
   const { error } = await admin.from('profiles').update({ status }).eq('id', userId);
   if (error) throw new ProvisioningError(error.message, 'unknown');
+}
+
+/** Resolve an active exact-role Manager before any privileged account mutation. */
+async function submanagerParent(managerId: string) {
+  const { data, error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .select('id, login_id, role, status, archived_at')
+    .eq('id', managerId)
+    .maybeSingle();
+  if (error || !data || data.role !== 'manager' || data.status !== 'active' || data.archived_at) {
+    throw new ProvisioningError('An active Manager is required', 'no-manager');
+  }
+  return data;
+}
+
+async function ownedSubmanager(managerActorId: string, submanagerId: string) {
+  await submanagerParent(managerActorId);
+  const { data, error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .select('id, role, manager_id, archived_at')
+    .eq('id', submanagerId)
+    .maybeSingle();
+  if (
+    error ||
+    !data ||
+    data.role !== 'submanager' ||
+    data.manager_id !== managerActorId ||
+    data.archived_at
+  ) {
+    throw new ProvisioningError('Submanager not found', 'invalid');
+  }
+  return data;
+}
+
+export async function createSubmanagerAccount(
+  input: NewPerson & { managerId: string; suffix: string },
+): Promise<{ id: string; loginId: string }> {
+  const person = parsePerson(input);
+  const manager = await submanagerParent(input.managerId);
+  let loginId: string;
+  try {
+    loginId = submanagerLoginId(manager.login_id, input.suffix);
+  } catch {
+    throw new ProvisioningError(
+      'Use exactly 2 letters or digits for a Submanager login ID',
+      'invalid-login-id',
+    );
+  }
+  return createUnderCode(
+    loginId,
+    { ...person, role: 'submanager', managerId: manager.id },
+    { createAccount },
+  );
+}
+
+export async function setSubmanagerStatus(
+  managerActorId: string,
+  submanagerId: string,
+  status: 'active' | 'disabled',
+): Promise<void> {
+  await ownedSubmanager(managerActorId, submanagerId);
+  if (status !== 'active' && status !== 'disabled')
+    throw new ProvisioningError('Invalid status', 'invalid');
+  // The database gate cannot reactivate an archived identity, including a concurrent archive.
+  const { error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .update({ status })
+    .eq('id', submanagerId)
+    .is('archived_at', null)
+    .select('id')
+    .single();
+  if (error) throw new ProvisioningError('Submanager not found', 'invalid');
+  const { error: authError } = await createSupabaseAdminClient().auth.admin.updateUserById(
+    submanagerId,
+    {
+      ban_duration: status === 'disabled' ? '876600h' : 'none',
+    },
+  );
+  if (authError) throw new ProvisioningError(authError.message, 'unknown');
+}
+
+export async function resetSubmanagerPassword(
+  managerActorId: string,
+  submanagerId: string,
+  password: string,
+): Promise<void> {
+  await ownedSubmanager(managerActorId, submanagerId);
+  await setAccountPassword(submanagerId, password);
+}
+
+/** Identity is retained because DBD creator references and the login code are permanent. */
+export async function archiveSubmanager(
+  managerActorId: string,
+  submanagerId: string,
+): Promise<void> {
+  await ownedSubmanager(managerActorId, submanagerId);
+  // Persist the access gate first; a failed auth ban must never leave a stale session usable.
+  const { error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .update({ status: 'disabled', archived_at: new Date().toISOString() })
+    .eq('id', submanagerId)
+    .select('id')
+    .single();
+  if (error) throw new ProvisioningError(error.message, 'unknown');
+  const { error: authError } = await createSupabaseAdminClient().auth.admin.updateUserById(
+    submanagerId,
+    { ban_duration: '876600h' },
+  );
+  if (authError) throw new ProvisioningError(authError.message, 'unknown');
 }

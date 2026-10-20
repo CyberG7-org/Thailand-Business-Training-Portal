@@ -5,6 +5,56 @@ import { createConfirmedRecord, createLearner, createManager, loginAs, switchTo 
 const MANAGER_PASSWORD = 'Manage1!';
 const LEARNER_PASSWORD = 'Learn123';
 
+test('a Manager creates, suspends, resets and archives their Submanager', async ({ page }) => {
+  test.setTimeout(120_000);
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const manager = await createManager(page, 'Submanager parent', MANAGER_PASSWORD);
+  await switchTo(page, manager.toLowerCase(), MANAGER_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  await expect(page.getByRole('heading', { name: 'Submanagers', exact: true })).toBeVisible();
+  const create = page.locator('form').filter({ has: page.locator('input[name="suffix"]') });
+  await create.locator('input[name="suffix"]').fill('A7');
+  await create.locator('input[name="password"]').fill('Sub123!');
+  await create.getByRole('button', { name: 'Create Submanager' }).click();
+  const login = `${manager.toLowerCase()}sa7`;
+  const row = page.getByTestId(`submanager-${login}`);
+  await expect(row).toBeVisible();
+  await row.getByRole('button', { name: 'Suspend', exact: true }).click();
+  await expect(row.getByTestId('account-status')).toHaveText('disabled');
+  await row.getByRole('button', { name: 'Re-enable', exact: true }).click();
+  await expect(row.getByTestId('account-status')).toHaveText('active');
+  await row.locator('input[name="password"]').fill('New123!');
+  await row.getByRole('button', { name: 'Reset password', exact: true }).click();
+  await expect(row.getByRole('status')).toContainText('Saved');
+  // Existing profile flow remains available; sidebar exposes exactly the two agreed items.
+  await switchTo(page, login, 'New123!');
+  await expect(page.getByTestId('staff-nav').getByRole('link')).toHaveCount(2);
+  await page.goto('/en/admin/profile');
+  await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
+  await switchTo(page, manager.toLowerCase(), MANAGER_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page
+    .getByTestId(`submanager-${login}`)
+    .getByRole('button', { name: 'Delete', exact: true })
+    .click();
+  await expect(page.getByTestId(`submanager-${login}`)).toHaveCount(0);
+  await create.locator('input[name="suffix"]').fill('a7');
+  await create.locator('input[name="password"]').fill('Sub123!');
+  await create.getByRole('button', { name: 'Create Submanager' }).click();
+  await expect(create.getByRole('alert')).toContainText('already taken');
+});
+
+test('Owner cannot enter Manager-only Submanager management', async ({ page }) => {
+  test.setTimeout(120_000);
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  await expect(page).toHaveURL(/\/en\/admin$/);
+  await expect(
+    page.getByTestId('staff-nav').getByRole('link', { name: 'Submanagers', exact: true }),
+  ).toHaveCount(0);
+});
+
 /** Spec §4: a manager may suspend and reset the password of their own team's learners. */
 test('a manager can open one of their learners and suspend them', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);

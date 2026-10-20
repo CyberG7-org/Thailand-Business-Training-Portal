@@ -11,6 +11,7 @@ export type CurrentUser = {
   displayName: string | null;
   preferredLanguage: AppLocale;
   status: 'active' | 'disabled';
+  archivedAt?: string | null;
 };
 
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
@@ -21,7 +22,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!user) return null;
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, login_id, role, manager_id, display_name, preferred_language, status')
+    .select('id, login_id, role, manager_id, display_name, preferred_language, status, archived_at')
     .eq('id', user.id)
     .single();
   if (!profile) return null;
@@ -33,6 +34,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     displayName: profile.display_name,
     preferredLanguage: profile.preferred_language as AppLocale,
     status: profile.status as CurrentUser['status'],
+    archivedAt: profile.archived_at,
   };
 });
 
@@ -40,7 +42,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(locale: string): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) redirect(`/${locale}/login`);
-  if (user.status === 'disabled') {
+  if (user.status === 'disabled' || user.archivedAt) {
     const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
     redirect(`/${locale}/login?reason=disabled`);

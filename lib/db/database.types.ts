@@ -1264,6 +1264,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          archived_at: string | null
           contact_email: string | null
           created_at: string
           display_name: string | null
@@ -1280,6 +1281,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          archived_at?: string | null
           contact_email?: string | null
           created_at?: string
           display_name?: string | null
@@ -1296,6 +1298,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          archived_at?: string | null
           contact_email?: string | null
           created_at?: string
           display_name?: string | null

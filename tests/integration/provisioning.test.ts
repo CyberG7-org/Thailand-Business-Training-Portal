@@ -10,9 +10,164 @@ import {
   isLoginIdTaken,
   learnerPrefixOf,
   suggestSuffix,
+  createSubmanagerAccount,
+  setSubmanagerStatus,
+  resetSubmanagerPassword,
+  archiveSubmanager,
 } from '@/lib/db/provisioning';
 import { MANAGER_PREFIX } from '@/lib/domain/login-id';
-import { adminClient, deleteTestUser } from './helpers';
+import {
+  adminClient,
+  deleteTestUser,
+  createTestManager,
+  clientFor,
+  INTERNAL_DOMAIN,
+  anonClient,
+} from './helpers';
+
+describe('Manager-owned Submanager lifecycle', () => {
+  const ids: string[] = [];
+  const recordIds: string[] = [];
+  afterAll(async () => {
+    for (const id of recordIds) await adminClient().from('dbd_records').delete().eq('id', id);
+    for (const id of ids.reverse()) await deleteTestUser(id);
+  });
+  const manager = async () => {
+    const m = await createTestManager();
+    ids.push(m.id);
+    return m;
+  };
+  const sub = async (managerId: string, suffix = 'A7') => {
+    const s = await createSubmanagerAccount({ managerId, suffix, password: 'Test123!' });
+    ids.push(s.id);
+    return s;
+  };
+  it('creates under the whole parent ID and rejects duplicate case variants', async () => {
+    const m = await manager();
+    const s = await sub(m.id);
+    expect(s.loginId).toBe(`${m.loginId}sa7`);
+    const { data } = await adminClient()
+      .from('profiles')
+      .select('role, manager_id')
+      .eq('id', s.id)
+      .single();
+    expect(data).toEqual({ role: 'submanager', manager_id: m.id });
+    await expect(sub(m.id, 'a7')).rejects.toMatchObject({ code: 'duplicate' });
+    expect((await sub(m.id, '9z')).loginId).toBe(`${m.loginId}s9z`);
+  });
+  it('refuses cross-Manager lifecycle operations', async () => {
+    const a = await manager();
+    const b = await manager();
+    const s = await sub(a.id);
+    await expect(setSubmanagerStatus(b.id, s.id, 'disabled')).rejects.toThrow();
+    await expect(resetSubmanagerPassword(b.id, s.id, 'Other123')).rejects.toThrow();
+    await expect(archiveSubmanager(b.id, s.id)).rejects.toThrow();
+    expect(
+      (await clientFor({ ...s, role: 'submanager', password: 'Test123!' })).auth,
+    ).toBeDefined();
+  });
+  it('suspends sign-in and stale-session access, then permits reactivation and password reset', async () => {
+    const m = await manager();
+    const s = await sub(m.id);
+    const old = await clientFor({ ...s, role: 'submanager', password: 'Test123!' });
+    await setSubmanagerStatus(m.id, s.id, 'disabled');
+    expect((await old.rpc('is_submanager')).data).toBe(false);
+    expect(
+      (
+        await anonClient().auth.signInWithPassword({
+          email: `${s.loginId}@${INTERNAL_DOMAIN}`,
+          password: 'Test123!',
+        })
+      ).error,
+    ).not.toBeNull();
+    await setSubmanagerStatus(m.id, s.id, 'active');
+    await resetSubmanagerPassword(m.id, s.id, 'New123!');
+    await clientFor({ ...s, role: 'submanager', password: 'New123!' });
+  });
+  it('archives without deleting identity or freeing the code, and denies reactivation', async () => {
+    const m = await manager();
+    const s = await sub(m.id);
+    const old = await clientFor({ ...s, role: 'submanager', password: 'Test123!' });
+    const { data: record, error: recordError } = await adminClient()
+      .from('dbd_records')
+      .insert({
+        team_id: m.id,
+        created_by: s.id,
+        company_name_th: 'Archive reference fixture',
+      })
+      .select('id')
+      .single();
+    expect(recordError).toBeNull();
+    recordIds.push(record!.id);
+    await archiveSubmanager(m.id, s.id);
+    const { data } = await adminClient()
+      .from('profiles')
+      .select('id, archived_at, status')
+      .eq('id', s.id)
+      .single();
+    expect(data?.id).toBe(s.id);
+    expect(data?.archived_at).toBeTruthy();
+    expect(data?.status).toBe('disabled');
+    expect((await old.rpc('is_submanager')).data).toBe(false);
+    expect(await isLoginIdTaken(s.loginId)).toBe(true);
+    await expect(sub(m.id)).rejects.toMatchObject({ code: 'duplicate' });
+    await expect(setSubmanagerStatus(m.id, s.id, 'active')).rejects.toThrow();
+    await expect(resetSubmanagerPassword(m.id, s.id, 'New123!')).rejects.toThrow();
+    expect(
+      (
+        await anonClient().auth.signInWithPassword({
+          email: `${s.loginId}@${INTERNAL_DOMAIN}`,
+          password: 'Test123!',
+        })
+      ).error,
+    ).not.toBeNull();
+    const { data: retained } = await adminClient()
+      .from('dbd_records')
+      .select('created_by')
+      .eq('id', record!.id)
+      .single();
+    expect(retained?.created_by).toBe(s.id);
+    const parentClient = await clientFor(m);
+    expect(
+      (
+        await parentClient
+          .from('profiles')
+          .update({ archived_at: null, status: 'active' })
+          .eq('id', s.id)
+      ).error,
+    ).not.toBeNull();
+    await adminClient().from('dbd_records').delete().eq('id', record!.id);
+  });
+  it('refuses creation and management by a suspended parent', async () => {
+    const m = await manager();
+    const s = await sub(m.id);
+    await adminClient().from('profiles').update({ status: 'disabled' }).eq('id', m.id);
+    await expect(sub(m.id, '9z')).rejects.toMatchObject({ code: 'no-manager' });
+    await expect(setSubmanagerStatus(m.id, s.id, 'disabled')).rejects.toMatchObject({
+      code: 'no-manager',
+    });
+  });
+  it('rejects invalid suffixes and passwords before creating an account', async () => {
+    const m = await manager();
+    for (const suffix of ['', 'a', 'abc', 'a-', 'ก1', 'a 1', ' a7 ']) {
+      await expect(sub(m.id, suffix)).rejects.toMatchObject({ code: 'invalid-login-id' });
+    }
+    await expect(
+      createSubmanagerAccount({ managerId: m.id, suffix: 'A7', password: 'short' }),
+    ).rejects.toMatchObject({ code: 'invalid' });
+    const s = await sub(m.id);
+    await expect(resetSubmanagerPassword(m.id, s.id, 'toolong123')).rejects.toMatchObject({
+      code: 'invalid',
+    });
+  });
+  it('gives one concurrent request the code and returns a duplicate to the other', async () => {
+    const m = await manager();
+    const results = await Promise.allSettled([sub(m.id), sub(m.id)]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const failed = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+    expect(failed.reason).toMatchObject({ code: 'duplicate' });
+  });
+});
 
 const svc = adminClient();
 const PASSWORD = 'Test123!';

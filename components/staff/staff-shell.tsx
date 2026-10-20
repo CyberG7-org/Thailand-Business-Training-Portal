@@ -30,7 +30,8 @@ export async function StaffShell({
     getTranslations('admin'),
     getTranslations('profile'),
   ]);
-  const role = user.role === 'admin' ? 'admin' : 'manager';
+  const role =
+    user.role === 'admin' ? 'admin' : user.role === 'submanager' ? 'submanager' : 'manager';
   return (
     <div className="bg-dotgrid min-h-screen">
       <div className="band px-4 pt-4 pb-5 md:px-6">

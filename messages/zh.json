@@ -133,6 +133,7 @@
   "admin": {
     "title": "栏目",
     "nav": {
+      "submanagers": "副经理",
       "users": "创建学员与DBD",
       "questions": "题库",
       "interviews": "面试",
@@ -1008,6 +1009,26 @@
       "nameNotInDbd": "请选择 DBD 文件中印有的姓名。",
       "noPeople": "尚未从文件中读取到董事或股东。"
     },
+    "submanagers": {
+      "title": "副经理",
+      "new": "新增副经理",
+      "loginId": "登录ID",
+      "suffix": "两位后缀",
+      "suffixHint": "请输入任意组合的两位英文字母或数字。",
+      "displayName": "显示名称",
+      "password": "密码（6–8位）",
+      "create": "创建副经理",
+      "status": "状态",
+      "actions": "操作",
+      "disable": "停用",
+      "enable": "重新启用",
+      "resetPassword": "重置密码",
+      "delete": "删除",
+      "saved": "已保存",
+      "empty": "暂无副经理。",
+      "archiveHint": "删除将停止访问并从此列表隐藏账户。其记录和登录ID将永久保留。",
+      "confirmArchive": "删除此副经理的访问权限？其记录和登录ID将保留。"
+    },
     "managers": {
       "title": "经理",
       "new": "新增经理",
@@ -1115,6 +1136,7 @@
       "system": "系统"
     },
     "roles": {
+      "submanager": "副经理",
       "admin": "所有者",
       "manager": "经理"
     },
