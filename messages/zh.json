@@ -238,7 +238,8 @@
       "createLearner": "创建学员",
       "takenCompany": "{name} — 已有学员",
       "noFreeCompany": "所有已确认的公司都已有学员，请在“公司（DBD）”中添加公司。",
-      "companyTaken": "该公司已有学员。每家公司只能有一名学员。"
+      "companyTaken": "该公司已有学员。每家公司只能有一名学员。",
+      "notCreatedByYou": "此 DBD 不是由您创建的。"
     },
     "learners": {
       "title": "学员记录",
@@ -384,7 +385,8 @@
         "zip-too-large": "zip 文件总计超过 200 MB，请移除部分文件。",
         "cannot-open": "无法打开此 zip 文件，请重新打包后再试。",
         "missing-business-link": "创建公司前，请在 zip 文件中加入网站或 Facebook 链接。",
-        "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。"
+        "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。",
+        "manager-action-needed": "此上传需要经理处理。请让您的经理审核。"
       },
       "fields": {
         "companyNameTh": "公司名称（泰文）",
@@ -777,7 +779,9 @@
         "openExceptions": "查看例外"
       },
       "addDocuments": "添加文件",
-      "teamChip": "团队 {code}"
+      "teamChip": "团队 {code}",
+      "uploadNeedsReview": "此上传未能完成。请查看保留的源文件并更正公司信息。",
+      "unfinishedSources": "未完成上传的源文件："
     },
     "assignment": {
       "title": "已分配公司",

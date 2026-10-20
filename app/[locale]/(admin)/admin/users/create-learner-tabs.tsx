@@ -128,7 +128,7 @@ export function CreateLearnerTabs({
           onAddOpenChange={setAddOpen}
           onAssign={(companyId) => {
             if (rows.find((row) => row.id === companyId)?.createdByMe === false) {
-              setAssignmentError('This DBD has not been created by you.');
+              setAssignmentError(t('notCreatedByYou'));
               return;
             }
             setAssignmentError(null);

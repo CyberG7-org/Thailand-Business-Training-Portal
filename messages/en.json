@@ -238,7 +238,8 @@
       "createLearner": "Create learner",
       "takenCompany": "{name} — has a learner",
       "noFreeCompany": "Every confirmed company already has its learner — add a company in Companies (DBD).",
-      "companyTaken": "This company already has a learner. Each company is studied by one learner."
+      "companyTaken": "This company already has a learner. Each company is studied by one learner.",
+      "notCreatedByYou": "This DBD has not been created by you."
     },
     "learners": {
       "title": "Learner Record",
@@ -384,7 +385,8 @@
         "zip-too-large": "The zip is over 200 MB in all. Take some files out.",
         "cannot-open": "This zip cannot be opened. Make it again and try once more.",
         "missing-business-link": "Add a website or Facebook link to the company zip before creating it.",
-        "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below)."
+        "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below).",
+        "manager-action-needed": "The upload needs Manager action. Ask your Manager to review it."
       },
       "fields": {
         "companyNameTh": "Company name (Thai)",
@@ -777,7 +779,9 @@
         "openExceptions": "See errors"
       },
       "addDocuments": "Add documents",
-      "teamChip": "Team {code}"
+      "teamChip": "Team {code}",
+      "uploadNeedsReview": "This upload could not be completed. Review the retained source and correct the company details.",
+      "unfinishedSources": "Sources from an unfinished upload:"
     },
     "assignment": {
       "title": "Assigned company",

@@ -23,9 +23,12 @@ test('a Manager creates, suspends, resets and archives their Submanager', async 
   await expect(row.getByTestId('account-status')).toHaveText('disabled');
   await row.getByRole('button', { name: 'Re-enable', exact: true }).click();
   await expect(row.getByTestId('account-status')).toHaveText('active');
-  await row.locator('input[name="password"]').fill('New123!');
-  await row.getByRole('button', { name: 'Reset password', exact: true }).click();
-  await expect(row.getByRole('status')).toContainText('Saved');
+  // The status form already says Saved, so wait on the password form's own result before
+  // navigating away (leaving early aborts the reset).
+  const passwordForm = row.locator('form').filter({ has: page.locator('input[name="password"]') });
+  await passwordForm.locator('input[name="password"]').fill('New123!');
+  await passwordForm.getByRole('button', { name: 'Reset password', exact: true }).click();
+  await expect(passwordForm.getByRole('status')).toContainText('Saved');
   // Existing profile flow remains available; sidebar exposes exactly the two agreed items.
   await switchTo(page, login, 'New123!');
   await expect(page.getByTestId('staff-nav').getByRole('link')).toHaveCount(2);

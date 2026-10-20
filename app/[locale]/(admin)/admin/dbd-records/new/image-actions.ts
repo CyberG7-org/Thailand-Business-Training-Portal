@@ -151,7 +151,9 @@ async function uploadCompanyProfile(
           documentType: 'other',
           uploadedBy: staff.id,
         });
-      await refreshDerivedFacts(db, row.id);
+      await refreshDerivedFacts(db, row.id).catch((error) =>
+        console.error('company category mapping', row.id, error),
+      );
       await validateAfterChange(row.id, staff.id);
       return { error: null, recordId: row.id, redirectTo: '/admin/users' };
     }
@@ -217,7 +219,7 @@ async function uploadCompanyProfile(
     if (staff.role === 'submanager' && created) {
       await markUploadForManager(created.id);
       return {
-        error: 'The upload needs Manager action. Ask your Manager to review it.',
+        error: 'manager-action-needed',
         recordId: null,
       };
     }

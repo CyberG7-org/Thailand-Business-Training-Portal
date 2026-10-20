@@ -4,6 +4,7 @@ import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { initialUploadFiles } from '@/lib/db/submanager-upload';
+import { initialUploadSchema } from '@/lib/domain/initial-upload';
 import { BUSINESS_NATURES } from '@/lib/domain/business-natures';
 import { categoryFiguresKey } from '@/lib/domain/business-category';
 import { PRIMARY_CATEGORIES } from '@/lib/domain/category-taxonomy';
@@ -63,8 +64,12 @@ export default async function DbdRecordPage({
       return data ? { name: f.name, url: data.signedUrl } : null;
     }),
   );
+  // A stopped Submanager upload asks for the Manager until the record is confirmed.
   const uploadNeedsReview =
-    (record.extraction_raw as { error?: string } | null)?.error === 'manager_review_required';
+    record.extraction_status !== 'confirmed' &&
+    initialUploadSchema.safeParse(
+      (record.structured_data as Record<string, unknown> | null)?.initial_upload,
+    ).data?.state === 'failed';
   const sourcePdf = sourceImage?.mime_type === 'application/pdf';
   const posterDocument = sourcePdf
     ? documents.find((document) => document.path === sourceImage.path)
@@ -149,13 +154,12 @@ export default async function DbdRecordPage({
     <section className="grid gap-5">
       {uploadNeedsReview && (
         <p role="alert" className="staff-card text-warn-700">
-          This upload could not be completed. Review the retained source and correct the company
-          details.
+          {t('uploadNeedsReview')}
         </p>
       )}
       {sourceLinks.some(Boolean) && (
         <div className="staff-card">
-          Sources from an unfinished upload:
+          {t('unfinishedSources')}
           {sourceLinks.map(
             (source, i) =>
               source && (

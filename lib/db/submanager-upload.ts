@@ -108,11 +108,28 @@ export async function claimInitialUpload(actorId: string, id: string, files: Ini
   return db;
 }
 
-/** Safe error marker, with source retained on the same Manager-owned record. */
+/**
+ * Safe error marker, with source retained on the same Manager-owned record. It lives in the
+ * upload manifest, not `extraction_raw`, whose presence means "documents were read".
+ */
 export async function markUploadForManager(id: string) {
-  const { error } = await createSupabaseAdminClient()
+  const db = createSupabaseAdminClient();
+  const { data: row, error: readError } = await db
     .from('dbd_records')
-    .update({ extraction_raw: { error: 'manager_review_required' } })
+    .select('structured_data')
+    .eq('id', id)
+    .single();
+  if (readError) throw readError;
+  const structured = (row.structured_data ?? {}) as Record<string, Json>;
+  const manifest = manifestSchema.safeParse(structured.initial_upload);
+  const { error } = await db
+    .from('dbd_records')
+    .update({
+      structured_data: {
+        ...structured,
+        initial_upload: { state: 'failed', files: manifest.success ? manifest.data.files : [] },
+      },
+    })
     .eq('id', id);
   if (error) throw error;
 }

@@ -122,15 +122,12 @@ describe('Submanager learner creation boundary', () => {
       .single();
     if (data) users.push(data.id);
     expect(data?.manager_id).toBe(manager.id);
-    expect(
-      (
-        await svc
-          .from('user_dbd_assignments')
-          .select('dbd_record_id')
-          .eq('user_id', data!.id)
-          .single()
-      ).data?.dbd_record_id,
-    ).toBe(id);
+    const { data: assignment } = await svc
+      .from('user_dbd_assignments')
+      .select('dbd_record_id, assigned_by')
+      .eq('user_id', data!.id)
+      .single();
+    expect(assignment).toEqual({ dbd_record_id: id, assigned_by: sub.id });
     expect(
       (await svc.from('audit_logs').select('actor_id').eq('entity_id', data!.id).single()).data
         ?.actor_id,

@@ -133,7 +133,7 @@ describe('Submanager initial upload capability', () => {
         f,
       );
       state.fail = false;
-      expect(result.error).toContain('Manager');
+      expect(result.error).toBe('manager-action-needed');
       const { data } = await (
         await clientFor(manager)
       )
@@ -142,7 +142,8 @@ describe('Submanager initial upload capability', () => {
         .eq('created_by', sub.id);
       const failed = data?.find(
         (r) =>
-          JSON.stringify(r.extraction_raw).includes('manager_review_required') &&
+          (r.structured_data as { initial_upload?: { state?: string } } | null)?.initial_upload
+            ?.state === 'failed' &&
           JSON.stringify(r.structured_data).includes(
             kind === 'pdf' ? 'application/pdf' : 'image/jpeg',
           ),
@@ -312,7 +313,7 @@ describe('Submanager initial upload capability', () => {
       })),
     });
     expect(result).toMatchObject({ ok: false });
-    expect(result.error).toContain('Manager');
+    expect(result.error).toBe('manager-action-needed');
     return prepared;
   }
 

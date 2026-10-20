@@ -154,7 +154,11 @@ export async function createUserAction(
     manager_id: managerId,
   });
   try {
-    await assignDbdRecord(db, { userId: created.id, dbdRecordId: record.id });
+    await assignDbdRecord(db, {
+      userId: created.id,
+      dbdRecordId: record.id,
+      assignedBy: staff.id,
+    });
     const contactUpdate = await updateStructuredData(db, record.id, (stored) => ({
       ...stored,
       interview: {

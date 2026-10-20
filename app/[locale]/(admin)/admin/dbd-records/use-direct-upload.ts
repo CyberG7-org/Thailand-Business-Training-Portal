@@ -19,6 +19,7 @@ export const UPLOAD_ERROR_KEYS = [
   'zip-too-large',
   'cannot-open',
   'missing-business-link',
+  'manager-action-needed',
 ] as const;
 
 /** What a chosen zip holds, shown before anything is sent (spec 2026-10-06 §2). */

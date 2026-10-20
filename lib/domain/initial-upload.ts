@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export const initialUploadSchema = z.object({
-  state: z.enum(['pending', 'claimed']),
+  // 'failed': a Submanager upload stopped; the Manager reviews the retained source.
+  state: z.enum(['pending', 'claimed', 'failed']),
   files: z.array(
     z.object({
       path: z.string(),

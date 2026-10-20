@@ -439,7 +439,7 @@ export async function registerUploadsAction(input: {
       await markUploadForManager(id);
       return {
         ok: false,
-        error: 'The upload needs Manager action. Ask your Manager to review it.',
+        error: 'manager-action-needed',
       };
     }
     return { ok: false, error: e instanceof DocumentUploadError ? e.code : errorMessage(e) };

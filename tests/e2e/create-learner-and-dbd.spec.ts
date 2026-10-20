@@ -183,7 +183,9 @@ test('Submanager delegation composes uploads, Manager correction, creator assign
       // Provider-failure handling itself is exercised by the upload integration tests.
       const { error: handoffError } = await db
         .from('dbd_records')
-        .update({ extraction_raw: { error: 'manager_review_required' } })
+        .update({
+          structured_data: { initial_upload: { state: 'failed', files: [] } },
+        })
         .eq('id', uploaded[0]);
       if (handoffError) throw handoffError;
       await switchTo(page, code, MANAGER_PASSWORD);
