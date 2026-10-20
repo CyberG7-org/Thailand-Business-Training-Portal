@@ -22,7 +22,6 @@ const DATE_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-GB',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
 const VERDICTS: Verdict[] = ['correct', 'partial', 'wrong', 'evasive', 'pasted', 'off_topic'];
 
@@ -85,9 +84,8 @@ export async function InterviewSessionView({
       ? readinessItem(concept)!.question[locale as AppLocale]
       : concept === 'juristic_id'
         ? ti('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
-            locale === 'ms' ? 'en' : (locale as 'th' | 'en' | 'zh')
-          ] ?? concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
+          concept);
 
   const resultItems: InterviewResultItem[] = [];
   let officerTurn: (typeof turns)[number] | null = null;

@@ -13,7 +13,6 @@ const DATE_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-GB',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
 
 const statusOf = (s: string) =>

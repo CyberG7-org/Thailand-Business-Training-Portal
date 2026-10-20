@@ -31,7 +31,6 @@ const NUMBER_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-US',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
 const DASHBOARD_STAGES = LEARNER_STAGES.filter((key) => key !== 'appointment');
 

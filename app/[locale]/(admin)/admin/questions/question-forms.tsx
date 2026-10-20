@@ -19,7 +19,6 @@ const LANGUAGE_LABELS: Record<AppLocale, string> = {
   th: 'ไทย',
   en: 'English',
   zh: '中文',
-  ms: 'Bahasa Melayu',
 };
 const KEYS = ['A', 'B', 'C', 'D'] as const;
 const PLACEHOLDER_EXAMPLES =

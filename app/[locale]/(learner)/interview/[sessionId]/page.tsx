@@ -81,9 +81,8 @@ export default async function InterviewSessionPage({
       ? readinessItem(concept)!.question[locale as AppLocale]
       : concept === 'juristic_id'
         ? labels('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
-            locale === 'ms' ? 'en' : (locale as 'th' | 'en' | 'zh')
-          ] ?? concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
+          concept);
   const validVerdicts: Verdict[] = [
     'correct',
     'partial',

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { translatableFacts, translatedRecord } from '@/lib/domain/facts/localization';
 import { SAMPLE_CONTEXT } from '@/lib/domain/mcq/sample';
-import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 
 describe('company fact localization', () => {
   it('selects descriptive Thai text without changing legal facts', () => {
@@ -22,18 +21,5 @@ describe('company fact localization', () => {
     expect(shown.juristic_id).toBe(source.juristic_id);
     expect(shown.address).toEqual(source.address);
     expect(source.nature_of_business).toContain('เสื้อผ้า');
-  });
-});
-
-describe('Malay study cards', () => {
-  it('covers all five cards and keeps every company-fact placeholder', () => {
-    expect(BANK_INTERVIEW_CARDS).toHaveLength(5);
-    for (const card of BANK_INTERVIEW_CARDS) {
-      expect(card.localizations.ms?.title).toBeTruthy();
-      const placeholders = (body: string) => (body.match(/\{[a-z_]+\}/g) ?? []).sort();
-      expect(placeholders(card.localizations.ms!.body)).toEqual(
-        placeholders(card.localizations.en.body),
-      );
-    }
   });
 });

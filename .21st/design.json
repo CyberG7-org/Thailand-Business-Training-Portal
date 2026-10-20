@@ -211,7 +211,7 @@
     },
     {
       "date": "2026-10-12",
-      "decision": "The shared login, learner, and staff language selector uses a compact dark dropdown with the selected language highlighted; Thai, English, Simplified Chinese, and Malay are selectable.",
+      "decision": "The shared login, learner, and staff language selector uses a compact dark dropdown with the selected language highlighted; Thai, English, and Simplified Chinese are selectable (Malay removed 2026-10-20).",
       "reason": "This follows the user's dropdown reference and supports the four core training languages. The 21st.dev catalog search returned HTTP 401, so the component uses the portal's existing brand tokens and accessible menu behavior."
     },
     {

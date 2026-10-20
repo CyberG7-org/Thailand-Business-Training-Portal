@@ -130,7 +130,6 @@ const NUMBER_LOCALES: Record<Locale, string> = {
   th: 'th-TH',
   en: 'en-US',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
 const CUSTOMER_CHANNELS: Record<
   Locale,
@@ -151,12 +150,6 @@ const CUSTOMER_CHANNELS: Record<
   zh: {
     with_website: '通过 Facebook、TikTok 和公司网站，以及客户推荐和到店客户寻找客户。',
     without_website: '通过 Facebook 和 TikTok，以及客户推荐和到店客户寻找客户。',
-  },
-  ms: {
-    with_website:
-      'Mencari pelanggan melalui Facebook, TikTok dan laman web syarikat, serta rujukan dan pelanggan yang datang terus.',
-    without_website:
-      'Mencari pelanggan melalui Facebook dan TikTok, serta rujukan dan pelanggan yang datang terus.',
   },
 };
 

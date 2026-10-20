@@ -140,7 +140,7 @@ export class ClaudeQuestionGenerator implements QuestionGenerator {
       throw new QuestionGenError('The model did not return a translation', 'invalid_output');
     }
     const out: Partial<Record<'th' | 'en' | 'zh', GeneratedLocalization>> = {};
-    for (const lang of input.targetLanguages.filter((language) => language !== 'ms')) {
+    for (const lang of input.targetLanguages) {
       const value = response.parsed_output[lang];
       if (value) out[lang] = value;
     }

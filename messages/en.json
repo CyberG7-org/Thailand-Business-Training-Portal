@@ -1552,8 +1552,7 @@
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option.",
       "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record.",
-      "not_ready": "The quiz is not ready for your company yet. Your manager has been told.",
-      "translation_unavailable": "Malay quiz translation is temporarily unavailable. Please try again shortly."
+      "not_ready": "The quiz is not ready for your company yet. Your manager has been told."
     },
     "meta": {
       "questions": "Questions",

@@ -1552,8 +1552,7 @@
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。",
       "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。",
-      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。",
-      "translation_unavailable": "马来语测验翻译暂时不可用，请稍后重试。"
+      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。"
     },
     "meta": {
       "questions": "题数",

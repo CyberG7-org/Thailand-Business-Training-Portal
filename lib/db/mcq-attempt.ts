@@ -15,7 +15,6 @@ import { listVariants } from './mcq-bank';
 import { loadRenderContext } from './mcq-context';
 import { pinnedFactsFor } from './pinning';
 import { cachedFactTranslationsFor } from './fact-translations';
-import { GeminiQuizTranslator } from '@/lib/integrations/translation/gemini-quiz';
 
 type Db = SupabaseClient<Database>;
 type AttemptRow = Database['public']['Tables']['assessment_attempts']['Row'];
@@ -23,7 +22,7 @@ type AttemptRow = Database['public']['Tables']['assessment_attempts']['Row'];
 /** The quiz cannot be started; `not_ready` names the concepts the bank cannot ask this company. */
 export class McqStartError extends Error {
   constructor(
-    public readonly code: 'no_assignment' | 'no_version' | 'not_ready' | 'translation_unavailable',
+    public readonly code: 'no_assignment' | 'no_version' | 'not_ready',
     public readonly concepts: string[] = [],
   ) {
     super(code);
@@ -131,19 +130,6 @@ export async function startMcqAttempt(args: {
       'not_ready',
       missing.map((m) => m.conceptKey),
     );
-  }
-  if (args.language === 'ms') {
-    try {
-      const translated = await new GeminiQuizTranslator().translate(
-        questions.map((question) => question.localized.en ?? question.localized.th),
-      );
-      questions.forEach((question, index) => {
-        question.localized.ms = translated[index];
-      });
-    } catch (error) {
-      console.error('Malay quiz translation unavailable', error);
-      throw new McqStartError('translation_unavailable');
-    }
   }
   await closeRenderFailures(admin, assignment.dbd_record_id);
 

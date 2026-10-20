@@ -35,7 +35,7 @@ export const newAccountSchema = z.object({
   role: z.enum(['learner', 'submanager', 'manager', 'admin']).default('learner'),
   managerId: z.uuid().optional(),
   displayName: z.string().trim().max(120).optional(),
-  preferredLanguage: z.enum(['th', 'en', 'zh', 'ms']).default('th'),
+  preferredLanguage: z.enum(['th', 'en', 'zh']).default('th'),
 });
 export type NewAccountInput = z.input<typeof newAccountSchema>;
 
@@ -90,7 +90,7 @@ export async function createAccount(
 type NewPerson = {
   password: string;
   displayName?: string;
-  preferredLanguage?: 'th' | 'en' | 'zh' | 'ms';
+  preferredLanguage?: 'th' | 'en' | 'zh';
 };
 
 /** The auth call behind a code; tests substitute it to make the auth service refuse. */
@@ -461,10 +461,7 @@ export async function resetSubmanagerPassword(
 }
 
 /** Identity is retained because DBD creator references and the login code are permanent. */
-export async function archiveSubmanager(
-  actorId: string,
-  submanagerId: string,
-): Promise<void> {
+export async function archiveSubmanager(actorId: string, submanagerId: string): Promise<void> {
   await ownedSubmanager(actorId, submanagerId);
   // Persist the access gate first; a failed auth ban must never leave a stale session usable.
   const { error } = await createSupabaseAdminClient()
