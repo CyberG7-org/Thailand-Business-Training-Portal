@@ -1915,7 +1915,6 @@ export type Database = {
         Returns: number
       }
       record_in_my_team: { Args: { p_record: string }; Returns: boolean }
-      rename_legacy_login_ids: { Args: never; Returns: number }
       set_my_preferred_language: {
         Args: { p_lang: string }
         Returns: undefined
