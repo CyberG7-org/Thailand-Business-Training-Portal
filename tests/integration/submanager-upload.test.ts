@@ -54,6 +54,7 @@ import {
   listTeamCompaniesForSubmanager,
   submanagerUploadContext,
 } from '@/lib/db/submanager-upload';
+import { deleteDbdRecord } from '@/lib/db/dbd-records';
 
 describe('Submanager initial upload capability', () => {
   const svc = adminClient();
@@ -271,6 +272,96 @@ describe('Submanager initial upload capability', () => {
       await expect(listTeamCompaniesForSubmanager(sub.id)).rejects.toThrow('not-allowed');
     } finally {
       await svc.from('profiles').update({ status: 'active' }).eq('id', manager.id);
+    }
+  });
+
+  async function partialZip() {
+    state.client = client;
+    const prepared = await prepareUploadsAction({
+      locale: 'en',
+      id: null,
+      links: { website: 'https://example.com', facebook: null },
+      files: ['first.pdf', 'missing.pdf', 'retained.pdf'].map((name) => ({
+        name,
+        size: 200,
+        type: 'application/pdf',
+      })),
+    });
+    if (!prepared.ok) throw new Error(prepared.error);
+    for (const index of [0, 2]) {
+      const upload = prepared.uploads[index];
+      expect(
+        (
+          await client.storage
+            .from('dbd-documents')
+            .uploadToSignedUrl(
+              upload.path,
+              upload.token,
+              readFileSync('tests/fixtures/three-pages.pdf'),
+              { contentType: 'application/pdf' },
+            )
+        ).error,
+      ).toBeNull();
+    }
+    const result = await registerUploadsAction({
+      locale: 'en',
+      id: prepared.id,
+      uploads: prepared.uploads.map((u, i) => ({
+        path: u.path,
+        name: ['first.pdf', 'missing.pdf', 'retained.pdf'][i],
+      })),
+    });
+    expect(result).toMatchObject({ ok: false });
+    expect(result.error).toContain('Manager');
+    return prepared;
+  }
+
+  it('preserves partial ZIP source associations through a Manager save', async () => {
+    const prepared = await partialZip();
+    try {
+      const before = await svc
+        .from('dbd_records')
+        .select('structured_data')
+        .eq('id', prepared.id)
+        .single();
+      state.client = await clientFor(manager);
+      const form = new FormData();
+      form.set('locale', 'en');
+      form.set('id', prepared.id);
+      form.set('company_name_en', 'Manager corrected');
+      expect(
+        await saveDbdRecordAction({ ok: false, error: null, fieldErrors: {} }, form),
+      ).toMatchObject({ ok: true });
+      const after = await svc
+        .from('dbd_records')
+        .select('structured_data')
+        .eq('id', prepared.id)
+        .single();
+      expect((after.data!.structured_data as Record<string, unknown>).initial_upload).toEqual(
+        (before.data!.structured_data as Record<string, unknown>).initial_upload,
+      );
+      expect(
+        (await svc.storage.from('dbd-documents').download(prepared.uploads[2].path)).error,
+      ).toBeNull();
+    } finally {
+      state.client = client;
+      await svc.storage.from('dbd-documents').remove(prepared.uploads.map((u) => u.path));
+      await svc.from('dbd_records').delete().eq('id', prepared.id);
+    }
+  });
+
+  it('Manager deletion removes registered and manifest-only sources after interrupted ZIP registration', async () => {
+    const prepared = await partialZip();
+    try {
+      expect(await deleteDbdRecord(await clientFor(manager), prepared.id, null)).toBe(true);
+      for (const index of [0, 2]) {
+        expect(
+          (await svc.storage.from('dbd-documents').download(prepared.uploads[index].path)).data,
+        ).toBeNull();
+      }
+    } finally {
+      await svc.storage.from('dbd-documents').remove(prepared.uploads.map((u) => u.path));
+      await svc.from('dbd_records').delete().eq('id', prepared.id);
     }
   });
 });

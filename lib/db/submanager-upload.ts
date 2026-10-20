@@ -1,5 +1,9 @@
 import 'server-only';
-import { z } from 'zod';
+import {
+  initialUploadSchema as manifestSchema,
+  type InitialUploadFile,
+} from '@/lib/domain/initial-upload';
+export { initialUploadFiles } from '@/lib/domain/initial-upload';
 import { createSupabaseAdminClient } from './admin';
 import { createDbdRecord, readingStatesOf } from './dbd-records';
 import { learnersOfRecords } from './assignments';
@@ -42,38 +46,15 @@ export async function createSubmanagerUpload(actorId: string) {
   const { teamId } = await submanagerUploadContext(actorId);
   const db = createSupabaseAdminClient();
   const row = await createDbdRecord(db, dbdRecordInputSchema.parse({}), actorId, undefined, teamId);
-  const { error } = await db
-    .from('audit_logs')
-    .insert({
-      actor_id: actorId,
-      action: 'dbd_records.upload',
-      entity_type: 'dbd_records',
-      entity_id: row.id,
-      after: { team_id: teamId, created_by: actorId },
-    });
+  const { error } = await db.from('audit_logs').insert({
+    actor_id: actorId,
+    action: 'dbd_records.upload',
+    entity_type: 'dbd_records',
+    entity_id: row.id,
+    after: { team_id: teamId, created_by: actorId },
+  });
   if (error) throw error;
   return row;
-}
-
-const manifestSchema = z.object({
-  state: z.enum(['pending', 'claimed']),
-  files: z.array(
-    z.object({
-      path: z.string(),
-      name: z.string(),
-      group: z.enum(['pack', 'invoice', 'agreement']),
-    }),
-  ),
-});
-export type InitialUploadFile = z.infer<typeof manifestSchema>['files'][number];
-
-export function initialUploadFiles(id: string, structured: Json): InitialUploadFile[] {
-  const manifest = manifestSchema.safeParse(
-    (structured as Record<string, Json> | null)?.initial_upload,
-  );
-  return manifest.success
-    ? manifest.data.files.filter((f) => f.path.startsWith(`${id}/`) && !f.path.includes('..'))
-    : [];
 }
 
 /** Server-created manifest is immutable to the Submanager: RLS grants no record writes. */
