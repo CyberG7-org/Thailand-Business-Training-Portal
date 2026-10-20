@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createManager, loginAs, switchTo } from './helpers';
 import { auditRowsFor } from './seed';
@@ -37,6 +38,24 @@ test('the admin creates a manager, sees the team, and can suspend it', async ({ 
 test('the admin types a two-character manager code without T, and a taken one is refused', async ({
   page,
 }) => {
+  const db = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const { data: reservations, error } = await db
+    .from('profiles')
+    .select('login_id')
+    .like('login_id', '__');
+  if (error) throw error;
+  const taken = new Set(reservations.map((profile) => profile.login_id.toLowerCase()));
+  const digits = Array.from({ length: 100 }, (_, index) => String(index).padStart(2, '0')).find(
+    (code) => !taken.has(code),
+  );
+  const letters = Array.from({ length: 676 }, (_, index) =>
+    String.fromCharCode(97 + Math.floor(index / 26), 97 + (index % 26)),
+  ).find((code) => !taken.has(code));
+  expect(digits, 'a free numeric fixture code').toBeTruthy();
+  expect(letters, 'a free alphabetic fixture code').toBeTruthy();
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/managers');
   const form = page.locator('form:has([data-testid="create-manager"])');
@@ -55,13 +74,13 @@ test('the admin types a two-character manager code without T, and a taken one is
   await expect(form.getByTestId('login-id-status')).toHaveText(
     'ใช้ตัวอักษรภาษาอังกฤษหรือตัวเลขให้ครบ 2 ตัว',
   );
-  await form.getByTestId('login-suffix').fill('12');
+  await form.getByTestId('login-suffix').fill(digits!);
   await expect(form.getByTestId('login-id-status')).toHaveAttribute('data-state', 'available');
 
   // A code typed in any case is stored as typed and shown upper-case.
-  const suffix = 'ab';
+  const suffix = letters!;
   const code = await createManager(page, 'ผู้จัดการพิมพ์รหัส', MANAGER_PASSWORD, suffix);
-  expect(code).toBe('AB');
+  expect(code).toBe(suffix.toUpperCase());
 
   await page.goto('/th/admin/managers');
   // Typed before the page hydrates, the input never reaches React; type until it answers.

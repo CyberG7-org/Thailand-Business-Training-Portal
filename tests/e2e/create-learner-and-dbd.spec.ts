@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
+import { companyZip } from './company-zip';
 import {
   assignLearner,
   createConfirmedRecord,
@@ -13,7 +14,7 @@ import {
 const MANAGER_PASSWORD = 'Manage1!';
 const LEARNER_PASSWORD = 'Learn123';
 
-test('Submanager sees team company names as text and cannot open their editors', async ({
+test('Submanager delegation composes uploads, Manager correction, creator assignment and static team records', async ({
   page,
 }) => {
   test.setTimeout(120_000);
@@ -46,6 +47,24 @@ test('Submanager sees team company names as text and cannot open their editors',
     });
     if (se) throw se;
     ids.push(s.user!.id);
+    const { data: second, error: secondError } = await db.auth.admin.createUser({
+      email: `${code}s02@${domain}`,
+      password: MANAGER_PASSWORD,
+      email_confirm: true,
+      user_metadata: { login_id: `${code}s02` },
+      app_metadata: { role: 'submanager', manager_id: m.user!.id },
+    });
+    if (secondError) throw secondError;
+    ids.push(second.user!.id);
+    const { data: other, error: otherError } = await db.auth.admin.createUser({
+      email: `${code}other@${domain}`,
+      password: MANAGER_PASSWORD,
+      email_confirm: true,
+      user_metadata: { login_id: `${code}other` },
+      app_metadata: { role: 'manager' },
+    });
+    if (otherError) throw otherError;
+    ids.push(other.user!.id);
     const { data: r, error: re } = await db
       .from('dbd_records')
       .insert({
@@ -128,6 +147,137 @@ test('Submanager sees team company names as text and cannot open their editors',
       (await db.from('profiles').select('manager_id').eq('id', assignment!.user_id).single()).data
         ?.manager_id,
     ).toBe(m.user!.id);
+    // Each delegated uploader uses the real signed browser ZIP workflow. The Manager can
+    // inspect the resulting review handoff without granting either uploader an editor.
+    const uploaded: string[] = [];
+    try {
+      for (const [login, creator] of [
+        [`${code}s01`, s.user!.id],
+        [`${code}s02`, second.user!.id],
+      ]) {
+        await switchTo(page, login, MANAGER_PASSWORD);
+        await page.goto('/en/admin/users');
+        await page.getByTestId('add-company').click();
+        await page.getByRole('radio', { name: 'ZIP file' }).check();
+        await page.getByTestId('create-dbd-zip-files').setInputFiles(companyZip());
+        await page.getByTestId('create-dbd-zip-submit').click();
+        await expect
+          .poll(async () => {
+            const { data } = await db
+              .from('dbd_records')
+              .select('id, team_id')
+              .eq('created_by', creator)
+              .neq('id', ownRecordId!);
+            return data?.length ?? 0;
+          })
+          .toBe(1);
+        const { data } = await db
+          .from('dbd_records')
+          .select('id, team_id')
+          .eq('created_by', creator)
+          .neq('id', ownRecordId!);
+        expect(data![0].team_id).toBe(m.user!.id);
+        uploaded.push(data![0].id);
+      }
+      // Seed the extraction failure boundary, while retaining the real uploaded source.
+      // Provider-failure handling itself is exercised by the upload integration tests.
+      const { error: handoffError } = await db
+        .from('dbd_records')
+        .update({ extraction_raw: { error: 'manager_review_required' } })
+        .eq('id', uploaded[0]);
+      if (handoffError) throw handoffError;
+      await switchTo(page, code, MANAGER_PASSWORD);
+      await page.goto(`/en/admin/dbd-records/${uploaded[0]}`);
+      await expect(
+        page.getByRole('alert').filter({ hasText: 'This upload could not be completed.' }),
+      ).toContainText('Review the retained source and correct the company');
+      await expect(page.getByTestId('record-status')).not.toHaveText('confirmed');
+      await page.locator('input[name="company_name_en"]').fill('Manager corrected upload');
+      await page
+        .locator('input[name="company_name_en"]')
+        .locator('xpath=ancestor::form')
+        .getByRole('button', { name: /Save/i })
+        .click();
+      await expect
+        .poll(
+          async () =>
+            (await db.from('dbd_records').select('company_name_en').eq('id', uploaded[0]).single())
+              .data?.company_name_en,
+        )
+        .toBe('Manager corrected upload');
+      expect(
+        (await db.from('dbd_records').select('created_by').eq('id', uploaded[0]).single()).data
+          ?.created_by,
+      ).toBe(s.user!.id);
+      // Complete the reviewed certificate fixture, then assign the actual uploaded DBD
+      // through the original uploader's form (not just the earlier seeded company).
+      const { error: confirmedUploadError } = await db
+        .from('dbd_records')
+        .update({ ...source!, company_name_en: 'Manager corrected upload' })
+        .eq('id', uploaded[0]);
+      if (confirmedUploadError) throw confirmedUploadError;
+      await switchTo(page, `${code}s01`, MANAGER_PASSWORD);
+      await page.goto('/en/admin/users');
+      await assignLearner(page, uploaded[0]);
+      await fillLoginSuffix(page);
+      await page.locator('input[name="password"]').fill(LEARNER_PASSWORD);
+      await page.getByRole('button', { name: 'Create learner', exact: true }).click();
+      await expect(page.getByTestId('create-user-status')).toBeVisible();
+      const { data: uploadedAssignment, error: uploadedAssignmentError } = await db
+        .from('user_dbd_assignments')
+        .select('user_id')
+        .eq('dbd_record_id', uploaded[0])
+        .single();
+      if (uploadedAssignmentError) throw uploadedAssignmentError;
+      ids.push(uploadedAssignment.user_id);
+      expect(
+        (
+          await db
+            .from('profiles')
+            .select('manager_id')
+            .eq('id', uploadedAssignment.user_id)
+            .single()
+        ).data?.manager_id,
+      ).toBe(m.user!.id);
+      // Make the sibling's uploaded record assignable; creator ownership must still win
+      // over its confirmed/same-team state, including after Manager-side review.
+      const { error: reviewedError } = await db
+        .from('dbd_records')
+        .update(source!)
+        .eq('id', uploaded[1]);
+      if (reviewedError) throw reviewedError;
+      await switchTo(page, `${code}s01`, MANAGER_PASSWORD);
+      await page.goto('/en/admin/users');
+      await page.getByTestId(`assign-learner-${uploaded[1]}`).click();
+      await expect(
+        page.getByRole('alert').filter({ hasText: 'This DBD has not been created by you.' }),
+      ).toHaveText('This DBD has not been created by you.');
+      await expect(page.getByTestId('tab-companies')).toHaveAttribute('aria-selected', 'true');
+      for (const login of [`${code}s01`, `${code}s02`]) {
+        await switchTo(page, login, MANAGER_PASSWORD);
+        await page.goto('/en/admin/learners');
+        const table = page.getByTestId('learner-record');
+        await expect(table.locator('tbody tr')).toHaveCount(2);
+        await expect(table).toContainText('Submanager uploaded company');
+        await expect(table).toContainText('Manager corrected upload');
+        await expect(table.locator('a, button, form, input, select')).toHaveCount(0);
+      }
+      await switchTo(page, `${code}other`, MANAGER_PASSWORD);
+      await page.goto('/en/admin/users');
+      await expect(page.getByText('Manager corrected upload', { exact: true })).toHaveCount(0);
+      await page.goto('/en/admin/learners');
+      await expect(page.getByText('Submanager uploaded company', { exact: true })).toHaveCount(0);
+    } finally {
+      for (const id of uploaded) {
+        const { data: documents } = await db
+          .from('dbd_documents')
+          .select('path')
+          .eq('record_id', id);
+        if (documents?.length)
+          await db.storage.from('dbd-documents').remove(documents.map((document) => document.path));
+        await db.from('dbd_records').delete().eq('id', id);
+      }
+    }
   } finally {
     if (ownRecordId) await db.from('dbd_records').delete().eq('id', ownRecordId);
     if (recordId) await db.from('dbd_records').delete().eq('id', recordId);

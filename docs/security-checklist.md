@@ -41,4 +41,7 @@ Verdict per item of the foundation spec §13 "Security" row plus what the slices
 
 ## Notes
 
+- Submanager delegation: `requireStaff`/`is_staff` remain Owner/Manager only. Dedicated server capabilities derive the active parent Manager, preserve uploader `created_by`, and refuse foreign-creator assignment before provisioning. Summary DTOs expose only row statuses; direct assessment/interview data and all editors/actions stay denied. Account archive reserves the login ID and retains creator/history references. Coverage: `team-helpers`, `team-gates`, `team-boundaries`, `team-isolation`, `provisioning`, `learner-contact`, `learner-record` integration tests and the Submanager E2E cases in `manager-manages`, `create-learner-and-dbd`, `learner-record`, and `manager-access`.
+- Audit read policy uses statement initplans for the existing active-role/team helpers; visibility remains Owner-all or Manager-own-team. The existing audit isolation regression must pass without raising database timeouts or filtering away forbidden rows in the test.
+
 - Interview transcripts and assessments contain company facts: they live in `interview_sessions` and `interview_turns` (learner reads own, manager their team, admin everything; service-role writes only). The voice call's `recordings` bucket lost its policies in migration `20260928010000` and is deleted through the Storage API. Retention automation is post-MVP (`retention_days` reserved, spec §16).

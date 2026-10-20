@@ -76,12 +76,16 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await expect(header).toContainText('ผู้จัดการ');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
-  await expect(nav.getByRole('link').first()).toHaveText('สร้างผู้เรียนและ DBD');
+  await expect(nav.getByRole('link').first()).toHaveText('ผู้ช่วยผู้จัดการ');
+  await expect(nav.getByRole('link', { name: 'ผู้ช่วยผู้จัดการ', exact: true })).toHaveAttribute(
+    'href',
+    '/th/admin/submanagers',
+  );
   await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
   await expect(nav).toContainText('บันทึกผู้เรียน');
   await expect(nav).toContainText('สัมภาษณ์');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
-  await expect(nav).not.toContainText('ผู้จัดการ');
+  await expect(nav.getByRole('link', { name: 'ผู้จัดการ', exact: true })).toHaveCount(0);
   await expect(nav).not.toContainText('การแจ้งเตือน');
 });
 

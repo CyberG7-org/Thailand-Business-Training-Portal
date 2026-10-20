@@ -30,7 +30,8 @@ test('admin changes a policy; the learner dashboard follows and the audit log re
     });
     expect(row.actor_login_id).toBe(E2E_ADMIN.loginId);
     expect((row.after as { value: unknown }).value).toBe(false);
-    await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+    await page.getByTestId('staff-profile-trigger').click();
+    await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 
     await loginAs(page, learner, E2E_PASSWORD);
     await expect(page.getByTestId('stage-interview-status')).toHaveText('เริ่ม');
