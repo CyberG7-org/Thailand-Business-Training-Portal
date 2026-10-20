@@ -1031,7 +1031,9 @@
       "saved": "Saved",
       "empty": "No Submanagers yet.",
       "archiveHint": "Deleting stops access and removes the account from this list. Its records and login ID are retained permanently.",
-      "confirmArchive": "Delete this Submanager's access? Their records and login ID will be retained."
+      "confirmArchive": "Delete this Submanager's access? Their records and login ID will be retained.",
+      "manager": "Manager",
+      "ownerHint": "Every team's Submanagers. Each Manager creates, suspends, resets and deletes their own; this list is read-only."
     },
     "managers": {
       "title": "Managers",

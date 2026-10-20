@@ -48,14 +48,33 @@ test('a Manager creates, suspends, resets and archives their Submanager', async 
   await expect(create.getByRole('alert')).toContainText('already taken');
 });
 
-test('Owner cannot enter Manager-only Submanager management', async ({ page }) => {
+test('the Owner sees every team’s Submanagers read-only', async ({ page }) => {
   test.setTimeout(120_000);
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const manager = await createManager(page, 'Owner view parent', MANAGER_PASSWORD);
+  await switchTo(page, manager.toLowerCase(), MANAGER_PASSWORD);
   await page.goto('/en/admin/submanagers');
-  await expect(page).toHaveURL(/\/en\/admin$/);
+  const create = page.locator('form').filter({ has: page.locator('input[name="suffix"]') });
+  await create.locator('input[name="suffix"]').fill('B8');
+  await create.locator('input[name="password"]').fill('Sub123!');
+  await create.getByRole('button', { name: 'Create Submanager' }).click();
+  const login = `${manager.toLowerCase()}sb8`;
+  await expect(page.getByTestId(`submanager-${login}`)).toBeVisible();
+
+  await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  // The Owner's home has the door too.
+  await page.goto('/en/admin');
+  await page.getByTestId('admin-nav').getByRole('link', { name: 'Submanagers' }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/submanagers$/);
   await expect(
     page.getByTestId('staff-nav').getByRole('link', { name: 'Submanagers', exact: true }),
-  ).toHaveCount(0);
+  ).toHaveAttribute('aria-current', 'page');
+  const row = page.getByTestId(`submanager-${login}`);
+  await expect(row.getByTestId('submanager-manager')).toHaveText(manager.toUpperCase());
+  await expect(row.getByTestId('account-status')).toHaveText('active');
+  // Only the parent Manager manages the account: no create form, no row actions.
+  await expect(page.locator('input[name="suffix"]')).toHaveCount(0);
+  await expect(row.getByRole('button')).toHaveCount(0);
 });
 
 /** Spec §4: a manager may suspend and reset the password of their own team's learners. */

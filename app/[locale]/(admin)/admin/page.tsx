@@ -18,6 +18,7 @@ const STAFF_LINKS = [
 
 const ADMIN_LINKS = [
   ['/admin/managers', 'managers'],
+  ['/admin/submanagers', 'submanagers'],
   // Assessment content is the Owner's (D76).
   ['/admin/questions', 'questions'],
   ['/admin/notifications', 'notifications'],

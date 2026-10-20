@@ -38,8 +38,10 @@ test('the admin sees every section in the sidebar with the current one marked', 
   await expect(nav).toBeVisible();
   // The team's sections lead with Managers: a team is started before anything goes in it.
   await expect(nav.getByRole('link').first()).toHaveText('ผู้จัดการ');
-  await expect(nav.getByRole('link').nth(1)).toHaveText('สร้างผู้เรียนและ DBD');
-  await expect(nav.getByRole('link').nth(2)).toHaveText('บันทึกผู้เรียน');
+  // The Owner sees every team's Submanagers read-only, next to the Managers.
+  await expect(nav.getByRole('link').nth(1)).toHaveText('ผู้ช่วยผู้จัดการ');
+  await expect(nav.getByRole('link').nth(2)).toHaveText('สร้างผู้เรียนและ DBD');
+  await expect(nav.getByRole('link').nth(3)).toHaveText('บันทึกผู้เรียน');
   for (const label of [
     'สร้างผู้เรียนและ DBD',
     'บันทึกผู้เรียน',
