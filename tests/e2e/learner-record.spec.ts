@@ -1,7 +1,116 @@
 import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
-import { seedExamWithAnswer, seedInterviewWithTurns, seedLearnerWithCompany } from './seed';
+import {
+  seedCompanyRecord,
+  seedExamWithAnswer,
+  seedInterviewWithTurns,
+  seedLearnerWithCompany,
+} from './seed';
+import { config } from 'dotenv';
+import { createClient } from '@supabase/supabase-js';
+
+test('Submanager sees static whole-team summaries and cannot open guessed detail doors', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  config({ path: '.env.local' });
+  const db = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const code = `summary${Date.now()}`;
+  const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
+  const ids: string[] = [];
+  const create = async (login: string, role: string, managerId?: string) => {
+    const { data, error } = await db.auth.admin.createUser({
+      email: `${login}@${domain}`,
+      password: 'Test123!',
+      email_confirm: true,
+      user_metadata: { login_id: login },
+      app_metadata: { role, ...(managerId ? { manager_id: managerId } : {}) },
+    });
+    if (error) throw error;
+    ids.push(data.user!.id);
+    if (role === 'learner' && managerId) {
+      const { error } = await db
+        .from('profiles')
+        .update({ manager_id: managerId })
+        .eq('id', data.user!.id);
+      if (error) throw error;
+    }
+    return data.user!.id;
+  };
+  const manager = await create(code, 'manager');
+  await create(`${code}s01`, 'submanager', manager);
+  const learner = await create(`${code}l1`, 'learner', manager);
+  await create(`${code}l2`, 'learner', manager);
+  const other = await create(`${code}other`, 'manager');
+  await create(`${code}hidden`, 'learner', other);
+  const record = await seedCompanyRecord({
+    companyNameTh: 'Summary company',
+    team: code,
+    juristicId: '0105568233704',
+    issuedOn: '2026-06-09',
+  });
+  try {
+    const { error } = await db
+      .from('user_dbd_assignments')
+      .insert({ user_id: learner, dbd_record_id: record });
+    if (error) throw error;
+    await seedExamWithAnswer(`${code}l1`, 1, 'pass');
+    await seedInterviewWithTurns(`${code}l1`, 'ready', 'Private interview text');
+    const { data: attempt } = await db
+      .from('assessment_attempts')
+      .select('id')
+      .eq('user_id', learner)
+      .single();
+    const { data: interview } = await db
+      .from('interview_sessions')
+      .select('id')
+      .eq('user_id', learner)
+      .single();
+    await loginAs(page, `${code}s01`, 'Test123!');
+    await page.goto('/th/admin/learners');
+    const table = page.getByTestId('learner-record');
+    await expect(table.locator('tbody tr')).toHaveCount(2);
+    await expect(table).toContainText(`${code}l1`.toUpperCase());
+    await expect(table).toContainText(`${code}l2`.toUpperCase());
+    await expect(page.getByTestId(`mcq-${code}l1`)).toHaveText('ผ่าน');
+    await expect(page.getByTestId(`chatbot-${code}l1`)).toHaveText('ผ่าน');
+    await expect(page.getByTestId(`company-${code}l1`)).toHaveText('E2E COMPANY CO., LTD.');
+    await expect(table).not.toContainText('Private interview text');
+    await expect(table.locator('a, button, form, input, select')).toHaveCount(0);
+    for (const path of [
+      `users/${learner}`,
+      `learners/${learner}/mcq`,
+      `learners/${learner}/mcq/${attempt!.id}`,
+      `learners/${learner}/chatbot`,
+      `learners/${learner}/chatbot/${interview!.id}`,
+      `dbd-records/${record}`,
+      `interviews/${interview!.id}`,
+      `appointments?learner=${learner}`,
+    ]) {
+      await page.goto(`/th/admin/${path}`);
+      await expect(page, path).toHaveURL(/\/th\/admin\/users$/);
+    }
+    await db.from('profiles').update({ status: 'disabled' }).eq('id', manager);
+    await page.goto('/th/admin/learners');
+    await expect(page).toHaveURL(/\/th\/login/);
+  } finally {
+    await db.from('assessment_attempts').delete().eq('user_id', learner);
+    await db.from('interview_sessions').delete().eq('user_id', learner);
+    await db.from('user_dbd_assignments').delete().eq('user_id', learner);
+    await db.from('dbd_records').delete().eq('id', record);
+    for (const id of [
+      learner,
+      ...ids.filter((id) => id !== learner && id !== manager && id !== other),
+      other,
+      manager,
+    ])
+      await db.auth.admin.deleteUser(id);
+  }
+});
 
 /**
  * D82: the Learner Record — Login ID, company (to its DBD record), registration date, MCQ and
