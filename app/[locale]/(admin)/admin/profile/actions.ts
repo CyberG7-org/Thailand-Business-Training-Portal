@@ -56,14 +56,14 @@ export async function changePasswordAction(
     email: authenticated.user.email,
     password: currentPassword,
   });
+  await verificationClient.auth.signOut({ scope: 'local' });
   if (signInError || verified.user?.id !== staff.id) {
     return { error: 'invalidCurrent', success: false };
   }
 
-  const { error: updateError } = await verificationClient.auth.updateUser({
-    password: newPassword,
-  });
-  await verificationClient.auth.signOut({ scope: 'local' });
+  // Update through the browser's own session: Auth revokes every other session of the user on a
+  // password change, so updating via the verification client signed the staff member out.
+  const { error: updateError } = await sessionClient.auth.updateUser({ password: newPassword });
   if (updateError) return { error: 'updateFailed', success: false };
   return { error: null, success: true };
 }

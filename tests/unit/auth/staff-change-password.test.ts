@@ -14,7 +14,10 @@ vi.mock('@/lib/auth/session', () => ({
   requireStaffOrSubmanager: mocks.requireStaffOrSubmanager,
 }));
 vi.mock('@/lib/db/server', () => ({
-  createSupabaseServerClient: async () => ({ auth: { getUser: mocks.getUser } }),
+  // The update must run on the browser's session: Auth revokes the user's other sessions.
+  createSupabaseServerClient: async () => ({
+    auth: { getUser: mocks.getUser, updateUser: mocks.updateUser },
+  }),
 }));
 vi.mock('@/lib/db/env', () => ({
   publicEnv: () => ({
@@ -26,7 +29,6 @@ vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     auth: {
       signInWithPassword: mocks.signInWithPassword,
-      updateUser: mocks.updateUser,
       signOut: mocks.signOut,
     },
   }),
