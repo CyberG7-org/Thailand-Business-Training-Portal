@@ -3,6 +3,9 @@ import { requireAdmin } from '@/lib/auth/session';
 import { listBusinessCategories } from '@/lib/db/business-categories';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { CategoryRowForm, NewCategoryForm } from './category-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'businessCategories');
 
 /** The Owner's business-category dictionary (spec §5.3, D73). */
 export default async function BusinessCategoriesPage({

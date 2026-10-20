@@ -10,6 +10,9 @@ import { dateTimeLabel } from '@/lib/domain/learner-record';
 import type { Locale } from '@/lib/domain/thai-date';
 import { ResultTag } from '../../../result-tag';
 import { HistoryHeader } from '../../history-header';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 /**
  * One MCQ attempt in full (D82): every question, all its options, the correct one marked and the

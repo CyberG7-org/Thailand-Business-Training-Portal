@@ -6,6 +6,9 @@ import { listVariants } from '@/lib/db/mcq-bank';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptTitle, MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { TOKENS, type TokenName } from '@/lib/domain/mcq/tokens';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 const EXAMPLES = [
   '{registered_capital|numeric(x0.5)}',

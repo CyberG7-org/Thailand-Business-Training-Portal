@@ -4,6 +4,9 @@ import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { ChangePasswordForm } from './password-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('profile', 'title');
 
 const DATE_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',

@@ -12,6 +12,9 @@ import {
 import { formatThaiMobile } from '@/lib/domain/phone';
 import { ReactPdfRenderer } from '@/lib/integrations/pdf/name-card';
 import { renderPages } from '@/lib/pdf/render-pages';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'nameCard');
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 

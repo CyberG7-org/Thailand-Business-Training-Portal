@@ -1145,7 +1145,8 @@
     "roles": {
       "submanager": "Submanager",
       "admin": "Owner",
-      "manager": "Manager"
+      "manager": "Manager",
+      "learner": "Learner"
     },
     "home": {
       "intro": "Pick a section to manage. A manager sees their own team only."

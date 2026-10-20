@@ -15,6 +15,9 @@ import type { ChatTurn } from '../actions';
 import { nextConcept } from '../turns';
 import { Chat } from './chat';
 import { LearnerResult } from './learner-result';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'interview');
 
 type StoredSummary = {
   verdict?: 'ready' | 'not_ready';

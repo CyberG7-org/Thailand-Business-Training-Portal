@@ -8,6 +8,9 @@ import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'quiz');
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 

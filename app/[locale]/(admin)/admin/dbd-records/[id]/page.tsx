@@ -29,6 +29,9 @@ import { loadRecord } from './record-data';
 import { isRecordTab, type RecordTab } from './record-tab-keys';
 import { RecordTabs } from './record-tabs';
 import { DocumentsCard, type DocumentSummary, type ReadingState } from './record-tools';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.dbd', 'title');
 
 // Upload + extraction run inside the page's server actions; allow the full serverless window.
 export const maxDuration = 60;

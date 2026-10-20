@@ -7,6 +7,9 @@ import { requireUser } from '@/lib/auth/session';
 import { listMyAttempts } from '@/lib/db/assessment';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { StartQuizButton } from './start-button';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'quiz');
 
 export default async function QuizHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

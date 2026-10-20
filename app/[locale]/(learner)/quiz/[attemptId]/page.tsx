@@ -7,6 +7,9 @@ import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessme
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { answerQuizAction, submitQuizAction } from '../actions';
 import { AttemptBoard, type BoardQuestion } from '../attempt-board';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'quiz');
 
 export default async function QuizAttemptPage({
   params,

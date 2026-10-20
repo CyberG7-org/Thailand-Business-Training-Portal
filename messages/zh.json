@@ -1145,7 +1145,8 @@
     "roles": {
       "submanager": "副经理",
       "admin": "所有者",
-      "manager": "经理"
+      "manager": "经理",
+      "learner": "学员"
     },
     "home": {
       "intro": "选择要管理的板块。经理只能看到自己的团队。"

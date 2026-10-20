@@ -3,6 +3,9 @@ import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { NewSubmanagerForm, SubmanagerControls } from './forms';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'submanagers');
 
 export default async function SubmanagersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

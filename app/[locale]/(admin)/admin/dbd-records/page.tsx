@@ -1,5 +1,8 @@
 import { redirect } from 'next/navigation';
 import { requireStaff } from '@/lib/auth/session';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.dbd', 'title');
 
 /**
  * The companies list moved to "Create learner & DBD" (D80), its own tab beside the learner form;

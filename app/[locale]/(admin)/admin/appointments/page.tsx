@@ -10,6 +10,9 @@ import { formatDate, todayInBangkok } from '@/lib/domain/thai-date';
 import { cancelBookingAction } from './actions';
 import { MonthCalendar } from './month-calendar';
 import { StaffForm } from './staff-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'appointments');
 
 const VALID_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 

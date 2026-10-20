@@ -17,6 +17,9 @@ import { companyPdfAvailable } from '@/lib/integrations/extraction/company-pdf';
 import type { CompanyRow } from './companies-panel';
 import { CreateLearnerTabs } from './create-learner-tabs';
 import type { CompanyOption, TeamOption } from './new-user-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'users');
 
 export const maxDuration = 180;
 

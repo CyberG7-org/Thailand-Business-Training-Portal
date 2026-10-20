@@ -9,6 +9,9 @@ import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { ResultTag } from './result-tag';
 import { DeleteIconForm } from '../delete-icon-form';
 import { deleteLearnerAction } from '../users/actions';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 /**
  * Learner Record (D82): one row per learner the caller can see — who, their company and its DBD

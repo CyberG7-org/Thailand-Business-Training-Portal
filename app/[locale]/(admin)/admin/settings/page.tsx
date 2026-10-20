@@ -4,6 +4,9 @@ import { POLICY_FIELDS, RETIRED_POLICY_KEYS, formatPolicyValue } from '@/lib/con
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listPolicies } from '@/lib/db/settings';
 import { SettingForm } from './setting-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'settings');
 
 export default async function SettingsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

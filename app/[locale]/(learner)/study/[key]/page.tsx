@@ -26,6 +26,9 @@ import { getTtsProvider } from '@/lib/integrations/tts';
 import { getVectorStore } from '@/lib/integrations/vector';
 import { markCompletedAction } from '../actions';
 import { ViewTracker } from '../view-tracker';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'study');
 
 type SegmentState = 'done' | 'viewed' | 'current' | 'new';
 const SEGMENT: Record<SegmentState, string> = {

@@ -6,6 +6,9 @@ import { contextForRecord, listRecordLearners, listVersionedCompanies } from '@/
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptTitle } from '@/lib/domain/concepts/registry';
 import { checkBank } from '@/lib/domain/mcq/preflight';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 /**
  * What the approved bank can ask one company as its facts stand today (P17d plan decision 10):

@@ -5,6 +5,9 @@ import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listExceptionQueue } from '@/lib/db/validation';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('dashboard', 'title');
 
 /** The doors a manager may open, in order; the admin gets these plus the admin-only ones. */
 const STAFF_LINKS = [

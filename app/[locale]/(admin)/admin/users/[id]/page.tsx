@@ -27,6 +27,9 @@ import { AssignmentPanel } from './assignment-panel';
 import { ContactForm } from './contact-form';
 import { RoleForm } from './role-form';
 import { VersionPanel } from './version-panel';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 export default async function UserDetailPage({
   params,
