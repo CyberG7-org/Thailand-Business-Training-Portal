@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import type { AppLocale } from '@/i18n/routing';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { ChangePasswordForm } from './password-form';
@@ -14,7 +14,7 @@ const DATE_LOCALES: Record<AppLocale, string> = {
 
 export default async function ProfilePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
   const [t, db] = await Promise.all([getTranslations('profile'), createSupabaseServerClient()]);
   const { data: profile } = await db
     .from('profiles')

@@ -368,25 +368,25 @@ export type Database = {
       }
       company_fact_translations: {
         Row: {
-          training_version_id: string
+          created_at: string
           locale: string
           source_hash: string
+          training_version_id: string
           translations: Json
-          created_at: string
         }
         Insert: {
-          training_version_id: string
+          created_at?: string
           locale: string
           source_hash: string
+          training_version_id: string
           translations: Json
-          created_at?: string
         }
         Update: {
-          training_version_id?: string
+          created_at?: string
           locale?: string
           source_hash?: string
+          training_version_id?: string
           translations?: Json
-          created_at?: string
         }
         Relationships: [
           {
@@ -1900,6 +1900,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_manager: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
+      is_submanager: { Args: never; Returns: boolean }
       key_learner_is_my_team: { Args: { p_key: string }; Returns: boolean }
       key_record_is_my_team: { Args: { p_key: string }; Returns: boolean }
       learner_of_my_team: { Args: { p_user: string }; Returns: boolean }

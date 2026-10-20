@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { loadLearnerRecords } from '@/lib/db/learner-record';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { bangkokDateOf } from '@/lib/domain/appointments/slots';
@@ -21,7 +21,7 @@ export default async function LearnerRecordPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
   const [rows, t] = await Promise.all([
     loadLearnerRecords(await createSupabaseServerClient()),
     getTranslations('admin.learners'),

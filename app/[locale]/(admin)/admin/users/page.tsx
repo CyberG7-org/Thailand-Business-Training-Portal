@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { learnersOfRecords } from '@/lib/db/assignments';
 import { listDbdRecords, readingStatesOf } from '@/lib/db/dbd-records';
@@ -30,7 +30,7 @@ export default async function CreateLearnerAndDbdPage({
   searchParams: Promise<{ tab?: string; add?: string }>;
 }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
   const supabase = await createSupabaseServerClient();
 
   // Only the admin chooses a team; a manager creates inside their own (spec §7).

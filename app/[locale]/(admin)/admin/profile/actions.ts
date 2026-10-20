@@ -2,7 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { publicEnv } from '@/lib/db/env';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { validateStaffPasswordChange, type StaffPasswordError } from '@/lib/domain/staff-password';
@@ -32,7 +32,7 @@ export async function changePasswordAction(
   if (!parsed.success) return { error: 'missing', success: false };
 
   const { locale, currentPassword, newPassword, confirmPassword } = parsed.data;
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
   const validationError = validateStaffPasswordChange(
     currentPassword,
     newPassword,

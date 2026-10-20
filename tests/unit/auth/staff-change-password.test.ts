@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   requireStaff: vi.fn(),
+  requireStaffOrSubmanager: vi.fn(),
   getUser: vi.fn(),
   signInWithPassword: vi.fn(),
   updateUser: vi.fn(),
   signOut: vi.fn(),
 }));
 
-vi.mock('@/lib/auth/session', () => ({ requireStaff: mocks.requireStaff }));
+vi.mock('@/lib/auth/session', () => ({
+  requireStaff: mocks.requireStaff,
+  requireStaffOrSubmanager: mocks.requireStaffOrSubmanager,
+}));
 vi.mock('@/lib/db/server', () => ({
   createSupabaseServerClient: async () => ({ auth: { getUser: mocks.getUser } }),
 }));
@@ -43,6 +47,7 @@ describe('staff self-service password action', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     mocks.requireStaff.mockResolvedValue({ id: 'staff-1', role: 'manager' });
+    mocks.requireStaffOrSubmanager.mockResolvedValue({ id: 'staff-1', role: 'manager' });
     mocks.getUser.mockResolvedValue({
       data: { user: { id: 'staff-1', email: 'staff@example.test' } },
       error: null,
@@ -71,6 +76,21 @@ describe('staff self-service password action', () => {
     });
     expect(mocks.updateUser).toHaveBeenCalledWith({ password: 'New123!' });
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: 'local' });
+  });
+
+  it('allows a verified Submanager to change only their own password', async () => {
+    mocks.requireStaff.mockRejectedValue(new Error('/en/admin'));
+    mocks.requireStaffOrSubmanager.mockResolvedValue({
+      id: 'staff-1',
+      role: 'submanager',
+      managerId: 'manager-1',
+    });
+    mocks.signInWithPassword.mockResolvedValue({ data: { user: { id: 'staff-1' } }, error: null });
+    mocks.updateUser.mockResolvedValue({ error: null });
+    expect(await changePasswordAction({ error: null, success: false }, form('Old123!'))).toEqual({
+      error: null,
+      success: true,
+    });
   });
 
   it('rejects a verified account with a different user ID', async () => {

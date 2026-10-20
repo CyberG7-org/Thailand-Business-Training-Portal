@@ -1,7 +1,16 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { askRecordDocuments } from '@/lib/db/dbd-index';
 import { FakeVectorStore } from '@/lib/integrations/vector/fake';
-import { adminClient, confirmRecord, deleteTeam, seedTeam, type Team } from './helpers';
+import {
+  adminClient,
+  clientFor,
+  createTestUser,
+  deleteTestUser,
+  confirmRecord,
+  deleteTeam,
+  seedTeam,
+  type Team,
+} from './helpers';
 
 const svc = adminClient();
 
@@ -71,5 +80,67 @@ describe('the service-role paths are gated by an RLS read', () => {
       .from('dbd-documents')
       .createSignedUploadUrl(`${a.recordId}/${Date.now()}-own.pdf`);
     expect(mine.error).toBeNull();
+  });
+
+  it('allows a Submanager only their own profile, with no raw team reads', async () => {
+    const sub = await createTestUser('submanager', { managerId: a.manager.id });
+    let attemptId: string | undefined;
+    let interviewId: string | undefined;
+    try {
+      const attempt = await svc
+        .from('assessment_attempts')
+        .insert({
+          user_id: a.learner.id,
+          dbd_record_id: a.recordId,
+          kind: 'exam',
+          language: 'th',
+          attempt_no: 1,
+          question_ids: [],
+          shuffle_seed: 'submanager-boundary',
+        })
+        .select('id')
+        .single();
+      expect(attempt.error).toBeNull();
+      attemptId = attempt.data!.id;
+      const interview = await svc
+        .from('interview_sessions')
+        .insert({
+          user_id: a.learner.id,
+          dbd_record_id: a.recordId,
+          plan: {},
+          provider: 'fake',
+          status: 'in_progress',
+        })
+        .select('id')
+        .single();
+      expect(interview.error).toBeNull();
+      interviewId = interview.data!.id;
+      const turn = await svc.from('interview_turns').insert({
+        session_id: interviewId,
+        seq: 1,
+        role: 'learner',
+        content: 'Private team answer',
+      });
+      expect(turn.error).toBeNull();
+      const client = await clientFor(sub);
+      const { data: profiles, error } = await client.from('profiles').select('id');
+      expect(error).toBeNull();
+      expect(profiles).toEqual([{ id: sub.id }]);
+      for (const table of [
+        'dbd_records',
+        'dbd_documents',
+        'assessment_attempts',
+        'interview_sessions',
+        'interview_turns',
+      ] as const) {
+        const result = await client.from(table).select('id');
+        expect(result.error).toBeNull();
+        expect(result.data).toEqual([]);
+      }
+    } finally {
+      if (attemptId) await svc.from('assessment_attempts').delete().eq('id', attemptId);
+      if (interviewId) await svc.from('interview_sessions').delete().eq('id', interviewId);
+      await deleteTestUser(sub.id);
+    }
   });
 });

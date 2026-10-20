@@ -72,3 +72,66 @@ describe('the team helpers', () => {
     await svc.from('profiles').update({ status: 'active' }).eq('id', manager.id);
   });
 });
+
+describe('Submanager parent invariant', () => {
+  let manager: TestUser;
+  let sub: TestUser;
+  let asSub: Client;
+  beforeAll(async () => {
+    manager = await createTestManager();
+    sub = await createTestUser('submanager', { managerId: manager.id });
+    asSub = await clientFor(sub);
+  });
+  afterAll(async () => {
+    if (sub) await deleteTestUser(sub.id);
+    if (manager) await deleteTestUser(manager.id);
+  });
+  it('synchronizes role and resolves the parent without broad staff privileges', async () => {
+    const { data } = await svc
+      .from('profiles')
+      .select('role, manager_id')
+      .eq('id', sub.id)
+      .single();
+    expect(data).toEqual({ role: 'submanager', manager_id: manager.id });
+    expect(await ask(asSub, 'is_submanager')).toBe(true);
+    expect(await ask(asSub, 'is_staff')).toBe(false);
+    expect(await ask(asSub, 'my_team')).toBe(manager.id);
+  });
+  it('rejects missing or non-Manager parents and demotion of a parent', async () => {
+    expect(
+      (await svc.from('profiles').update({ manager_id: null }).eq('id', sub.id)).error,
+    ).not.toBeNull();
+    expect(
+      (await svc.from('profiles').update({ manager_id: sub.id }).eq('id', sub.id)).error,
+    ).not.toBeNull();
+    expect(
+      (await svc.from('profiles').update({ role: 'learner' }).eq('id', manager.id)).error,
+    ).not.toBeNull();
+  });
+  it('syncs a trusted role change and parent together', async () => {
+    const learner = await createTestUser('learner');
+    try {
+      const { error } = await svc.auth.admin.updateUserById(learner.id, {
+        app_metadata: { role: 'submanager', manager_id: manager.id },
+      });
+      expect(error).toBeNull();
+      const { data } = await svc
+        .from('profiles')
+        .select('role, manager_id')
+        .eq('id', learner.id)
+        .single();
+      expect(data).toEqual({ role: 'submanager', manager_id: manager.id });
+    } finally {
+      await deleteTestUser(learner.id);
+    }
+  });
+  it('revokes the team and Submanager guard when the parent is suspended', async () => {
+    await svc.from('profiles').update({ status: 'disabled' }).eq('id', manager.id);
+    try {
+      expect(await ask(asSub, 'is_submanager')).toBe(false);
+      expect(await ask(asSub, 'my_team')).toBeNull();
+    } finally {
+      await svc.from('profiles').update({ status: 'active' }).eq('id', manager.id);
+    }
+  });
+});
