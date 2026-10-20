@@ -1,6 +1,9 @@
 'use server';
 
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
+import { createSupabaseAdminClient } from '@/lib/db/admin';
+import { createSubmanagerUpload, markUploadForManager } from '@/lib/db/submanager-upload';
+import { updateDbdRecord } from '@/lib/db/dbd-records';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { createDbdRecord, registerDbdDocument } from '@/lib/db/dbd-records';
 import { validateAfterChange } from '@/lib/db/validation';
@@ -17,7 +20,11 @@ import {
 } from '@/lib/integrations/extraction/company-pdf';
 import { countPages } from '@/lib/pdf/slice';
 
-export type ImageUploadState = { error: string | null; recordId: string | null };
+export type ImageUploadState = {
+  error: string | null;
+  recordId: string | null;
+  redirectTo?: string;
+};
 
 function imageMime(bytes: Uint8Array): 'image/jpeg' | 'image/png' | 'image/webp' | null {
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
@@ -50,7 +57,7 @@ async function uploadCompanyProfile(
   kind: 'image' | 'pdf',
 ): Promise<ImageUploadState> {
   const locale = String(formData.get('locale') ?? 'th');
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
   const file = formData.get(kind);
   if (!(file instanceof File) || file.size === 0 || file.size > 4_000_000) {
     return {
@@ -94,6 +101,59 @@ async function uploadCompanyProfile(
           recordId: null,
         };
       }
+    }
+    // Retain the source before invoking an external reader so failures remain reviewable.
+    if (staff.role === 'submanager') {
+      const db = createSupabaseAdminClient();
+      const row = await createSubmanagerUpload(staff.id);
+      const ext =
+        mime === 'application/pdf'
+          ? 'pdf'
+          : mime === 'image/jpeg'
+            ? 'jpg'
+            : mime === 'image/png'
+              ? 'png'
+              : 'webp';
+      const path = `${row.id}/company-profile.${ext}`;
+      created = { id: row.id, path, db };
+      const source = { path, mime_type: mime, reviewed: false };
+      const { error: sourceError } = await db
+        .from('dbd_records')
+        .update({ structured_data: { source_image: source } })
+        .eq('id', row.id);
+      if (sourceError) throw sourceError;
+      const { error: uploadError } = await db.storage
+        .from('dbd-documents')
+        .upload(path, bytes, { contentType: mime });
+      if (uploadError) throw uploadError;
+      const extracted =
+        kind === 'pdf' ? await extractCompanyPdf(bytes) : await extractCompanyImage(bytes, mime);
+      const draft = companyImageToDraft(extracted);
+      await updateDbdRecord(db, row.id, draft.record);
+      const { error: saveError } = await db
+        .from('dbd_records')
+        .update({
+          website: draft.website,
+          facebook_page: draft.facebookPage,
+          structured_data: {
+            business: draft.business,
+            interview: draft.interview,
+            source_image: source,
+          },
+        })
+        .eq('id', row.id);
+      if (saveError) throw saveError;
+      if (kind === 'pdf')
+        await registerDbdDocument(db, row.id, {
+          path,
+          originalName: file.name,
+          primary: false,
+          documentType: 'other',
+          uploadedBy: staff.id,
+        });
+      await refreshDerivedFacts(db, row.id);
+      await validateAfterChange(row.id, staff.id);
+      return { error: null, recordId: row.id, redirectTo: '/admin/users' };
     }
     const extracted =
       kind === 'pdf' ? await extractCompanyPdf(bytes) : await extractCompanyImage(bytes, mime);
@@ -154,6 +214,13 @@ async function uploadCompanyProfile(
     return { error: null, recordId: row.id };
   } catch (error) {
     console.error('company profile upload', error);
+    if (staff.role === 'submanager' && created) {
+      await markUploadForManager(created.id);
+      return {
+        error: 'The upload needs Manager action. Ask your Manager to review it.',
+        recordId: null,
+      };
+    }
     // This request alone created the draft; a failed upload must not leave it in the list.
     if (created) {
       const { db, id, path } = created;

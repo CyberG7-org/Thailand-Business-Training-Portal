@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
+import { initialUploadFiles } from '@/lib/db/submanager-upload';
 import { BUSINESS_NATURES } from '@/lib/domain/business-natures';
 import { categoryFiguresKey } from '@/lib/domain/business-category';
 import { PRIMARY_CATEGORIES } from '@/lib/domain/category-taxonomy';
@@ -51,6 +52,19 @@ export default async function DbdRecordPage({
   if (!loaded) notFound();
   const { db, record, structured, documents, exceptions, address } = loaded;
   const sourceImage = structured.source_image;
+  // Initial ZIP uploads can stop before registration. Their server manifest retains the
+  // association; offer the Manager each uploaded source that has no document row yet.
+  const pendingSources = initialUploadFiles(id, record.structured_data).filter(
+    (f) => !documents.some((d) => d.path === f.path),
+  );
+  const sourceLinks = await Promise.all(
+    pendingSources.map(async (f) => {
+      const { data } = await db.storage.from('dbd-documents').createSignedUrl(f.path, 300);
+      return data ? { name: f.name, url: data.signedUrl } : null;
+    }),
+  );
+  const uploadNeedsReview =
+    (record.extraction_raw as { error?: string } | null)?.error === 'manager_review_required';
   const sourcePdf = sourceImage?.mime_type === 'application/pdf';
   const posterDocument = sourcePdf
     ? documents.find((document) => document.path === sourceImage.path)
@@ -133,6 +147,31 @@ export default async function DbdRecordPage({
 
   return (
     <section className="grid gap-5">
+      {uploadNeedsReview && (
+        <p role="alert" className="staff-card text-warn-700">
+          This upload could not be completed. Review the retained source and correct the company
+          details.
+        </p>
+      )}
+      {sourceLinks.some(Boolean) && (
+        <div className="staff-card">
+          Sources from an unfinished upload:
+          {sourceLinks.map(
+            (source, i) =>
+              source && (
+                <a
+                  key={i}
+                  className="staff-link block"
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {source.name}
+                </a>
+              ),
+          )}
+        </div>
+      )}
       <div className="grid gap-2">
         <Link href="/admin/users?tab=companies" className="staff-link w-fit text-sm">
           ← {tc('companies')}

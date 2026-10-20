@@ -1,6 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import { requireStaffOrSubmanager } from '@/lib/auth/session';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
+import {
+  listTeamCompaniesForSubmanager,
+  submanagerUploadContext,
+} from '@/lib/db/submanager-upload';
 import { learnersOfRecords } from '@/lib/db/assignments';
 import { listDbdRecords, readingStatesOf } from '@/lib/db/dbd-records';
 import { suggestSuffix } from '@/lib/db/provisioning';
@@ -32,6 +36,48 @@ export default async function CreateLearnerAndDbdPage({
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   const staff = await requireStaffOrSubmanager(locale);
   const supabase = await createSupabaseServerClient();
+  if (staff.role === 'submanager') {
+    const { teamId } = await submanagerUploadContext(staff.id);
+    const rows = await listTeamCompaniesForSubmanager(staff.id);
+    const { data: parent, error } = await createSupabaseAdminClient()
+      .from('profiles')
+      .select('login_id')
+      .eq('id', teamId)
+      .single();
+    if (error || !parent) throw new Error('not-allowed');
+    const t = await getTranslations('admin.users');
+    const companies: CompanyOption[] = rows
+      .filter((r) => r.createdByMe)
+      .map((r) => ({
+        id: r.id,
+        name: r.name ?? t('untitledCompany'),
+        director: r.director,
+        status: r.status === 'confirmed_auto' ? 'confirmed' : r.status,
+        confirmed: r.status === 'confirmed' || r.status === 'confirmed_auto',
+        taken: r.learner !== null,
+        teamId,
+      }));
+    return (
+      <section className="grid gap-5">
+        <h1 className="staff-title">{t('title')}</h1>
+        <CreateLearnerTabs
+          companies={companies}
+          rows={rows.map((r) => ({
+            ...r,
+            registeredOn: r.registeredOn ? formatDate(r.registeredOn, locale as Locale) : null,
+          }))}
+          teams={null}
+          ownLoginId={parent.login_id}
+          initialSuffix={await suggestSuffix('learner', learnerPrefix(parent.login_id))}
+          extractionAvailable={Boolean(process.env.GEMINI_API_KEY)}
+          pdfExtractionAvailable={companyPdfAvailable()}
+          zipExtractionAvailable={getDbdExtractor() !== null}
+          initialTab={query.tab === 'learner' && query.add !== '1' ? 'learner' : 'companies'}
+          initialAddOpen={query.add === '1'}
+        />
+      </section>
+    );
+  }
 
   // Only the admin chooses a team; a manager creates inside their own (spec §7).
   const { data: managers } =

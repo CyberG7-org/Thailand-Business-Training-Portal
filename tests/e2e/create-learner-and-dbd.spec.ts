@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createClient } from '@supabase/supabase-js';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import {
   assignLearner,
@@ -11,6 +12,65 @@ import {
 
 const MANAGER_PASSWORD = 'Manage1!';
 const LEARNER_PASSWORD = 'Learn123';
+
+test('Submanager sees team company names as text and cannot open their editors', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const db = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  );
+  const domain = process.env.APP_INTERNAL_EMAIL_DOMAIN ?? 'learner.portal.internal';
+  const code = `e2esub${Date.now()}`;
+  const ids: string[] = [];
+  let recordId: string | undefined;
+  try {
+    const { data: m, error: me } = await db.auth.admin.createUser({
+      email: `${code}@${domain}`,
+      password: MANAGER_PASSWORD,
+      email_confirm: true,
+      user_metadata: { login_id: code },
+      app_metadata: { role: 'manager' },
+    });
+    if (me) throw me;
+    ids.push(m.user!.id);
+    const { data: s, error: se } = await db.auth.admin.createUser({
+      email: `${code}s01@${domain}`,
+      password: MANAGER_PASSWORD,
+      email_confirm: true,
+      user_metadata: { login_id: `${code}s01` },
+      app_metadata: { role: 'submanager', manager_id: m.user!.id },
+    });
+    if (se) throw se;
+    ids.push(s.user!.id);
+    const { data: r, error: re } = await db
+      .from('dbd_records')
+      .insert({
+        team_id: m.user!.id,
+        created_by: m.user!.id,
+        company_name_en: 'Manager uploaded company',
+      })
+      .select('id')
+      .single();
+    if (re) throw re;
+    recordId = r.id;
+    await loginAs(page, `${code}s01`, MANAGER_PASSWORD);
+    await page.goto('/en/admin/users');
+    await expect(page.getByText('Manager uploaded company', { exact: true })).toBeVisible();
+    await expect(page.locator(`a[href*="dbd-records/${recordId}"]`)).toHaveCount(0);
+    await expect(page.getByTestId(`delete-company-${recordId}`)).toHaveCount(0);
+    await page.getByTestId('add-company').click();
+    await expect(page.getByRole('radio', { name: 'PDF poster' })).toBeVisible();
+    await expect(page.getByRole('radio', { name: 'ZIP file' })).toBeVisible();
+    await page.goto(`/en/admin/dbd-records/${recordId}`);
+    await expect(page).toHaveURL(/\/en\/admin\/users$/);
+  } finally {
+    if (recordId) await db.from('dbd_records').delete().eq('id', recordId);
+    for (const id of ids.reverse()) await db.auth.admin.deleteUser(id);
+  }
+});
 
 /**
  * D80, D93: one page, two tabs in the order a manager works — the companies with a way to add

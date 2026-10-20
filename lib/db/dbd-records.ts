@@ -168,6 +168,8 @@ export async function registerDbdDocument(
     /** A profile poster is evidence for search, not the company's DBD certificate. */
     primary?: boolean;
     documentType?: 'other';
+    /** Trusted server upload capability supplies the real actor when using a service client. */
+    uploadedBy?: string;
   },
 ): Promise<string> {
   const { path } = input;
@@ -209,7 +211,7 @@ export async function registerDbdDocument(
       position,
       group,
       document_type: group === 'pack' ? (input.documentType ?? null) : group,
-      uploaded_by: auth.user?.id ?? null,
+      uploaded_by: input.uploadedBy ?? auth.user?.id ?? null,
       page_count: pageCount,
       index_status: pageCount === null ? 'failed' : indexing ? 'queued' : 'skipped',
       index_error: pageCount === null ? 'unreadable_pdf' : null,
