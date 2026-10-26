@@ -11,7 +11,7 @@ test('tab titles name the page first, then the role', async ({ page }) => {
   await page.goto('/en/admin');
   await expect(page).toHaveTitle('Dashboard · Owner');
   await page.goto('/en/admin/submanagers');
-  await expect(page).toHaveTitle('Submanagers · Owner');
+  await expect(page).toHaveTitle('Create Submanager · Owner');
   await page.goto('/th/admin/learners');
   await expect(page).toHaveTitle('บันทึกผู้เรียน · เจ้าของ');
 

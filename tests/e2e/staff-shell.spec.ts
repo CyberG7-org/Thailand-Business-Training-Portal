@@ -157,17 +157,17 @@ test('manager row actions are buttons a thumb can hit', async ({ page }) => {
   }
 });
 
-test('the appointment learner picker stays on one row on a laptop', async ({ page }) => {
+test('the appointment calendar is visible but inactive until a learner is chosen', async ({
+  page,
+}) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการปฏิทินแล็ปท็อป', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/th/admin/appointments');
-  const select = await page.getByTestId('appointment-learner').boundingBox();
-  const button = await page
-    .locator('form:has([data-testid="appointment-learner"]) button')
-    .boundingBox();
-  expect(
-    select && button && Math.abs(select.y + select.height - (button.y + button.height)),
-  ).toBeLessThan(2);
+  await expect(page.getByTestId('appointment-learner')).toBeVisible();
+  await expect(page.getByTestId('appointment-month')).toBeVisible();
+  await expect(page.getByTestId('month-prev')).toBeDisabled();
+  await expect(page.getByTestId('month-next')).toBeDisabled();
+  await expect(page.locator('[data-testid^="appointment-date-"]:enabled')).toHaveCount(0);
 });
