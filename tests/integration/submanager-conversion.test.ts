@@ -31,13 +31,11 @@ describe('a learner converted to Submanager', () => {
     await confirmRecord(team.recordId, team.manager.id);
     expect(
       (
-        await svc
-          .from('user_dbd_assignments')
-          .insert({
-            user_id: team.learner.id,
-            dbd_record_id: team.recordId,
-            assigned_by: team.manager.id,
-          })
+        await svc.from('user_dbd_assignments').insert({
+          user_id: team.learner.id,
+          dbd_record_id: team.recordId,
+          assigned_by: team.manager.id,
+        })
       ).error,
     ).toBeNull();
     const question = await svc
@@ -64,16 +62,14 @@ describe('a learner converted to Submanager', () => {
     attemptId = attempt.data!.id;
     expect(
       (
-        await svc
-          .from('assessment_answers')
-          .insert({
-            attempt_id: attemptId,
-            question_id: questionId,
-            position: 1,
-            presented_option_order: ['A'],
-            rendered_options: [{ key: 'A', text: 'private' }],
-            rendered_prompt: 'private prompt',
-          })
+        await svc.from('assessment_answers').insert({
+          attempt_id: attemptId,
+          question_id: questionId,
+          position: 1,
+          presented_option_order: ['A'],
+          rendered_options: [{ key: 'A', text: 'private' }],
+          rendered_prompt: 'private prompt',
+        })
       ).error,
     ).toBeNull();
     const interview = await svc
