@@ -20,6 +20,26 @@ test('learner account page is compact and asks before deleting the account', asy
   await expect(page.getByTestId('role-form')).toHaveCount(0);
   await expect(page.getByTestId('version-panel')).toHaveCount(0);
 
+  const cards = [
+    page.getByTestId('password-card'),
+    page.getByTestId('assignment-card'),
+    page.getByTestId('assignment-coverage'),
+    page.getByTestId('account-actions-card'),
+  ];
+  for (const card of cards) await expect(card).toBeVisible();
+  await expect(
+    page.getByTestId('account-actions-card').getByTestId('delete-learner-account'),
+  ).toBeVisible();
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    const boxes = await Promise.all(cards.map((card) => card.boundingBox()));
+    for (let index = 1; index < boxes.length; index += 1) {
+      expect(boxes[index]!.y).toBeGreaterThan(boxes[index - 1]!.y);
+      expect(Math.abs(boxes[index]!.x - boxes[0]!.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(boxes[index]!.width - boxes[0]!.width)).toBeLessThanOrEqual(1);
+    }
+  }
+
   const deleteButton = page.getByTestId('delete-learner-account');
   await expect(deleteButton).toHaveText('Delete account');
   page.once('dialog', async (dialog) => {

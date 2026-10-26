@@ -18,12 +18,10 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { formatDate } from '@/lib/domain/thai-date';
-import { AccountControls } from './account-controls';
+import { AccountStatusControls, PasswordResetForm } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
 import { AssignmentPanel } from './assignment-panel';
-import { DeleteIconForm } from '../../delete-icon-form';
-import { deleteLearnerFromDetailAction } from './actions';
 import { pageTitle } from '@/i18n/page-title';
 
 export const generateMetadata = pageTitle('admin.nav', 'learners');
@@ -105,7 +103,7 @@ export default async function UserDetailPage({
         ← {tl('title')}
       </Link>
       <h1 className="staff-title">{displayLoginId(user.login_id)}</h1>
-      <dl className="grid max-w-md grid-cols-2 gap-1 text-sm">
+      <dl className="grid w-full max-w-2xl grid-cols-2 gap-1 text-sm">
         <dt>{t('displayName')}</dt>
         <dd>{user.display_name ?? '—'}</dd>
         <dt>{t('role')}</dt>
@@ -113,19 +111,16 @@ export default async function UserDetailPage({
         <dt>{t('status')}</dt>
         <dd data-testid="account-status">{user.status}</dd>
       </dl>
-      <AssignmentPanel userId={user.id} current={current} options={options} />
-      {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}
-      <AccountControls userId={user.id} status={user.status as 'active' | 'disabled'} />
-      {user.role === 'learner' && (
-        <DeleteIconForm
-          action={deleteLearnerFromDetailAction}
-          id={user.id}
-          label={tl('deleteAccount')}
-          confirmation={tl('deleteLearnerConfirm', { loginId: displayLoginId(user.login_id) })}
-          testId="delete-learner-account"
-          appearance="button"
+      <div className="grid w-full max-w-2xl gap-6">
+        <PasswordResetForm userId={user.id} />
+        <AssignmentPanel userId={user.id} current={current} options={options} />
+        {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}
+        <AccountStatusControls
+          userId={user.id}
+          status={user.status as 'active' | 'disabled'}
+          loginId={user.role === 'learner' ? displayLoginId(user.login_id) : null}
         />
-      )}
+      </div>
     </section>
   );
 }

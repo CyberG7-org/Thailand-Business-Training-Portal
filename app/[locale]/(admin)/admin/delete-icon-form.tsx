@@ -30,7 +30,9 @@ export function DeleteIconForm({
       onSubmit={(event) => {
         if (!window.confirm(confirmation)) event.preventDefault();
       }}
-      className={`inline-grid gap-1 ${appearance === 'button' ? 'justify-items-start' : 'justify-items-center'}`}
+      className={
+        appearance === 'button' ? 'grid w-full gap-1' : 'inline-grid justify-items-center gap-1'
+      }
     >
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="id" value={id} />
@@ -42,7 +44,7 @@ export function DeleteIconForm({
         disabled={pending}
         className={
           appearance === 'button'
-            ? 'staff-btn-ghost border-bad-600 text-bad-600 hover:bg-bad-50 disabled:opacity-50'
+            ? 'staff-btn-ghost w-full border-bad-600 text-bad-600 hover:bg-bad-50 disabled:opacity-50'
             : 'inline-flex size-11 items-center justify-center rounded-control text-ink-500 transition-colors hover:bg-bad-50 hover:text-bad-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bad-600 disabled:opacity-50'
         }
       >
