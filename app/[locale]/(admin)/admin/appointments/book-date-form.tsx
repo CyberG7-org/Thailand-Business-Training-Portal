@@ -62,7 +62,7 @@ export function BookDateForm({
         data-testid="appointment-confirmation"
         aria-labelledby="appointment-confirm-title"
         aria-describedby="appointment-confirm-description"
-        className="backdrop:bg-brand-950/60 w-[min(90vw,28rem)] rounded-card border border-ink-100 bg-white p-6 text-ink-900 shadow-raised"
+        className="backdrop:bg-brand-950/60 fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[min(90vw,28rem)] overflow-y-auto rounded-card border border-ink-100 bg-white p-6 text-ink-900 shadow-raised"
       >
         <h3 id="appointment-confirm-title" className="font-display text-xl font-semibold">
           {t('confirmTitle')}

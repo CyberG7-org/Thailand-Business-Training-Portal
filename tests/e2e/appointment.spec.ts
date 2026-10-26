@@ -34,6 +34,14 @@ test('the owning manager books and replaces a ready learner date; the learner on
   await first.click();
   const confirmation = page.getByTestId('appointment-confirmation');
   await expect(confirmation).toBeVisible();
+  const dialogBounds = await confirmation.boundingBox();
+  const viewport = page.viewportSize();
+  expect(dialogBounds).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(Math.abs(dialogBounds!.x + dialogBounds!.width / 2 - viewport!.width / 2)).toBeLessThan(2);
+  expect(Math.abs(dialogBounds!.y + dialogBounds!.height / 2 - viewport!.height / 2)).toBeLessThan(
+    2,
+  );
   await expect(confirmation).toContainText(learner.toUpperCase());
   await expect(page.locator('[data-testid^="admin-appointment-"]')).toHaveCount(0);
   await confirmation.getByRole('button', { name: 'ไม่ กลับไป' }).click();
@@ -74,6 +82,12 @@ test('the manager month calendar is a 42-cell month view and fits a phone', asyn
   await expect(page.locator('[data-calendar-cell]')).toHaveCount(42);
   await page.getByTestId('month-next').click();
   await expect(page).toHaveURL(/month=\d{4}-\d{2}/);
+  await page.locator('button[data-testid^="appointment-date-"]:not([disabled])').first().click();
+  const confirmation = page.getByTestId('appointment-confirmation');
+  const dialogBounds = await confirmation.boundingBox();
+  expect(dialogBounds).not.toBeNull();
+  expect(Math.abs(dialogBounds!.x + dialogBounds!.width / 2 - 195)).toBeLessThan(2);
+  expect(Math.abs(dialogBounds!.y + dialogBounds!.height / 2 - 422)).toBeLessThan(2);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
