@@ -73,7 +73,8 @@ export async function getActiveAssignmentForUser(
  */
 export async function assignDbdRecord(
   db: Db,
-  args: { userId: string; dbdRecordId: string },
+  // assignedBy: the real actor when `db` is the service role (auth.uid() is then null).
+  args: { userId: string; dbdRecordId: string; assignedBy?: string },
 ): Promise<AssignmentRow> {
   const { data: active, error: versionError } = await db
     .from('company_training_versions')
@@ -88,6 +89,7 @@ export async function assignDbdRecord(
       user_id: args.userId,
       dbd_record_id: args.dbdRecordId,
       training_version_id: active?.id ?? null,
+      ...(args.assignedBy ? { assigned_by: args.assignedBy } : {}),
     })
     .select()
     .single();

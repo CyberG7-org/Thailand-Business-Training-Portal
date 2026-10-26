@@ -5,6 +5,9 @@ import { requireUser } from '@/lib/auth/session';
 import { myUpcomingAppointment } from '@/lib/db/appointments';
 import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { formatDate } from '@/lib/domain/thai-date';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'appointment');
 
 /** D102: the manager owns booking; the learner only sees the selected date or the waiting note. */
 export default async function AppointmentPage({ params }: { params: Promise<{ locale: string }> }) {

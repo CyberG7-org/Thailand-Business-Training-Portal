@@ -2,8 +2,112 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createLearner, createManager, loginAs, switchTo } from './helpers';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 const LEARNER_PASSWORD = 'Learn123';
+
+test('a Manager creates, suspends, resets and archives their Submanager', async ({ page }) => {
+  test.setTimeout(120_000);
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const manager = await createManager(page, 'Submanager parent', MANAGER_PASSWORD);
+  await switchTo(page, manager.toLowerCase(), MANAGER_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  await expect(page.getByRole('heading', { name: 'Submanagers', exact: true })).toBeVisible();
+  const create = page.locator('form').filter({ has: page.locator('input[name="suffix"]') });
+  await create.locator('input[name="suffix"]').fill('A7');
+  await create.locator('input[name="password"]').fill('Sub123!');
+  await create.getByRole('button', { name: 'Create Submanager' }).click();
+  const login = `${manager.toLowerCase()}sa7`;
+  const row = page.getByTestId(`submanager-${login}`);
+  await expect(row).toBeVisible();
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    const formBox = await create.boundingBox();
+    const listBox = await page.locator('.staff-table-wrap').boundingBox();
+    expect(formBox).not.toBeNull();
+    expect(listBox).not.toBeNull();
+    expect(Math.abs(formBox!.x - listBox!.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(formBox!.width - listBox!.width)).toBeLessThanOrEqual(1);
+  }
+  await page.setViewportSize({ width: 1280, height: 844 });
+  await row.getByRole('button', { name: 'Suspend', exact: true }).click();
+  await expect(row.getByTestId('account-status')).toHaveText('disabled');
+  await row.getByRole('button', { name: 'Re-enable', exact: true }).click();
+  await expect(row.getByTestId('account-status')).toHaveText('active');
+  // The status form already says Saved, so wait on the password form's own result before
+  // navigating away (leaving early aborts the reset).
+  const passwordForm = row.locator('form').filter({ has: page.locator('input[name="password"]') });
+  await passwordForm.locator('input[name="password"]').fill('New123!');
+  await passwordForm.getByRole('button', { name: 'Reset password', exact: true }).click();
+  await expect(passwordForm.getByRole('status')).toContainText('Saved');
+  // Existing profile flow remains available; sidebar exposes exactly the two agreed items.
+  await switchTo(page, login, 'New123!');
+  await expect(page.getByTestId('staff-nav').getByRole('link')).toHaveCount(2);
+  await page.goto('/en/admin/profile');
+  await expect(page.getByRole('heading', { name: 'Your profile' })).toBeVisible();
+  await switchTo(page, manager.toLowerCase(), MANAGER_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page
+    .getByTestId(`submanager-${login}`)
+    .getByRole('button', { name: 'Delete', exact: true })
+    .click();
+  await expect(page.getByTestId(`submanager-${login}`)).toHaveCount(0);
+  await create.locator('input[name="suffix"]').fill('a7');
+  await create.locator('input[name="password"]').fill('Sub123!');
+  await create.getByRole('button', { name: 'Create Submanager' }).click();
+  await expect(create.getByRole('alert')).toContainText('already taken');
+});
+
+test('the Owner creates and manages any team’s Submanagers', async ({ page }) => {
+  test.setTimeout(120_000);
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  const manager = await createManager(page, 'Owner view parent', MANAGER_PASSWORD);
+  // The Owner's home has the door too.
+  await page.goto('/en/admin');
+  await page.getByTestId('admin-nav').getByRole('link', { name: 'Create Submanager' }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/submanagers$/);
+  await expect(
+    page.getByTestId('staff-nav').getByRole('link', { name: 'Create Submanager', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
+
+  // The Owner picks the team; the login ID follows that Manager's ID.
+  const create = page.locator('form').filter({ has: page.locator('input[name="suffix"]') });
+  await create
+    .locator('select[name="managerId"]')
+    .selectOption({ label: `${manager} — Owner view parent` });
+  await expect(create.getByTestId('submanager-prefix')).toHaveText(`${manager}S`);
+  await create.locator('input[name="suffix"]').fill('B8');
+  await create.locator('input[name="password"]').fill('Sub123!');
+  await create.getByRole('button', { name: 'Create Submanager' }).click();
+  const login = `${manager.toLowerCase()}sb8`;
+  const row = page.getByTestId(`submanager-${login}`);
+  await expect(row.getByTestId('submanager-manager')).toHaveText(manager.toUpperCase());
+
+  await row.getByRole('button', { name: 'Suspend', exact: true }).click();
+  await expect(row.getByTestId('account-status')).toHaveText('disabled');
+  await row.getByRole('button', { name: 'Re-enable', exact: true }).click();
+  await expect(row.getByTestId('account-status')).toHaveText('active');
+  const passwordForm = row.locator('form').filter({ has: page.locator('input[name="password"]') });
+  await passwordForm.locator('input[name="password"]').fill('Own123!');
+  await passwordForm.getByRole('button', { name: 'Reset password', exact: true }).click();
+  await expect(passwordForm.getByRole('status')).toContainText('Saved');
+
+  // The parent Manager sees the account the Owner made.
+  await switchTo(page, manager.toLowerCase(), MANAGER_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  await expect(page.getByTestId(`submanager-${login}`)).toBeVisible();
+  await switchTo(page, login, 'Own123!');
+  await expect(page.getByTestId('staff-nav').getByRole('link')).toHaveCount(2);
+
+  await switchTo(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/en/admin/submanagers');
+  page.once('dialog', (dialog) => dialog.accept());
+  await page
+    .getByTestId(`submanager-${login}`)
+    .getByRole('button', { name: 'Delete', exact: true })
+    .click();
+  await expect(page.getByTestId(`submanager-${login}`)).toHaveCount(0);
+});
 
 /** Spec §4: a manager may suspend and reset the password of their own team's learners. */
 test('a manager can open one of their learners and suspend them', async ({ page }) => {

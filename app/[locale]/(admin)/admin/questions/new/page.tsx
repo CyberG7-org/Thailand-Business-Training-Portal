@@ -1,6 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import { requireAdmin } from '@/lib/auth/session';
 import { QuestionForm } from '../question-forms';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 export default async function NewQuestionPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;

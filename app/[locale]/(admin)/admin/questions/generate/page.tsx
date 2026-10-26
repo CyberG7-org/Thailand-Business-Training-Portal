@@ -8,6 +8,9 @@ import { listStudyMaterials } from '@/lib/db/study';
 import { AI_QUESTION_GENERATION_VISIBLE } from '@/lib/domain/generation-limits';
 import { resolveQuestionGenProvider } from '@/lib/integrations/question-gen';
 import { GenerateForm } from './generate-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 // Generation is one long model call; allow the full serverless window (Vercel Hobby limit).
 // One batch is a single long Opus call (three languages per question): allow the full window

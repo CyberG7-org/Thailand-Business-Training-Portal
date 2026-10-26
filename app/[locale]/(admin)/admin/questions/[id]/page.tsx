@@ -11,6 +11,9 @@ import {
   QuestionForm,
   QuestionLocalizationForm,
 } from '../question-forms';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 export default async function QuestionDetailPage({
   params,

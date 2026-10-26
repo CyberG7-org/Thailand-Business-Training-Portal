@@ -21,6 +21,9 @@ import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { translatedRecord } from '@/lib/domain/facts/localization';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { isCardDone } from '@/lib/domain/study-progress';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'study');
 
 type State = 'new' | 'viewed' | 'completed';
 

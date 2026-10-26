@@ -13,20 +13,18 @@ import {
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { currentAddress } from '@/lib/db/training-sheet';
 import { pinnedFactsFor } from '@/lib/db/pinning';
-import { getActiveVersion } from '@/lib/db/training-versions';
 import { assignmentFacts } from '@/lib/domain/facts/snapshot';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
 import { formatDate } from '@/lib/domain/thai-date';
-import { AccountControls } from './account-controls';
+import { AccountStatusControls, PasswordResetForm } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
-import { dbdPeople, withStandardRole } from '@/lib/domain/standard-role';
 import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
 import { AssignmentPanel } from './assignment-panel';
-import { ContactForm } from './contact-form';
-import { RoleForm } from './role-form';
-import { VersionPanel } from './version-panel';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 export default async function UserDetailPage({
   params,
@@ -66,20 +64,13 @@ export default async function UserDetailPage({
       }
     : null;
 
-  // The learner's role (D95): a name from the DBD documents and three fixed answers.
-  const { directors, people } = dbdPeople(active?.dbd_records ?? null);
-  const role = active ? withStandardRole(active, { directors }) : null;
-
   // Assignment scope (spec §7.3) on the pinned version (D75): the company sheet as frozen, the
   // learner's role only once confirmed (plan decision 4). A record without a version yet is
   // read live, as before P17b.
   let coverage: Coverage | null = null;
   let pinned: Awaited<ReturnType<typeof pinnedFactsFor>> = null;
-  let newest: { id: string; n: number } | null = null;
   if (active) {
     pinned = await pinnedFactsFor(createSupabaseAdminClient(), active);
-    const activeVersion = await getActiveVersion(db, active.dbd_record_id);
-    newest = activeVersion ? { id: activeVersion.id, n: activeVersion.version_no } : null;
     if (pinned) {
       coverage = conceptCoverage(
         assignmentFacts(pinned.snapshot, pinned.roleConfirmed ? pinned.role : null),
@@ -112,7 +103,7 @@ export default async function UserDetailPage({
         ← {tl('title')}
       </Link>
       <h1 className="staff-title">{displayLoginId(user.login_id)}</h1>
-      <dl className="grid max-w-md grid-cols-2 gap-1 text-sm">
+      <dl className="grid w-full max-w-2xl grid-cols-2 gap-1 text-sm">
         <dt>{t('displayName')}</dt>
         <dd>{user.display_name ?? '—'}</dd>
         <dt>{t('role')}</dt>
@@ -120,38 +111,16 @@ export default async function UserDetailPage({
         <dt>{t('status')}</dt>
         <dd data-testid="account-status">{user.status}</dd>
       </dl>
-      {user.role === 'learner' && (
-        <ContactForm
+      <div className="grid w-full max-w-2xl gap-6">
+        <PasswordResetForm userId={user.id} />
+        <AssignmentPanel userId={user.id} current={current} options={options} />
+        {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}
+        <AccountStatusControls
           userId={user.id}
-          contact={{
-            phone: user.phone ?? undefined,
-            contactEmail: user.contact_email ?? undefined,
-            website: user.website,
-            facebookPage: user.facebook_page,
-          }}
+          status={user.status as 'active' | 'disabled'}
+          loginId={user.role === 'learner' ? displayLoginId(user.login_id) : null}
         />
-      )}
-      <AssignmentPanel userId={user.id} current={current} options={options} />
-      {active && role && (
-        <RoleForm
-          userId={user.id}
-          assignmentId={active.id}
-          role={role}
-          picked={Boolean(active.holder_name?.trim())}
-          people={people}
-        />
-      )}
-      {active && (
-        <VersionPanel
-          userId={user.id}
-          assignmentId={active.id}
-          pinned={pinned ? { n: pinned.version.version_no } : null}
-          newest={newest}
-          roleConfirmedAt={pinned?.roleConfirmedAt ?? active.role_confirmed_at}
-        />
-      )}
-      {coverage && <CoveragePanel coverage={coverage} testId="assignment-coverage" />}
-      <AccountControls userId={user.id} status={user.status as 'active' | 'disabled'} />
+      </div>
     </section>
   );
 }

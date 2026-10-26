@@ -9,7 +9,7 @@ import { validateRecord } from '@/lib/db/validation';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/db/database.types';
 
-export type Role = 'learner' | 'manager' | 'admin';
+export type Role = 'learner' | 'submanager' | 'manager' | 'admin';
 export type TestUser = { id: string; loginId: string; password: string; role: Role };
 export type Client = SupabaseClient<Database>;
 
@@ -34,10 +34,11 @@ export async function createTestUser(
     loginId?: string;
     displayName?: string;
     preferredLanguage?: 'th' | 'en' | 'zh';
+    managerId?: string;
   } = {},
 ): Promise<TestUser> {
   const loginId = overrides.loginId ?? `${role}-${randomUUID().slice(0, 8)}`;
-  const password = 'Test-Password-123!';
+  const password = 'Test123!';
   const { data, error } = await adminClient().auth.admin.createUser({
     email: `${loginId}@${INTERNAL_DOMAIN}`,
     password,
@@ -47,7 +48,7 @@ export async function createTestUser(
       display_name: overrides.displayName ?? loginId,
       preferred_language: overrides.preferredLanguage ?? 'th',
     },
-    app_metadata: { role },
+    app_metadata: { role, ...(overrides.managerId ? { manager_id: overrides.managerId } : {}) },
   });
   if (error || !data.user) throw error ?? new Error('createUser returned no user');
   return { id: data.user.id, loginId, password, role };

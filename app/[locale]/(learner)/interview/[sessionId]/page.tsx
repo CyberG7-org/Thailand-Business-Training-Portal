@@ -15,6 +15,9 @@ import type { ChatTurn } from '../actions';
 import { nextConcept } from '../turns';
 import { Chat } from './chat';
 import { LearnerResult } from './learner-result';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'interview');
 
 type StoredSummary = {
   verdict?: 'ready' | 'not_ready';
@@ -78,9 +81,8 @@ export default async function InterviewSessionPage({
       ? readinessItem(concept)!.question[locale as AppLocale]
       : concept === 'juristic_id'
         ? labels('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
-            locale === 'ms' ? 'en' : (locale as 'th' | 'en' | 'zh')
-          ] ?? concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
+          concept);
   const validVerdicts: Verdict[] = [
     'correct',
     'partial',

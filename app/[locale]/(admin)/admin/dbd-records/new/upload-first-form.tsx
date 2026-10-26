@@ -36,12 +36,20 @@ export function UploadFirstForm({
   const [pdfState, pdfAction, pdfPending] = useActionState(uploadCompanyPdfAction, initial);
   const zip = useDirectUpload({ locale, id: null, redirect: true });
   const zipError = UPLOAD_ERROR_KEYS.find((key) => key === zip.state.error);
+  const errorText = (error: string) =>
+    error === 'manager-action-needed' ? t('errors.manager-action-needed') : error;
   useEffect(() => {
-    if (state.recordId) router.push(`/admin/dbd-records/${state.recordId}`);
-  }, [router, state.recordId]);
+    if (state.recordId) {
+      router.push(state.redirectTo ?? `/admin/dbd-records/${state.recordId}`);
+      router.refresh();
+    }
+  }, [router, state.recordId, state.redirectTo]);
   useEffect(() => {
-    if (pdfState.recordId) router.push(`/admin/dbd-records/${pdfState.recordId}`);
-  }, [router, pdfState.recordId]);
+    if (pdfState.recordId) {
+      router.push(pdfState.redirectTo ?? `/admin/dbd-records/${pdfState.recordId}`);
+      router.refresh();
+    }
+  }, [router, pdfState.recordId, pdfState.redirectTo]);
   const formClass = `grid gap-4 ${embedded ? '' : 'staff-card max-w-2xl'}`;
   return (
     <div
@@ -142,7 +150,7 @@ export function UploadFirstForm({
           )}
           {state.error && (
             <p role="alert" className="text-sm text-bad-600">
-              {state.error}
+              {errorText(state.error)}
             </p>
           )}
           <button
@@ -188,7 +196,7 @@ export function UploadFirstForm({
           )}
           {pdfState.error && (
             <p role="alert" className="text-sm text-bad-600">
-              {pdfState.error}
+              {errorText(pdfState.error)}
             </p>
           )}
           <button

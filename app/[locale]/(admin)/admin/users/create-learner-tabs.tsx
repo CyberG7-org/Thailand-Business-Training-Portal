@@ -46,6 +46,7 @@ export function CreateLearnerTabs({
   const t = useTranslations('admin.users');
   const [tab, setTab] = useState<CreateLearnerTab>(initialTab);
   const [addOpen, setAddOpen] = useState(initialAddOpen);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
   const form = useRef<NewUserFormHandle>(null);
   const tabRefs = useRef<Record<CreateLearnerTab, HTMLButtonElement | null>>({
     learner: null,
@@ -112,6 +113,11 @@ export function CreateLearnerTabs({
         hidden={tab !== 'companies'}
         className="min-w-0"
       >
+        {assignmentError && (
+          <p role="alert" className="text-sm text-warn-700">
+            {assignmentError}
+          </p>
+        )}
         <CompaniesPanel
           rows={rows}
           showTeam={teams !== null}
@@ -121,6 +127,11 @@ export function CreateLearnerTabs({
           addOpen={addOpen}
           onAddOpenChange={setAddOpen}
           onAssign={(companyId) => {
+            if (rows.find((row) => row.id === companyId)?.createdByMe === false) {
+              setAssignmentError(t('notCreatedByYou'));
+              return;
+            }
+            setAssignmentError(null);
             form.current?.assign(companyId);
             setTab('learner');
             window.scrollTo({ top: 0 });

@@ -23,12 +23,14 @@ import { Hero } from './hero';
 import { ProgressCard } from './progress-card';
 import { STAGE_ROUTES, type StageRow } from './stage-row';
 import { StepsList } from './steps-list';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('dashboard', 'title');
 
 const NUMBER_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-US',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
 const DASHBOARD_STAGES = LEARNER_STAGES.filter((key) => key !== 'appointment');
 

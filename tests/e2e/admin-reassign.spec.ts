@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createLearner, createManager, loginAs, switchTo } from './helpers';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 
 /**
  * The reassignment picker on a learner's page offers only companies the learner's own team may

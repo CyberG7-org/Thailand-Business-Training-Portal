@@ -51,7 +51,7 @@ export async function setManagerStatusAction(
   const status = String(formData.get('status') ?? '') === 'disabled' ? 'disabled' : 'active';
   const id = String(formData.get('id') ?? '');
   try {
-    await setAccountStatus(id, status);
+    await setAccountStatus(id, status, 'manager');
     await recordAccountAction(admin.id, 'status', id, { status });
     revalidatePath(`/${locale}/admin/managers`);
     return { ok: true, error: null, createdLoginId: null };
@@ -95,7 +95,7 @@ export async function resetManagerPasswordAction(
   const admin = await requireAdmin(locale);
   try {
     const id = String(formData.get('id') ?? '');
-    await setAccountPassword(id, String(formData.get('newPassword') ?? ''));
+    await setAccountPassword(id, String(formData.get('newPassword') ?? ''), 'manager');
     await recordAccountAction(admin.id, 'password', id);
     revalidatePath(`/${locale}/admin/managers`);
     return { ok: true, error: null, createdLoginId: null };

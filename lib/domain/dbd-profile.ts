@@ -7,6 +7,7 @@ import {
 } from './business-category';
 import { registeredAddressSchema, type RegisteredAddress } from './geo/resolve';
 import { invoiceReadSchema, type InvoiceRead } from './invoices/schema';
+import { initialUploadSchema, type InitialUpload } from './initial-upload';
 
 /**
  * Level 2 of the three-level DBD model (decision D38): the business profile that comes from the
@@ -101,6 +102,8 @@ const facebookSourceSchema = z.object({
 });
 
 export type StructuredData = {
+  /** Retained source associations survive Manager corrections and derived-fact saves. */
+  initial_upload?: InitialUpload | null;
   source_image?: { path: string; mime_type: string; reviewed: boolean } | null;
   business?: BusinessProfile;
   /** Bank-interview answers the DBD cannot supply (decision D39). */
@@ -138,7 +141,9 @@ export function readStructuredData(raw: unknown): StructuredData {
   const invoices = invoiceReadSchema.safeParse(data.invoices);
   const described = describedSchema.safeParse(data.described);
   const facebookSource = facebookSourceSchema.safeParse(data.facebook_source);
+  const initialUpload = initialUploadSchema.safeParse(data.initial_upload);
   return {
+    ...(initialUpload.success ? { initial_upload: initialUpload.data } : {}),
     source_image:
       data.source_image &&
       typeof data.source_image === 'object' &&

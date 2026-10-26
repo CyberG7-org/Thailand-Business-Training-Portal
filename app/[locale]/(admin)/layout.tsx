@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { StaffShell } from '@/components/staff/staff-shell';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
 
 export default async function AdminLayout({
   children,
@@ -13,7 +13,7 @@ export default async function AdminLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const user = await requireStaff(locale);
+  const user = await requireStaffOrSubmanager(locale);
   return (
     <StaffShell user={user} side={side}>
       {children}

@@ -39,6 +39,7 @@ describe('newLearnerChecklist', () => {
     expect(doneOf({ ...filled, password: 'x'.repeat(5) }).password).toBe(false);
     expect(doneOf({ ...filled, password: 'x'.repeat(6) }).password).toBe(true);
     expect(doneOf({ ...filled, password: 'x'.repeat(9) }).password).toBe(false);
+    expect(doneOf({ ...filled, password: 'a b!12' }).password).toBe(true);
   });
 
   it('does not count a name of spaces', () => {

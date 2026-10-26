@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createManager, loginAs, switchTo } from './helpers';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 
 /**
  * The staff shell: the navy band with the glass header, a sidebar that names every section the
@@ -39,9 +39,11 @@ test('the admin sees every section in the sidebar with the current one marked', 
   // The team's sections lead with Managers: a team is started before anything goes in it.
   await expect(nav.getByRole('link').first()).toHaveText('ผู้จัดการ');
   await expect(nav.getByRole('link').nth(1)).toHaveText('สร้างผู้เรียนและ DBD');
-  await expect(nav.getByRole('link').nth(2)).toHaveText('บันทึกผู้เรียน');
+  await expect(nav.getByRole('link').nth(2)).toHaveText('สร้างผู้ช่วยผู้จัดการ');
+  await expect(nav.getByRole('link').nth(3)).toHaveText('บันทึกผู้เรียน');
   for (const label of [
     'สร้างผู้เรียนและ DBD',
+    'สร้างผู้ช่วยผู้จัดการ',
     'บันทึกผู้เรียน',
     'ผู้จัดการ',
     'คลังคำถาม',
@@ -52,6 +54,7 @@ test('the admin sees every section in the sidebar with the current one marked', 
   }
   // DBD records left the sidebar: their list is on "Create learner & DBD" (D80).
   await expect(nav).not.toContainText('ข้อมูล DBD');
+  await expect(nav).not.toContainText('สัมภาษณ์');
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
   // The old address forwards there.
   await page.goto('/th/admin/dbd-records');
@@ -76,12 +79,25 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await expect(header).toContainText('ผู้จัดการ');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
-  await expect(nav.getByRole('link').first()).toHaveText('สร้างผู้เรียนและ DBD');
-  await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
-  await expect(nav).toContainText('บันทึกผู้เรียน');
-  await expect(nav).toContainText('สัมภาษณ์');
+  await expect(
+    nav.getByRole('link', { name: 'สร้างผู้ช่วยผู้จัดการ', exact: true }),
+  ).toHaveAttribute('href', '/th/admin/submanagers');
+  await expect(nav.getByRole('link')).toHaveText([
+    'สร้างผู้เรียนและ DBD',
+    'สร้างผู้ช่วยผู้จัดการ',
+    'บันทึกผู้เรียน',
+    'นัดหมายธนาคาร',
+    'ข้อผิดพลาด',
+  ]);
+  await expect(page.getByTestId('admin-nav').getByRole('link')).toHaveText([
+    'สร้างผู้เรียนและ DBD',
+    'สร้างผู้ช่วยผู้จัดการ',
+    'บันทึกผู้เรียน',
+    'นัดหมายธนาคาร',
+    'ข้อผิดพลาด',
+  ]);
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
-  await expect(nav).not.toContainText('ผู้จัดการ');
+  await expect(nav.getByRole('link', { name: 'ผู้จัดการ', exact: true })).toHaveCount(0);
   await expect(nav).not.toContainText('การแจ้งเตือน');
 });
 
@@ -141,17 +157,17 @@ test('manager row actions are buttons a thumb can hit', async ({ page }) => {
   }
 });
 
-test('the appointment learner picker stays on one row on a laptop', async ({ page }) => {
+test('the appointment calendar is visible but inactive until a learner is chosen', async ({
+  page,
+}) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   const code = await createManager(page, 'ผู้จัดการปฏิทินแล็ปท็อป', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto('/th/admin/appointments');
-  const select = await page.getByTestId('appointment-learner').boundingBox();
-  const button = await page
-    .locator('form:has([data-testid="appointment-learner"]) button')
-    .boundingBox();
-  expect(
-    select && button && Math.abs(select.y + select.height - (button.y + button.height)),
-  ).toBeLessThan(2);
+  await expect(page.getByTestId('appointment-learner')).toBeVisible();
+  await expect(page.getByTestId('appointment-month')).toBeVisible();
+  await expect(page.getByTestId('month-prev')).toBeDisabled();
+  await expect(page.getByTestId('month-next')).toBeDisabled();
+  await expect(page.locator('[data-testid^="appointment-date-"]:enabled')).toHaveCount(0);
 });

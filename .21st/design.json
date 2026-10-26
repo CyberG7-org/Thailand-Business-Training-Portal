@@ -211,8 +211,13 @@
     },
     {
       "date": "2026-10-12",
-      "decision": "The shared login, learner, and staff language selector uses a compact dark dropdown with the selected language highlighted; Thai, English, Simplified Chinese, and Malay are selectable.",
+      "decision": "The shared login, learner, and staff language selector uses a compact dark dropdown with the selected language highlighted; Thai, English, and Simplified Chinese are selectable (Malay removed 2026-10-20).",
       "reason": "This follows the user's dropdown reference and supports the four core training languages. The 21st.dev catalog search returned HTTP 401, so the component uses the portal's existing brand tokens and accessible menu behavior."
+    },
+    {
+      "date": "2026-10-16",
+      "decision": "The owner and manager header uses a compact avatar-and-name profile dropdown with Change password and Sign out actions.",
+      "reason": "This adapts the user's 21st.dev profile-dropdown reference to the portal's existing tokens and accessible menu behavior. The catalog search returned HTTP 401; the supplied example informed the layout without adding unrelated demo links or dependencies."
     }
   ],
   "evidence": [

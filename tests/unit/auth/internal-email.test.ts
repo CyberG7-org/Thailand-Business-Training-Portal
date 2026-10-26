@@ -6,6 +6,7 @@ describe('isValidLoginId', () => {
     expect(isValidLoginId('a1')).toBe(true);
     expect(isValidLoginId('siam001')).toBe(true);
     expect(isValidLoginId('learner.a_b-c')).toBe(true);
+    expect(isValidLoginId('tf38sA7')).toBe(true);
   });
   it('rejects too short, spaces, @ and leading punctuation', () => {
     expect(isValidLoginId('a')).toBe(false);
@@ -19,6 +20,9 @@ describe('loginIdToEmail', () => {
   it('lower-cases the id and appends the internal domain', () => {
     expect(loginIdToEmail('Siam001', 'learner.portal.internal')).toBe(
       'siam001@learner.portal.internal',
+    );
+    expect(loginIdToEmail('tf38sA7', 'learner.portal.internal')).toBe(
+      'tf38sa7@learner.portal.internal',
     );
   });
 });

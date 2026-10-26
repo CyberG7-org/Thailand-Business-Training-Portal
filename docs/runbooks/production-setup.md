@@ -72,8 +72,7 @@ Target: Vercel (Next.js) + Supabase (Postgres, Auth, Storage) + external provide
    | `TELEGRAM_BOT_TOKEN` | BotFather token | exam results + name cards to admin chats |
    | `RESEND_API_KEY`, `EMAIL_FROM` | Resend | exam result emails; sender domain must be verified in Resend |
    | `GEMINI_API_KEY` | Google AI Studio API key | server-side company-image extraction and cached company-fact translations; the readiness interview does not use it. Never expose it as a `NEXT_PUBLIC_` variable |
-   | `GEMINI_FACT_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for one-time English/Chinese/Malay translations per pinned company fact set; apply migrations `20261012015000_company_fact_translations.sql` and `20261012020000_malay_language.sql` before deploying |
-   | `GEMINI_QUIZ_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for Malay translations of frozen quiz questions; requires `GEMINI_API_KEY` |
+   | `GEMINI_FACT_TRANSLATION_MODEL` | `gemini-2.5-flash` | optional model for one-time English/Chinese translations per pinned company fact set; apply migrations `20261012015000_company_fact_translations.sql` before deploying |
    | `GEMINI_COMPANY_IMAGE_MODEL` | `gemini-3.8-flash` | optional stable Gemini model for reading the uploaded company image |
    | `CATEGORY_MAP_PROVIDER` | unset (local `rules`) | selects one of the 40 business categories from `nature_of_business` and `products_services` without an AI call; `off` disables automatic selection. Old `claude`, `gemini`, and `fake` values now resolve to `rules` too. |
    | `PINECONE_API_KEY`, `PINECONE_NAMESPACE` | Pinecone key; namespace `production` (staging: `staging`) | DBD retrieval index (P14); `VECTOR_PROVIDER=off` to disable; optional `PINECONE_INDEX`, `PINECONE_REGION`, `TRANSCRIPTION_MODEL`, `TRANSCRIBE_SLICE_PAGES` |

@@ -3,10 +3,9 @@
  * must be filled before the button wakes, and the starting password it can generate.
  */
 
-/** The shortest initial password the server accepts (`newAccountSchema`). */
-export const MIN_PASSWORD_LENGTH = 6;
-export const MAX_PASSWORD_LENGTH = 8;
-export const LEARNER_PASSWORD_PATTERN = /^[a-z0-9]{6,8}$/i;
+import { isValidPassword } from './password-policy';
+
+export { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from './password-policy';
 
 /** What the "Before you create" list ticks off; `team` only when the owner picks one. */
 export type ChecklistItem = 'team' | 'company' | 'password' | 'name';
@@ -35,7 +34,7 @@ export function newLearnerChecklist(
   if (needsTeam) items.push({ item: 'team', done: values.team !== '' });
   items.push(
     { item: 'company', done: values.company !== '' },
-    { item: 'password', done: LEARNER_PASSWORD_PATTERN.test(values.password) },
+    { item: 'password', done: isValidPassword(values.password) },
     { item: 'name', done: values.name.trim() !== '' },
   );
   return items;

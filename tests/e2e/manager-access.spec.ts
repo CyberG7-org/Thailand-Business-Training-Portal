@@ -3,7 +3,7 @@ import { E2E_ADMIN, E2E_PASSWORD } from './fixtures';
 import { createConfirmedRecord, createManager, loginAs, switchTo } from './helpers';
 import { disableProfileOnly } from './seed';
 
-const MANAGER_PASSWORD = 'Manager-Password-1!';
+const MANAGER_PASSWORD = 'Manage1!';
 
 test('a manager lands in the admin area and sees only their own doors', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
@@ -16,7 +16,8 @@ test('a manager lands in the admin area and sees only their own doors', async ({
   // No audit or study-content screens for anyone (D81).
   await expect(nav).not.toContainText('บันทึกการเปลี่ยนแปลง');
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
-  await expect(nav).not.toContainText('ผู้จัดการ');
+  // The manager may create Submanagers, but cannot open the Owner's Managers page.
+  await expect(nav.getByRole('link', { name: 'ผู้จัดการ', exact: true })).toHaveCount(0);
 });
 
 test('typing an admin-only URL does not get a manager in', async ({ page }) => {

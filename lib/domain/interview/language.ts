@@ -10,53 +10,12 @@ export function interviewReplyLanguage(
   transcript: readonly Turn[],
   pageLocale: AppLocale,
 ): AppLocale {
-  const malay = new Set([
-    'syarikat',
-    'saya',
-    'kami',
-    'menjual',
-    'pelanggan',
-    'perniagaan',
-    'dan',
-    'yang',
-    'ialah',
-    'adalah',
-    'sebulan',
-    'pendapatan',
-    'transaksi',
-    'akaun',
-    'bank',
-    'untuk',
-    'daripada',
-  ]);
-  const english = new Set([
-    'company',
-    'we',
-    'our',
-    'sell',
-    'customers',
-    'business',
-    'the',
-    'and',
-    'monthly',
-    'revenue',
-    'account',
-    'from',
-    'with',
-  ]);
   const classify = (text: string): AppLocale | null => {
     const latin = (text.match(/[a-z]/gi) ?? []).length;
     const thai = (text.match(/[\u0e00-\u0e7f]/g) ?? []).length;
     const han = (text.match(/\p{Script=Han}/gu) ?? []).length;
     if (han > 0 && han >= latin && han >= thai) return 'zh';
-    if (latin >= 3 && latin >= thai) {
-      const words = text.toLowerCase().match(/[a-z]+/g) ?? [];
-      const malayHits = words.filter((word) => malay.has(word)).length;
-      const englishHits = words.filter((word) => english.has(word)).length;
-      if (malayHits > englishHits) return 'ms';
-      if (englishHits > malayHits) return 'en';
-      return pageLocale === 'ms' ? 'ms' : 'en';
-    }
+    if (latin >= 3 && latin >= thai) return 'en';
     if (thai >= 3) return 'th';
     return null;
   };

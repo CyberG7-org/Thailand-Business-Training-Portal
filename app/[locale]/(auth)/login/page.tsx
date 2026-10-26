@@ -6,6 +6,9 @@ import { LanguageToggle } from '@/components/language-toggle';
 import { getCurrentUser, homePathFor } from '@/lib/auth/session';
 import { LEARNER_STAGES } from '@/lib/domain/stage-progress';
 import { LoginForm } from './login-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('auth', 'title');
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 

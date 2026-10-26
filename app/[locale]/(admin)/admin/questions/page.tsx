@@ -8,6 +8,9 @@ import { conceptTitle, MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { bankCoverage } from '@/lib/domain/mcq/coverage';
 import type { AppliesWhen } from '@/lib/domain/mcq/variant';
 import { ApproveDraftsForm, StarterForm } from './bank-forms';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 /** The Owner's bank, concept first (P17d): thirty concepts and what each still lacks. */
 export default async function QuestionBankPage({

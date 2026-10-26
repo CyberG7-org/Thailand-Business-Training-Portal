@@ -9,9 +9,8 @@ test('switching language re-renders and persists; the next login lands on it', a
   await expect(page).toHaveURL(/\/th\/dashboard$/);
 
   await page.getByTestId('language-menu-button').click();
-  await expect(page.getByTestId('lang-ms')).toContainText('Bahasa Melayu');
-  await expect(page.getByTestId('lang-ms')).toBeDisabled();
-  await expect(page.getByTestId('lang-ms')).toHaveAttribute('aria-disabled', 'true');
+  // Thai, English and Simplified Chinese only: Malay was removed.
+  await expect(page.getByTestId('lang-ms')).toHaveCount(0);
   await expect(page.getByTestId('lang-th')).toHaveAttribute('aria-checked', 'true');
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);

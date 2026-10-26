@@ -74,15 +74,19 @@ export async function handleWithSession(
 
   const { locale, path } = splitLocale(request.nextUrl.pathname);
   const guard = GUARDS.find((g) => path === g.prefix || path.startsWith(`${g.prefix}/`));
+  const role = user?.app_metadata?.role;
+  const submanagerPage =
+    role === 'submanager' &&
+    ['/admin', '/admin/users', '/admin/learners', '/admin/profile'].includes(path);
 
   let response: NextResponse;
   if (guard && !user) {
     response = redirectTo(request, `/${locale}/login`);
-  } else if (guard && !meetsGuard(guard.role, user?.app_metadata?.role)) {
+  } else if (guard && !submanagerPage && !meetsGuard(guard.role, role)) {
     // Send them to their own home rather than always to the learner dashboard: a manager who
     // opens an admin-only URL belongs in the admin area, not in the study screens.
-    const role = user?.app_metadata?.role;
-    const home = role === 'admin' || role === 'manager' ? 'admin' : 'dashboard';
+    const home =
+      role === 'admin' || role === 'manager' || role === 'submanager' ? 'admin' : 'dashboard';
     response = redirectTo(request, `/${locale}/${home}`);
   } else {
     response = buildResponse(request);

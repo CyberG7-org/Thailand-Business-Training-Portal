@@ -10,6 +10,8 @@ import { CreateDbdForm } from './create-dbd-form';
 
 /** One company as the tab lists it, prepared on the server (RLS has narrowed the rows). */
 export type CompanyRow = {
+  createdByMe?: boolean;
+  displayOnly?: boolean;
   id: string;
   name: string | null;
   director: string | null;
@@ -169,14 +171,18 @@ export function CompaniesPanel({
                   return (
                     <tr key={r.id}>
                       <td className="align-middle md:pl-6">
-                        <Link
-                          href={`/admin/dbd-records/${r.id}`}
-                          className={`font-medium underline-offset-4 hover:underline ${
-                            confirmed ? 'text-ink-900' : 'text-ink-500'
-                          }`}
-                        >
-                          {r.name ?? t('unnamed')}
-                        </Link>
+                        {r.displayOnly ? (
+                          <span>{r.name ?? t('unnamed')}</span>
+                        ) : (
+                          <Link
+                            href={`/admin/dbd-records/${r.id}`}
+                            className={`font-medium underline-offset-4 hover:underline ${
+                              confirmed ? 'text-ink-900' : 'text-ink-500'
+                            }`}
+                          >
+                            {r.name ?? t('unnamed')}
+                          </Link>
+                        )}
                       </td>
                       {showTeam && (
                         <td className="align-middle" data-testid={`record-team-${r.id}`}>
@@ -200,12 +206,16 @@ export function CompaniesPanel({
                             {t('learnerOtherTeam')}
                           </span>
                         ) : r.learner ? (
-                          <Link
-                            href={`/admin/users/${r.learner.id}`}
-                            className="staff-link font-mono text-sm whitespace-nowrap tabular-nums"
-                          >
-                            {r.learner.code}
-                          </Link>
+                          r.displayOnly ? (
+                            <span>{r.learner.code}</span>
+                          ) : (
+                            <Link
+                              href={`/admin/users/${r.learner.id}`}
+                              className="staff-link font-mono text-sm whitespace-nowrap tabular-nums"
+                            >
+                              {r.learner.code}
+                            </Link>
+                          )
                         ) : confirmed ? (
                           <button
                             type="button"
@@ -222,13 +232,17 @@ export function CompaniesPanel({
                         )}
                       </td>
                       <td className="align-middle">
-                        <DeleteIconForm
-                          action={deleteCompanyAction}
-                          id={r.id}
-                          label={t('deleteCompany')}
-                          confirmation={t('deleteCompanyConfirm', { name: r.name ?? t('unnamed') })}
-                          testId={`delete-company-${r.id}`}
-                        />
+                        {!r.displayOnly && (
+                          <DeleteIconForm
+                            action={deleteCompanyAction}
+                            id={r.id}
+                            label={t('deleteCompany')}
+                            confirmation={t('deleteCompanyConfirm', {
+                              name: r.name ?? t('unnamed'),
+                            })}
+                            testId={`delete-company-${r.id}`}
+                          />
+                        )}
                       </td>
                     </tr>
                   );

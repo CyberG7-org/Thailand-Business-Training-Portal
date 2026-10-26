@@ -41,13 +41,7 @@ export function pickLocalization(
   material: StudyMaterialWithLocalizations,
   locale: AppLocale,
 ): StudyLocalizationRow | null {
-  return (
-    material.study_material_localizations.find((l) => l.language === locale) ??
-    (locale === 'ms'
-      ? material.study_material_localizations.find((l) => l.language === 'en')
-      : undefined) ??
-    null
-  );
+  return material.study_material_localizations.find((l) => l.language === locale) ?? null;
 }
 
 export type StudyMaterialInput = {

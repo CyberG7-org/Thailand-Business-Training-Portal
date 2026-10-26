@@ -22,6 +22,39 @@
     "showPassword": "显示密码",
     "hidePassword": "隐藏密码"
   },
+  "profile": {
+    "menu": "个人资料菜单",
+    "title": "个人资料",
+    "intro": "管理您账户的密码。",
+    "account": "账户",
+    "lastPasswordUpdate": "上次修改密码时间",
+    "lastPasswordUpdateUnknown": "开始记录前的时间未知",
+    "bangkokTime": "（曼谷时间）",
+    "changePassword": "修改密码",
+    "logOut": "退出登录",
+    "hint": "输入当前密码，并设置任意 6–8 个字符的新密码。",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "confirmPassword": "确认新密码",
+    "save": "保存新密码",
+    "saving": "正在保存…",
+    "success": "密码已修改。",
+    "requirements": {
+      "min": "至少 6 个字符",
+      "max": "不超过 8 个字符",
+      "confirmPending": "再次输入新密码以确认。",
+      "match": "密码一致",
+      "noMatch": "密码不一致"
+    },
+    "errors": {
+      "missing": "请填写所有密码字段。",
+      "tooShort": "新密码至少需要 6 个字符。",
+      "tooLong": "新密码不能超过 8 个字符。",
+      "mismatch": "两次输入的新密码不一致。",
+      "invalidCurrent": "当前密码不正确。",
+      "updateFailed": "无法修改密码，请重试。"
+    }
+  },
   "dashboard": {
     "title": "首页",
     "welcome": "欢迎，{name}",
@@ -100,6 +133,7 @@
   "admin": {
     "title": "栏目",
     "nav": {
+      "submanagers": "创建副经理",
       "users": "创建学员与DBD",
       "questions": "题库",
       "interviews": "面试",
@@ -179,7 +213,7 @@
       "tabCompanies": "公司（DBD）",
       "signIn": "登录信息",
       "signInIntro": "学员首次登录时使用这些信息。",
-      "passwordPlaceholder": "6–8 位字母或数字",
+      "passwordPlaceholder": "任意 6–8 个字符",
       "generatePassword": "生成",
       "showPassword": "显示密码",
       "hidePassword": "隐藏密码",
@@ -204,7 +238,8 @@
       "createLearner": "创建学员",
       "takenCompany": "{name} — 已有学员",
       "noFreeCompany": "所有已确认的公司都已有学员，请在“公司（DBD）”中添加公司。",
-      "companyTaken": "该公司已有学员。每家公司只能有一名学员。"
+      "companyTaken": "该公司已有学员。每家公司只能有一名学员。",
+      "notCreatedByYou": "此 DBD 不是由您创建的。"
     },
     "learners": {
       "title": "学员记录",
@@ -213,6 +248,7 @@
       "empty": "暂无学员。",
       "readyToAssign": "可分配公司",
       "deleteLearner": "删除学员",
+      "deleteAccount": "删除账户",
       "deleteLearnerConfirm": "确定删除学员 {loginId} 吗？其账户和培训记录将被永久删除。",
       "backToRecord": "← 学员记录",
       "appointment": {
@@ -350,7 +386,8 @@
         "zip-too-large": "zip 文件总计超过 200 MB，请移除部分文件。",
         "cannot-open": "无法打开此 zip 文件，请重新打包后再试。",
         "missing-business-link": "创建公司前，请在 zip 文件中加入网站或 Facebook 链接。",
-        "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。"
+        "answers-required": "无法保存：该记录已确认，需先补全联系方式与业务信息（见下方）。",
+        "manager-action-needed": "此上传需要经理处理。请让您的经理审核。"
       },
       "fields": {
         "companyNameTh": "公司名称（泰文）",
@@ -743,7 +780,9 @@
         "openExceptions": "查看例外"
       },
       "addDocuments": "添加文件",
-      "teamChip": "团队 {code}"
+      "teamChip": "团队 {code}",
+      "uploadNeedsReview": "此上传未能完成。请查看保留的源文件并更正公司信息。",
+      "unfinishedSources": "未完成上传的源文件："
     },
     "assignment": {
       "title": "已分配公司",
@@ -975,6 +1014,29 @@
       "nameNotInDbd": "请选择 DBD 文件中印有的姓名。",
       "noPeople": "尚未从文件中读取到董事或股东。"
     },
+    "submanagers": {
+      "title": "副经理",
+      "new": "新增副经理",
+      "loginId": "登录ID",
+      "suffix": "两位后缀",
+      "suffixHint": "请输入任意组合的两位英文字母或数字。",
+      "displayName": "显示名称",
+      "password": "密码（6–8位）",
+      "create": "创建副经理",
+      "status": "状态",
+      "actions": "操作",
+      "disable": "停用",
+      "enable": "重新启用",
+      "resetPassword": "重置密码",
+      "delete": "删除",
+      "saved": "已保存",
+      "empty": "暂无副经理。",
+      "archiveHint": "删除将停止访问并从此列表隐藏账户。其记录和登录ID将永久保留。",
+      "confirmArchive": "删除此副经理的访问权限？其记录和登录ID将保留。",
+      "manager": "经理",
+      "ownerHint": "所有团队的副经理。作为所有者，您可以为任何经理的团队创建副经理，并暂停、重置密码或删除任何副经理。",
+      "chooseManager": "选择经理"
+    },
     "managers": {
       "title": "经理",
       "new": "新增经理",
@@ -1048,7 +1110,10 @@
       "bookingIntro": "选择已准备好的学员，然后选择或更改日期；无需选择时段。",
       "chooseLearner": "学员",
       "choose": "选择学员",
-      "showCalendar": "显示日历",
+      "confirmTitle": "确认银行预约",
+      "confirmDate": "确定将{learner}的银行预约日期设为{date}吗？",
+      "confirmNo": "否，返回",
+      "confirmYes": "是，确认日期",
       "needsQuiz": "请先通过测验",
       "needsInterview": "请先通过面试",
       "ownerReadOnly": "只有负责该学员的经理可以预约日期。所有者可在此查看和取消预约。",
@@ -1082,8 +1147,10 @@
       "system": "系统"
     },
     "roles": {
+      "submanager": "副经理",
       "admin": "所有者",
-      "manager": "经理"
+      "manager": "经理",
+      "learner": "学员"
     },
     "home": {
       "intro": "选择要管理的板块。经理只能看到自己的团队。"
@@ -1489,8 +1556,7 @@
       "unanswered": "请先回答所有问题。",
       "invalid_key": "选项无效。",
       "no_version": "贵公司的培训信息尚未就绪，请联系经理检查 DBD 记录。",
-      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。",
-      "translation_unavailable": "马来语测验翻译暂时不可用，请稍后重试。"
+      "not_ready": "针对您公司的测验尚未就绪，已通知您的经理。"
     },
     "meta": {
       "questions": "题数",

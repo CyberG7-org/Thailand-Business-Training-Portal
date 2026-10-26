@@ -57,8 +57,8 @@ test('only the Owner edits business categories', async ({ page }) => {
   await page.getByTestId('category-add').click();
   await expect(page.getByTestId(`category-${key}`)).toBeVisible();
 
-  const code = await createManager(page, 'ผู้จัดการหมวดธุรกิจ', 'Manager-Password-1!');
-  await switchTo(page, code.toLowerCase(), 'Manager-Password-1!');
+  const code = await createManager(page, 'ผู้จัดการหมวดธุรกิจ', 'Manage1!');
+  await switchTo(page, code.toLowerCase(), 'Manage1!');
   await page.goto('/th/admin/business-categories');
   await expect(page).toHaveURL(/\/th\/admin$/);
   await expect(page.getByTestId('staff-nav')).not.toContainText('หมวดธุรกิจ');

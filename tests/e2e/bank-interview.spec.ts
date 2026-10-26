@@ -46,28 +46,9 @@ test('starter cards, interview answers and the learner role combine into a perso
   await page.goto('/th/admin/learners');
   await page.getByRole('link', { name: learner }).click();
   await page.waitForURL(/\/th\/admin\/users\/[0-9a-f-]{36}$/);
-  // Nobody types it (D95): the company's only director is the learner, and the three other
-  // answers are the same for every learner.
-  const role = page.getByTestId('role-form');
-  await expect(role.getByTestId('role-holder')).toHaveValue('นางสาวผู้เรียน ทดสอบ');
-  await expect(role.getByTestId('role-holder')).toHaveAttribute('data-automatic', 'true');
-  await expect(role.getByTestId('role-position')).toHaveText('กรรมการ');
-  await expect(role.locator('input[name="position"]')).toHaveCount(0);
-  // Picking the other shareholder and back is still possible, from the documents only.
-  await role.getByTestId('role-holder').selectOption('นายอื่น ทดสอบ');
-  await role.getByRole('button', { name: 'บันทึกบทบาท' }).click();
-  await expect(page.getByTestId('role-saved')).toBeVisible();
-  await role.getByTestId('role-holder').selectOption('นางสาวผู้เรียน ทดสอบ');
-  await role.getByRole('button', { name: 'บันทึกบทบาท' }).click();
-  // The first save already showed "saved" and turned "automatic" off, so neither says the second
-  // one landed: read it back from the server before moving on.
-  await expect(async () => {
-    await page.reload();
-    await expect(role.getByTestId('role-holder')).toHaveValue('นางสาวผู้เรียน ทดสอบ', {
-      timeout: 2_000,
-    });
-  }).toPass();
-  await expect(role.getByTestId('role-holder')).toHaveAttribute('data-automatic', 'false');
+  // The company has one director, so the learner's role is resolved automatically without
+  // exposing the role editor on the account page.
+  await expect(page.getByTestId('role-form')).toHaveCount(0);
 
   // The learner reads the ownership card with their own numbers filled in. `switchTo` clears
   // the session rather than racing a sign-out click, since the login page sends a signed-in

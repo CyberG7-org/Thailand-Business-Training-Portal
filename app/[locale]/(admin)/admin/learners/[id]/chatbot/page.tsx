@@ -8,6 +8,9 @@ import { chatbotSessionResult, dateTimeLabel } from '@/lib/domain/learner-record
 import type { Locale } from '@/lib/domain/thai-date';
 import { ResultTag } from '../../result-tag';
 import { HistoryHeader } from '../history-header';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 /**
  * A learner's Chatbot history (D82; the readiness interview until P17's chatbot ships): every
