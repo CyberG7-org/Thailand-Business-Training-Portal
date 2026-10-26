@@ -43,6 +43,10 @@ test('the owning manager books and replaces a ready learner date; the learner on
     2,
   );
   await expect(confirmation).toContainText(learner.toUpperCase());
+  await expect(confirmation.getByRole('button', { name: 'ใช่ ยืนยันวัน' })).toHaveCSS(
+    'background-color',
+    'rgb(31, 122, 77)',
+  );
   await expect(page.locator('[data-testid^="admin-appointment-"]')).toHaveCount(0);
   await confirmation.getByRole('button', { name: 'ไม่ กลับไป' }).click();
   await expect(confirmation).not.toBeVisible();

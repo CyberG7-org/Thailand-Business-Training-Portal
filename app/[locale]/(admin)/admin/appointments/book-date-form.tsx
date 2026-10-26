@@ -81,7 +81,7 @@ export function BookDateForm({
             name="date"
             value={proposedDate ?? ''}
             disabled={!proposedDate}
-            className="staff-btn-primary"
+            className="staff-btn-ok"
             onClick={() => dialog.current?.close()}
           >
             {t('confirmYes')}
