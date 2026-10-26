@@ -19,6 +19,16 @@ test('a Manager creates, suspends, resets and archives their Submanager', async 
   const login = `${manager.toLowerCase()}sa7`;
   const row = page.getByTestId(`submanager-${login}`);
   await expect(row).toBeVisible();
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    const formBox = await create.boundingBox();
+    const listBox = await page.locator('.staff-table-wrap').boundingBox();
+    expect(formBox).not.toBeNull();
+    expect(listBox).not.toBeNull();
+    expect(Math.abs(formBox!.x - listBox!.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(formBox!.width - listBox!.width)).toBeLessThanOrEqual(1);
+  }
+  await page.setViewportSize({ width: 1280, height: 844 });
   await row.getByRole('button', { name: 'Suspend', exact: true }).click();
   await expect(row.getByTestId('account-status')).toHaveText('disabled');
   await row.getByRole('button', { name: 'Re-enable', exact: true }).click();

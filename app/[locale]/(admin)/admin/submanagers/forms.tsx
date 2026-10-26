@@ -81,52 +81,54 @@ export function NewSubmanagerForm({
   const chosen = managers?.find((m) => m.id === managerId);
   const shownPrefix = managers ? (chosen ? `${chosen.loginId}s` : '') : (prefix ?? '');
   return (
-    <AccountForm operation="create" className="staff-card grid max-w-md gap-3">
+    <AccountForm operation="create" className="staff-card grid w-full gap-4">
       <h2 className="text-sm font-semibold">{t('new')}</h2>
-      {managers && (
-        <label className="text-sm">
-          {t('manager')}
-          <select
-            className="staff-input mt-1 block w-full"
-            name="managerId"
-            required
-            value={managerId}
-            onChange={(event) => setManagerId(event.target.value)}
-          >
-            <option value="">{t('chooseManager')}</option>
-            {managers.map((m) => (
-              <option key={m.id} value={m.id}>
-                {displayLoginId(m.loginId)}
-                {m.name ? ` — ${m.name}` : ''}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-      <label className="text-sm">
-        {t('loginId')}
-        <span className="mt-1 flex items-center gap-2">
-          <span className="font-mono" data-testid="submanager-prefix">
-            {shownPrefix ? displayLoginId(shownPrefix) : '—'}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {managers && (
+          <label className="min-w-0 text-sm">
+            {t('manager')}
+            <select
+              className="staff-input mt-1 block w-full"
+              name="managerId"
+              required
+              value={managerId}
+              onChange={(event) => setManagerId(event.target.value)}
+            >
+              <option value="">{t('chooseManager')}</option>
+              {managers.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {displayLoginId(m.loginId)}
+                  {m.name ? ` — ${m.name}` : ''}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="min-w-0 text-sm">
+          {t('loginId')}
+          <span className="mt-1 flex min-w-0 items-center gap-2">
+            <span className="shrink-0 font-mono" data-testid="submanager-prefix">
+              {shownPrefix ? displayLoginId(shownPrefix) : '—'}
+            </span>
+            <input
+              aria-label={t('suffix')}
+              className="staff-input min-w-0"
+              name="suffix"
+              required
+              pattern="[A-Za-z0-9]{2}"
+              minLength={2}
+              maxLength={2}
+              autoComplete="off"
+            />
           </span>
-          <input
-            aria-label={t('suffix')}
-            className="staff-input"
-            name="suffix"
-            required
-            pattern="[A-Za-z0-9]{2}"
-            minLength={2}
-            maxLength={2}
-            autoComplete="off"
-          />
-        </span>
-      </label>
-      <p className="text-xs text-ink-500">{t('suffixHint')}</p>
-      <label className="text-sm">
-        {t('displayName')}
-        <input className="staff-input mt-1" name="displayName" maxLength={120} />
-      </label>
-      <PasswordField />
+          <span className="mt-2 block text-xs text-ink-500">{t('suffixHint')}</span>
+        </label>
+        <label className="min-w-0 text-sm">
+          {t('displayName')}
+          <input className="staff-input mt-1" name="displayName" maxLength={120} />
+        </label>
+        <PasswordField />
+      </div>
       <button className="staff-btn justify-self-start" type="submit">
         {t('create')}
       </button>

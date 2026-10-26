@@ -39,7 +39,7 @@ export default async function SubmanagersPage({ params }: { params: Promise<{ lo
     : [];
   const managerCodes = new Map(managers.map((m) => [m.id, m.login_id]));
   return (
-    <section className="grid gap-6">
+    <section className="grid w-full max-w-4xl min-w-0 gap-6">
       <h1 className="staff-title">{t('title')}</h1>
       {owner && <p className="staff-intro">{t('ownerHint')}</p>}
       {owner ? (
