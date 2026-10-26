@@ -248,6 +248,7 @@
       "empty": "No learners yet.",
       "readyToAssign": "Ready to Assign",
       "deleteLearner": "Delete learner",
+      "deleteAccount": "Delete account",
       "deleteLearnerConfirm": "Delete learner {loginId}? Their account and training history will be permanently removed.",
       "backToRecord": "← Learner Record",
       "appointment": {

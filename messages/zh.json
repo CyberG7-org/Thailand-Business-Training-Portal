@@ -248,6 +248,7 @@
       "empty": "暂无学员。",
       "readyToAssign": "可分配公司",
       "deleteLearner": "删除学员",
+      "deleteAccount": "删除账户",
       "deleteLearnerConfirm": "确定删除学员 {loginId} 吗？其账户和培训记录将被永久删除。",
       "backToRecord": "← 学员记录",
       "appointment": {

@@ -10,6 +10,33 @@ import {
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 
+test('learner account page is compact and asks before deleting the account', async ({ page }) => {
+  const learner = await seedLearnerWithCompany(`บริษัท ลบบัญชี ${Date.now()} จำกัด`, '2026-06-09');
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.goto('/en/admin/learners');
+  await page.getByRole('link', { name: learner.toUpperCase(), exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/users\/[0-9a-f-]{36}$/);
+  await expect(page.getByTestId('contact-form')).toHaveCount(0);
+  await expect(page.getByTestId('role-form')).toHaveCount(0);
+  await expect(page.getByTestId('version-panel')).toHaveCount(0);
+
+  const deleteButton = page.getByTestId('delete-learner-account');
+  await expect(deleteButton).toHaveText('Delete account');
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('account and training history will be permanently removed');
+    await dialog.dismiss();
+  });
+  await deleteButton.click();
+  await expect(deleteButton).toBeVisible();
+
+  page.once('dialog', async (dialog) => {
+    await dialog.accept();
+  });
+  await deleteButton.click();
+  await expect(page).toHaveURL('/en/admin/learners');
+  await expect(page.getByTestId(`learner-${learner}`)).toHaveCount(0);
+});
+
 test('Submanager sees static whole-team summaries and cannot open guessed detail doors', async ({
   page,
 }) => {

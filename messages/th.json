@@ -248,6 +248,7 @@
       "empty": "ยังไม่มีผู้เรียน",
       "readyToAssign": "พร้อมมอบหมาย",
       "deleteLearner": "ลบผู้เรียน",
+      "deleteAccount": "ลบบัญชี",
       "deleteLearnerConfirm": "ลบผู้เรียน {loginId} หรือไม่ บัญชีและประวัติการฝึกอบรมจะถูกลบถาวร",
       "backToRecord": "← บันทึกผู้เรียน",
       "appointment": {
