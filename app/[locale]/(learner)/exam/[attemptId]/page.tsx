@@ -9,6 +9,9 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { readMcqRule } from '@/lib/domain/mcq/result';
 import { AttemptBoard, type BoardQuestion } from '../../quiz/attempt-board';
 import { answerExamAction, submitExamAction } from '../actions';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'exam');
 
 export default async function ExamAttemptPage({
   params,

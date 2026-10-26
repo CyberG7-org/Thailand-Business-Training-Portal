@@ -6,6 +6,9 @@ import { listQuestions } from '@/lib/db/questions';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import type { SourceRef } from '@/lib/integrations/question-gen/passages';
 import { approveQuestionAction } from '../actions';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 const STATUSES = ['draft', 'approved', 'retired'] as const;
 

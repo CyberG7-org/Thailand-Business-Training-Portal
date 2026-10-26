@@ -5,14 +5,12 @@ const labels = {
   en: { exam: 'Quiz', interview: 'Interview', nameCard: 'Namecard' },
   th: { exam: 'แบบทดสอบ', interview: 'สัมภาษณ์', nameCard: 'นามบัตร' },
   zh: { exam: '测验', interview: '面试', nameCard: '名片' },
-  ms: { exam: 'Kuiz', interview: 'Temu duga', nameCard: 'Kad nama' },
 } as const;
 
 const retiredNames = {
   en: /Business Knowledge Quiz|(?:Bank )?Readiness Interview|Name card|name card/iu,
   th: /แบบทดสอบความรู้ธุรกิจ|สัมภาษณ์ความพร้อม/u,
   zh: /业务知识测验|银行准备面试|准备度面试/u,
-  ms: /Kuiz Pengetahuan Perniagaan|Temu Duga Kesediaan Bank/u,
 } as const;
 
 describe('stage terminology', () => {

@@ -9,6 +9,9 @@ import { listMyInterviews } from '@/lib/db/interviews';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { resolveInterviewProvider } from '@/lib/integrations/interview';
 import { StartInterviewButton } from './start-button';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'interview');
 
 const TAG = {
   ready: 'bg-gold-100 text-gold-700',

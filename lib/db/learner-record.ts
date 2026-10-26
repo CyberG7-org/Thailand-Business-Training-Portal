@@ -7,7 +7,9 @@ import {
   type ChatbotResult,
   type McqResult,
 } from '@/lib/domain/learner-record';
-import { allRows } from './chunks';
+import { allRows, inChunks } from './chunks';
+import { createSupabaseAdminClient } from './admin';
+import { submanagerUploadContext } from './submanager-upload';
 import { todayInBangkok } from '@/lib/domain/thai-date';
 import type { Database } from './database.types';
 
@@ -39,45 +41,91 @@ export type LearnerRecordRow = {
  * learners' ids, which is what made the old list refuse a few hundred learners ("URI too long").
  */
 export async function loadLearnerRecords(db: Db): Promise<LearnerRecordRow[]> {
+  return loadRows(db);
+}
+
+/** Only summary fields leave this server helper; every privileged read is team-scoped first. */
+export async function loadSubmanagerLearnerSummary(actorId: string): Promise<LearnerRecordRow[]> {
+  const { teamId } = await submanagerUploadContext(actorId);
+  const db = createSupabaseAdminClient();
+  const learners = await allRows((from, to) =>
+    db
+      .from('profiles')
+      .select('id')
+      .eq('role', 'learner')
+      .eq('manager_id', teamId)
+      .order('created_at', { ascending: false })
+      .order('id')
+      .range(from, to),
+  );
+  const rows = await inChunks(
+    learners.map((l) => l.id),
+    (ids) => loadRows(db, ids),
+  );
+  // Keep the newest-first order even when the team spans multiple filter chunks.
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return learners.flatMap((l) => (byId.has(l.id) ? [byId.get(l.id)!] : []));
+}
+
+async function loadRows(db: Db, learnerIds?: string[]): Promise<LearnerRecordRow[]> {
   const today = bangkokDateTime(todayInBangkok(), 0);
   // Each list is read in full, a page at a time (allRows), so a long one is never cut off at
   // the API's row limit; every query is ordered on a unique column for stable pages.
   const [learners, assignments, exams, sessions, bookings, rule] = await Promise.all([
     allRows((from, to) =>
-      db
-        .from('profiles')
-        .select('id, login_id')
+      (learnerIds
+        ? db.from('profiles').select('id, login_id').in('id', learnerIds)
+        : db.from('profiles').select('id, login_id')
+      )
         .eq('role', 'learner')
         .order('created_at', { ascending: false })
         .order('id')
         .range(from, to),
     ),
     allRows((from, to) =>
-      db
-        .from('user_dbd_assignments')
-        .select(
-          'user_id, dbd_records(id, company_name_en, company_name_th, directors, registered_on)',
-        )
+      (learnerIds
+        ? db
+            .from('user_dbd_assignments')
+            .select(
+              'user_id, dbd_records(id, company_name_en, company_name_th, directors, registered_on)',
+            )
+            .in('user_id', learnerIds)
+        : db
+            .from('user_dbd_assignments')
+            .select(
+              'user_id, dbd_records(id, company_name_en, company_name_th, directors, registered_on)',
+            )
+      )
         .eq('active', true)
         .order('id')
         .range(from, to),
     ),
     allRows((from, to) =>
-      db
-        .from('assessment_attempts')
-        .select('user_id, result, submitted_at')
+      (learnerIds
+        ? db
+            .from('assessment_attempts')
+            .select('user_id, result, submitted_at')
+            .in('user_id', learnerIds)
+        : db.from('assessment_attempts').select('user_id, result, submitted_at')
+      )
         .eq('kind', 'exam')
         .eq('status', 'submitted')
         .order('id')
         .range(from, to),
     ),
     allRows((from, to) =>
-      db.from('interview_sessions').select('user_id, status, verdict').order('id').range(from, to),
+      (learnerIds
+        ? db.from('interview_sessions').select('user_id, status, verdict').in('user_id', learnerIds)
+        : db.from('interview_sessions').select('user_id, status, verdict')
+      )
+        .order('id')
+        .range(from, to),
     ),
     allRows((from, to) =>
-      db
-        .from('appointments')
-        .select('user_id, starts_at')
+      (learnerIds
+        ? db.from('appointments').select('user_id, starts_at').in('user_id', learnerIds)
+        : db.from('appointments').select('user_id, starts_at')
+      )
         .eq('status', 'booked')
         .gte('starts_at', today)
         .order('starts_at')

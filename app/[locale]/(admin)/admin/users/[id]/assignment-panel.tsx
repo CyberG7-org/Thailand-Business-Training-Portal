@@ -44,7 +44,7 @@ export function AssignmentPanel({
   );
   const assignErrorKey = ASSIGN_ERROR_KEYS.find((k) => k === assignState.error);
   return (
-    <div className="staff-card grid max-w-md gap-2">
+    <div className="staff-card grid gap-2" data-testid="assignment-card">
       <h2 className="font-semibold">{t('title')}</h2>
       {current ? (
         <form action={deactAction} className="grid gap-2">

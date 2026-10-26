@@ -17,8 +17,7 @@ export type ApprovedQuestionLocale = 'th' | 'en' | 'zh';
 /** One question in all three languages, as the model returns it. */
 export type GeneratedQuestion = {
   kind: 'generic' | 'dbd_template';
-  localizations: Record<ApprovedQuestionLocale, GeneratedLocalization> &
-    Partial<Record<'ms', GeneratedLocalization>>;
+  localizations: Record<ApprovedQuestionLocale, GeneratedLocalization>;
   /** 1-based numbers of the reference passages the question is grounded in ([] when none). */
   sources?: number[];
 };

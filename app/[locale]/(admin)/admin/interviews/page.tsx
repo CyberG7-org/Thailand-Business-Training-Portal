@@ -5,12 +5,14 @@ import { requireStaff } from '@/lib/auth/session';
 import { listInterviewsForStaff } from '@/lib/db/interviews';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { displayLoginId } from '@/lib/domain/login-id';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'interviews');
 
 const DATE_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-GB',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
 
 const statusOf = (s: string) =>

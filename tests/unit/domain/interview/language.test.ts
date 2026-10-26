@@ -7,9 +7,6 @@ describe('interview language', () => {
     expect(interviewReplyLanguage('My company sells food', [], 'th')).toBe('en');
     expect(interviewReplyLanguage('公司销售食品', [], 'en')).toBe('zh');
     expect(interviewReplyLanguage('บริษัทขายอาหาร', [], 'en')).toBe('th');
-    expect(interviewReplyLanguage('Syarikat kami menjual makanan', [], 'en')).toBe('ms');
-    expect(interviewReplyLanguage('Syarikat kami menjual makanan', [], 'ms')).toBe('ms');
-    expect(interviewReplyLanguage('Our company sells food', [], 'ms')).toBe('en');
     expect(
       interviewReplyLanguage(
         '300,000',
@@ -22,6 +19,5 @@ describe('interview language', () => {
   it('uses the same approved readiness concept in each language', () => {
     expect(questionFor('monthly_revenue', 'en', '')).toContain('monthly revenue');
     expect(questionFor('monthly_revenue', 'zh', '')).toContain('每月');
-    expect(questionFor('monthly_revenue', 'ms', '')).toContain('hasil bulanan');
   });
 });

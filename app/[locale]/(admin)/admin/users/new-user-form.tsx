@@ -221,7 +221,6 @@ export function NewUserForm({
                   required
                   minLength={MIN_PASSWORD_LENGTH}
                   maxLength={MAX_PASSWORD_LENGTH}
-                  pattern="[A-Za-z0-9]{6,8}"
                   autoComplete="new-password"
                   placeholder={t('passwordPlaceholder')}
                   className="staff-input min-w-0 flex-1"

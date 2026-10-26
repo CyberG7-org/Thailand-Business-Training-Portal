@@ -4,6 +4,9 @@ import { Link } from '@/i18n/navigation';
 import { requireAdmin } from '@/lib/auth/session';
 import { conceptTitle, MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { VariantForm } from '../../variant-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 export default async function NewVariantPage({
   params,

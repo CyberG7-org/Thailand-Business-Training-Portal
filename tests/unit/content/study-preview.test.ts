@@ -45,19 +45,16 @@ describe('studyPreview', () => {
       en: ['How many shares do you hold?', '36,000 shares (90%)'],
       th: ['คุณถือหุ้นกี่หุ้น?', '36,000 หุ้น (90%)'],
       zh: ['您持有多少股？', '36,000 股（90%）'],
-      ms: ['Berapa saham yang anda pegang?', '36,000 saham (90%)'],
     } as const;
 
-    for (const locale of ['en', 'th', 'zh', 'ms'] as const) {
-      const body = renderTemplateLenient(card.localizations[locale]!.body, record, locale);
+    for (const locale of ['en', 'th', 'zh'] as const) {
+      const body = renderTemplateLenient(card.localizations[locale].body, record, locale);
       const { facts } = studyPreview(body);
       expect(facts[1], locale).toEqual({ label: labels[locale][0], value: labels[locale][1] });
       expect(body).toContain(
         `| ${
-          { en: 'Value per share', th: 'มูลค่าต่อหุ้น', zh: '每股价值', ms: 'Nilai setiap saham' }[
-            locale
-          ]
-        } | ${{ en: '100 Baht', th: '100 บาท', zh: '100 泰铢', ms: '100 baht' }[locale]} |`,
+          { en: 'Value per share', th: 'มูลค่าต่อหุ้น', zh: '每股价值' }[locale]
+        } | ${{ en: '100 Baht', th: '100 บาท', zh: '100 泰铢' }[locale]} |`,
       );
     }
   });

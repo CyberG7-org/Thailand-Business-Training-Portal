@@ -1,6 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import { requireStaff } from '@/lib/auth/session';
 import { InterviewSessionView } from '../../../../interviews/session-view';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 /**
  * One Chatbot session in full (D82): the verdict, the officer's narrative, every assessment and

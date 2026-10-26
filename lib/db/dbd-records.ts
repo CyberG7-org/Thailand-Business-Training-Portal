@@ -5,6 +5,7 @@ import type { PackGroup } from '@/lib/domain/pack/sort';
 import { type StructuredData } from '@/lib/domain/dbd-profile';
 import { getVectorStore, resolveVectorProvider, type VectorStore } from '@/lib/integrations/vector';
 import { countPages } from '@/lib/pdf/slice';
+import { initialUploadFiles } from '@/lib/domain/initial-upload';
 import { inChunks } from './chunks';
 import type { Database, Json } from './database.types';
 import { enqueueIndexJob, listChunkIds } from './dbd-index';
@@ -168,6 +169,8 @@ export async function registerDbdDocument(
     /** A profile poster is evidence for search, not the company's DBD certificate. */
     primary?: boolean;
     documentType?: 'other';
+    /** Trusted server upload capability supplies the real actor when using a service client. */
+    uploadedBy?: string;
   },
 ): Promise<string> {
   const { path } = input;
@@ -209,7 +212,7 @@ export async function registerDbdDocument(
       position,
       group,
       document_type: group === 'pack' ? (input.documentType ?? null) : group,
-      uploaded_by: auth.user?.id ?? null,
+      uploaded_by: input.uploadedBy ?? auth.user?.id ?? null,
       page_count: pageCount,
       index_status: pageCount === null ? 'failed' : indexing ? 'queued' : 'skipped',
       index_error: pageCount === null ? 'unreadable_pdf' : null,
@@ -290,14 +293,28 @@ export async function deleteDbdRecord(
 ): Promise<boolean> {
   const { data: record, error } = await db
     .from('dbd_records')
-    .select('id')
+    .select('id, structured_data')
     .eq('id', recordId)
     .maybeSingle();
   if (error) throw error;
   if (!record) return false;
 
-  for (const document of await listDbdDocuments(db, recordId)) {
+  const documents = await listDbdDocuments(db, recordId);
+  const registeredPaths = new Set(documents.map((document) => document.path));
+  for (const document of documents) {
     await removeDbdDocument(db, recordId, document.id, vector);
+  }
+  const retainedPaths = [
+    ...new Set(
+      initialUploadFiles(recordId, record.structured_data)
+        .map((file) => file.path)
+        .filter((path) => !registeredPaths.has(path)),
+    ),
+  ];
+  if (retainedPaths.length) {
+    const { error: storageError } = await db.storage.from('dbd-documents').remove(retainedPaths);
+    // Keep the record and manifest available for retry when cleanup could not finish.
+    if (storageError) throw storageError;
   }
   const { data: deleted, error: deleteError } = await db
     .from('dbd_records')

@@ -84,14 +84,6 @@ export class FakeInterview implements InterviewProvider {
         probing: '我们再回到这个问题。',
         done: '谢谢，问题已全部问完。银行将汇总您的结果。',
       },
-      ms: {
-        hello: 'Helo, saya pegawai bank. Saya akan bertanya tentang syarikat anda. ',
-        reask: 'Boleh saya tanya sekali lagi? ',
-        pasted: 'Sila jawab dengan kata-kata anda sendiri. ',
-        next: 'Terima kasih. ',
-        probing: 'Mari kembali kepada soalan ini. ',
-        done: 'Terima kasih. Semua soalan telah selesai. Pihak bank akan merumuskan keputusan anda.',
-      },
     }[language];
     const question = (concept: string, fallback: string) =>
       questionFor(concept, language, fallback);

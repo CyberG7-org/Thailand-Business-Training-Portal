@@ -1,11 +1,49 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+const request = vi.hoisted(() => ({ client: null as unknown }));
+// Replace request plumbing only: the session guard and authenticated RLS client are real.
+vi.mock('react', () => ({ cache: (fn: unknown) => fn }));
+vi.mock('@/lib/db/server', () => ({ createSupabaseServerClient: async () => request.client }));
+vi.mock('next/cache', () => ({ revalidatePath: () => {} }));
+vi.mock('next/navigation', () => ({
+  redirect: (url: string) => {
+    throw new Error(`redirect:${url}`);
+  },
+}));
+import {
+  deleteLearnerAction,
+  deleteCompanyAction,
+} from '@/app/[locale]/(admin)/admin/users/actions';
+import {
+  resetPasswordAction,
+  assignRecordAction,
+  updateContactAction,
+} from '@/app/[locale]/(admin)/admin/users/[id]/actions';
+import {
+  bookForLearnerAction,
+  cancelBookingAction,
+} from '@/app/[locale]/(admin)/admin/appointments/actions';
+import {
+  removeDocumentAction,
+  retryIndexAction,
+} from '@/app/[locale]/(admin)/admin/dbd-records/actions';
 import {
   getLearnerHeader,
   listExamAttempts,
   listInterviewSessions,
   loadLearnerRecords,
+  loadSubmanagerLearnerSummary,
 } from '@/lib/db/learner-record';
-import { adminClient, confirmRecord, deleteTeam, seedTeam, type Team } from './helpers';
+import {
+  adminClient,
+  clientFor,
+  createTestUser,
+  deleteTestUser,
+  confirmRecord,
+  deleteTeam,
+  seedTeam,
+  type Team,
+  type TestUser,
+} from './helpers';
 
 const svc = adminClient();
 
@@ -55,9 +93,11 @@ async function interviewSession(
 describe('Learner Record', () => {
   let team: Team;
   let other: Team;
+  let sub: TestUser;
   beforeAll(async () => {
     team = await seedTeam('บันทึกผู้เรียน');
     other = await seedTeam('ทีมอื่นบันทึก');
+    sub = await createTestUser('submanager', { managerId: team.manager.id });
     await confirmRecord(team.recordId, team.manager.id);
     await svc
       .from('dbd_records')
@@ -91,12 +131,92 @@ describe('Learner Record', () => {
     );
   });
   afterAll(async () => {
+    await deleteTestUser(sub.id);
     for (const t of [team, other]) {
       await svc.from('interview_sessions').delete().eq('user_id', t.learner.id);
       await svc.from('assessment_attempts').delete().eq('user_id', t.learner.id);
       await svc.from('user_dbd_assignments').delete().eq('user_id', t.learner.id);
       await deleteTeam(t);
     }
+  });
+
+  it('gives a Submanager only their parent team summary DTO while raw histories stay private', async () => {
+    const rows = await loadSubmanagerLearnerSummary(sub.id);
+    expect(rows.map((r) => r.id)).toEqual([team.learner.id]);
+    expect(rows[0]).toMatchObject({
+      mcq: 'pass',
+      chatbot: 'pass',
+      mcqAttempts: 2,
+      chatbotSessions: 3,
+    });
+    expect(Object.keys(rows[0]).sort()).toEqual([
+      'appointmentAt',
+      'chatbot',
+      'chatbotSessions',
+      'company',
+      'id',
+      'loginId',
+      'mcq',
+      'mcqAttempts',
+    ]);
+    const db = await clientFor(sub);
+    for (const table of [
+      'assessment_attempts',
+      'assessment_answers',
+      'interview_sessions',
+      'interview_turns',
+      'dbd_records',
+      'appointments',
+    ] as const) {
+      const { data, error } = await db.from(table).select('*');
+      expect(error).toBeNull();
+      expect(data, table).toEqual([]);
+    }
+    expect(await getLearnerHeader(db, team.learner.id)).toBeNull();
+  });
+
+  it('denies a suspended parent and refuses non-Submanager actors', async () => {
+    await expect(loadSubmanagerLearnerSummary(team.manager.id)).rejects.toThrow('not-allowed');
+    await svc.from('profiles').update({ status: 'disabled' }).eq('id', team.manager.id);
+    try {
+      await expect(loadSubmanagerLearnerSummary(sub.id)).rejects.toThrow('not-allowed');
+    } finally {
+      await svc.from('profiles').update({ status: 'active' }).eq('id', team.manager.id);
+    }
+  });
+
+  it('denies forged detail mutations and appointment actions through the real session guard', async () => {
+    request.client = await clientFor(sub);
+    const form = new FormData();
+    for (const [key, value] of Object.entries({
+      locale: 'en',
+      id: team.learner.id,
+      userId: team.learner.id,
+      learnerId: team.learner.id,
+      recordId: team.recordId,
+      dbdRecordId: team.recordId,
+      password: 'Changed1',
+      date: '2026-12-01',
+    }))
+      form.set(key, value);
+    for (const action of [
+      () => deleteLearnerAction({ error: null }, form),
+      () => deleteCompanyAction({ error: null }, form),
+      () => resetPasswordAction({ message: null, error: null }, form),
+      () => assignRecordAction({ message: null, error: null }, form),
+      () => updateContactAction({ message: null, error: null }, form),
+      () => bookForLearnerAction({ error: null }, form),
+      () => cancelBookingAction({ error: null }, form),
+      () => removeDocumentAction(form),
+      () => retryIndexAction(form),
+    ])
+      await expect(action()).rejects.toThrow('redirect:/en/admin');
+    const { data } = await svc
+      .from('profiles')
+      .select('status, manager_id')
+      .eq('id', team.learner.id)
+      .single();
+    expect(data).toEqual({ status: 'active', manager_id: team.manager.id });
   });
 
   it('gives the manager a row with the company registration date and results', async () => {

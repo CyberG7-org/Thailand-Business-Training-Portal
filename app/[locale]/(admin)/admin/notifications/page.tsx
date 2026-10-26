@@ -3,6 +3,9 @@ import { requireAdmin } from '@/lib/auth/session';
 import { listNotifications } from '@/lib/db/notifications';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { requeueAction } from './actions';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'notifications');
 
 export default async function NotificationsPage({
   params,

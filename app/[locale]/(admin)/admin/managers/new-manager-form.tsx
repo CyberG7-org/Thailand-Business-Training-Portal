@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState, useState } from 'react';
 import { MANAGER_PREFIX, displayLoginId } from '@/lib/domain/login-id';
+import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '@/lib/domain/password-policy';
 import { suggestLoginIdAction } from '../login-id-actions';
 import { LoginIdField } from '../login-id-field';
 import { createManagerAction, type ManagerState } from './actions';
@@ -45,7 +46,8 @@ export function NewManagerForm({ initialSuffix }: { initialSuffix: string | null
           name="password"
           type="password"
           required
-          minLength={10}
+          minLength={MIN_PASSWORD_LENGTH}
+          maxLength={MAX_PASSWORD_LENGTH}
           className="staff-input mt-1"
         />
       </label>

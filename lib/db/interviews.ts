@@ -102,15 +102,6 @@ const OFFICER_COPY: Record<
     limit: '谢谢，面试已达到消息数量上限。现在将汇总您的结果。',
     evasions: '抱歉，银行今天无法继续。谢谢。',
   },
-  ms: {
-    greeting: 'Helo, saya pegawai bank. Saya akan bertanya tentang syarikat anda. ',
-    reask: 'Boleh saya tanya sekali lagi? ',
-    next: 'Terima kasih. ',
-    complete: 'Terima kasih. Semua soalan telah selesai. Keputusan anda akan dirumuskan sekarang.',
-    limit:
-      'Terima kasih. Temu duga telah mencapai had mesej. Keputusan anda akan dirumuskan sekarang.',
-    evasions: 'Maaf, pihak bank tidak dapat meneruskan hari ini. Terima kasih.',
-  },
 };
 
 export type InterviewErrorCode =

@@ -32,24 +32,42 @@ import {
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { updateStructuredData } from '@/lib/db/derived-facts';
 import { EMPTY_INTERVIEW_PROFILE } from '@/lib/domain/bank-interview';
+import { deleteLearnerAction, type DeleteState } from '../actions';
+import { LOCALES, type AppLocale } from '@/i18n/routing';
 
 export type AccountActionState = { message: string | null; error: string | null };
 
+/** The detail page must navigate away after deleting the account it displays. */
+export async function deleteLearnerFromDetailAction(
+  state: DeleteState,
+  formData: FormData,
+): Promise<DeleteState> {
+  const locale = String(formData.get('locale') ?? 'th');
+  if (!LOCALES.includes(locale as AppLocale)) return { error: 'Invalid locale' };
+  const result = await deleteLearnerAction(state, formData);
+  if (result.error) return result;
+  redirect(`/${locale}/admin/learners`);
+}
+
 /**
- * Staff may act on an account only when it is theirs: the admin on anyone, a manager on their own
- * learners. setAccountStatus and setAccountPassword run as service role, so RLS cannot do this.
+ * Legacy account screens exclude Submanagers: only their owning Manager's dedicated lifecycle
+ * actions may manage them. Other roles retain the existing Owner/team rules.
  */
 async function requireManageable(locale: string, userId: string): Promise<CurrentUser> {
   const staff = await requireStaff(locale);
-  if (staff.role === 'admin') return staff;
   const db = await createSupabaseServerClient();
   const { data } = await db
     .from('profiles')
-    .select('id')
+    .select('id, role, manager_id')
     .eq('id', userId)
-    .eq('manager_id', staff.id)
     .maybeSingle();
-  if (!data) redirect(`/${locale}/admin/learners`);
+  if (
+    !data ||
+    data.role === 'submanager' ||
+    (staff.role !== 'admin' && data.manager_id !== staff.id)
+  ) {
+    redirect(`/${locale}/admin/learners`);
+  }
   return staff;
 }
 

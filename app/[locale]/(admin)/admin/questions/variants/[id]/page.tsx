@@ -12,6 +12,9 @@ import { SAMPLE_CONTEXT } from '@/lib/domain/mcq/sample';
 import { VARIANT_LOCALES } from '@/lib/domain/mcq/variant';
 import { VariantStatusForm } from '../../bank-forms';
 import { VariantForm } from '../../variant-form';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'questions');
 
 const LANGUAGE_LABELS = { th: 'ไทย', en: 'English', zh: '中文' } as const;
 

@@ -28,7 +28,8 @@ test('learners see passages from their own documents', async ({ page, request })
   // 2. Starter cards exist (idempotent; D81 — no staff screen for them).
   await ensureStarterCards();
 
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await page.getByTestId('staff-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 
   // 3. A learner assigned to that record sees passages from it on the identity card.
   const learner = await seedLearnerForRecord(recordId);

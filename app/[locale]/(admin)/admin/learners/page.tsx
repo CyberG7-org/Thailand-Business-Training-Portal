@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { requireStaff } from '@/lib/auth/session';
-import { loadLearnerRecords } from '@/lib/db/learner-record';
+import { requireStaffOrSubmanager } from '@/lib/auth/session';
+import { loadLearnerRecords, loadSubmanagerLearnerSummary } from '@/lib/db/learner-record';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { displayLoginId } from '@/lib/domain/login-id';
@@ -9,6 +9,9 @@ import { formatDate, type Locale } from '@/lib/domain/thai-date';
 import { ResultTag } from './result-tag';
 import { DeleteIconForm } from '../delete-icon-form';
 import { deleteLearnerAction } from '../users/actions';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'learners');
 
 /**
  * Learner Record (D82): one row per learner the caller can see — who, their company and its DBD
@@ -21,9 +24,12 @@ export default async function LearnerRecordPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const staff = await requireStaff(locale);
+  const staff = await requireStaffOrSubmanager(locale);
+  const summaryOnly = staff.role === 'submanager';
   const [rows, t] = await Promise.all([
-    loadLearnerRecords(await createSupabaseServerClient()),
+    summaryOnly
+      ? loadSubmanagerLearnerSummary(staff.id)
+      : loadLearnerRecords(await createSupabaseServerClient()),
     getTranslations('admin.learners'),
   ]);
 
@@ -52,9 +58,11 @@ export default async function LearnerRecordPage({
                 <th>{t('columns.mcq')}</th>
                 <th>{t('columns.chatbot')}</th>
                 <th>{t('columns.appointment')}</th>
-                <th>
-                  <span className="sr-only">{t('columns.actions')}</span>
-                </th>
+                {!summaryOnly && (
+                  <th>
+                    <span className="sr-only">{t('columns.actions')}</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -66,12 +74,22 @@ export default async function LearnerRecordPage({
                 return (
                   <tr key={r.id} data-testid={`learner-${r.loginId}`}>
                     <td className="whitespace-nowrap">
-                      <Link href={`/admin/users/${r.id}`} className="staff-link">
-                        {displayLoginId(r.loginId)}
-                      </Link>
+                      {summaryOnly ? (
+                        displayLoginId(r.loginId)
+                      ) : (
+                        <Link href={`/admin/users/${r.id}`} className="staff-link">
+                          {displayLoginId(r.loginId)}
+                        </Link>
+                      )}
                     </td>
                     <td data-testid={`company-${r.loginId}`}>
-                      {r.company ? (
+                      {summaryOnly ? (
+                        r.company ? (
+                          (r.company.nameEn ?? r.company.nameTh ?? '—')
+                        ) : (
+                          t('readyToAssign')
+                        )
+                      ) : r.company ? (
                         <Link href={`/admin/dbd-records/${r.company.id}`} className="staff-link">
                           {r.company.nameEn ?? r.company.nameTh ?? '—'}
                         </Link>
@@ -94,13 +112,19 @@ export default async function LearnerRecordPage({
                     <td data-testid={`mcq-${r.loginId}`}>
                       <ResultTag
                         result={r.mcq}
-                        href={r.mcqAttempts > 0 ? `/admin/learners/${r.id}/mcq` : null}
+                        href={
+                          !summaryOnly && r.mcqAttempts > 0 ? `/admin/learners/${r.id}/mcq` : null
+                        }
                       />
                     </td>
                     <td data-testid={`chatbot-${r.loginId}`}>
                       <ResultTag
                         result={r.chatbot}
-                        href={r.chatbotSessions > 0 ? `/admin/learners/${r.id}/chatbot` : null}
+                        href={
+                          !summaryOnly && r.chatbotSessions > 0
+                            ? `/admin/learners/${r.id}/chatbot`
+                            : null
+                        }
                       />
                     </td>
                     <td data-testid={`appointment-${r.loginId}`} className="whitespace-nowrap">
@@ -123,17 +147,19 @@ export default async function LearnerRecordPage({
                         '—'
                       )}
                     </td>
-                    <td className="align-middle">
-                      <DeleteIconForm
-                        action={deleteLearnerAction}
-                        id={r.id}
-                        label={t('deleteLearner')}
-                        confirmation={t('deleteLearnerConfirm', {
-                          loginId: displayLoginId(r.loginId),
-                        })}
-                        testId={`delete-learner-${r.loginId}`}
-                      />
-                    </td>
+                    {!summaryOnly && (
+                      <td className="align-middle">
+                        <DeleteIconForm
+                          action={deleteLearnerAction}
+                          id={r.id}
+                          label={t('deleteLearner')}
+                          confirmation={t('deleteLearnerConfirm', {
+                            loginId: displayLoginId(r.loginId),
+                          })}
+                          testId={`delete-learner-${r.loginId}`}
+                        />
+                      </td>
+                    )}
                   </tr>
                 );
               })}

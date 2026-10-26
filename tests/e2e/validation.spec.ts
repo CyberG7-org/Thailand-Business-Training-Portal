@@ -51,8 +51,8 @@ test('a manager sees only their own team in the queue', async ({ page }) => {
   await page.goto('/th/admin/exceptions');
   await expect(page.getByTestId(`queue-${recordId}`)).toBeVisible();
 
-  const code = await createManager(page, 'ผู้จัดการคิวข้อยกเว้น', 'Manager-Password-1!');
-  await switchTo(page, code.toLowerCase(), 'Manager-Password-1!');
+  const code = await createManager(page, 'ผู้จัดการคิวข้อยกเว้น', 'Manage1!');
+  await switchTo(page, code.toLowerCase(), 'Manage1!');
   await page.goto('/th/admin/exceptions');
   await expect(page.getByTestId(`queue-${recordId}`)).toHaveCount(0);
 });

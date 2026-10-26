@@ -47,6 +47,14 @@ export function learnerLoginId(managerLoginId: string, suffix: string): string {
   return learnerPrefix(managerLoginId) + suffix.trim().toLowerCase();
 }
 
+/** Submanagers keep their parent's complete ID, including legacy punctuation. */
+export function submanagerLoginId(managerLoginId: string, suffix: string): string {
+  if (!MANAGER_SUFFIX_PATTERN.test(suffix)) {
+    throw new Error('Use exactly 2 letters or digits for a Submanager login ID');
+  }
+  return `${managerLoginId.trim().toLowerCase()}s${suffix.toLowerCase()}`;
+}
+
 export function displayLoginId(loginId: string | null | undefined): string {
   const trimmed = loginId?.trim();
   return trimmed ? trimmed.toUpperCase() : '—';

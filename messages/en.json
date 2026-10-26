@@ -22,6 +22,39 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password"
   },
+  "profile": {
+    "menu": "Profile menu",
+    "title": "Your profile",
+    "intro": "Manage the password for your own account.",
+    "account": "Account",
+    "lastPasswordUpdate": "Last password update",
+    "lastPasswordUpdateUnknown": "Not recorded (before tracking began)",
+    "bangkokTime": "(Bangkok time)",
+    "changePassword": "Change password",
+    "logOut": "Log out",
+    "hint": "Enter your current password and choose any 6–8 characters for the new one.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "save": "Save new password",
+    "saving": "Saving…",
+    "success": "Your password has been changed.",
+    "requirements": {
+      "min": "At least 6 characters",
+      "max": "No more than 8 characters",
+      "confirmPending": "Enter the new password again to confirm it.",
+      "match": "Passwords match",
+      "noMatch": "Passwords do not match"
+    },
+    "errors": {
+      "missing": "Fill in all password fields.",
+      "tooShort": "The new password must have at least 6 characters.",
+      "tooLong": "The new password must have no more than 8 characters.",
+      "mismatch": "The new passwords do not match.",
+      "invalidCurrent": "The current password is incorrect.",
+      "updateFailed": "Could not change your password. Please try again."
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome, {name}",
@@ -100,10 +133,11 @@
   "admin": {
     "title": "Sections",
     "nav": {
-      "users": "Create learner & DBD",
+      "submanagers": "Create Submanager",
+      "users": "Create Learner & DBD",
       "questions": "Question bank",
       "interviews": "Interviews",
-      "appointments": "Bank appointments",
+      "appointments": "Bank Appointment",
       "notifications": "Notifications",
       "settings": "Policy settings",
       "managers": "Managers",
@@ -179,7 +213,7 @@
       "tabCompanies": "Companies (DBD)",
       "signIn": "Sign-in",
       "signInIntro": "The learner uses these to log in the first time.",
-      "passwordPlaceholder": "6–8 letters or numbers",
+      "passwordPlaceholder": "Any 6–8 characters",
       "generatePassword": "Generate",
       "showPassword": "Show password",
       "hidePassword": "Hide password",
@@ -204,7 +238,8 @@
       "createLearner": "Create learner",
       "takenCompany": "{name} — has a learner",
       "noFreeCompany": "Every confirmed company already has its learner — add a company in Companies (DBD).",
-      "companyTaken": "This company already has a learner. Each company is studied by one learner."
+      "companyTaken": "This company already has a learner. Each company is studied by one learner.",
+      "notCreatedByYou": "This DBD has not been created by you."
     },
     "learners": {
       "title": "Learner Record",
@@ -213,6 +248,7 @@
       "empty": "No learners yet.",
       "readyToAssign": "Ready to Assign",
       "deleteLearner": "Delete learner",
+      "deleteAccount": "Delete account",
       "deleteLearnerConfirm": "Delete learner {loginId}? Their account and training history will be permanently removed.",
       "backToRecord": "← Learner Record",
       "appointment": {
@@ -350,7 +386,8 @@
         "zip-too-large": "The zip is over 200 MB in all. Take some files out.",
         "cannot-open": "This zip cannot be opened. Make it again and try once more.",
         "missing-business-link": "Add a website or Facebook link to the company zip before creating it.",
-        "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below)."
+        "answers-required": "Cannot save: this record is confirmed, so its contact and business answers must be complete first (see below).",
+        "manager-action-needed": "The upload needs Manager action. Ask your Manager to review it."
       },
       "fields": {
         "companyNameTh": "Company name (Thai)",
@@ -743,7 +780,9 @@
         "openExceptions": "See errors"
       },
       "addDocuments": "Add documents",
-      "teamChip": "Team {code}"
+      "teamChip": "Team {code}",
+      "uploadNeedsReview": "This upload could not be completed. Review the retained source and correct the company details.",
+      "unfinishedSources": "Sources from an unfinished upload:"
     },
     "assignment": {
       "title": "Assigned company",
@@ -975,6 +1014,29 @@
       "nameNotInDbd": "Choose a name that is printed in the DBD documents.",
       "noPeople": "No director or shareholder has been read from the documents yet."
     },
+    "submanagers": {
+      "title": "Submanagers",
+      "new": "New Submanager",
+      "loginId": "Login ID",
+      "suffix": "Two-character suffix",
+      "suffixHint": "Enter exactly two English letters or digits in any combination.",
+      "displayName": "Display name",
+      "password": "Password (6–8 characters)",
+      "create": "Create Submanager",
+      "status": "Status",
+      "actions": "Actions",
+      "disable": "Suspend",
+      "enable": "Re-enable",
+      "resetPassword": "Reset password",
+      "delete": "Delete",
+      "saved": "Saved",
+      "empty": "No Submanagers yet.",
+      "archiveHint": "Deleting stops access and removes the account from this list. Its records and login ID are retained permanently.",
+      "confirmArchive": "Delete this Submanager's access? Their records and login ID will be retained.",
+      "manager": "Manager",
+      "ownerHint": "Every team's Submanagers. As Owner you can create one for any Manager's team and suspend, reset or delete any of them.",
+      "chooseManager": "Choose a Manager"
+    },
     "managers": {
       "title": "Managers",
       "new": "New manager",
@@ -1048,7 +1110,10 @@
       "bookingIntro": "Choose a ready learner, then pick or replace their date. There are no time slots.",
       "chooseLearner": "Learner",
       "choose": "Choose a learner",
-      "showCalendar": "Show calendar",
+      "confirmTitle": "Confirm bank appointment",
+      "confirmDate": "Set the bank appointment for {learner} to {date}?",
+      "confirmNo": "No, go back",
+      "confirmYes": "Yes, confirm date",
       "needsQuiz": "Pass the Quiz first",
       "needsInterview": "Pass the Interview first",
       "ownerReadOnly": "Only an owning manager books a learner's date. The Owner can review and cancel appointments here.",
@@ -1082,8 +1147,10 @@
       "system": "System"
     },
     "roles": {
+      "submanager": "Submanager",
       "admin": "Owner",
-      "manager": "Manager"
+      "manager": "Manager",
+      "learner": "Learner"
     },
     "home": {
       "intro": "Pick a section to manage. A manager sees their own team only."
@@ -1489,8 +1556,7 @@
       "unanswered": "Please answer every question first.",
       "invalid_key": "Unknown option.",
       "no_version": "Your company's training facts are not ready yet. Ask your manager to check the record.",
-      "not_ready": "The quiz is not ready for your company yet. Your manager has been told.",
-      "translation_unavailable": "Malay quiz translation is temporarily unavailable. Please try again shortly."
+      "not_ready": "The quiz is not ready for your company yet. Your manager has been told."
     },
     "meta": {
       "questions": "Questions",

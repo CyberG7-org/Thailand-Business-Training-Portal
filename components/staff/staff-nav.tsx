@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 
-type Role = 'admin' | 'manager';
+type Role = 'admin' | 'manager' | 'submanager';
 type Item = { href: string; key: string; adminOnly?: boolean };
 
 /** The sections in the order a manager reads them; the admin-only doors are marked. */
@@ -16,8 +16,14 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
       { href: '/admin/managers', key: 'managers', adminOnly: true },
       // "Create learner & DBD" (D80): a company's record pages sit under it too.
       { href: '/admin/users', key: 'users' },
+      // Managers manage their own Submanagers; the Owner can manage any team's.
+      { href: '/admin/submanagers', key: 'submanagers' },
       { href: '/admin/learners', key: 'learners' },
     ],
+  },
+  {
+    key: 'learners',
+    items: [{ href: '/admin/appointments', key: 'appointments' }],
   },
   {
     // Study cards are the company's own content, read by its learners; staff no longer edit
@@ -26,13 +32,6 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
     items: [
       { href: '/admin/exceptions', key: 'exceptions' },
       { href: '/admin/questions', key: 'questions', adminOnly: true },
-    ],
-  },
-  {
-    key: 'learners',
-    items: [
-      { href: '/admin/interviews', key: 'interviews' },
-      { href: '/admin/appointments', key: 'appointments' },
     ],
   },
   {
@@ -77,7 +76,11 @@ export function StaffNav({ role }: { role: Role }) {
     >
       <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-4 md:overflow-visible">
         {GROUPS.map((group) => {
-          const items = group.items.filter((item) => !item.adminOnly || role === 'admin');
+          const items = group.items.filter((item) => {
+            if (role === 'submanager')
+              return ['/admin/users', '/admin/learners'].includes(item.href);
+            return !item.adminOnly || role === 'admin';
+          });
           if (items.length === 0) return null;
           return (
             <li key={group.key} className="shrink-0 md:shrink">

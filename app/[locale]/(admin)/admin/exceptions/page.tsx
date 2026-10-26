@@ -3,6 +3,9 @@ import { Link } from '@/i18n/navigation';
 import { requireStaff } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { listExceptionQueue } from '@/lib/db/validation';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'exceptions');
 
 /** The exception queue (spec §5.5): RLS scopes it to the viewer's companies. */
 export default async function ExceptionsPage({ params }: { params: Promise<{ locale: string }> }) {

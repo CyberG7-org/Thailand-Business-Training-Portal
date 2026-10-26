@@ -1,5 +1,8 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
+import { getCurrentUser } from '@/lib/auth/session';
 import { IBM_Plex_Sans_Thai, Trirong } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { htmlLang, routing } from '@/i18n/routing';
@@ -19,6 +22,20 @@ const plexThai = IBM_Plex_Sans_Thai({
   variable: '--font-plex-thai',
   display: 'swap',
 });
+
+/** Tab titles read "Dashboard · Owner": each page names itself; the viewer's role follows. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale });
+  const user = await getCurrentUser();
+  const suffix = user ? t(`admin.roles.${user.role}`) : t('app.name');
+  return { title: { default: t('app.name'), template: `%s · ${suffix}` } };
+}
 
 export default async function LocaleLayout({
   children,

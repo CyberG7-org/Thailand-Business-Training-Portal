@@ -12,6 +12,9 @@ import { getAttemptWithAnswers, localizeAttemptAnswers } from '@/lib/db/assessme
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptTitle } from '@/lib/domain/concepts/registry';
 import { readMcqRule } from '@/lib/domain/mcq/result';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'exam');
 
 const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
 

@@ -4,7 +4,7 @@ import { useLocale } from 'next-intl';
 import { useEffect, useId, useRef, useState, useTransition } from 'react';
 import type { KeyboardEvent } from 'react';
 import { setPreferredLanguageAction } from '@/app/[locale]/actions';
-import { LANGUAGE_CHOICE_COOKIE, isLanguageOptionAvailable } from '@/i18n/language-choice';
+import { LANGUAGE_CHOICE_COOKIE } from '@/i18n/language-choice';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { LOCALES, type AppLocale } from '@/i18n/routing';
 
@@ -12,7 +12,6 @@ const LABELS: Record<AppLocale, string> = {
   th: 'ไทย',
   en: 'English',
   zh: '简体中文',
-  ms: 'Bahasa Melayu',
 };
 
 /** Remembered for the sign-in action; expires quickly so it never outlives the visit. */
@@ -53,7 +52,6 @@ export function LanguageToggle({
   }, [open]);
 
   function choose(next: AppLocale) {
-    if (!isLanguageOptionAvailable(next)) return;
     setOpen(false);
     triggerRef.current?.focus();
     if (next === locale) return;
@@ -144,12 +142,10 @@ export function LanguageToggle({
               type="button"
               role="menuitemradio"
               aria-checked={code === locale}
-              aria-disabled={!isLanguageOptionAvailable(code)}
-              disabled={!isLanguageOptionAvailable(code)}
               lang={code === 'zh' ? 'zh-Hans' : code}
               onClick={() => choose(code)}
               data-testid={`lang-${code}`}
-              className={`flex min-h-10 w-full items-center rounded-[8px] px-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-300 ${!isLanguageOptionAvailable(code) ? 'cursor-not-allowed text-white/45 line-through' : code === locale ? 'bg-white font-semibold text-ink-900' : 'hover:bg-white/15'}`}
+              className={`flex min-h-10 w-full items-center rounded-[8px] px-3 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-300 ${code === locale ? 'bg-white font-semibold text-ink-900' : 'hover:bg-white/15'}`}
             >
               {LABELS[code]}
             </button>

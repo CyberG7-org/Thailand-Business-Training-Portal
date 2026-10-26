@@ -5,6 +5,9 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { MANAGER_PREFIX, displayLoginId } from '@/lib/domain/login-id';
 import { NewManagerForm } from './new-manager-form';
 import { ManagerRowControls } from './row-controls';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('admin.nav', 'managers');
 
 /** Admin only: managers are the one thing a manager may not create (spec §4). */
 export default async function ManagersPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -23,6 +26,7 @@ export default async function ManagersPage({ params }: { params: Promise<{ local
   const { data: learners } = await db
     .from('profiles')
     .select('manager_id')
+    .eq('role', 'learner')
     .not('manager_id', 'is', null);
   const { data: records } = await db
     .from('dbd_records')

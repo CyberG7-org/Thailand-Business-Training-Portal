@@ -2,7 +2,7 @@ import type { AppLocale } from '@/i18n/routing';
 import type { FactTranslations } from '@/lib/domain/facts/localization';
 
 const MODEL = process.env.GEMINI_FACT_TRANSLATION_MODEL ?? 'gemini-2.5-flash';
-const LANGUAGE = { en: 'English', zh: 'Simplified Chinese', ms: 'Malay (Bahasa Melayu)' } as const;
+const LANGUAGE = { en: 'English', zh: 'Simplified Chinese' } as const;
 
 /** Translate only descriptive company answers; never send the key to the browser. */
 export class GeminiFactTranslator {

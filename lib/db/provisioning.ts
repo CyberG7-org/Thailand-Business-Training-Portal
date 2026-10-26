@@ -1,7 +1,11 @@
 import 'server-only';
 import { z } from 'zod';
 import { isValidLoginId, loginIdToEmail } from '@/lib/auth/internal-email';
-import { LEARNER_PASSWORD_PATTERN } from '@/lib/domain/new-learner';
+import {
+  isValidPassword,
+  MAX_PASSWORD_LENGTH,
+  MIN_PASSWORD_LENGTH,
+} from '@/lib/domain/password-policy';
 import type { LearnerContact } from '@/lib/domain/learner-contact';
 import {
   MANAGER_PREFIX,
@@ -10,6 +14,7 @@ import {
   learnerPrefix,
   suffixLength,
   suggestionCandidates,
+  submanagerLoginId,
   type LoginIdKind,
 } from '@/lib/domain/login-id';
 import { createSupabaseAdminClient } from './admin';
@@ -26,10 +31,11 @@ export const newAccountSchema = z.object({
     .string()
     .trim()
     .refine(isValidLoginId, 'Login ID must be 2–64 letters, digits, ".", "_" or "-"'),
-  password: z.string().min(6),
-  role: z.enum(['learner', 'manager', 'admin']).default('learner'),
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
+  role: z.enum(['learner', 'submanager', 'manager', 'admin']).default('learner'),
+  managerId: z.uuid().optional(),
   displayName: z.string().trim().max(120).optional(),
-  preferredLanguage: z.enum(['th', 'en', 'zh', 'ms']).default('th'),
+  preferredLanguage: z.enum(['th', 'en', 'zh']).default('th'),
 });
 export type NewAccountInput = z.input<typeof newAccountSchema>;
 
@@ -51,12 +57,9 @@ export async function createAccount(
   if (!parsed.success) {
     throw new ProvisioningError(parsed.error.issues[0]?.message ?? 'Invalid input', 'invalid');
   }
-  const { loginId, password, role, displayName, preferredLanguage } = parsed.data;
-  if (role === 'learner' && !LEARNER_PASSWORD_PATTERN.test(password)) {
-    throw new ProvisioningError('Password must be 6–8 letters or digits', 'invalid');
-  }
-  if (role !== 'learner' && password.length < 10) {
-    throw new ProvisioningError('Password must be at least 10 characters', 'invalid');
+  const { loginId, password, role, managerId, displayName, preferredLanguage } = parsed.data;
+  if (role === 'submanager' && !managerId) {
+    throw new ProvisioningError('A Submanager requires a parent Manager', 'no-manager');
   }
   const normalizedLoginId = loginId.toLowerCase();
 
@@ -70,7 +73,7 @@ export async function createAccount(
       preferred_language: preferredLanguage,
       role,
     },
-    app_metadata: { role },
+    app_metadata: { role, ...(role === 'submanager' ? { manager_id: managerId } : {}) },
   });
   if (error || !data.user) {
     const message = error?.message ?? 'createUser returned no user';
@@ -87,28 +90,19 @@ export async function createAccount(
 type NewPerson = {
   password: string;
   displayName?: string;
-  preferredLanguage?: 'th' | 'en' | 'zh' | 'ms';
+  preferredLanguage?: 'th' | 'en' | 'zh';
 };
 
 /** The auth call behind a code; tests substitute it to make the auth service refuse. */
 type Deps = { createAccount: typeof createAccount };
 
-const newPersonSchema = newAccountSchema.omit({ loginId: true, role: true });
+const newPersonSchema = newAccountSchema.omit({ loginId: true, role: true, managerId: true });
 
 /** Everything the form can get wrong is checked before the auth service is asked. */
-function parsePerson(
-  input: NewPerson,
-  role: 'manager' | 'learner',
-): z.infer<typeof newPersonSchema> {
+function parsePerson(input: NewPerson): z.infer<typeof newPersonSchema> {
   const parsed = newPersonSchema.safeParse(input);
   if (!parsed.success) {
     throw new ProvisioningError(parsed.error.issues[0]?.message ?? 'Invalid input', 'invalid');
-  }
-  if (role === 'learner' && !LEARNER_PASSWORD_PATTERN.test(parsed.data.password)) {
-    throw new ProvisioningError('Password must be 6–8 letters or digits', 'invalid');
-  }
-  if (role === 'manager' && parsed.data.password.length < 10) {
-    throw new ProvisioningError('Password must be at least 10 characters', 'invalid');
   }
   return parsed.data;
 }
@@ -225,7 +219,10 @@ export async function suggestSuffix(
  */
 async function createUnderCode(
   loginId: string,
-  person: z.infer<typeof newPersonSchema> & { role: 'manager' | 'learner' },
+  person: z.infer<typeof newPersonSchema> & {
+    role: 'manager' | 'learner' | 'submanager';
+    managerId?: string;
+  },
   deps: Deps,
 ): Promise<{ id: string; loginId: string }> {
   if (await isLoginIdTaken(loginId)) throw new ProvisioningError(LOGIN_ID_TAKEN, 'duplicate');
@@ -245,7 +242,7 @@ export async function createManagerAccount(
   input: NewPerson & { suffix: string },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
-  const person = parsePerson(input, 'manager');
+  const person = parsePerson(input);
   const suffix = parseSuffix('manager', input.suffix);
   return createUnderCode(MANAGER_PREFIX + suffix, { ...person, role: 'manager' }, deps);
 }
@@ -270,7 +267,7 @@ export async function createLearnerAccount(
   input: NewPerson & { managerId: string; suffix: string; contact?: LearnerContact },
   deps: Deps = { createAccount },
 ): Promise<{ id: string; loginId: string }> {
-  const person = parsePerson(input, 'learner');
+  const person = parsePerson(input);
   const suffix = parseSuffix('learner', input.suffix);
   const prefix = await learnerPrefixOf(input.managerId);
   const created = await createUnderCode(prefix + suffix, { ...person, role: 'learner' }, deps);
@@ -313,31 +310,50 @@ export async function deleteLearnerAccount(actorId: string, learnerId: string): 
   if (error) throw error;
 }
 
-export async function setAccountPassword(userId: string, newPassword: string): Promise<void> {
+/** Legacy account mutations must never become another entry point for Submanager lifecycle. */
+async function legacyAccount(userId: string, expectedRole?: 'manager'): Promise<void> {
   const admin = createSupabaseAdminClient();
   const { data: profile, error: profileError } = await admin
     .from('profiles')
     .select('role')
     .eq('id', userId)
     .maybeSingle();
-  if (profileError || !profile) throw new ProvisioningError('Account not found', 'invalid');
-  if (profile.role === 'learner' && !LEARNER_PASSWORD_PATTERN.test(newPassword)) {
-    throw new ProvisioningError('Password must be 6–8 letters or digits', 'invalid');
+  if (
+    profileError ||
+    !profile ||
+    profile.role === 'submanager' ||
+    (expectedRole && profile.role !== expectedRole)
+  ) {
+    throw new ProvisioningError('Account not found', 'invalid');
   }
-  if (profile.role !== 'learner' && newPassword.length < 10) {
-    throw new ProvisioningError('Password must be at least 10 characters', 'invalid');
+}
+
+async function changeAccountPassword(userId: string, newPassword: string): Promise<void> {
+  if (!isValidPassword(newPassword)) {
+    throw new ProvisioningError('Password must be 6–8 characters', 'invalid');
   }
-  const { error } = await admin.auth.admin.updateUserById(userId, {
+  const { error } = await createSupabaseAdminClient().auth.admin.updateUserById(userId, {
     password: newPassword,
   });
   if (error) throw new ProvisioningError(error.message, 'unknown');
+}
+
+export async function setAccountPassword(
+  userId: string,
+  newPassword: string,
+  expectedRole?: 'manager',
+): Promise<void> {
+  await legacyAccount(userId, expectedRole);
+  await changeAccountPassword(userId, newPassword);
 }
 
 /** Disabling bans the auth user (blocks sign-in and token refresh) and marks the profile. */
 export async function setAccountStatus(
   userId: string,
   status: 'active' | 'disabled',
+  expectedRole?: 'manager',
 ): Promise<void> {
+  await legacyAccount(userId, expectedRole);
   const admin = createSupabaseAdminClient();
   const { error: authError } = await admin.auth.admin.updateUserById(userId, {
     ban_duration: status === 'disabled' ? '876600h' : 'none',
@@ -345,4 +361,119 @@ export async function setAccountStatus(
   if (authError) throw new ProvisioningError(authError.message, 'unknown');
   const { error } = await admin.from('profiles').update({ status }).eq('id', userId);
   if (error) throw new ProvisioningError(error.message, 'unknown');
+}
+
+/** Resolve an active exact-role Manager before any privileged account mutation. */
+async function submanagerParent(managerId: string) {
+  const { data, error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .select('id, login_id, role, status, archived_at')
+    .eq('id', managerId)
+    .maybeSingle();
+  if (error || !data || data.role !== 'manager' || data.status !== 'active' || data.archived_at) {
+    throw new ProvisioningError('An active Manager is required', 'no-manager');
+  }
+  return data;
+}
+
+/** The Owner may manage any team's Submanager; a Manager only their own. */
+async function ownedSubmanager(actorId: string, submanagerId: string) {
+  const db = createSupabaseAdminClient();
+  const { data: actor } = await db
+    .from('profiles')
+    .select('role, status')
+    .eq('id', actorId)
+    .maybeSingle();
+  const owner = actor?.role === 'admin' && actor.status === 'active';
+  if (!owner) await submanagerParent(actorId);
+  const { data, error } = await db
+    .from('profiles')
+    .select('id, role, manager_id, archived_at')
+    .eq('id', submanagerId)
+    .maybeSingle();
+  if (
+    error ||
+    !data ||
+    data.role !== 'submanager' ||
+    (!owner && data.manager_id !== actorId) ||
+    data.archived_at
+  ) {
+    throw new ProvisioningError('Submanager not found', 'invalid');
+  }
+  return data;
+}
+
+export async function createSubmanagerAccount(
+  input: NewPerson & { managerId: string; suffix: string },
+): Promise<{ id: string; loginId: string; managerId: string }> {
+  const person = parsePerson(input);
+  const manager = await submanagerParent(input.managerId);
+  let loginId: string;
+  try {
+    loginId = submanagerLoginId(manager.login_id, input.suffix);
+  } catch {
+    throw new ProvisioningError(
+      'Use exactly 2 letters or digits for a Submanager login ID',
+      'invalid-login-id',
+    );
+  }
+  const created = await createUnderCode(
+    loginId,
+    { ...person, role: 'submanager', managerId: manager.id },
+    { createAccount },
+  );
+  return { id: created.id, loginId: created.loginId, managerId: manager.id };
+}
+
+export async function setSubmanagerStatus(
+  actorId: string,
+  submanagerId: string,
+  status: 'active' | 'disabled',
+): Promise<void> {
+  await ownedSubmanager(actorId, submanagerId);
+  if (status !== 'active' && status !== 'disabled')
+    throw new ProvisioningError('Invalid status', 'invalid');
+  // The database gate cannot reactivate an archived identity, including a concurrent archive.
+  const { error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .update({ status })
+    .eq('id', submanagerId)
+    .is('archived_at', null)
+    .select('id')
+    .single();
+  if (error) throw new ProvisioningError('Submanager not found', 'invalid');
+  const { error: authError } = await createSupabaseAdminClient().auth.admin.updateUserById(
+    submanagerId,
+    {
+      ban_duration: status === 'disabled' ? '876600h' : 'none',
+    },
+  );
+  if (authError) throw new ProvisioningError(authError.message, 'unknown');
+}
+
+export async function resetSubmanagerPassword(
+  actorId: string,
+  submanagerId: string,
+  password: string,
+): Promise<void> {
+  await ownedSubmanager(actorId, submanagerId);
+  await changeAccountPassword(submanagerId, password);
+}
+
+/** Identity is retained because DBD creator references and the login code are permanent. */
+export async function archiveSubmanager(actorId: string, submanagerId: string): Promise<void> {
+  await ownedSubmanager(actorId, submanagerId);
+  // Persist the access gate first; a failed auth ban must never leave a stale session usable.
+  const { error } = await createSupabaseAdminClient()
+    .from('profiles')
+    .update({ status: 'disabled', archived_at: new Date().toISOString() })
+    .eq('id', submanagerId)
+    .select('id')
+    .single();
+  if (error) throw new ProvisioningError(error.message, 'unknown');
+  const { error: authError } = await createSupabaseAdminClient().auth.admin.updateUserById(
+    submanagerId,
+    { ban_duration: '876600h' },
+  );
+  if (authError) throw new ProvisioningError(authError.message, 'unknown');
 }

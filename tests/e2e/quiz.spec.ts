@@ -47,7 +47,8 @@ test('admin authors a personalized question; learner takes the quiz with instant
   await page.locator('select[name="status"]').selectOption('approved');
   await page.getByTestId('set-status').click();
   await expect(page.getByTestId('question-status')).toHaveText('approved');
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await page.getByTestId('staff-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 
   const company = 'บริษัท ควิซทดสอบ จำกัด';
   const learner = await seedLearnerWithCompany(company, '2026-07-13');

@@ -6,9 +6,8 @@ const NUMBER_LOCALES: Record<Locale, string> = {
   th: 'th-TH',
   en: 'en-US',
   zh: 'zh-CN',
-  ms: 'ms-MY',
 };
-const CURRENCY: Record<Locale, string> = { th: 'บาท', en: 'THB', zh: '泰铢', ms: 'THB' };
+const CURRENCY: Record<Locale, string> = { th: 'บาท', en: 'THB', zh: '泰铢' };
 
 export function formatNumber(n: number, locale: Locale): string {
   return n.toLocaleString(NUMBER_LOCALES[locale], { maximumFractionDigits: 2 });
@@ -24,7 +23,7 @@ export function formatQuantity(kind: TokenKind, n: number, locale: Locale): stri
 /** Thai and English show their own name; Chinese has none, so it shows both (plan decision 9). */
 export function geoLabel(place: GeoName, locale: Locale): string {
   if (locale === 'th') return place.th;
-  if (locale === 'en' || locale === 'ms') return place.en;
+  if (locale === 'en') return place.en;
   return `${place.th} (${place.en})`;
 }
 

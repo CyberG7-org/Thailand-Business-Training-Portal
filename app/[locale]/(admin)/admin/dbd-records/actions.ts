@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { redirect } from 'next/navigation';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaff, requireStaffOrSubmanager } from '@/lib/auth/session';
+import {
+  createSubmanagerUpload,
+  saveInitialUploadManifest,
+  claimInitialUpload,
+  markUploadForManager,
+} from '@/lib/db/submanager-upload';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import {
@@ -317,7 +323,8 @@ export async function prepareUploadsAction(input: {
   links?: PackLinks;
   files: (DocumentFileMeta & { group?: PackGroup })[];
 }): Promise<PrepareUploadsResult> {
-  const admin = await requireStaff(input.locale);
+  const admin = await requireStaffOrSubmanager(input.locale);
+  if (admin.role === 'submanager' && input.id) return { ok: false, error: 'not-allowed' };
   const problem = checkDocumentFiles(input.files);
   if (problem) return { ok: false, error: problem };
   if (!input.id) {
@@ -326,10 +333,22 @@ export async function prepareUploadsAction(input: {
       return { ok: false, error: 'missing-business-link' };
     }
   }
-  const db = await createSupabaseServerClient();
+  const db =
+    admin.role === 'submanager' ? createSupabaseAdminClient() : await createSupabaseServerClient();
   try {
     const id =
-      input.id ?? (await createDbdRecord(db, EMPTY_INPUT, admin.id, undefined, teamOf(admin))).id;
+      input.id ??
+      (admin.role === 'submanager'
+        ? (await createSubmanagerUpload(admin.id)).id
+        : (
+            await createDbdRecord(
+              db,
+              EMPTY_INPUT,
+              admin.id,
+              undefined,
+              teamOf(admin as { id: string; role: 'manager' | 'admin' }),
+            )
+          ).id);
     if (input.id) {
       const record = await getDbdRecord(db, id);
       if (!record) return { ok: false, error: 'not-found' };
@@ -339,8 +358,16 @@ export async function prepareUploadsAction(input: {
       }
     }
     const uploads: PreparedUpload[] = [];
-    for (const file of input.files.filter((f) => f.size > 0)) {
-      const path = newDocumentPath(id);
+    const manifest = input.files
+      .filter((f) => f.size > 0)
+      .map((file) => ({
+        path: newDocumentPath(id),
+        name: file.name,
+        group: packGroupSchema.parse(file.group ?? 'pack'),
+      }));
+    if (admin.role === 'submanager') await saveInitialUploadManifest(admin.id, id, manifest);
+    for (const file of manifest) {
+      const path = file.path;
       const { data, error } = await db.storage.from('dbd-documents').createSignedUploadUrl(path);
       if (error || !data) throw new Error(error?.message ?? `no upload URL for ${file.name}`);
       uploads.push({ path, token: data.token });
@@ -365,9 +392,22 @@ export async function registerUploadsAction(input: {
   redirect?: boolean;
 }): Promise<ToolState & { redirectTo?: string }> {
   const { locale, id } = input;
-  await requireStaff(locale);
-  const db = await createSupabaseServerClient();
+  const actor = await requireStaffOrSubmanager(locale);
+  let db = await createSupabaseServerClient();
+  let claimed = false;
   try {
+    if (actor.role === 'submanager') {
+      db = await claimInitialUpload(
+        actor.id,
+        id,
+        input.uploads.map((u) => ({
+          path: u.path,
+          name: u.name,
+          group: packGroupSchema.parse(u.group ?? 'pack'),
+        })),
+      );
+      claimed = true;
+    }
     const record = await getDbdRecord(db, id);
     if (!record) return { ok: false, error: 'not-found' };
     const groups = input.uploads.map((upload) => packGroupSchema.parse(upload.group ?? 'pack'));
@@ -380,6 +420,7 @@ export async function registerUploadsAction(input: {
         path: upload.path,
         originalName: upload.name,
         group: packGroupSchema.parse(upload.group ?? 'pack'),
+        ...(actor.role === 'submanager' ? { uploadedBy: actor.id } : {}),
       });
     }
     const links = packLinksSchema.parse(input.links ?? {});
@@ -394,12 +435,29 @@ export async function registerUploadsAction(input: {
       if (error) throw error;
     }
   } catch (e) {
+    if (claimed) {
+      await markUploadForManager(id);
+      return {
+        ok: false,
+        error: 'manager-action-needed',
+      };
+    }
     return { ok: false, error: e instanceof DocumentUploadError ? e.code : errorMessage(e) };
   }
   const outcome = input.uploads.some((u) => (u.group ?? 'pack') === 'pack')
     ? await queueReading(db, id)
     : { extraction: 'skipped' as const, applied: [] };
   revalidatePath(`/${locale}/admin/dbd-records/${id}`);
+  if (actor.role === 'submanager') {
+    if (outcome.extraction === 'failed') await markUploadForManager(id);
+    revalidatePath(`/${locale}/admin/users`);
+    return {
+      ok: true,
+      error: null,
+      ...outcome,
+      ...(input.redirect ? { redirectTo: `/${locale}/admin/users` } : {}),
+    };
+  }
   if (input.redirect) {
     const query = new URLSearchParams({ extraction: outcome.extraction ?? 'skipped' });
     if (outcome.extractionError) query.set('extractionError', outcome.extractionError);

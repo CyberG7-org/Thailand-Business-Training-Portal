@@ -153,6 +153,12 @@ export async function seedLearnerWithCompany(
       .eq('id', user.user.id);
     if (phoneError) throw phoneError;
   }
+  const { data: owner, error: ownerError } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('login_id', E2E_ADMIN.loginId)
+    .single();
+  if (ownerError || !owner) throw ownerError ?? new Error('E2E owner missing');
   const { data: record, error: recordError } = await admin
     .from('dbd_records')
     .insert({
@@ -174,7 +180,7 @@ export async function seedLearnerWithCompany(
         },
       },
       extraction_status: 'confirmed',
-      confirmed_by: user.user.id,
+      confirmed_by: owner.id,
       confirmed_at: new Date().toISOString(),
     })
     .select()

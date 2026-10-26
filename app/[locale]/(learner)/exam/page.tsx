@@ -11,6 +11,9 @@ import { prepareQuizFactsAfter } from '@/lib/db/quiz-preparation';
 import { MCQ_CONCEPTS } from '@/lib/domain/concepts/registry';
 import { mcqRule } from '@/lib/domain/mcq/result';
 import { StartExamButton } from './start-button';
+import { pageTitle } from '@/i18n/page-title';
+
+export const generateMetadata = pageTitle('stages.titles', 'exam');
 
 /** How each result is worded and coloured: gold is for a pass alone. */
 const RESULT_CHIP = {
