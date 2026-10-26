@@ -13,15 +13,14 @@ export const generateMetadata = pageTitle('dashboard', 'title');
 const STAFF_LINKS = [
   // "Create learner & DBD" holds the companies list too (D80).
   ['/admin/users', 'users'],
+  ['/admin/submanagers', 'submanagers'],
   ['/admin/learners', 'learners'],
-  ['/admin/exceptions', 'exceptions'],
-  ['/admin/interviews', 'interviews'],
   ['/admin/appointments', 'appointments'],
+  ['/admin/exceptions', 'exceptions'],
 ] as const;
 
 const ADMIN_LINKS = [
   ['/admin/managers', 'managers'],
-  ['/admin/submanagers', 'submanagers'],
   // Assessment content is the Owner's (D76).
   ['/admin/questions', 'questions'],
   ['/admin/notifications', 'notifications'],

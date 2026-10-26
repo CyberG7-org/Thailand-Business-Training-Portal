@@ -8,6 +8,7 @@ import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { formatDate, todayInBangkok } from '@/lib/domain/thai-date';
 import { cancelBookingAction } from './actions';
+import { LearnerPicker } from './learner-picker';
 import { MonthCalendar } from './month-calendar';
 import { StaffForm } from './staff-form';
 import { pageTitle } from '@/i18n/page-title';
@@ -60,49 +61,29 @@ export default async function AppointmentsPage({
             </h2>
             <p className="mt-1 text-sm text-ink-700">{t('bookingIntro')}</p>
           </div>
-          <form method="get" className="flex flex-wrap items-end gap-2">
-            <label className="grid min-w-64 flex-1 gap-1 text-sm font-medium text-ink-900">
-              {t('chooseLearner')}
-              <select
-                name="learner"
-                data-testid="appointment-learner"
-                defaultValue={selected?.id ?? ''}
-                required
-                className="staff-input"
-              >
-                <option value="">{t('choose')}</option>
-                {learners.map((learner) => {
-                  const ready = learner.mcq === 'pass' && learner.chatbot === 'pass';
-                  return (
-                    <option key={learner.id} value={learner.id} disabled={!ready}>
-                      {displayLoginId(learner.loginId)} · {learner.company?.nameTh ?? '—'}
-                      {!ready
-                        ? ` · ${learner.mcq !== 'pass' ? t('needsQuiz') : t('needsInterview')}`
-                        : ''}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
-            <input type="hidden" name="month" value={month} />
-            <button type="submit" className="staff-btn-primary">
-              {t('showCalendar')}
-            </button>
-          </form>
+          <LearnerPicker
+            selectedId={selected?.id ?? ''}
+            month={month}
+            options={learners.map((learner) => ({
+              id: learner.id,
+              label: `${displayLoginId(learner.loginId)} · ${learner.company?.nameTh ?? '—'}`,
+              ready: learner.mcq === 'pass' && learner.chatbot === 'pass',
+              reason: learner.mcq !== 'pass' ? t('needsQuiz') : t('needsInterview'),
+            }))}
+          />
           {selected && !selectedReady && (
             <p className="rounded-control bg-warn-50 px-4 py-3 text-sm font-medium text-warn-700">
               {selected.mcq !== 'pass' ? t('needsQuiz') : t('needsInterview')}
             </p>
           )}
-          {selected && selectedReady && (
-            <MonthCalendar
-              learnerId={selected.id}
-              month={month}
-              today={today}
-              selectedDate={selectedDate}
-              locale={loc}
-            />
-          )}
+          <MonthCalendar
+            learnerId={selectedReady ? selected.id : null}
+            learnerName={selected ? displayLoginId(selected.loginId) : ''}
+            month={month}
+            today={today}
+            selectedDate={selectedDate}
+            locale={loc}
+          />
         </section>
       ) : (
         <p className="rounded-control bg-ink-50 px-4 py-3 text-sm text-ink-700">

@@ -133,7 +133,7 @@
   "admin": {
     "title": "栏目",
     "nav": {
-      "submanagers": "副经理",
+      "submanagers": "创建副经理",
       "users": "创建学员与DBD",
       "questions": "题库",
       "interviews": "面试",
@@ -1109,7 +1109,10 @@
       "bookingIntro": "选择已准备好的学员，然后选择或更改日期；无需选择时段。",
       "chooseLearner": "学员",
       "choose": "选择学员",
-      "showCalendar": "显示日历",
+      "confirmTitle": "确认银行预约",
+      "confirmDate": "确定将{learner}的银行预约日期设为{date}吗？",
+      "confirmNo": "否，返回",
+      "confirmYes": "是，确认日期",
       "needsQuiz": "请先通过测验",
       "needsInterview": "请先通过面试",
       "ownerReadOnly": "只有负责该学员的经理可以预约日期。所有者可在此查看和取消预约。",

@@ -38,12 +38,12 @@ test('the admin sees every section in the sidebar with the current one marked', 
   await expect(nav).toBeVisible();
   // The team's sections lead with Managers: a team is started before anything goes in it.
   await expect(nav.getByRole('link').first()).toHaveText('ผู้จัดการ');
-  // The Owner sees every team's Submanagers read-only, next to the Managers.
-  await expect(nav.getByRole('link').nth(1)).toHaveText('ผู้ช่วยผู้จัดการ');
-  await expect(nav.getByRole('link').nth(2)).toHaveText('สร้างผู้เรียนและ DBD');
+  await expect(nav.getByRole('link').nth(1)).toHaveText('สร้างผู้เรียนและ DBD');
+  await expect(nav.getByRole('link').nth(2)).toHaveText('สร้างผู้ช่วยผู้จัดการ');
   await expect(nav.getByRole('link').nth(3)).toHaveText('บันทึกผู้เรียน');
   for (const label of [
     'สร้างผู้เรียนและ DBD',
+    'สร้างผู้ช่วยผู้จัดการ',
     'บันทึกผู้เรียน',
     'ผู้จัดการ',
     'คลังคำถาม',
@@ -54,6 +54,7 @@ test('the admin sees every section in the sidebar with the current one marked', 
   }
   // DBD records left the sidebar: their list is on "Create learner & DBD" (D80).
   await expect(nav).not.toContainText('ข้อมูล DBD');
+  await expect(nav).not.toContainText('สัมภาษณ์');
   await expect(nav.locator('[aria-current="page"]')).toHaveText(/สร้างผู้เรียนและ DBD/);
   // The old address forwards there.
   await page.goto('/th/admin/dbd-records');
@@ -78,14 +79,24 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await expect(header).toContainText('ผู้จัดการ');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
-  await expect(nav.getByRole('link').first()).toHaveText('ผู้ช่วยผู้จัดการ');
-  await expect(nav.getByRole('link', { name: 'ผู้ช่วยผู้จัดการ', exact: true })).toHaveAttribute(
+  await expect(nav.getByRole('link', { name: 'สร้างผู้ช่วยผู้จัดการ', exact: true })).toHaveAttribute(
     'href',
     '/th/admin/submanagers',
   );
-  await expect(nav).toContainText('สร้างผู้เรียนและ DBD');
-  await expect(nav).toContainText('บันทึกผู้เรียน');
-  await expect(nav).toContainText('สัมภาษณ์');
+  await expect(nav.getByRole('link')).toHaveText([
+    'สร้างผู้เรียนและ DBD',
+    'สร้างผู้ช่วยผู้จัดการ',
+    'บันทึกผู้เรียน',
+    'นัดหมายธนาคาร',
+    'ข้อผิดพลาด',
+  ]);
+  await expect(page.getByTestId('admin-nav').getByRole('link')).toHaveText([
+    'สร้างผู้เรียนและ DBD',
+    'สร้างผู้ช่วยผู้จัดการ',
+    'บันทึกผู้เรียน',
+    'นัดหมายธนาคาร',
+    'ข้อผิดพลาด',
+  ]);
   await expect(nav).not.toContainText('ตั้งค่านโยบาย');
   await expect(nav.getByRole('link', { name: 'ผู้จัดการ', exact: true })).toHaveCount(0);
   await expect(nav).not.toContainText('การแจ้งเตือน');

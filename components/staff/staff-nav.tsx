@@ -14,12 +14,16 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
       // The owner starts a team before anything goes in it, so Managers leads; a manager does
       // not see it and starts at "Create learner & DBD".
       { href: '/admin/managers', key: 'managers', adminOnly: true },
-      // Managers manage their own; the Owner sees every team's list read-only.
-      { href: '/admin/submanagers', key: 'submanagers' },
       // "Create learner & DBD" (D80): a company's record pages sit under it too.
       { href: '/admin/users', key: 'users' },
+      // Managers manage their own Submanagers; the Owner can manage any team's.
+      { href: '/admin/submanagers', key: 'submanagers' },
       { href: '/admin/learners', key: 'learners' },
     ],
+  },
+  {
+    key: 'learners',
+    items: [{ href: '/admin/appointments', key: 'appointments' }],
   },
   {
     // Study cards are the company's own content, read by its learners; staff no longer edit
@@ -28,13 +32,6 @@ const GROUPS: { key: 'team' | 'content' | 'learners' | 'system'; items: Item[] }
     items: [
       { href: '/admin/exceptions', key: 'exceptions' },
       { href: '/admin/questions', key: 'questions', adminOnly: true },
-    ],
-  },
-  {
-    key: 'learners',
-    items: [
-      { href: '/admin/interviews', key: 'interviews' },
-      { href: '/admin/appointments', key: 'appointments' },
     ],
   },
   {

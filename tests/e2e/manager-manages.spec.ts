@@ -54,10 +54,10 @@ test('the Owner creates and manages any team’s Submanagers', async ({ page }) 
   const manager = await createManager(page, 'Owner view parent', MANAGER_PASSWORD);
   // The Owner's home has the door too.
   await page.goto('/en/admin');
-  await page.getByTestId('admin-nav').getByRole('link', { name: 'Submanagers' }).click();
+  await page.getByTestId('admin-nav').getByRole('link', { name: 'Create Submanager' }).click();
   await expect(page).toHaveURL(/\/en\/admin\/submanagers$/);
   await expect(
-    page.getByTestId('staff-nav').getByRole('link', { name: 'Submanagers', exact: true }),
+    page.getByTestId('staff-nav').getByRole('link', { name: 'Create Submanager', exact: true }),
   ).toHaveAttribute('aria-current', 'page');
 
   // The Owner picks the team; the login ID follows that Manager's ID.

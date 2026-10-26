@@ -23,21 +23,35 @@ test('the owning manager books and replaces a ready learner date; the learner on
 
   await switchTo(page, manager.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/appointments');
+  await expect(page.getByTestId('appointment-month')).toBeVisible();
+  await expect(page.getByTestId('month-next')).toBeDisabled();
+  await expect(page.locator('button[data-testid^="appointment-date-"]').first()).toBeDisabled();
   await selectLearner(page, learner);
-  await page.getByRole('button', { name: 'แสดงปฏิทิน' }).click();
+  await expect(page.getByTestId('month-next')).toBeEnabled();
   await page.getByTestId('month-next').click();
-  const first = page.locator('[data-testid^="appointment-date-"]:not([disabled])').nth(5);
+  const first = page.locator('button[data-testid^="appointment-date-"]:not([disabled])').nth(5);
   const firstTestId = await first.getAttribute('data-testid');
   await first.click();
+  const confirmation = page.getByTestId('appointment-confirmation');
+  await expect(confirmation).toBeVisible();
+  await expect(confirmation).toContainText(learner.toUpperCase());
+  await expect(page.locator('[data-testid^="admin-appointment-"]')).toHaveCount(0);
+  await confirmation.getByRole('button', { name: 'ไม่ กลับไป' }).click();
+  await expect(confirmation).not.toBeVisible();
+  await expect(page.locator('[data-testid^="admin-appointment-"]')).toHaveCount(0);
+  await first.click();
+  await confirmation.getByRole('button', { name: 'ใช่ ยืนยันวัน' }).click();
   await expect(page.getByTestId('appointment-saved')).toBeVisible();
   await expect(page.locator('[data-testid^="admin-appointment-"]').first()).toContainText(
     'บริษัท เลือกวัน จำกัด',
   );
 
-  const second = page.locator('[data-testid^="appointment-date-"]:not([disabled])').nth(9);
+  const second = page.locator('button[data-testid^="appointment-date-"]:not([disabled])').nth(9);
   const secondTestId = await second.getAttribute('data-testid');
   expect(secondTestId).not.toBe(firstTestId);
   await second.click();
+  await expect(confirmation).toBeVisible();
+  await confirmation.getByRole('button', { name: 'ใช่ ยืนยันวัน' }).click();
   await expect(page.getByTestId(secondTestId!)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('[data-testid^="admin-appointment-"]')).toHaveCount(1);
 
@@ -55,8 +69,8 @@ test('the manager month calendar is a 42-cell month view and fits a phone', asyn
   await loginAs(page, manager.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/appointments');
   await selectLearner(page, learner);
-  await page.getByRole('button', { name: 'แสดงปฏิทิน' }).click();
   await expect(page.getByTestId('appointment-month')).toBeVisible();
+  await expect(page.getByTestId('month-next')).toBeEnabled();
   await expect(page.locator('[data-calendar-cell]')).toHaveCount(42);
   await page.getByTestId('month-next').click();
   await expect(page).toHaveURL(/month=\d{4}-\d{2}/);
