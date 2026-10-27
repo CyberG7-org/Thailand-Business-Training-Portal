@@ -6,14 +6,15 @@ const labels = {
   th: { exam: 'แบบทดสอบ', interview: 'สัมภาษณ์', nameCard: 'นามบัตร' },
   zh: { exam: '测验', interview: '面试', nameCard: '名片' },
   ms: { exam: 'Kuiz', interview: 'Temu Duga', nameCard: 'Kad Nama' },
-  ta: { exam: 'வினாடி வினா', interview: 'நேர்காணல்', nameCard: 'பெயர் அட்டை' },
+  ta: { exam: 'புதிர்', interview: 'நேர்காணல்', nameCard: 'பெயர் அட்டை' },
 } as const;
 
-const retiredNames = {
+const retiredNames: Partial<Record<keyof typeof labels, RegExp>> = {
   en: /Business Knowledge Quiz|(?:Bank )?Readiness Interview|Name card|name card/iu,
   th: /แบบทดสอบความรู้ธุรกิจ|สัมภาษณ์ความพร้อม/u,
   zh: /业务知识测验|银行准备面试|准备度面试/u,
-} as const;
+  ta: /வினாடி வினா/u,
+};
 
 describe('stage terminology', () => {
   for (const locale of Object.keys(labels) as (keyof typeof labels)[]) {
@@ -30,9 +31,8 @@ describe('stage terminology', () => {
       expect(messages.exam.title).toBe(expected.exam);
       expect(messages.interview.title).toBe(expected.interview);
       if (messages.nameCard?.title) expect(messages.nameCard.title).toBe(expected.nameCard);
-      if (locale === 'en' || locale === 'th' || locale === 'zh') {
-        expect(source).not.toMatch(retiredNames[locale]);
-      }
+      const retired = retiredNames[locale];
+      if (retired) expect(source).not.toMatch(retired);
     });
   }
 });
