@@ -6,11 +6,16 @@ import remarkGfm from 'remark-gfm';
 import { CheckIcon } from '@/components/icons';
 import { ReadAloudPlayer } from '@/components/read-aloud-player';
 import { LearnerShell } from '@/components/shell/learner-shell';
+import { StudyLanguageLinks } from '@/components/study-language-links';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
-import { BANK_INTERVIEW_CARDS, cardConceptGroup } from '@/lib/content/bank-interview-cards';
+import {
+  BANK_INTERVIEW_CARDS,
+  cardConceptGroup,
+  studyLanguage,
+} from '@/lib/content/bank-interview-cards';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { loadCardEvidence, type Evidence } from '@/lib/db/passages';
@@ -19,8 +24,10 @@ import { getActiveAssignmentForUser } from '@/lib/db/assignments';
 import { toTemplateRecord } from '@/lib/db/assessment';
 import { pinnedFactsFor } from '@/lib/db/pinning';
 import { factTranslationsFor } from '@/lib/db/fact-translations';
+import { studyReadingAidsFor } from '@/lib/db/study-reading-aids';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { translatedRecord } from '@/lib/domain/facts/localization';
+import { withReadingAids } from '@/lib/domain/facts/study-reading-aids';
 import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { getTtsProvider } from '@/lib/integrations/tts';
 import { getVectorStore } from '@/lib/integrations/vector';
@@ -78,13 +85,16 @@ function ArrowIcon() {
  */
 export default async function StudyMaterialPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; key: string }>;
+  searchParams: Promise<{ language?: string }>;
 }) {
   const { locale, key } = await params;
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
   const loc = locale as AppLocale;
+  const language = studyLanguage((await searchParams).language, loc);
   const [materials, t] = await Promise.all([listStudyMaterials(db), getTranslations('study')]);
   const index = materials.findIndex((m) => m.content_key === key);
   if (index < 0) notFound();
@@ -120,20 +130,21 @@ export default async function StudyMaterialPage({
   // Starter cards are maintained in code now that staff cannot edit them. Use the current
   // approved wording even if an environment has not rerun content:starter after deployment.
   const starterCard = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === key)?.localizations[
-    loc
+    language
   ];
   const starterBody = starterCard?.body;
-  const translations =
-    pinned && templateRecord
-      ? await factTranslationsFor(
-          createSupabaseAdminClient(),
-          pinned.version.id,
-          templateRecord,
-          loc,
-        )
-      : {};
-  const shownRecord = templateRecord ? translatedRecord(templateRecord, translations) : null;
-  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', shownRecord, loc);
+  const admin = pinned && templateRecord ? createSupabaseAdminClient() : null;
+  const [translations, readingAids] =
+    admin && pinned && templateRecord
+      ? await Promise.all([
+          factTranslationsFor(admin, pinned.version.id, templateRecord, language),
+          studyReadingAidsFor(admin, pinned.version.id, templateRecord, language),
+        ])
+      : [{}, {}];
+  const shownRecord = templateRecord
+    ? withReadingAids(translatedRecord(templateRecord, translations), readingAids, language)
+    : null;
+  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', shownRecord, language);
 
   // "From your documents" (spec §8, D44): passages of the learner's OWN record for this card's
   // concepts. The assignment is the ownership check; names are read with the service role because
@@ -154,7 +165,8 @@ export default async function StudyMaterialPage({
   }
   const progressById = new Map(progress.map((p) => [p.material_id, p]));
   const mine = progressById.get(material.id) ?? null;
-  const ttsAvailable = loc === 'th' && localization.tts_enabled && getTtsProvider() !== null;
+  const ttsAvailable =
+    language === 'th' && loc === 'th' && localization.tts_enabled && getTtsProvider() !== null;
 
   // Where this card sits in the list, with the same notion of "done" as the list itself.
   const states: SegmentState[] = materials.map((m, i) => {
@@ -176,7 +188,11 @@ export default async function StudyMaterialPage({
     ? {
         key: nextMaterial.content_key,
         index: materials.indexOf(nextMaterial) + 1,
-        title: pickLocalization(nextMaterial, loc)?.title ?? '',
+        title:
+          BANK_INTERVIEW_CARDS.find((card) => card.contentKey === nextMaterial.content_key)
+            ?.localizations[language].title ??
+          pickLocalization(nextMaterial, loc)?.title ??
+          '',
       }
     : null;
 
@@ -220,6 +236,7 @@ export default async function StudyMaterialPage({
       }
     >
       <ViewTracker materialId={material.id} />
+      <StudyLanguageLinks path={`/study/${key}`} language={language} />
       {/* The card first, then what the documents say about it (the owner, 2026-10-02). */}
       <div className="grid gap-6">
         <article className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-9 md:py-8">
@@ -255,7 +272,7 @@ export default async function StudyMaterialPage({
               {previous && (
                 <Link
                   data-testid="study-previous"
-                  href={'/study/' + previous.key}
+                  href={`/study/${previous.key}?language=${language}`}
                   className="inline-flex min-h-11 items-center gap-2 rounded-control border border-brand-100 px-3 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
                 >
                   <span className="rotate-180">
@@ -291,7 +308,7 @@ export default async function StudyMaterialPage({
               {next && (
                 <Link
                   data-testid="study-next"
-                  href={'/study/' + next.key}
+                  href={`/study/${next.key}?language=${language}`}
                   className={`${footerLink} ml-auto`}
                 >
                   {t('nextCard', { n: next.index, title: next.title })}

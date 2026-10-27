@@ -2,13 +2,14 @@ import type { CSSProperties } from 'react';
 import { CheckCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
+import { StudyLanguageLinks } from '@/components/study-language-links';
 import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
 import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
-import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
+import { BANK_INTERVIEW_CARDS, studyLanguage } from '@/lib/content/bank-interview-cards';
 import { studyPreview } from '@/lib/content/study-preview';
 import { toTemplateRecord } from '@/lib/db/assessment';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
@@ -42,7 +43,13 @@ const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
  * the way to the next card. What counts as done follows the completion-tracking policy: a viewed
  * card under "viewed", an explicitly completed one under "completed".
  */
-export default async function StudyListPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function StudyListPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ language?: string }>;
+}) {
   const { locale } = await params;
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
@@ -55,6 +62,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
     getActiveAssignmentForUser(db, user.id),
   ]);
   const loc = locale as AppLocale;
+  const language = studyLanguage((await searchParams).language, loc);
   const admin = assignment ? createSupabaseAdminClient() : null;
   const pinned = assignment && admin ? await pinnedFactsFor(admin, assignment) : null;
   const templateRecord = pinned
@@ -64,7 +72,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
       : null;
   const translations =
     pinned && templateRecord && admin
-      ? await cachedFactTranslationsFor(admin, pinned.version.id, templateRecord, loc)
+      ? await cachedFactTranslationsFor(admin, pinned.version.id, templateRecord, language)
       : {};
   const shownRecord = templateRecord ? translatedRecord(templateRecord, translations) : null;
   const progressById = new Map(progress.map((p) => [p.material_id, p]));
@@ -74,11 +82,15 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
     const p = progressById.get(m.id);
     const state: State = p?.completed_at ? 'completed' : p ? 'viewed' : 'new';
     const starterCard = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === m.content_key)
-      ?.localizations[loc];
+      ?.localizations[language];
     const preview =
       localization && m.type === 'card'
         ? studyPreview(
-            renderTemplateLenient(starterCard?.body ?? localization.body ?? '', shownRecord, loc),
+            renderTemplateLenient(
+              starterCard?.body ?? localization.body ?? '',
+              shownRecord,
+              language,
+            ),
           )
         : null;
     return {
@@ -87,7 +99,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
       title: localization ? (starterCard?.title ?? localization.title) : null,
       description: localization && m.type === 'pdf' ? 'PDF' : null,
       preview,
-      href: localization ? `/study/${m.content_key}` : null,
+      href: localization ? `/study/${m.content_key}?language=${language}` : null,
       state,
       // The same rule the steps use to call study Done.
       done: isCardDone(p, tracking),
@@ -156,6 +168,7 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
         </aside>
 
         <LearnerStageTabs current="study" statuses={statuses} />
+        <StudyLanguageLinks path="/study" language={language} />
 
         <section className="rise grid gap-3" style={rise('80ms')}>
           {total === 0 && <p className="px-6 py-5 text-sm text-ink-700">{t('empty')}</p>}

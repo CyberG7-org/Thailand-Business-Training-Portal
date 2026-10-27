@@ -1,4 +1,5 @@
 import type { Director } from '../dbd-record';
+import type { StudyLanguage } from '@/lib/content/bank-interview-cards';
 import type { Objective, Promoter, Shareholder } from '../dbd-profile';
 import { addCalendarDays, formatDate, type ISODate, type Locale } from '../thai-date';
 import { createRng, shuffleWith } from './random';
@@ -278,13 +279,44 @@ export function renderTemplate(
 export function renderTemplateLenient(
   text: string,
   record: TemplateRecord | null,
-  locale: Locale,
+  locale: StudyLanguage,
 ): string {
   return text.replace(PLACEHOLDER, (match, rawField: string, variant?: string) => {
     const field = rawField as TemplateField;
     if (!(TEMPLATE_FIELDS as readonly string[]).includes(field) || variant) return match;
     const value = record?.[field];
     if (isEmpty(value)) return '—';
+    if (locale === 'ms' || locale === 'ta') {
+      if (field === 'registered_on' || field === 'issued_on') {
+        const [year, month, day] = String(value).split('-').map(Number);
+        return new Intl.DateTimeFormat(locale === 'ms' ? 'ms-MY' : 'ta-IN', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+          timeZone: 'UTC',
+        }).format(new Date(Date.UTC(year, month - 1, day)));
+      }
+      if (field === 'customer_channels') {
+        const website = value === 'with_website';
+        return locale === 'ms'
+          ? `Melalui Facebook dan TikTok${website ? ' serta laman web syarikat' : ''}, rujukan pelanggan dan pelanggan yang datang sendiri.`
+          : `Facebook மற்றும் TikTok${website ? ', நிறுவன இணையதளம்' : ''} வழியாகவும், வாடிக்கையாளர் பரிந்துரைகள் மற்றும் நேரில் வருபவர்கள் மூலமாகவும்.`;
+      }
+      if (
+        [
+          'registered_capital',
+          'total_shares',
+          'par_value',
+          'directors_count',
+          'shareholders_count',
+          'my_shares',
+          'my_share_percent',
+        ].includes(field)
+      ) {
+        return Number(value).toLocaleString(locale === 'ms' ? 'ms-MY' : 'ta-IN');
+      }
+      return formatValue(field, value, 'en');
+    }
     return formatValue(field, value, locale);
   });
 }

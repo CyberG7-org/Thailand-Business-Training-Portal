@@ -201,7 +201,8 @@ export async function loadStarterCards(
       materialId = material.id;
       created.push(card.contentKey);
     }
-    for (const language of Object.keys(card.localizations) as AppLocale[]) {
+    // Malay and Tamil are code-owned Study choices, not site-wide DB localizations yet.
+    for (const language of ['th', 'en', 'zh'] as const) {
       const loc = card.localizations[language];
       if (!loc) continue;
       await upsertLocalization(db, materialId, {
