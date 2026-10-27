@@ -1,14 +1,8 @@
 import type { ConceptGroup } from '@/lib/domain/bank-interview';
-import type { AppLocale, ExistingContentLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 
 export const STUDY_LANGUAGES = ['th', 'en', 'zh', 'ms', 'ta'] as const;
 export type StudyLanguage = (typeof STUDY_LANGUAGES)[number];
-
-export function studyLanguage(value: unknown, fallback: AppLocale): StudyLanguage {
-  return typeof value === 'string' && (STUDY_LANGUAGES as readonly string[]).includes(value)
-    ? (value as StudyLanguage)
-    : fallback;
-}
 
 export type StarterCard<L extends StudyLanguage = ExistingContentLocale> = {
   contentKey: string;

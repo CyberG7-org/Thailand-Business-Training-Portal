@@ -2,14 +2,13 @@ import type { CSSProperties } from 'react';
 import { CheckCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import { StudyLanguageLinks } from '@/components/study-language-links';
 import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
 import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
-import { BANK_INTERVIEW_CARDS, studyLanguage } from '@/lib/content/bank-interview-cards';
+import { BANK_INTERVIEW_CARDS } from '@/lib/content/bank-interview-cards';
 import { studyPreview } from '@/lib/content/study-preview';
 import { toTemplateRecord } from '@/lib/db/assessment';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
@@ -43,13 +42,7 @@ const rise = (delay: string) => ({ '--rise-delay': delay }) as CSSProperties;
  * the way to the next card. What counts as done follows the completion-tracking policy: a viewed
  * card under "viewed", an explicitly completed one under "completed".
  */
-export default async function StudyListPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ locale: string }>;
-  searchParams: Promise<{ language?: string }>;
-}) {
+export default async function StudyListPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
@@ -62,7 +55,7 @@ export default async function StudyListPage({
     getActiveAssignmentForUser(db, user.id),
   ]);
   const loc = locale as AppLocale;
-  const language = studyLanguage((await searchParams).language, loc);
+  const language = loc;
   const admin = assignment ? createSupabaseAdminClient() : null;
   const pinned = assignment && admin ? await pinnedFactsFor(admin, assignment) : null;
   const templateRecord = pinned
@@ -99,7 +92,7 @@ export default async function StudyListPage({
       title: localization ? (starterCard?.title ?? localization.title) : null,
       description: localization && m.type === 'pdf' ? 'PDF' : null,
       preview,
-      href: localization ? `/study/${m.content_key}?language=${language}` : null,
+      href: localization ? `/study/${m.content_key}` : null,
       state,
       // The same rule the steps use to call study Done.
       done: isCardDone(p, tracking),
@@ -168,7 +161,6 @@ export default async function StudyListPage({
         </aside>
 
         <LearnerStageTabs current="study" statuses={statuses} />
-        <StudyLanguageLinks path="/study" language={language} />
 
         <section className="rise grid gap-3" style={rise('80ms')}>
           {total === 0 && <p className="px-6 py-5 text-sm text-ink-700">{t('empty')}</p>}

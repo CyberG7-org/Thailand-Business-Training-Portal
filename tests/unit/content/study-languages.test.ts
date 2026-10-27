@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  BANK_INTERVIEW_CARDS,
-  STUDY_LANGUAGES,
-  studyLanguage,
-} from '@/lib/content/bank-interview-cards';
+import { BANK_INTERVIEW_CARDS, STUDY_LANGUAGES } from '@/lib/content/bank-interview-cards';
 import {
   placeholderFields,
   renderTemplateLenient,
@@ -29,12 +25,6 @@ describe('five-language study cards', () => {
     expect(BANK_INTERVIEW_CARDS[4].localizations.ta.body).toContain(
       'வங்கியாளர் கேட்கக்கூடும் கேள்விகள்',
     );
-  });
-
-  it('accepts only supported study choices', () => {
-    expect(studyLanguage('ta', 'en')).toBe('ta');
-    expect(studyLanguage('ms', 'en')).toBe('ms');
-    expect(studyLanguage('../admin', 'en')).toBe('en');
   });
 });
 

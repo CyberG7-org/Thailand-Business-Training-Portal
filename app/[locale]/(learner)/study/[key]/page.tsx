@@ -6,16 +6,11 @@ import remarkGfm from 'remark-gfm';
 import { CheckIcon } from '@/components/icons';
 import { ReadAloudPlayer } from '@/components/read-aloud-player';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import { StudyLanguageLinks } from '@/components/study-language-links';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
-import {
-  BANK_INTERVIEW_CARDS,
-  cardConceptGroup,
-  studyLanguage,
-} from '@/lib/content/bank-interview-cards';
+import { BANK_INTERVIEW_CARDS, cardConceptGroup } from '@/lib/content/bank-interview-cards';
 import { createSupabaseAdminClient } from '@/lib/db/admin';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { loadCardEvidence, type Evidence } from '@/lib/db/passages';
@@ -85,16 +80,14 @@ function ArrowIcon() {
  */
 export default async function StudyMaterialPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ locale: string; key: string }>;
-  searchParams: Promise<{ language?: string }>;
 }) {
   const { locale, key } = await params;
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
   const loc = locale as AppLocale;
-  const language = studyLanguage((await searchParams).language, loc);
+  const language = loc;
   const [materials, t] = await Promise.all([listStudyMaterials(db), getTranslations('study')]);
   const index = materials.findIndex((m) => m.content_key === key);
   if (index < 0) notFound();
@@ -236,7 +229,6 @@ export default async function StudyMaterialPage({
       }
     >
       <ViewTracker materialId={material.id} />
-      <StudyLanguageLinks path={`/study/${key}`} language={language} />
       {/* The card first, then what the documents say about it (the owner, 2026-10-02). */}
       <div className="grid gap-6">
         <article className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-9 md:py-8">
@@ -272,7 +264,7 @@ export default async function StudyMaterialPage({
               {previous && (
                 <Link
                   data-testid="study-previous"
-                  href={`/study/${previous.key}?language=${language}`}
+                  href={`/study/${previous.key}`}
                   className="inline-flex min-h-11 items-center gap-2 rounded-control border border-brand-100 px-3 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
                 >
                   <span className="rotate-180">
@@ -308,7 +300,7 @@ export default async function StudyMaterialPage({
               {next && (
                 <Link
                   data-testid="study-next"
-                  href={`/study/${next.key}?language=${language}`}
+                  href={`/study/${next.key}`}
                   className={`${footerLink} ml-auto`}
                 >
                   {t('nextCard', { n: next.index, title: next.title })}
