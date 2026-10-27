@@ -35,6 +35,7 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
   const inProgress = attempts.find((a) => a.status === 'in_progress') ?? null;
   const history = attempts.filter((a) => a.status === 'submitted' || a.status === 'in_progress');
   const t = await getTranslations('exam');
+  const common = await getTranslations('app');
   const resultOf = (result: string | null) =>
     result === 'pass' ? 'pass' : result === 'retest' ? 'retest' : 'fail';
   // What the quiz is, before it starts (D100): how many, how it is marked, what each result means.
@@ -47,6 +48,11 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="exam">
       <div className="mx-auto grid max-w-[780px] gap-6">
+        {(locale === 'ta' || locale === 'ms') && (
+          <p role="note" className="rounded-control bg-brand-50 px-4 py-3 text-sm text-brand-900">
+            {common('quizLanguageNotice')}
+          </p>
+        )}
         <section
           data-testid="exam-about"
           className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7"

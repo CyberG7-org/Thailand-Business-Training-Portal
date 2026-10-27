@@ -1,5 +1,5 @@
 import { BANK_INTERVIEW_CONCEPTS, type BankInterviewConcept } from '@/lib/domain/bank-interview';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale, type ExistingContentLocale } from '@/i18n/routing';
 import type {
   Assessment,
   CloseReason,
@@ -26,7 +26,7 @@ export const READINESS_PASS_SCORE = 10;
 
 export type ReadinessItemDefinition = {
   concept: ConceptId;
-  question: Record<AppLocale, string>;
+  question: Record<ExistingContentLocale, string>;
   facts: string[];
   cardKey: string;
 };
@@ -199,9 +199,10 @@ export function readinessItem(concept: ConceptId): ReadinessItemDefinition | nul
 /** The frozen plan stores Thai wording; display and follow-ups use the selected language. */
 export function questionFor(concept: ConceptId, locale: AppLocale, fallback: string): string {
   if (locale === 'th') return fallback;
+  const language = contentLocale(locale);
   return (
-    readinessItem(concept)?.question[locale] ??
-    BANK_INTERVIEW_CONCEPTS.find((item) => item.id === concept)?.question[locale] ??
+    readinessItem(concept)?.question[language] ??
+    BANK_INTERVIEW_CONCEPTS.find((item) => item.id === concept)?.question[language] ??
     fallback
   );
 }

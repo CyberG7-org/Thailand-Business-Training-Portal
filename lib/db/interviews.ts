@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
 import { binaryReadinessAssessment } from '@/lib/domain/interview/answer-validation';
 import { revealedFact } from '@/lib/domain/interview/leak';
@@ -67,7 +67,7 @@ const CLOSING = {
   too_many_evasions: 'ขออภัยค่ะ วันนี้ธนาคารยังไม่สามารถดำเนินการต่อได้ ขอบคุณที่มาค่ะ',
 } as const;
 const OFFICER_COPY: Record<
-  AppLocale,
+  ExistingContentLocale,
   {
     greeting: string;
     reask: string;
@@ -291,7 +291,7 @@ function guard(
   item: PlanItem | null,
   facts: FactSheet,
   opening: boolean,
-  language: AppLocale = 'th',
+  language: ExistingContentLocale = 'th',
 ): OfficerTurn {
   const assessment =
     reply.assessment && item ? { ...reply.assessment, concept: item.concept } : reply.assessment;

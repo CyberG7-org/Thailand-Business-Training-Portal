@@ -37,6 +37,19 @@ describe('set_my_preferred_language', () => {
     expect(byId[learnerB.id]).toBe('th');
   });
 
+  it('persists Malay and Tamil without changing other accounts', async () => {
+    for (const language of ['ms', 'ta']) {
+      const { error } = await asA.rpc('set_my_preferred_language', { p_lang: language });
+      expect(error).toBeNull();
+      const { data } = await adminClient()
+        .from('profiles')
+        .select('preferred_language')
+        .eq('id', learnerA.id)
+        .single();
+      expect(data?.preferred_language).toBe(language);
+    }
+  });
+
   it('rejects unsupported languages', async () => {
     const { error } = await asA.rpc('set_my_preferred_language', { p_lang: 'fr' });
     expect(error?.code).toBe('23514');

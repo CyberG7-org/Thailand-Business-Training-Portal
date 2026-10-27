@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import type { OptionKey, QuestionOption } from '@/lib/domain/assessment/engine';
 
 const LOCALES = ['th', 'en', 'zh'] as const;
@@ -150,7 +150,7 @@ export async function buildMaterial(db: Db, input: GenerateBankInput): Promise<M
   return { text, pdf: uploaded.pdf };
 }
 
-function toLocalizationInput(language: AppLocale, loc: GeneratedLocalization) {
+function toLocalizationInput(language: ExistingContentLocale, loc: GeneratedLocalization) {
   return {
     language,
     prompt: loc.prompt,
@@ -267,12 +267,14 @@ export async function fillMissingLanguages(
   db: Db,
   questionId: string,
   generator: QuestionGenerator | null = getQuestionGenerator(),
-): Promise<AppLocale[]> {
+): Promise<ExistingContentLocale[]> {
   if (!generator)
     throw new QuestionGenError('Question generation is not configured', 'not_configured');
   const question = await getQuestion(db, questionId);
   if (!question) throw new QuestionGenError('Question not found', 'no_material');
-  const present = new Set(question.question_localizations.map((l) => l.language as AppLocale));
+  const present = new Set(
+    question.question_localizations.map((l) => l.language as ExistingContentLocale),
+  );
   const missing = LOCALES.filter((l) => !present.has(l));
   if (missing.length === 0) return [];
   const sourceRow =
@@ -289,11 +291,11 @@ export async function fillMissingLanguages(
     explanation: sourceRow.explanation ?? '',
   };
   const translated = await generator.translate({
-    sourceLanguage: sourceRow.language as AppLocale,
+    sourceLanguage: sourceRow.language as ExistingContentLocale,
     source,
     targetLanguages: missing,
   });
-  const written: AppLocale[] = [];
+  const written: ExistingContentLocale[] = [];
   for (const lang of missing) {
     const loc = translated[lang];
     if (!loc) continue;

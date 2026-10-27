@@ -5,6 +5,8 @@ const labels = {
   en: { exam: 'Quiz', interview: 'Interview', nameCard: 'Namecard' },
   th: { exam: 'แบบทดสอบ', interview: 'สัมภาษณ์', nameCard: 'นามบัตร' },
   zh: { exam: '测验', interview: '面试', nameCard: '名片' },
+  ms: { exam: 'Kuiz', interview: 'Temu Duga', nameCard: 'Kad Nama' },
+  ta: { exam: 'வினாடி வினா', interview: 'நேர்காணல்', nameCard: 'பெயர் அட்டை' },
 } as const;
 
 const retiredNames = {
@@ -28,7 +30,9 @@ describe('stage terminology', () => {
       expect(messages.exam.title).toBe(expected.exam);
       expect(messages.interview.title).toBe(expected.interview);
       if (messages.nameCard?.title) expect(messages.nameCard.title).toBe(expected.nameCard);
-      expect(source).not.toMatch(retiredNames[locale]);
+      if (locale === 'en' || locale === 'th' || locale === 'zh') {
+        expect(source).not.toMatch(retiredNames[locale]);
+      }
     });
   }
 });

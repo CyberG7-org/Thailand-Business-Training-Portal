@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { getPolicy } from '@/lib/config/policy';
 import {
@@ -31,7 +31,7 @@ export async function startQuizAction(_prev: StartState, formData: FormData): Pr
     const attempt = await getOrStartAttempt({
       userId: user.id,
       kind: 'quiz',
-      language: locale,
+      language: contentLocale(locale),
       count: await getPolicy('quiz_question_count'),
     });
     attemptId = attempt.id;
@@ -56,7 +56,7 @@ export async function answerQuizAction(
       attemptId,
       questionId,
       selectedKey,
-      locale: locale as AppLocale,
+      locale: contentLocale(locale as AppLocale),
     });
     return { feedback, selectedKey, error: null };
   } catch (e) {

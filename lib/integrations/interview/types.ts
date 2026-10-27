@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import type {
   FactSheet,
   InterviewPlan,
@@ -12,7 +12,7 @@ export type InterviewProviderName = 'gemini' | 'claude' | 'fake' | 'off';
 
 export type TurnInput = {
   /** The language for the officer's next line; Thai remains the canonical fact language. */
-  language?: AppLocale;
+  language?: ExistingContentLocale;
   facts: FactSheet;
   plan: InterviewPlan;
   /** The turns so far, ending with the officer's last question; empty on the opening turn. */
@@ -25,7 +25,7 @@ export type TurnInput = {
 };
 
 export type NarrateInput = {
-  language?: AppLocale;
+  language?: ExistingContentLocale;
   facts: FactSheet;
   verdict: Omit<SessionVerdict, 'narrative'>;
   transcript: Turn[];

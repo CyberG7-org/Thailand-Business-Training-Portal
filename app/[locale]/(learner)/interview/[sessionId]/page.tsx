@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { MAX_INPUT_CHARS, getInterviewWithTurns, turnBudget } from '@/lib/db/interviews';
 import { getMyCompany } from '@/lib/db/learner';
@@ -78,11 +78,12 @@ export default async function InterviewSessionPage({
   const labels = await getTranslations('interview');
   const conceptLabel = (concept: string) =>
     guidedReadiness && readinessItem(concept)
-      ? readinessItem(concept)!.question[locale as AppLocale]
+      ? readinessItem(concept)!.question[contentLocale(locale as AppLocale)]
       : concept === 'juristic_id'
         ? labels('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
-          concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
+            contentLocale(locale as AppLocale)
+          ] ?? concept);
   const validVerdicts: Verdict[] = [
     'correct',
     'partial',

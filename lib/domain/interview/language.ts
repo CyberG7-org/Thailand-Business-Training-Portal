@@ -1,16 +1,16 @@
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale, type ExistingContentLocale } from '@/i18n/routing';
 import type { Turn } from './types';
 
 /** The officer speaks Thai even when the page UI or learner message uses another language. */
-export const OFFICER_CONVERSATION_LANGUAGE: AppLocale = 'th';
+export const OFFICER_CONVERSATION_LANGUAGE: ExistingContentLocale = 'th';
 
 /** Use the learner's latest written language; numbers and names inherit the page language. */
 export function interviewReplyLanguage(
   message: string,
   transcript: readonly Turn[],
   pageLocale: AppLocale,
-): AppLocale {
-  const classify = (text: string): AppLocale | null => {
+): ExistingContentLocale {
+  const classify = (text: string): ExistingContentLocale | null => {
     const latin = (text.match(/[a-z]/gi) ?? []).length;
     const thai = (text.match(/[\u0e00-\u0e7f]/g) ?? []).length;
     const han = (text.match(/\p{Script=Han}/gu) ?? []).length;
@@ -26,5 +26,5 @@ export function interviewReplyLanguage(
     const prior = classify(turn.content);
     if (prior) return prior;
   }
-  return pageLocale;
+  return contentLocale(pageLocale);
 }

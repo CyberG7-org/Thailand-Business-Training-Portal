@@ -5,7 +5,8 @@ import { loadLearnerRecords, loadSubmanagerLearnerSummary } from '@/lib/db/learn
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { displayLoginId } from '@/lib/domain/login-id';
-import { formatDate, type Locale } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
+import type { AppLocale } from '@/i18n/routing';
 import { ResultTag } from './result-tag';
 import { DeleteIconForm } from '../delete-icon-form';
 import { deleteLearnerAction } from '../users/actions';
@@ -69,7 +70,7 @@ export default async function LearnerRecordPage({
               {rows.map((r) => {
                 const ready = r.mcq === 'pass' && r.chatbot === 'pass';
                 const date = r.appointmentAt
-                  ? formatDate(bangkokDateOf(r.appointmentAt), locale as Locale)
+                  ? formatDisplayDate(bangkokDateOf(r.appointmentAt), locale as AppLocale)
                   : null;
                 return (
                   <tr key={r.id} data-testid={`learner-${r.loginId}`}>
@@ -106,7 +107,7 @@ export default async function LearnerRecordPage({
                     <td>{r.company?.director ?? '—'}</td>
                     <td data-testid={`registered-${r.loginId}`} className="whitespace-nowrap">
                       {r.company?.registeredOn
-                        ? formatDate(r.company.registeredOn, locale as Locale)
+                        ? formatDisplayDate(r.company.registeredOn, locale as AppLocale)
                         : '—'}
                     </td>
                     <td data-testid={`mcq-${r.loginId}`}>

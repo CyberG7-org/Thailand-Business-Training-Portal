@@ -9,7 +9,7 @@ import {
   WarningCircleIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import { Link } from '@/i18n/navigation';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale } from '@/i18n/routing';
 import { getInterviewWithTurns } from '@/lib/db/interviews';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
@@ -22,6 +22,8 @@ const DATE_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-GB',
   zh: 'zh-CN',
+  ta: 'ta-IN',
+  ms: 'ms-MY',
 };
 const VERDICTS: Verdict[] = ['correct', 'partial', 'wrong', 'evasive', 'pasted', 'off_topic'];
 
@@ -81,11 +83,12 @@ export async function InterviewSessionView({
   );
   const label = (concept: string) =>
     (plan.version === 2 || plan.version === 3) && readinessItem(concept)
-      ? readinessItem(concept)!.question[locale as AppLocale]
+      ? readinessItem(concept)!.question[contentLocale(locale as AppLocale)]
       : concept === 'juristic_id'
         ? ti('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
-          concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
+            contentLocale(locale as AppLocale)
+          ] ?? concept);
 
   const resultItems: InterviewResultItem[] = [];
   let officerTurn: (typeof turns)[number] | null = null;

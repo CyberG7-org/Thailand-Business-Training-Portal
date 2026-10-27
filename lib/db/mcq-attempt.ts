@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import { getPolicy } from '@/lib/config/policy';
 import { assignmentFacts, templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { translatedRecord } from '@/lib/domain/facts/localization';
@@ -90,7 +90,7 @@ async function closeRenderFailures(admin: Db, recordId: string): Promise<void> {
  */
 export async function startMcqAttempt(args: {
   userId: string;
-  language: AppLocale;
+  language: ExistingContentLocale;
 }): Promise<AttemptRow> {
   const admin = createSupabaseAdminClient();
   const assignment = await getActiveAssignmentForUser(admin, args.userId);

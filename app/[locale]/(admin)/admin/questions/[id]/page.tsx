@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { LOCALES } from '@/i18n/routing';
+import { CONTENT_LOCALES } from '@/i18n/routing';
 import { requireAdmin } from '@/lib/auth/session';
 import { getQuestion } from '@/lib/db/questions';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -27,7 +27,7 @@ export default async function QuestionDetailPage({
   if (question.concept_key) redirect(`/${locale}/admin/questions/variants/${question.id}`);
   const tb = await getTranslations('admin.bank');
   const present = new Set(question.question_localizations.map((l) => l.language));
-  const missing = LOCALES.filter((l) => !present.has(l));
+  const missing = CONTENT_LOCALES.filter((l) => !present.has(l));
   return (
     <section className="grid gap-6">
       <Link href="/admin/questions/legacy" className="staff-link text-sm">
@@ -42,7 +42,7 @@ export default async function QuestionDetailPage({
         )}
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
-        {LOCALES.map((language) => (
+        {CONTENT_LOCALES.map((language) => (
           <QuestionLocalizationForm
             key={language}
             questionId={question.id}

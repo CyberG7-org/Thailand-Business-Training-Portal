@@ -18,9 +18,15 @@ export default async function QuizHome({ params }: { params: Promise<{ locale: s
   const inProgress = attempts.find((a) => a.status === 'in_progress') ?? null;
   const submitted = attempts.filter((a) => a.status === 'submitted');
   const t = await getTranslations('quiz');
+  const common = await getTranslations('app');
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="quiz">
       <div className="mx-auto grid max-w-[780px] gap-6">
+        {(locale === 'ta' || locale === 'ms') && (
+          <p role="note" className="rounded-control bg-brand-50 px-4 py-3 text-sm text-brand-900">
+            {common('quizLanguageNotice')}
+          </p>
+        )}
         <section className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7">
           <StartQuizButton resume={inProgress !== null} />
         </section>

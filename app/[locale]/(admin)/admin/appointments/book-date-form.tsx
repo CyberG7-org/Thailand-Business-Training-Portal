@@ -3,7 +3,8 @@
 import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { AppLocale } from '@/i18n/routing';
-import { formatDate, type ISODate } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
+import type { ISODate } from '@/lib/domain/thai-date';
 import { bookForLearnerAction } from './actions';
 import { StaffForm } from './staff-form';
 
@@ -44,7 +45,7 @@ export function BookDateForm({
                 disabled={!learnerId || date < today}
                 aria-current={date === today ? 'date' : undefined}
                 aria-pressed={date === selectedDate}
-                title={formatDate(date, locale)}
+                title={formatDisplayDate(date, locale)}
                 onClick={() => {
                   setProposedDate(date);
                   dialog.current?.showModal();
@@ -69,7 +70,10 @@ export function BookDateForm({
         </h3>
         <p id="appointment-confirm-description" className="mt-3 text-sm text-ink-700">
           {proposedDate
-            ? t('confirmDate', { learner: learnerName, date: formatDate(proposedDate, locale) })
+            ? t('confirmDate', {
+                learner: learnerName,
+                date: formatDisplayDate(proposedDate, locale),
+              })
             : ''}
         </p>
         <div className="mt-6 flex flex-wrap justify-end gap-2">

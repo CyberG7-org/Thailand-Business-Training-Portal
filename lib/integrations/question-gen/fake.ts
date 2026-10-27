@@ -1,4 +1,4 @@
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale as ApprovedQuestionLocale } from '@/i18n/routing';
 import type {
   GenerateInput,
   GeneratedLocalization,
@@ -239,8 +239,8 @@ export class FakeQuestionGenerator implements QuestionGenerator {
 
   async translate(
     input: TranslateInput,
-  ): Promise<Partial<Record<AppLocale, GeneratedLocalization>>> {
-    const out: Partial<Record<AppLocale, GeneratedLocalization>> = {};
+  ): Promise<Partial<Record<ApprovedQuestionLocale, GeneratedLocalization>>> {
+    const out: Partial<Record<ApprovedQuestionLocale, GeneratedLocalization>> = {};
     for (const lang of input.targetLanguages) {
       out[lang] = {
         prompt: `[${lang}] ${input.source.prompt}`,

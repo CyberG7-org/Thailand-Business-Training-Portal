@@ -1,7 +1,18 @@
 import { defineRouting } from 'next-intl/routing';
 
-export const LOCALES = ['th', 'en', 'zh'] as const;
+export const LOCALES = ['th', 'en', 'zh', 'ta', 'ms'] as const;
 export type AppLocale = (typeof LOCALES)[number];
+export type ExistingContentLocale = 'th' | 'en' | 'zh';
+export const CONTENT_LOCALES = [
+  'th',
+  'en',
+  'zh',
+] as const satisfies readonly ExistingContentLocale[];
+
+/** Quiz/question content stays in its approved languages until it is translated separately. */
+export function contentLocale(locale: AppLocale): ExistingContentLocale {
+  return locale === 'th' || locale === 'zh' ? locale : 'en';
+}
 
 export const routing = defineRouting({
   locales: LOCALES,

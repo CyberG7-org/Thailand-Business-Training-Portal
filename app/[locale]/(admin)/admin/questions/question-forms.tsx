@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import type { QuestionLocalizationRow, QuestionRow } from '@/lib/db/questions';
 import type { QuestionOption } from '@/lib/domain/assessment/engine';
 import {
@@ -15,7 +15,7 @@ import {
 } from './actions';
 
 const initial: QuestionState = { ok: false, error: null };
-const LANGUAGE_LABELS: Record<AppLocale, string> = {
+const LANGUAGE_LABELS: Record<ExistingContentLocale, string> = {
   th: 'ไทย',
   en: 'English',
   zh: '中文',
@@ -102,18 +102,22 @@ export function QuestionForm({ question }: { question: QuestionRow | null }) {
 export function ApprovalForm({ question }: { question: QuestionRow }) {
   const locale = useLocale();
   const t = useTranslations('admin.questions');
+  const status = useTranslations('admin.bank.status');
   const [state, formAction, pending] = useActionState(setApprovalAction, initial);
   return (
     <form action={formAction} className="staff-card grid max-w-md gap-2">
       <input type="hidden" name="locale" value={locale} />
       <input type="hidden" name="questionId" value={question.id} />
       <p className="text-sm">
-        {t('status')}: <span data-testid="question-status">{question.approval_status}</span>
+        {t('status')}:{' '}
+        <span data-testid="question-status">
+          {status(question.approval_status as 'draft' | 'approved' | 'retired')}
+        </span>
       </p>
       <select name="status" defaultValue={question.approval_status} className="staff-input">
-        <option value="draft">draft</option>
-        <option value="approved">approved</option>
-        <option value="retired">retired</option>
+        <option value="draft">{status('draft')}</option>
+        <option value="approved">{status('approved')}</option>
+        <option value="retired">{status('retired')}</option>
       </select>
       <p className="text-xs text-ink-500">{t('approvalHint')}</p>
       <Feedback state={state} savedLabel={t('saved')} />
@@ -130,7 +134,7 @@ export function QuestionLocalizationForm({
   localization,
 }: {
   questionId: string;
-  language: AppLocale;
+  language: ExistingContentLocale;
   localization: QuestionLocalizationRow | null;
 }) {
   const locale = useLocale();
@@ -216,7 +220,7 @@ export function FillMissingLanguagesForm({
   missing,
 }: {
   questionId: string;
-  missing: AppLocale[];
+  missing: ExistingContentLocale[];
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.questions');

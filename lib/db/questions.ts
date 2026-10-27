@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import type { OptionKey, QuestionOption } from '@/lib/domain/assessment/engine';
 import { placeholderFields, type TemplateField } from '@/lib/domain/assessment/template';
 import type { Database, Json } from './database.types';
@@ -81,7 +81,7 @@ export async function setApprovalStatus(
 }
 
 export type QuestionLocalizationInput = {
-  language: AppLocale;
+  language: ExistingContentLocale;
   prompt: string;
   options: QuestionOption[];
   correctKey: OptionKey;

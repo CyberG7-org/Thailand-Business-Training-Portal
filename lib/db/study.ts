@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale, type ExistingContentLocale } from '@/i18n/routing';
 import type { StarterCard } from '@/lib/content/bank-interview-cards';
 import type { Database } from './database.types';
 
@@ -41,7 +41,9 @@ export function pickLocalization(
   material: StudyMaterialWithLocalizations,
   locale: AppLocale,
 ): StudyLocalizationRow | null {
-  return material.study_material_localizations.find((l) => l.language === locale) ?? null;
+  return (
+    material.study_material_localizations.find((l) => l.language === contentLocale(locale)) ?? null
+  );
 }
 
 export type StudyMaterialInput = {
@@ -84,7 +86,7 @@ export async function updateStudyMaterial(
 }
 
 export type LocalizationInput = {
-  language: AppLocale;
+  language: ExistingContentLocale;
   title: string;
   body: string | null;
   ttsEnabled: boolean;
@@ -112,7 +114,7 @@ export async function upsertLocalization(
 export async function uploadStudyPdf(
   db: Db,
   materialId: string,
-  language: AppLocale,
+  language: ExistingContentLocale,
   file: File | Blob,
 ): Promise<string> {
   const path = `${materialId}/${language}/${Date.now()}.pdf`;
