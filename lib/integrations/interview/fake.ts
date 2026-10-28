@@ -47,7 +47,7 @@ export function amountMatches(answer: string, expected: string): boolean {
 }
 
 /**
- * The deterministic officer for the suites: asks the plan's Thai questions in order, judges an
+ * The deterministic officer: asks the plan's localized questions in order, judges an
  * answer by whether it carries the record's value, asks once more, and closes when the plan ends
  * or the third evasion comes. It never says a fact.
  */

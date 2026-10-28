@@ -65,7 +65,7 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       ms: 'Apakah alamat berdaftar syarikat?',
       ta: 'நிறுவனத்தின் பதிவு செய்யப்பட்ட முகவரி என்ன?',
     },
-    facts: ['head_office_address'],
+    facts: ['head_office_address', 'province_romanized', 'subdistrict_romanized'],
     cardKey: 'bank-interview-1-identity',
   },
   {

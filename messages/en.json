@@ -103,7 +103,7 @@
       "quiz": "Your next step is the practice quiz. It shows what to review before the Quiz.",
       "exam": "Your next step is the Quiz. Passing it unlocks the Interview.",
       "nameCard": "Your next step is the Namecard. View or download it after the Interview.",
-      "interview": "Your next step is the Interview. The officer asks about your company, in Thai.",
+      "interview": "Your next step is the Interview. Choose a language before you start; the officer will use it for the whole session.",
       "appointment": "You are ready. Your next step is the bank appointment.",
       "done": "You have completed every step. Well done."
     },

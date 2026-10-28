@@ -37,6 +37,7 @@ import { toTemplateRecord } from './assessment';
 import { pinnedFactsFor } from './pinning';
 import { cachedFactTranslationsFor } from './fact-translations';
 import { getActiveAssignmentForUser } from './assignments';
+import { studyPlaceNames } from './study-places';
 import type { Database, Json } from './database.types';
 import type { DbdRecordRow } from './dbd-records';
 import { loadProgressionFacts } from './progression';
@@ -209,6 +210,7 @@ async function factsFor(userId: string) {
   const source = templateRecordFromSnapshot(pinned.snapshot, pinned.role);
   return {
     assignment,
+    address: pinned.snapshot.facts.address,
     source,
     versionId: pinned.version.id,
     facts: factsFromTemplate(source, pinned.snapshot.extras.invoice_summary),
@@ -293,8 +295,13 @@ export async function startOrResumeInterview(
     if (!isIdle(open)) return { session: open, turns: await turnsOf(open.id) };
     await abandon(open.id);
   }
-  const { assignment, facts } = await factsFor(userId);
-  const plan = buildReadinessPlan(facts);
+  const { assignment, address, facts } = await factsFor(userId);
+  const places = await studyPlaceNames(admin, address);
+  const plan = buildReadinessPlan({
+    ...facts,
+    province_romanized: places.province?.nameEn ?? null,
+    subdistrict_romanized: places.subdistrict?.nameEn ?? null,
+  });
   // Only a record confirmed before D58 can lack every fact; it would otherwise end ready
   // without a single question.
   if (plan.items.length === 0) throw new InterviewError('Nothing to verify', 'no_facts');

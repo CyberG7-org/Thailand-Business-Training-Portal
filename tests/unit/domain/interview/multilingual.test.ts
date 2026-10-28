@@ -54,6 +54,15 @@ describe('five-language interview', () => {
     );
   });
 
+  it('accepts the verified romanized province and subdistrict for a Thai legal address', () => {
+    const address = item(
+      'registered_address',
+      '17/1 หมู่ที่ 6 ตำบลบ้านปึก อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000 / Chon Buri / Ban Puek',
+    );
+    expect(evaluateReadinessAnswer(address, 'Ban Puek, Chon Buri')).toBe('correct');
+    expect(evaluateReadinessAnswer(address, 'Bang Na, Bangkok')).toBe('wrong');
+  });
+
   it('accepts dates, account purpose and figures written in the selected language', () => {
     const date = item('registration_date', '10 เมษายน 2569');
     expect(evaluateReadinessAnswer(date, '10 April 2026')).toBe('correct');
