@@ -1,5 +1,5 @@
 import 'server-only';
-import type { ExistingContentLocale } from '@/i18n/routing';
+import type { AppLocale } from '@/i18n/routing';
 import { getPolicy } from '@/lib/config/policy';
 import { evaluateResult, scoreAnswers } from '@/lib/domain/assessment/engine';
 import { mcqResult, readMcqRule } from '@/lib/domain/mcq/result';
@@ -25,10 +25,7 @@ export class ExamPolicyError extends Error {
  * A new attempt asks the Owner's bank, one question for each of the 30 concepts (D100); the
  * earlier question pool is the practice round's alone.
  */
-export async function startExam(
-  userId: string,
-  language: ExistingContentLocale,
-): Promise<AttemptRow> {
+export async function startExam(userId: string, language: AppLocale): Promise<AttemptRow> {
   const admin = createSupabaseAdminClient();
   const open = await getInProgressAttempt(admin, userId, 'exam');
   if (open) return open;

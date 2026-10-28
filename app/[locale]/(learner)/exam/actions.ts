@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { contentLocale, type AppLocale } from '@/i18n/routing';
+import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { AssessmentError, answerQuestion } from '@/lib/db/assessment';
 import { ExamPolicyError, finalizeExam, startExam } from '@/lib/db/exam';
@@ -17,7 +17,7 @@ export async function startExamAction(_prev: StartState, formData: FormData): Pr
   const user = await requireUser(locale);
   let attemptId: string;
   try {
-    attemptId = (await startExam(user.id, contentLocale(locale))).id;
+    attemptId = (await startExam(user.id, locale)).id;
   } catch (e) {
     return { error: code(e) };
   }
@@ -44,7 +44,7 @@ export async function answerExamAction(
       attemptId,
       questionId,
       selectedKey,
-      locale: contentLocale(locale as AppLocale),
+      locale: locale as AppLocale,
     });
     return { feedback: feedback.fromBank ? feedback : null, selectedKey, error: null };
   } catch (e) {

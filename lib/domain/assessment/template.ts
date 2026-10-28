@@ -133,6 +133,8 @@ const NUMBER_LOCALES: Record<Locale, string> = {
   th: 'th-TH',
   en: 'en-US',
   zh: 'zh-CN',
+  ms: 'ms-MY',
+  ta: 'ta-IN',
 };
 const CUSTOMER_CHANNELS: Record<
   Locale,
@@ -153,6 +155,18 @@ const CUSTOMER_CHANNELS: Record<
   zh: {
     with_website: '通过 Facebook、TikTok 和公司网站，以及客户推荐和到店客户寻找客户。',
     without_website: '通过 Facebook 和 TikTok，以及客户推荐和到店客户寻找客户。',
+  },
+  ms: {
+    with_website:
+      'Mendapat pelanggan melalui Facebook, TikTok, laman web syarikat, rujukan dan pelanggan yang datang terus.',
+    without_website:
+      'Mendapat pelanggan melalui Facebook, TikTok, rujukan dan pelanggan yang datang terus.',
+  },
+  ta: {
+    with_website:
+      'Facebook, TikTok, நிறுவன இணையதளம், பரிந்துரைகள் மற்றும் நேரடியாக வரும் வாடிக்கையாளர்கள் மூலம் வாடிக்கையாளர்களைப் பெறுகிறது.',
+    without_website:
+      'Facebook, TikTok, பரிந்துரைகள் மற்றும் நேரடியாக வரும் வாடிக்கையாளர்கள் மூலம் வாடிக்கையாளர்களைப் பெறுகிறது.',
   },
 };
 

@@ -249,8 +249,11 @@ export async function localizeAttemptAnswers(
   locale: AppLocale,
 ): Promise<Map<string, DisplayedQuestion>> {
   const admin = createSupabaseAdminClient();
-  const shownLocale = contentLocale(locale);
-  const languages = Array.from(new Set([shownLocale, attempt.language as ExistingContentLocale]));
+  const shownLocale = locale;
+  const legacyLocale = contentLocale(locale);
+  const languages = Array.from(
+    new Set([legacyLocale, contentLocale(attempt.language as AppLocale)]),
+  );
   const banked = attempt.assessment_answers.filter((a) => a.concept_key !== null);
   const [keys, { data: locs }, record] = await Promise.all([
     answerKeysFor(
@@ -279,8 +282,7 @@ export async function localizeAttemptAnswers(
     };
     if (answer.concept_key !== null) {
       const key = keys.get(answer.id);
-      const shown =
-        key?.localized[shownLocale] ?? key?.localized[attempt.language as ExistingContentLocale];
+      const shown = key?.localized[shownLocale] ?? key?.localized[attempt.language as AppLocale];
       out.set(
         answer.question_id,
         key && shown ? { ...shown, correctKey: key.correctKey } : snapshot,
@@ -289,7 +291,7 @@ export async function localizeAttemptAnswers(
     }
     const candidates = byQuestion.get(answer.question_id) ?? [];
     const loc =
-      candidates.find((l) => l.language === shownLocale) ??
+      candidates.find((l) => l.language === legacyLocale) ??
       candidates.find((l) => l.language === attempt.language);
     if (!loc) {
       out.set(answer.question_id, snapshot);
@@ -299,7 +301,7 @@ export async function localizeAttemptAnswers(
       ...snapshot,
       correctKey: loc.correct_key as OptionKey,
       explanation: loc.explanation
-        ? renderTemplateLenient(loc.explanation, record, shownLocale)
+        ? renderTemplateLenient(loc.explanation, record, legacyLocale)
         : null,
     };
     if (loc.language !== attempt.language) {
@@ -314,7 +316,7 @@ export async function localizeAttemptAnswers(
           },
           record,
           attempt.shuffle_seed,
-          shownLocale,
+          legacyLocale,
         );
         const byKey = new Map(rendered.options.map((o) => [o.key, o]));
         const options = (answer.presented_option_order as OptionKey[])
@@ -405,9 +407,7 @@ export async function answerQuestion(args: {
 }): Promise<AnswerFeedback> {
   const admin = createSupabaseAdminClient();
   const attempt = await requireOwnedInProgress(admin, args.userId, args.attemptId);
-  const shownLocale = args.locale
-    ? contentLocale(args.locale)
-    : (attempt.language as ExistingContentLocale);
+  const shownLocale = args.locale ?? (attempt.language as AppLocale);
 
   const { data: answer } = await admin
     .from('assessment_answers')
@@ -443,7 +443,7 @@ export async function answerQuestion(args: {
     if (!key) throw new AssessmentError('Question text missing', 'not_found');
     const shown =
       key.localized[shownLocale] ??
-      key.localized[attempt.language as ExistingContentLocale] ??
+      key.localized[attempt.language as AppLocale] ??
       key.localized.th;
     const isCorrect = key.correctKey === args.selectedKey;
     await record(isCorrect);
@@ -459,10 +459,10 @@ export async function answerQuestion(args: {
     .from('question_localizations')
     .select('language, correct_key, explanation')
     .eq('question_id', args.questionId)
-    .in('language', [attempt.language, shownLocale]);
+    .in('language', [contentLocale(attempt.language as AppLocale), contentLocale(shownLocale)]);
   const loc =
-    locs?.find((l) => l.language === shownLocale) ??
-    locs?.find((l) => l.language === attempt.language);
+    locs?.find((l) => l.language === contentLocale(shownLocale)) ??
+    locs?.find((l) => l.language === contentLocale(attempt.language as AppLocale));
   if (!loc) throw new AssessmentError('Question text missing', 'not_found');
 
   const isCorrect = loc.correct_key === args.selectedKey;
@@ -470,7 +470,7 @@ export async function answerQuestion(args: {
     ? renderTemplateLenient(
         loc.explanation,
         await templateRecordForAttempt(admin, attempt),
-        shownLocale,
+        contentLocale(shownLocale),
       )
     : null;
   await record(isCorrect);
