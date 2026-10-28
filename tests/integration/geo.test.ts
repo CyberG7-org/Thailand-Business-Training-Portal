@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { geoLookup } from '@/lib/db/geo';
+import { studyPlaceNames } from '@/lib/db/study-places';
 import { currentAddress } from '@/lib/db/training-sheet';
 import { resolveRegisteredAddress } from '@/lib/domain/geo/resolve';
 import type { StructuredData } from '@/lib/domain/dbd-profile';
@@ -85,6 +86,15 @@ describe('Thai geography', () => {
 });
 
 describe('resolving against the real tables', () => {
+  it('reads verified romanized names for study without changing the Thai address', async () => {
+    const printed = '17/1 หมู่ที่ 6 ตำบลบ้านปึก อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000';
+    const address = await resolveRegisteredAddress(printed, geoLookup(svc));
+    const names = await studyPlaceNames(svc, address);
+    expect(names.province).toEqual({ nameTh: 'ชลบุรี', nameEn: 'Chon Buri' });
+    expect(names.subdistrict).toEqual({ nameTh: 'บ้านปึก', nameEn: 'Ban Puek' });
+    expect(address.full).toBe(printed);
+  });
+
   it('reads an older postcode-only mismatch as resolved without changing the supplied address', async () => {
     const printed = '17/1 หมู่ที่ 6 ตำบลบ้านปึก อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000';
     const oldAddress = {

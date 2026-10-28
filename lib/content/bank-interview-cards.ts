@@ -27,10 +27,12 @@ export const BANK_INTERVIEW_CARDS: StarterCard<StudyLanguage>[] = [
 
 | What to remember | Your company answer |
 |---|---|
-| Full registered name | **{company_name_th}** |
+| Company name (as provided in English) | **{company_name_en}** |
 | 13-digit registration number | {juristic_id} |
 | Registration date | {registered_on} |
 | Registered address | {head_office_address} |
+| Province | {province} |
+| Subdistrict | {subdistrict} |
 | Directors | {directors_count} — {directors} |
 | Who can sign for the company | {signing_authority} |
 
@@ -44,10 +46,12 @@ export const BANK_INTERVIEW_CARDS: StarterCard<StudyLanguage>[] = [
 
 | สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
 |---|---|
-| ชื่อเต็มที่จดทะเบียน | **{company_name_th}** |
+| ชื่อบริษัทภาษาอังกฤษตามเอกสาร | **{company_name_en}** |
 | เลขทะเบียน 13 หลัก | {juristic_id} |
 | วันที่จดทะเบียน | {registered_on} |
 | ที่อยู่จดทะเบียน | {head_office_address} |
+| จังหวัด | {province} |
+| ตำบล/แขวง | {subdistrict} |
 | กรรมการ | {directors_count} คน — {directors} |
 | ผู้มีอำนาจลงนาม | {signing_authority} |
 
@@ -61,10 +65,12 @@ export const BANK_INTERVIEW_CARDS: StarterCard<StudyLanguage>[] = [
 
 | 要记住的内容 | 您公司的答案 |
 |---|---|
-| 完整注册名称 | **{company_name_th}** |
+| 文件中的英文公司名称 | **{company_name_en}** |
 | 13 位注册号 | {juristic_id} |
 | 注册日期 | {registered_on} |
 | 注册地址 | {head_office_address} |
+| 府 | {province} |
+| 分区/乡 | {subdistrict} |
 | 董事 | {directors_count} 位 — {directors} |
 | 有权代表公司签字的人 | {signing_authority} |
 
@@ -78,10 +84,12 @@ export const BANK_INTERVIEW_CARDS: StarterCard<StudyLanguage>[] = [
 
 | Perkara yang perlu diingat | Jawapan syarikat anda |
 |---|---|
-| Nama berdaftar penuh | **{company_name_th}** |
+| Nama syarikat dalam bahasa Inggeris pada dokumen | **{company_name_en}** |
 | Nombor pendaftaran 13 digit | {juristic_id} |
 | Tarikh pendaftaran | {registered_on} |
 | Alamat berdaftar | {head_office_address} |
+| Wilayah | {province} |
+| Mukim (tambon/khwaeng) | {subdistrict} |
 | Pengarah | {directors_count} orang — {directors} |
 | Syarat menandatangani bagi pihak syarikat | {signing_authority} |
 
@@ -95,10 +103,12 @@ export const BANK_INTERVIEW_CARDS: StarterCard<StudyLanguage>[] = [
 
 | நினைவில் கொள்ள வேண்டியது | உங்கள் நிறுவனத்தின் பதில் |
 |---|---|
-| முழு பதிவு செய்யப்பட்ட பெயர் | **{company_name_th}** |
+| ஆவணத்தில் உள்ள ஆங்கில நிறுவனப் பெயர் | **{company_name_en}** |
 | 13 இலக்க பதிவெண் | {juristic_id} |
 | பதிவு செய்யப்பட்ட திகதி | {registered_on} |
 | பதிவு செய்யப்பட்ட முகவரி | {head_office_address} |
+| மாகாணம் | {province} |
+| துணை மாவட்டம் (tambon/khwaeng) | {subdistrict} |
 | இயக்குநர்கள் | {directors_count} பேர் — {directors} |
 | நிறுவனத்தின் சார்பில் கையொப்பமிடும் நிபந்தனை | {signing_authority} |
 

@@ -19,6 +19,7 @@ export const TEMPLATE_FIELDS = [
   'signing_authority',
   // Level 1/2 additions (decision D38)
   'province',
+  'subdistrict',
   'objectives',
   'business_categories',
   'shareholders',
@@ -74,6 +75,7 @@ export type TemplateRecord = {
   objectives_count: number | null;
   signing_authority: string | null;
   province: string | null;
+  subdistrict?: string | null;
   objectives: Objective[] | null;
   business_categories: string[] | null;
   shareholders: Shareholder[] | null;

@@ -5,8 +5,7 @@ import {
   renderTemplateLenient,
   type TemplateRecord,
 } from '@/lib/domain/assessment/template';
-import { readingAidSource, withReadingAids } from '@/lib/domain/facts/study-reading-aids';
-import { GeminiFactTranslator } from '@/lib/integrations/translation/gemini';
+import { studyDisplayRecord } from '@/lib/domain/facts/study-display';
 
 describe('five-language study cards', () => {
   it('has complete cards with matching placeholders in every language', () => {
@@ -28,77 +27,66 @@ describe('five-language study cards', () => {
   });
 });
 
-describe('Thai-first study reading aids', () => {
+describe('source-accurate study identity', () => {
   const record = {
     company_name_th: 'บริษัท วารัน เทรด จำกัด',
     company_name_en: 'WARAN TRADE CO., LTD.',
-    head_office_address: '17/1 หมู่ที่ 6 ชลบุรี 20000',
+    head_office_address: '17/1 หมู่ที่ 6 ตำบลบ้านปึก อำเภอเมืองชลบุรี จังหวัดชลบุรี 20000',
     business_address: 'ร้านค้า ชลบุรี 20000',
     my_name: 'นายบดินทร์',
     directors: [{ name_th: 'นายบดินทร์', name_en: null }],
-    shareholders: [{ name: 'นายบดินทร์', shares: 10, nationality: null, percent: 100 }],
   } as TemplateRecord;
+  const places = {
+    province: { nameTh: 'ชลบุรี', nameEn: 'Chon Buri' },
+    subdistrict: { nameTh: 'บ้านปึก', nameEn: 'Ban Puek' },
+  };
 
-  it('preserves originals and adds a second-line reading aid', () => {
-    const source = readingAidSource(record);
-    expect(source.head_office_address).toContain('20000');
-    const result = withReadingAids(
-      record,
-      {
-        company_name_th: 'Waran Trade Company',
-        head_office_address: '17/1 Moo 6 Chonburi 20000',
-        director_0: 'Mr Bodin',
-      },
-      'en',
-    );
-    expect(result.company_name_th).toBe('บริษัท วารัน เทรด จำกัด\u2028WARAN TRADE CO., LTD.');
-    expect(result.head_office_address).toBe(
-      '17/1 หมู่ที่ 6 ชลบุรี 20000\u202817/1 Moo 6 Chonburi 20000',
-    );
-    expect(result.directors?.[0].name_th).toBe('นายบดินทร์\u2028Mr Bodin');
+  it('shows source identities and localized place rows in all five languages', () => {
+    for (const language of STUDY_LANGUAGES) {
+      const shown = studyDisplayRecord(record, language, places);
+      const body = renderTemplateLenient(
+        BANK_INTERVIEW_CARDS[0].localizations[language].body,
+        shown,
+        language,
+      );
+      expect(body).toContain('WARAN TRADE CO., LTD.');
+      expect(body).toContain(record.head_office_address);
+      expect(body).toContain('นายบดินทร์');
+      expect(shown.province).toBe(language === 'th' ? 'ชลบุรี' : 'Chon Buri');
+      expect(shown.subdistrict).toBe(language === 'th' ? 'บ้านปึก' : 'Ban Puek');
+      expect(body).not.toContain('Waran Trade Company');
+    }
     expect(record.company_name_th).toBe('บริษัท วารัน เทรด จำกัด');
   });
 
-  it('renders a Thai-only fallback and translated Malay date', () => {
-    expect(withReadingAids(record, {}, 'ta').head_office_address).toBe(record.head_office_address);
-    const shown = renderTemplateLenient('{head_office_address}', record, 'ta');
-    expect(shown).toContain('20000');
+  it('falls back to the original Thai name only when no English name was supplied', () => {
+    const shown = studyDisplayRecord({ ...record, company_name_en: null }, 'ms', places);
+    expect(renderTemplateLenient('{company_name_en}', shown, 'ms')).toBe(record.company_name_th);
+  });
+
+  it('does not use a romanization whose Thai name differs from the supplied address', () => {
+    const shown = studyDisplayRecord(record, 'ta', {
+      province: { nameTh: 'ภูเก็ต', nameEn: 'Phuket' },
+      subdistrict: { nameTh: 'บ้านปึก', nameEn: 'Ban Puek' },
+    });
+    expect(shown.province).toBe('ชลบุรี');
+    expect(shown.subdistrict).toBe('Ban Puek');
+  });
+
+  it('does not guess an absent subdistrict and keeps the Malay date', () => {
+    const shown = studyDisplayRecord(
+      {
+        ...record,
+        head_office_address: '17/1 ชลบุรี 20000',
+        province: 'จังหวัดอื่น',
+      },
+      'ta',
+      places,
+    );
+    expect(renderTemplateLenient('{subdistrict}', shown, 'ta')).toBe('—');
+    expect(renderTemplateLenient('{province}', shown, 'ta')).toBe('—');
     expect(
       renderTemplateLenient('{registered_on}', { ...record, registered_on: '2026-04-10' }, 'ms'),
     ).toContain('2026');
-  });
-});
-
-describe('generated reading aids', () => {
-  it('rejects an address translation that changes the supplied postcode', async () => {
-    const request = async () =>
-      new Response(
-        JSON.stringify({
-          candidates: [
-            {
-              content: {
-                parts: [
-                  {
-                    text: JSON.stringify({
-                      head_office_address: '17/1 Chonburi 20001',
-                      my_name: 'Mr Bodin',
-                    }),
-                  },
-                ],
-              },
-            },
-          ],
-        }),
-        { status: 200 },
-      );
-    const translator = new GeminiFactTranslator('test-key', request as typeof fetch);
-    const result = await translator.translateReadingAids(
-      {
-        head_office_address: '17/1 ชลบุรี 20000',
-        my_name: 'นายบดินทร์',
-      },
-      'en',
-    );
-    expect(result).toEqual({ my_name: 'Mr Bodin' });
   });
 });

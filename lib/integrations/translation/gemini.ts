@@ -22,17 +22,6 @@ export class GeminiFactTranslator {
     );
   }
 
-  async translateReadingAids(
-    source: Record<string, string>,
-    locale: Exclude<StudyLanguage, 'th'>,
-  ): Promise<Record<string, string>> {
-    return this.requestTranslations(
-      source,
-      locale,
-      'These are Thai legal names and addresses. Transliterate personal and company names for reading; translate address words without changing the place, any number, postcode or official meaning. Never invent missing details.',
-    );
-  }
-
   private async requestTranslations<T extends Record<string, string | undefined>>(
     source: T,
     locale: Exclude<StudyLanguage, 'th'>,

@@ -19,10 +19,11 @@ import { getActiveAssignmentForUser } from '@/lib/db/assignments';
 import { toTemplateRecord } from '@/lib/db/assessment';
 import { pinnedFactsFor } from '@/lib/db/pinning';
 import { factTranslationsFor } from '@/lib/db/fact-translations';
-import { studyReadingAidsFor } from '@/lib/db/study-reading-aids';
+import { studyPlaceNames } from '@/lib/db/study-places';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { translatedRecord } from '@/lib/domain/facts/localization';
-import { withReadingAids } from '@/lib/domain/facts/study-reading-aids';
+import { studyDisplayRecord } from '@/lib/domain/facts/study-display';
 import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { getTtsProvider } from '@/lib/integrations/tts';
 import { getVectorStore } from '@/lib/integrations/vector';
@@ -127,15 +128,19 @@ export default async function StudyMaterialPage({
   ];
   const starterBody = starterCard?.body;
   const admin = pinned && templateRecord ? createSupabaseAdminClient() : null;
-  const [translations, readingAids] =
+  const translations =
     admin && pinned && templateRecord
-      ? await Promise.all([
-          factTranslationsFor(admin, pinned.version.id, templateRecord, language),
-          studyReadingAidsFor(admin, pinned.version.id, templateRecord, language),
-        ])
-      : [{}, {}];
+      ? await factTranslationsFor(admin, pinned.version.id, templateRecord, language)
+      : {};
+  const address =
+    pinned?.snapshot.facts.address ??
+    (assignment ? readStructuredData(assignment.dbd_records.structured_data).address : null);
+  const places =
+    language !== 'th' && key === 'bank-interview-1-identity'
+      ? await studyPlaceNames(db, address)
+      : undefined;
   const shownRecord = templateRecord
-    ? withReadingAids(translatedRecord(templateRecord, translations), readingAids, language)
+    ? studyDisplayRecord(translatedRecord(templateRecord, translations), language, places)
     : null;
   const body = renderTemplateLenient(starterBody ?? localization.body ?? '', shownRecord, language);
 

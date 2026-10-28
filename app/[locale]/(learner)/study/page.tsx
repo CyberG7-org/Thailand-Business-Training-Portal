@@ -19,6 +19,7 @@ import { createSupabaseServerClient } from '@/lib/db/server';
 import { getMyStudyProgress, listStudyMaterials, pickLocalization } from '@/lib/db/study';
 import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { translatedRecord } from '@/lib/domain/facts/localization';
+import { studyDisplayRecord } from '@/lib/domain/facts/study-display';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
 import { isCardDone } from '@/lib/domain/study-progress';
 import { pageTitle } from '@/i18n/page-title';
@@ -67,7 +68,9 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
     pinned && templateRecord && admin
       ? await cachedFactTranslationsFor(admin, pinned.version.id, templateRecord, language)
       : {};
-  const shownRecord = templateRecord ? translatedRecord(templateRecord, translations) : null;
+  const shownRecord = templateRecord
+    ? studyDisplayRecord(translatedRecord(templateRecord, translations), language)
+    : null;
   const progressById = new Map(progress.map((p) => [p.material_id, p]));
 
   const rows = materials.map((m, i) => {
