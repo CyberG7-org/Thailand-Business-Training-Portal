@@ -83,6 +83,20 @@ describe('readiness answers expressed in the learner’s own words', () => {
         'ใช้รับชำระค่าสินค้า แล้วจ่ายค่าเช่าร้าน',
       ),
     ).toBe('correct');
+    expect(
+      mark(
+        'account_purpose',
+        'รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+        "To be used for the company's financial transactions, receiving money from customers and paying business expenses.",
+      ),
+    ).toBe('correct');
+    expect(
+      mark(
+        'account_purpose',
+        'รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+        'The account is only for receiving customer payments.',
+      ),
+    ).toBe('wrong');
   });
 
   it('accepts one documented way of finding customers without requiring a customer group', () => {

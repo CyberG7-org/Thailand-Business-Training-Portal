@@ -181,14 +181,52 @@ const dateMatches = (answer: string, expected: string) => {
 
 const accountPurposeMatches = (answer: string) => {
   const actual = compact(answer);
+  const hasAny = (keywords: string[]) => keywords.some((keyword) => actual.includes(keyword));
+  // Grade the two required ideas from keyword groups, not a memorized sentence. Latin stems
+  // deliberately cover normal inflections such as receive/received/receiving and pay/paid/paying.
   const receives =
-    /(รับ|receive|terima|பெற|收)/.test(actual) &&
-    /(ลูกค้า|ชำระ|ยอดขาย|customer|pelanggan|வாடிக்கையாள|客户)/.test(actual);
+    hasAny(['รับ', 'receiv', 'collect', 'accept', 'terima', 'பெற', '收']) &&
+    hasAny([
+      'ลูกค้า',
+      'ชำระ',
+      'ยอดขาย',
+      'customer',
+      'client',
+      'sale',
+      'revenue',
+      'payment',
+      'pelanggan',
+      'வாடிக்கையாள',
+      '客户',
+    ]);
   const pays =
-    /(จ่าย|pay|bayar|செலுத்த|付)/.test(actual) &&
-    /(ค่าใช้จ่าย|บริษัท|กิจการ|ธุรกิจ|ค่าเช่า|ค่าสินค้า|ค่าจ้าง|เงินเดือน|ค่าดำเนินการ|expense|cost|company|perbelanjaan|syarikat|செலவ|நிறுவன|费用|公司)/.test(
-      actual,
-    );
+    hasAny(['จ่าย', 'pay', 'paid', 'cover', 'settle', 'bayar', 'செலுத்த', '付']) &&
+    hasAny([
+      'ค่าใช้จ่าย',
+      'บริษัท',
+      'กิจการ',
+      'ธุรกิจ',
+      'ค่าเช่า',
+      'ค่าสินค้า',
+      'ค่าจ้าง',
+      'เงินเดือน',
+      'ค่าดำเนินการ',
+      'expense',
+      'cost',
+      'bill',
+      'supplier',
+      'rent',
+      'salary',
+      'operation',
+      'company',
+      'business',
+      'perbelanjaan',
+      'syarikat',
+      'செலவ',
+      'நிறுவன',
+      '费用',
+      '公司',
+    ]);
   return receives && pays;
 };
 
