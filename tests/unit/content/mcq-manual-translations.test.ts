@@ -46,9 +46,8 @@ describe('manual quiz languages', () => {
     }
   });
 
-  it('uses static translations only for an unchanged starter question', () => {
+  it('uses the localizations stored with the question', () => {
     const starter = MCQ_STARTER.find((item) => item.conceptKey === 'company_name')!;
-    const english = starter.texts.en!;
     const row = {
       id: starter.key,
       question_key: starter.key,
@@ -58,12 +57,12 @@ describe('manual quiz languages', () => {
       option_recipes: starter.optionRecipes,
       applies_when: null,
       question_localizations: [
-        {
-          language: 'en',
-          prompt: english.prompt,
-          options: OPTION_KEYS.map((key) => ({ key, text: english.options[key] })),
-          explanation: english.explanation,
-        },
+        ...(['en', 'ms', 'ta'] as const).map((language) => ({
+          language,
+          prompt: starter.texts[language]!.prompt,
+          options: OPTION_KEYS.map((key) => ({ key, text: starter.texts[language]!.options[key] })),
+          explanation: starter.texts[language]!.explanation,
+        })),
       ],
     } as unknown as QuestionWithLocalizations;
     expect(toVariant(row).texts.ms?.prompt).toContain('nama penuh');
@@ -71,15 +70,15 @@ describe('manual quiz languages', () => {
       ...row,
       question_localizations: [
         { ...row.question_localizations[0], prompt: 'Owner edited this question' },
+        ...row.question_localizations.slice(1),
       ],
     };
-    expect(toVariant(edited).texts.ms).toBeUndefined();
-    expect(toVariant(edited).texts.ta).toBeUndefined();
+    expect(toVariant(edited).texts.ms?.prompt).toBe(starter.texts.ms!.prompt);
+    expect(toVariant(edited).texts.ta?.prompt).toBe(starter.texts.ta!.prompt);
   });
 
   it('freezes Tamil and Malay versions with the same correct choice as Thai', () => {
     const bank = MCQ_STARTER.map((starter) => {
-      const english = starter.texts.en!;
       return toVariant({
         id: starter.key,
         question_key: starter.key,
@@ -88,20 +87,12 @@ describe('manual quiz languages', () => {
         correct_option_key: starter.correctKey,
         option_recipes: starter.optionRecipes,
         applies_when: null,
-        question_localizations: [
-          {
-            language: 'en',
-            prompt: english.prompt,
-            options: OPTION_KEYS.map((key) => ({ key, text: english.options[key] })),
-            explanation: english.explanation,
-          },
-          {
-            language: 'th',
-            prompt: starter.texts.th!.prompt,
-            options: OPTION_KEYS.map((key) => ({ key, text: starter.texts.th!.options[key] })),
-            explanation: starter.texts.th!.explanation,
-          },
-        ],
+        question_localizations: (['th', 'en', 'zh', 'ms', 'ta'] as const).map((language) => ({
+          language,
+          prompt: starter.texts[language]!.prompt,
+          options: OPTION_KEYS.map((key) => ({ key, text: starter.texts[language]!.options[key] })),
+          explanation: starter.texts[language]!.explanation,
+        })),
       } as unknown as QuestionWithLocalizations);
     });
     const { questions, missing } = buildAttemptQuestions(bank, SAMPLE_CONTEXT, 'manual-languages');

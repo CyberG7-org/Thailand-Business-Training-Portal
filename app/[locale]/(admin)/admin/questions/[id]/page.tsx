@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { CONTENT_LOCALES } from '@/i18n/routing';
+import { CONTENT_LOCALES, QUESTION_LOCALES } from '@/i18n/routing';
 import { requireAdmin } from '@/lib/auth/session';
 import { getQuestion } from '@/lib/db/questions';
 import { createSupabaseServerClient } from '@/lib/db/server';
@@ -42,7 +42,7 @@ export default async function QuestionDetailPage({
         )}
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
-        {CONTENT_LOCALES.map((language) => (
+        {QUESTION_LOCALES.map((language) => (
           <QuestionLocalizationForm
             key={language}
             questionId={question.id}

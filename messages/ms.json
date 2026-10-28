@@ -1327,6 +1327,8 @@
         "thai": "Thai (teks yang diluluskan)",
         "english": "Inggeris (rujukan)",
         "chinese": "Cina (rujukan)",
+        "malay": "Bahasa Melayu (rujukan)",
+        "tamil": "Bahasa Tamil (rujukan)",
         "prompt": "Soalan",
         "option": "Pilihan {key}",
         "explanation": "Penjelasan yang ditunjukkan selepas jawapan salah",
@@ -1401,6 +1403,8 @@
         "th": "Bahasa Thai",
         "en": "Bahasa Inggeris",
         "zh": "Bahasa Cina",
+        "ms": "Bahasa Melayu",
+        "ta": "Bahasa Tamil",
         "explanation": "Penerangan"
       },
       "grammar": {

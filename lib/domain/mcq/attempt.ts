@@ -58,7 +58,7 @@ export function buildAttemptQuestions(
       explanation: rendered.explanation,
     });
     const localized: LocalizedQuestion = { th: present(check.rendered!) };
-    for (const locale of [...VARIANT_LOCALES, 'ms', 'ta'] as const) {
+    for (const locale of VARIANT_LOCALES) {
       if (locale === 'th') continue;
       if (!variant.texts[locale]) {
         localized[locale] = localized.en ?? localized.th;

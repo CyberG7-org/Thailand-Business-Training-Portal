@@ -5,7 +5,7 @@ import type { Recipe } from './tokens';
 
 export const OPTION_KEYS = ['A', 'B', 'C', 'D'] as const;
 export type VariantOptionKey = (typeof OPTION_KEYS)[number];
-export const VARIANT_LOCALES = ['th', 'en', 'zh'] as const satisfies readonly Locale[];
+export const VARIANT_LOCALES = ['th', 'en', 'zh', 'ms', 'ta'] as const satisfies readonly Locale[];
 
 /** One language of a variant: the prompt, exactly four options, an optional explanation. */
 export type VariantText = {
@@ -19,8 +19,8 @@ export type AppliesWhen = { fact: StatusFact; value: boolean };
 export type VariantStatus = 'draft' | 'approved' | 'retired';
 
 /**
- * A question variant of one MCQ concept. Thai is the text it is approved on; English and
- * Chinese are reference translations with the same placeholders.
+ * A question variant of one MCQ concept. Thai is the text it is approved on; the other
+ * languages are reference translations with the same placeholders.
  */
 export type Variant = {
   id: string;
@@ -56,14 +56,15 @@ function placeholdersOnly(option: string): boolean {
 }
 
 /**
- * A blank English or Chinese option takes the Thai option when that one is placeholders only:
+ * A blank translated option takes the Thai option when that one is placeholders only:
  * `{registered_capital|numeric(x2)}` reads the same in every language.
  */
 export function inheritPlaceholders(texts: Variant['texts']): Variant['texts'] {
   const th = texts.th;
   if (!th) return texts;
   const out: Variant['texts'] = { th };
-  for (const locale of ['en', 'zh'] as const) {
+  for (const locale of VARIANT_LOCALES) {
+    if (locale === 'th') continue;
     const text = texts[locale];
     if (!text) continue;
     const options = { ...text.options };

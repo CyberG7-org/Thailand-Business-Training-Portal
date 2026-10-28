@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
+import { QUESTION_LOCALES } from '@/i18n/routing';
 import { requireAdmin } from '@/lib/auth/session';
 import { fillMissingLanguages } from '@/lib/db/question-gen';
 import {
@@ -30,7 +31,7 @@ const questionSchema = z.object({
 });
 
 const localizationSchema = z.object({
-  language: z.enum(['th', 'en', 'zh']),
+  language: z.enum(QUESTION_LOCALES),
   prompt: z.string().trim().min(1, 'Prompt is required').max(2000),
   options: z
     .array(z.object({ key: z.enum(['A', 'B', 'C', 'D']), text: z.string().trim().min(1) }))

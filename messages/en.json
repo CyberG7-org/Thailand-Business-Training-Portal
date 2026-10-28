@@ -1327,6 +1327,8 @@
         "thai": "Thai (the text that is approved)",
         "english": "English (reference)",
         "chinese": "Chinese (reference)",
+        "malay": "Malay (reference)",
+        "tamil": "Tamil (reference)",
         "prompt": "Question",
         "option": "Option {key}",
         "explanation": "Explanation shown after a wrong answer",
@@ -1401,6 +1403,8 @@
         "th": "Thai",
         "en": "English",
         "zh": "Chinese",
+        "ms": "Malay",
+        "ta": "Tamil",
         "explanation": "Explanation"
       },
       "grammar": {

@@ -50,7 +50,7 @@ describe('the starter drafts', () => {
 
   it('keeps every rule, in all three languages', () => {
     for (const starter of MCQ_STARTER) {
-      expect(Object.keys(starter.texts).sort(), starter.key).toEqual(['en', 'th', 'zh']);
+      expect(Object.keys(starter.texts).sort(), starter.key).toEqual(['en', 'ms', 'ta', 'th', 'zh']);
       expect(validateVariant(starter), starter.key).toEqual([]);
       expect(starter.texts.th?.explanation, starter.key).toBeTruthy();
     }

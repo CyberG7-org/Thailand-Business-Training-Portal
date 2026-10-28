@@ -15,13 +15,10 @@ import {
 import type { Locale } from '@/lib/domain/thai-date';
 import type { Database, Json } from './database.types';
 import type { QuestionWithLocalizations } from './questions';
-import { MCQ_STARTER } from '@/lib/content/mcq-starter';
-import { starterQuizTranslation } from '@/lib/content/mcq-manual-translations';
 
 type Db = SupabaseClient<Database>;
 
 const SELECT = '*, question_localizations(*)';
-const STARTERS = new Map(MCQ_STARTER.map((starter) => [starter.key, starter]));
 
 /** A save or an approval the rules refuse; `issues` says what and where. */
 export class VariantError extends Error {
@@ -46,15 +43,6 @@ export function toVariant(row: QuestionWithLocalizations): Variant {
       options,
       explanation: loc.explanation,
     };
-  }
-  // Attach static translations only while the Owner's English source still matches the
-  // starter. An edited question must not silently keep translations of old answers.
-  const starter = STARTERS.get(row.question_key);
-  if (starter && JSON.stringify(texts.en) === JSON.stringify(starter.texts.en)) {
-    for (const locale of ['ms', 'ta'] as const) {
-      const translation = starterQuizTranslation(starter.conceptKey, locale, starter.key);
-      if (translation) texts[locale] = translation;
-    }
   }
   return {
     id: row.id,

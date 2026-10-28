@@ -2,6 +2,8 @@ import { defineRouting } from 'next-intl/routing';
 
 export const LOCALES = ['th', 'en', 'zh', 'ta', 'ms'] as const;
 export type AppLocale = (typeof LOCALES)[number];
+export const QUESTION_LOCALES = LOCALES;
+export type QuestionLocale = (typeof QUESTION_LOCALES)[number];
 export type ExistingContentLocale = 'th' | 'en' | 'zh';
 export const CONTENT_LOCALES = [
   'th',

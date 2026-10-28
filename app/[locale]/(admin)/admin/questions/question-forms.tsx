@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState } from 'react';
-import type { ExistingContentLocale } from '@/i18n/routing';
+import type { ExistingContentLocale, QuestionLocale } from '@/i18n/routing';
 import type { QuestionLocalizationRow, QuestionRow } from '@/lib/db/questions';
 import type { QuestionOption } from '@/lib/domain/assessment/engine';
 import {
@@ -15,10 +15,12 @@ import {
 } from './actions';
 
 const initial: QuestionState = { ok: false, error: null };
-const LANGUAGE_LABELS: Record<ExistingContentLocale, string> = {
+const LANGUAGE_LABELS: Record<QuestionLocale, string> = {
   th: 'ไทย',
   en: 'English',
   zh: '中文',
+  ms: 'Bahasa Melayu',
+  ta: 'தமிழ்',
 };
 const KEYS = ['A', 'B', 'C', 'D'] as const;
 const PLACEHOLDER_EXAMPLES =
@@ -134,7 +136,7 @@ export function QuestionLocalizationForm({
   localization,
 }: {
   questionId: string;
-  language: ExistingContentLocale;
+  language: QuestionLocale;
   localization: QuestionLocalizationRow | null;
 }) {
   const locale = useLocale();
