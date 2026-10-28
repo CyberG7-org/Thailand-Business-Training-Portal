@@ -35,21 +35,29 @@ describe('readiness answers expressed in the learner’s own words', () => {
     expect(mark('authorized_representative', expected, 'ผู้จัดการ')).toBe('wrong');
   });
 
-  it('does not require signing conditions even when the registration has them', () => {
+  it('accepts a saved authorized person without requiring signing conditions', () => {
     const expected = 'นายหนึ่ง ใจดี, นางสาวสอง ใจดี / กรรมการสองคนลงนามร่วมกัน';
-    expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('wrong');
+    expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('correct');
     expect(mark('authorized_representative', expected, 'กรรมการ')).toBe('correct');
   });
 
-  it('accepts the director role independently of names in the certificate', () => {
+  it('accepts either a saved authorized person or the director role', () => {
     const expected = 'นายหนึ่ง ใจดี, นางสาวสอง ใจดี / นายหนึ่ง ใจดีลงนาม';
-    expect(mark('authorized_representative', expected, 'นางสาวสอง ใจดี')).toBe('wrong');
+    expect(mark('authorized_representative', expected, 'นางสาวสอง ใจดี')).toBe('correct');
     expect(mark('authorized_representative', expected, 'กรรมการ')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'นายอื่น ใจร้าย')).toBe('wrong');
   });
 
   it('accepts an equivalent director role without requiring the word sign', () => {
     expect(
       mark('authorized_representative', 'นายหนึ่ง ใจดี / กรรมการหนึ่งคนลงนาม', 'กรรมการคนเดียว'),
+    ).toBe('correct');
+  });
+
+  it('accepts the common Tamil director spelling for signer and attendee answers', () => {
+    expect(mark('authorized_representative', 'นายบัณฑิต รติปัจจรกุล', 'இயக்குனர்')).toBe('correct');
+    expect(
+      mark('attendee_identity', 'นายบัณฑิต รติปัจจรกุล', 'นายบัณฑิต รติปัจจรกุล – இயக்குனர்'),
     ).toBe('correct');
   });
 

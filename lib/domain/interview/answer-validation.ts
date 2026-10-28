@@ -104,17 +104,25 @@ const addressMatches = (answer: string, expected: string) => {
 
 const directorMatches = (answer: string): boolean => {
   const actual = compact(answer);
-  if (/ไม่ใช่กรรมการ|notadirector|bukanpengarah|不是董事|இயக்குநர்அல்ல/.test(actual)) return false;
-  return /กรรมการ|director|pengarah|董事|இயக்குநர்/.test(actual);
+  if (/ไม่ใช่กรรมการ|notadirector|bukanpengarah|不是董事|இயக்குநர்அல்ல|இயக்குனர்அல்ல/.test(actual))
+    return false;
+  return /กรรมการ|director|pengarah|董事|இயக்குநர்|இயக்குனர்/.test(actual);
+};
+
+const withoutTitle = (value: string) => compact(value).replace(/^(นาย|นางสาว|นาง|ดร|คุณ)/, '');
+
+const personNameMatches = (answer: string, expected: string) => {
+  const actual = withoutTitle(answer);
+  const names = expected
+    .split(' / ')[0]
+    .split(/[,;]+/)
+    .map(withoutTitle)
+    .filter((name) => name.length >= 2);
+  return names.some((name) => actual.includes(name));
 };
 
 const attendeeMatches = (answer: string, expected: string) => {
-  const [name = ''] = expected.split(' / ');
-  const withoutTitle = (value: string) => compact(value).replace(/^(นาย|นางสาว|นาง|ดร|คุณ)/, '');
-  const actual = withoutTitle(answer);
-  return (
-    withoutTitle(name).length >= 2 && actual.includes(withoutTitle(name)) && directorMatches(answer)
-  );
+  return personNameMatches(answer, expected) && directorMatches(answer);
 };
 
 const dateMatches = (answer: string, expected: string) => {
@@ -284,7 +292,7 @@ export function evaluateReadinessAnswer(
         );
       break;
     case 'authorized_representative':
-      correct = directorMatches(answer);
+      correct = directorMatches(answer) || personNameMatches(answer, expected);
       break;
     case 'attendee_identity':
       correct = attendeeMatches(answer, expected);
