@@ -227,6 +227,27 @@ describe('the readiness interview', () => {
     expect(data!.verdict).toBe('not_ready');
   });
 
+  it('keeps the selected interview language when the website language changes', async () => {
+    const first = await startOrResumeInterview(team.learner.id, 'ms');
+    expect(first.session.language).toBe('ms');
+    expect(first.turns[0].content).toContain('nama penuh');
+    const resumed = await startOrResumeInterview(team.learner.id, 'ta');
+    expect(resumed.session.id).toBe(first.session.id);
+    expect(resumed.session.language).toBe('ms');
+    const reply = await submitLearnerMessage(
+      team.learner.id,
+      first.session.id,
+      expected.company_name,
+    );
+    expect(reply.turns.at(-1)?.content).toContain('nombor pendaftaran');
+    await endInterview(team.learner.id, first.session.id);
+
+    const tamil = await startOrResumeInterview(team.learner.id, 'ta');
+    expect(tamil.session.language).toBe('ta');
+    expect(tamil.turns[0].content).toContain('பதிவு செய்யப்பட்ட பெயர்');
+    await endInterview(team.learner.id, tamil.session.id);
+  });
+
   it('is closed to a learner who has not passed the exam', async () => {
     const other = await seedTeam('ยังไม่สอบ');
     try {

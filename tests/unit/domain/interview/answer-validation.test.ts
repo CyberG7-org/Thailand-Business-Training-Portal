@@ -22,13 +22,9 @@ describe('readiness answers expressed in the learner’s own words', () => {
     );
   });
 
-  it('accepts the named authorized signer without requiring the word sign', () => {
+  it('accepts Director alone without a name, signing condition or seal', () => {
     expect(
-      mark(
-        'authorized_representative',
-        'นายวรีโรจน์ ชาวนารี / นายวรีโรจน์ ชาวนารี',
-        'นายวรีโรจน์ ชาวนารี',
-      ),
+      mark('authorized_representative', 'นายวรีโรจน์ ชาวนารี / นายวรีโรจน์ ชาวนารี', 'กรรมการ'),
     ).toBe('correct');
   });
 
@@ -39,16 +35,16 @@ describe('readiness answers expressed in the learner’s own words', () => {
     expect(mark('authorized_representative', expected, 'ผู้จัดการ')).toBe('wrong');
   });
 
-  it('requires both directors when the registration requires joint signatures', () => {
+  it('does not require signing conditions even when the registration has them', () => {
     const expected = 'นายหนึ่ง ใจดี, นางสาวสอง ใจดี / กรรมการสองคนลงนามร่วมกัน';
     expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('wrong');
-    expect(mark('authorized_representative', expected, 'กรรมการสองคนลงนามร่วมกัน')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'กรรมการ')).toBe('correct');
   });
 
-  it('does not accept a director excluded by a named signing authority', () => {
+  it('accepts the director role independently of names in the certificate', () => {
     const expected = 'นายหนึ่ง ใจดี, นางสาวสอง ใจดี / นายหนึ่ง ใจดีลงนาม';
     expect(mark('authorized_representative', expected, 'นางสาวสอง ใจดี')).toBe('wrong');
-    expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'กรรมการ')).toBe('correct');
   });
 
   it('accepts an equivalent director role without requiring the word sign', () => {

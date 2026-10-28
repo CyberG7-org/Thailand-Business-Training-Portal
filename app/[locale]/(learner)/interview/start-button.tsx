@@ -13,6 +13,19 @@ export function StartInterviewButton({ resume }: { resume: boolean }) {
   return (
     <form action={formAction} className="grid gap-3">
       <input type="hidden" name="locale" value={locale} />
+      {!resume && (
+        <label className="grid gap-1 text-sm font-medium text-ink-900">
+          {t('chooseLanguage')}
+          <select name="interviewLanguage" defaultValue={locale} className="staff-input max-w-sm">
+            <option value="th">ไทย</option>
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+            <option value="ta">தமிழ்</option>
+            <option value="ms">Bahasa Melayu</option>
+          </select>
+          <span className="text-ink-600 text-xs font-normal">{t('languageLocked')}</span>
+        </label>
+      )}
       {state.error && (
         <p
           role="alert"

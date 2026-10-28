@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import type { AppLocale } from '@/i18n/routing';
+import { LOCALES, type AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { interviewErrorDiagnostic } from '@/lib/domain/interview/diagnostic';
 import {
@@ -36,9 +36,13 @@ export async function startInterviewAction(
 ): Promise<StartState> {
   const locale = String(formData.get('locale') ?? 'th') as AppLocale;
   const user = await requireUser(locale);
+  const requested = String(formData.get('interviewLanguage') ?? locale);
+  const interviewLanguage = LOCALES.includes(requested as AppLocale)
+    ? (requested as AppLocale)
+    : 'th';
   let sessionId: string;
   try {
-    sessionId = (await startOrResumeInterview(user.id)).session.id;
+    sessionId = (await startOrResumeInterview(user.id, interviewLanguage)).session.id;
   } catch (e) {
     console.error('interview.start.failed', interviewErrorDiagnostic(e));
     return { error: code(e) };

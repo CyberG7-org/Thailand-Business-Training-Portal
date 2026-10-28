@@ -1,19 +1,16 @@
-import { currentItem, isReadinessPlan, questionFor } from '@/lib/domain/interview/plan';
+import {
+  currentItem,
+  isReadinessPlan,
+  questionFor,
+  readinessItem,
+} from '@/lib/domain/interview/plan';
 import { evaluateReadinessAnswer } from '@/lib/domain/interview/answer-validation';
+import { OFFICER_COPY } from '@/lib/domain/interview/copy';
 import type { Assessment, OfficerTurn } from '@/lib/domain/interview/types';
 import type { InterviewProvider, NarrateInput, TurnInput } from './types';
 
 const MAX_EVASIONS = 3;
 const EVASIVE = /ไม่ทราบ|ไม่รู้|ไม่แน่ใจ/;
-
-const NOTE: Record<Assessment['verdict'], string> = {
-  correct: 'ตรงกับหนังสือรับรอง',
-  partial: 'ตอบได้บางส่วน',
-  wrong: 'ไม่ตรงกับหนังสือรับรอง',
-  evasive: 'ไม่ได้ตอบคำถาม',
-  pasted: 'คัดลอกข้อความจากระบบ',
-  off_topic: 'ไม่เกี่ยวกับคำถาม',
-};
 
 function norm(s: string): string {
   return s
@@ -59,39 +56,14 @@ export class FakeInterview implements InterviewProvider {
 
   async turn(input: TurnInput): Promise<OfficerTurn> {
     const language = input.language ?? 'th';
-    const phrases = {
-      th: {
-        hello: 'สวัสดีค่ะ ดิฉันเป็นเจ้าหน้าที่ธนาคาร ขอสอบถามข้อมูลบริษัทนะคะ ',
-        reask: 'ขอถามอีกครั้งนะคะ ',
-        pasted: 'กรุณาตอบด้วยคำพูดของคุณเองนะคะ ',
-        next: 'รับทราบค่ะ ',
-        probing: 'ขอกลับมาที่ข้อนี้อีกครั้งนะคะ ',
-        done: 'ขอบคุณค่ะ ครบทุกข้อแล้ว ธนาคารจะสรุปผลให้นะคะ',
-      },
-      en: {
-        hello: 'Hello, I am the bank officer. I will ask about your company. ',
-        reask: 'Let me ask that again. ',
-        pasted: 'Please answer in your own words. ',
-        next: 'Thank you. ',
-        probing: 'Let us return to this question. ',
-        done: 'Thank you. That is all the questions. The bank will summarise your result.',
-      },
-      zh: {
-        hello: '您好，我是银行工作人员。请回答几个关于您公司的问题。',
-        reask: '请再回答一次。',
-        pasted: '请用您自己的话回答。',
-        next: '谢谢。',
-        probing: '我们再回到这个问题。',
-        done: '谢谢，问题已全部问完。银行将汇总您的结果。',
-      },
-    }[language];
+    const phrases = OFFICER_COPY[language];
     const question = (concept: string, fallback: string) =>
       questionFor(concept, language, fallback);
     const item = currentItem(input.plan);
     if (input.learnerMessage === null || !item) {
       const first = input.plan.items[0];
       return {
-        say: phrases.hello + (first ? question(first.concept, first.question) : ''),
+        say: phrases.greeting + (first ? question(first.concept, first.question) : ''),
         assessment: null,
         next: first ? { concept: first.concept } : { close: 'plan_complete' },
       };
@@ -99,7 +71,18 @@ export class FakeInterview implements InterviewProvider {
     const message = input.learnerMessage;
     let verdict: Assessment['verdict'];
     if (input.plan.version === 3) {
-      verdict = input.pastedDetected ? 'wrong' : evaluateReadinessAnswer(item, message);
+      const translatedExpected = readinessItem(item.concept)
+        ?.facts.map((fact) => input.translatedFacts?.[fact])
+        .filter((value): value is string => Boolean(value))
+        .join(' / ');
+      verdict = input.pastedDetected
+        ? 'wrong'
+        : evaluateReadinessAnswer(
+            item,
+            message,
+            translatedExpected || undefined,
+            input.facts.company_name_en,
+          );
     } else if (input.pastedDetected) verdict = 'pasted';
     else {
       const answer = norm(message);
@@ -116,11 +99,15 @@ export class FakeInterview implements InterviewProvider {
       else if (message.trim().length < 3 || EVASIVE.test(message)) verdict = 'evasive';
       else verdict = 'wrong';
     }
-    const assessment: Assessment = { concept: item.concept, verdict, note: NOTE[verdict] };
+    const assessment: Assessment = {
+      concept: item.concept,
+      verdict,
+      note: verdict === 'correct' ? phrases.correct : phrases.wrong,
+    };
     const evasions = input.evasions + (verdict === 'evasive' ? 1 : 0);
     if (!isReadinessPlan(input.plan) && evasions >= MAX_EVASIONS) {
       return {
-        say: 'ขออภัยค่ะ วันนี้ธนาคารยังไม่สามารถดำเนินการต่อได้ ขอบคุณที่มาค่ะ',
+        say: phrases.evasions,
         assessment,
         next: { close: 'too_many_evasions' },
       };
@@ -137,7 +124,7 @@ export class FakeInterview implements InterviewProvider {
     const next = input.plan.items[input.plan.cursor + 1];
     if (!next) {
       return {
-        say: phrases.done,
+        say: phrases.complete,
         assessment,
         next: { close: 'plan_complete' },
       };
@@ -151,11 +138,11 @@ export class FakeInterview implements InterviewProvider {
   }
 
   async narrate(input: NarrateInput): Promise<string> {
-    const weak = input.verdict.reasons.filter((r) => r.verdict !== 'correct').map((r) => r.concept);
-    return input.verdict.verdict === 'ready'
-      ? 'ผู้สมัครตอบคำถามเกี่ยวกับบริษัทได้ถูกต้องและครบถ้วน ธนาคารประเมินความเสี่ยงต่ำ'
-      : 'ผู้สมัครยังตอบคำถามบางข้อไม่ได้หรือไม่ชัดเจน (' +
-          weak.join(', ') +
-          ') ธนาคารยังไม่สามารถดำเนินการต่อได้ในวันนี้';
+    const copy = OFFICER_COPY[input.language ?? 'th'];
+    if (input.verdict.verdict === 'ready') return copy.ready;
+    const weak = input.verdict.reasons
+      .filter((reason) => reason.verdict !== 'correct')
+      .map((reason) => questionFor(reason.concept, input.language ?? 'th', reason.concept));
+    return weak.length ? `${copy.practise} (${weak.join('; ')})` : copy.practise;
   }
 }

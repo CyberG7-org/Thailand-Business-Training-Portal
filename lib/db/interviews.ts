@@ -1,8 +1,9 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ExistingContentLocale } from '@/i18n/routing';
+import { LOCALES, type AppLocale } from '@/i18n/routing';
 import type { LearnerRole } from '@/lib/domain/bank-interview';
 import { binaryReadinessAssessment } from '@/lib/domain/interview/answer-validation';
+import { OFFICER_COPY } from '@/lib/domain/interview/copy';
 import { revealedFact } from '@/lib/domain/interview/leak';
 import {
   advance,
@@ -13,10 +14,6 @@ import {
   probingItems,
   questionFor,
 } from '@/lib/domain/interview/plan';
-import {
-  OFFICER_CONVERSATION_LANGUAGE,
-  interviewReplyLanguage,
-} from '@/lib/domain/interview/language';
 import { detectPasted } from '@/lib/domain/interview/pasted';
 import type {
   Assessment,
@@ -38,6 +35,7 @@ import { invoiceFacts } from '@/lib/domain/invoices/answers';
 import type { InvoiceSummary } from '@/lib/domain/invoices/arithmetic';
 import { toTemplateRecord } from './assessment';
 import { pinnedFactsFor } from './pinning';
+import { cachedFactTranslationsFor } from './fact-translations';
 import { getActiveAssignmentForUser } from './assignments';
 import type { Database, Json } from './database.types';
 import type { DbdRecordRow } from './dbd-records';
@@ -58,51 +56,6 @@ export function turnBudget(plan: InterviewPlan): number {
 }
 
 export type Budget = { used: number; max: number };
-
-const GREETING = 'สวัสดีค่ะ ดิฉันเป็นเจ้าหน้าที่ธนาคาร ขอสอบถามข้อมูลบริษัทนะคะ ';
-const REASK = 'ขอถามอีกครั้งนะคะ ';
-/** What the officer says when the code, not the model, closes the interview. */
-const CLOSING = {
-  turn_limit: 'ขอบคุณค่ะ การสัมภาษณ์ครบจำนวนข้อความที่กำหนดแล้ว ธนาคารจะสรุปผลให้นะคะ',
-  too_many_evasions: 'ขออภัยค่ะ วันนี้ธนาคารยังไม่สามารถดำเนินการต่อได้ ขอบคุณที่มาค่ะ',
-} as const;
-const OFFICER_COPY: Record<
-  ExistingContentLocale,
-  {
-    greeting: string;
-    reask: string;
-    next: string;
-    complete: string;
-    limit: string;
-    evasions: string;
-  }
-> = {
-  th: {
-    greeting: GREETING,
-    reask: REASK,
-    next: 'รับทราบค่ะ ',
-    complete: 'ขอบคุณค่ะ ครบทุกข้อแล้ว ระบบจะสรุปผลให้นะคะ',
-    limit: CLOSING.turn_limit,
-    evasions: CLOSING.too_many_evasions,
-  },
-  en: {
-    greeting: 'Hello, I am the bank officer. I will ask about your company. ',
-    reask: 'Let me ask that again. ',
-    next: 'Thank you. ',
-    complete: 'Thank you. That is all the questions. Your result will be summarised now.',
-    limit:
-      'Thank you. The interview has reached its message limit. Your result will be summarised now.',
-    evasions: 'I am sorry, the bank cannot continue today. Thank you.',
-  },
-  zh: {
-    greeting: '您好，我是银行工作人员。请回答几个关于您公司的问题。',
-    reask: '请再回答一次。',
-    next: '谢谢。',
-    complete: '谢谢，问题已全部问完。现在将汇总您的结果。',
-    limit: '谢谢，面试已达到消息数量上限。现在将汇总您的结果。',
-    evasions: '抱歉，银行今天无法继续。谢谢。',
-  },
-};
 
 export type InterviewErrorCode =
   | 'not_open'
@@ -253,12 +206,12 @@ async function factsFor(userId: string) {
   if (!assignment) throw new InterviewError('No active assignment', 'no_assignment');
   const pinned = await pinnedFactsFor(admin, assignment);
   if (!pinned) throw new InterviewError('No training version yet', 'no_version');
+  const source = templateRecordFromSnapshot(pinned.snapshot, pinned.role);
   return {
     assignment,
-    facts: factsFromTemplate(
-      templateRecordFromSnapshot(pinned.snapshot, pinned.role),
-      pinned.snapshot.extras.invoice_summary,
-    ),
+    source,
+    versionId: pinned.version.id,
+    facts: factsFromTemplate(source, pinned.snapshot.extras.invoice_summary),
   };
 }
 
@@ -291,23 +244,21 @@ function guard(
   item: PlanItem | null,
   facts: FactSheet,
   opening: boolean,
-  language: ExistingContentLocale = 'th',
+  language: AppLocale = 'th',
 ): OfficerTurn {
   const assessment =
     reply.assessment && item ? { ...reply.assessment, concept: item.concept } : reply.assessment;
   const leaked = revealedFact(reply.say, facts) !== null;
-  const wrongLanguage = language !== interviewReplyLanguage(reply.say, [], language);
-  if (!leaked && !wrongLanguage) return { ...reply, assessment };
-  console.warn('interview: an unsafe or wrong-language officer turn was replaced');
+  if (!leaked) return { ...reply, assessment };
+  console.warn('interview: an unsafe officer turn was replaced');
   const copy = OFFICER_COPY[language];
   const say = item
     ? (opening ? copy.greeting : copy.reask) + questionFor(item.concept, language, item.question)
     : copy.complete;
   return {
     say,
-    // A leaked answer invalidates judgment; wrong-language speech alone does not.
-    assessment: item && leaked ? null : assessment,
-    next: item && leaked ? { concept: item.concept } : reply.next,
+    assessment: item ? null : assessment,
+    next: item ? { concept: item.concept } : reply.next,
   };
 }
 
@@ -317,7 +268,10 @@ function guard(
  */
 export async function startOrResumeInterview(
   userId: string,
+  selectedLanguage: AppLocale = 'th',
 ): Promise<{ session: InterviewSessionRow; turns: InterviewTurnRow[] }> {
+  if (!LOCALES.includes(selectedLanguage))
+    throw new InterviewError('Unsupported language', 'not_configured');
   const officer = provider();
   const admin = createSupabaseAdminClient();
   const [gate, { data: open, error: openError }] = await Promise.all([
@@ -347,7 +301,7 @@ export async function startOrResumeInterview(
   // The officer speaks before the session exists: a provider failure leaves nothing behind.
   const opening = guard(
     await officer.turn({
-      language: OFFICER_CONVERSATION_LANGUAGE,
+      language: selectedLanguage,
       facts,
       plan,
       transcript: [],
@@ -358,7 +312,7 @@ export async function startOrResumeInterview(
     plan.items[0] ?? null,
     facts,
     true,
-    OFFICER_CONVERSATION_LANGUAGE,
+    selectedLanguage,
   );
   const { data: session, error } = await admin
     .from('interview_sessions')
@@ -366,7 +320,7 @@ export async function startOrResumeInterview(
       user_id: userId,
       dbd_record_id: assignment.dbd_record_id,
       status: 'in_progress',
-      language: OFFICER_CONVERSATION_LANGUAGE,
+      language: selectedLanguage,
       plan: plan as unknown as Json,
       provider: officer.name,
     })
@@ -417,7 +371,7 @@ async function close(
       facts,
       verdict: core,
       transcript,
-      language: OFFICER_CONVERSATION_LANGUAGE,
+      language: session.language as AppLocale,
     });
     if (narrative) {
       await admin
@@ -448,10 +402,14 @@ export async function submitLearnerMessage(
   if (session.status !== 'in_progress') throw new InterviewError('The session is closed', 'closed');
   await assertFresh(session);
   const admin = createSupabaseAdminClient();
-  const { facts } = await factsFor(userId);
+  const { facts, source, versionId } = await factsFor(userId);
   const rows = await turnsOf(sessionId);
   const transcript = toTurns(rows);
-  const language = OFFICER_CONVERSATION_LANGUAGE;
+  const language = LOCALES.includes(session.language as AppLocale)
+    ? (session.language as AppLocale)
+    : 'th';
+  const translations = await cachedFactTranslationsFor(admin, versionId, source, language);
+  const translatedFacts: FactSheet = { ...facts, ...translations };
   let plan = session.plan as unknown as InterviewPlan;
   const item = currentItem(plan);
   // Spec §4.2, the second phase: when the last facts item is on the table, the risk officer's
@@ -471,6 +429,7 @@ export async function submitLearnerMessage(
     await provider().turn({
       language,
       facts,
+      translatedFacts,
       plan,
       transcript,
       learnerMessage: text,

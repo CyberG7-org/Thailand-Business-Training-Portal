@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from '@/i18n/navigation';
+import type { AppLocale } from '@/i18n/routing';
 import { endInterviewAction, sendMessageAction, type Budget, type ChatTurn } from '../actions';
 
 const BUBBLE = {
@@ -19,11 +20,13 @@ const BUBBLE = {
  */
 export function Chat({
   sessionId,
+  interviewLanguage,
   initialTurns,
   maxChars,
   initialBudget,
 }: {
   sessionId: string;
+  interviewLanguage: AppLocale;
   initialTurns: ChatTurn[];
   maxChars: number;
   /** Learner messages sent so far and the session's limit (spec §4.3: shown, not silently cut). */
@@ -106,7 +109,7 @@ export function Chat({
               >
                 {turn.role === 'officer' ? t('chat.officer') : t('chat.you')}
               </span>
-              <p lang="th" className="whitespace-pre-wrap">
+              <p lang={interviewLanguage} className="whitespace-pre-wrap">
                 {turn.content}
               </p>
             </li>
@@ -144,7 +147,7 @@ export function Chat({
           }}
           maxLength={maxChars}
           rows={2}
-          lang="th"
+          lang={interviewLanguage}
           placeholder={t('chat.placeholder')}
           aria-label={t('chat.placeholder')}
           className="w-full resize-none rounded-control border border-ink-300 bg-white px-3.5 py-2.5 text-base leading-[1.6] text-ink-900 placeholder:text-ink-500"

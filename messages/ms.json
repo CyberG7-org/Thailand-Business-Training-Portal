@@ -1625,13 +1625,15 @@
   "interview": {
     "title": "Temu Duga",
     "intro": "Temu duga latihan yang mesra menggunakan fakta syarikat yang sama yang anda pelajari.",
-    "thaiOnly": "Pegawai bercakap dalam bahasa Thai. Sila jawab dalam bahasa Thai.",
+    "languageNotice": "Pegawai akan menggunakan bahasa yang dipilih untuk temu duga ini. Nama dan alamat syarikat kekal seperti dalam rekod.",
+    "chooseLanguage": "Bahasa apa yang anda mahu gunakan sepanjang temu duga?",
+    "languageLocked": "Pilihan bahasa ini kekal sepanjang percubaan ini.",
     "guide": {
       "eyebrow": "Sebelum anda mula",
       "title": "Berlatih mengikut rentak anda sendiri",
       "questions": "Jawab 13 soalan pendek",
       "pass": "Dapatkan 10 jawapan betul untuk bersedia",
-      "language": "Temu duga adalah dalam bahasa Thai",
+      "language": "Pilih bahasa temu duga sebelum bermula",
       "repeat": "Berlatih seberapa banyak kali yang anda suka (ฝึกได้ไม่จำกัด)",
       "support": "Pegawai akan memberi anda satu peluang kedua yang mesra apabila jawapan memerlukan lebih banyak butiran. Ini adalah latihan, jadi luangkan masa anda."
     },

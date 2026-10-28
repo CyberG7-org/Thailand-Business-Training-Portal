@@ -1625,13 +1625,15 @@
   "interview": {
     "title": "Interview",
     "intro": "A friendly practice interview using the same company facts you studied.",
-    "thaiOnly": "The officer speaks Thai. Please answer in Thai.",
+    "languageNotice": "The officer will speak the language chosen for this interview. Company names and addresses remain as recorded.",
+    "chooseLanguage": "What language would you like for the entire interview?",
+    "languageLocked": "Your choice stays the same throughout this attempt.",
     "guide": {
       "eyebrow": "Before you start",
       "title": "Practise at your own pace",
       "questions": "Answer 13 short questions",
       "pass": "Get 10 correct to be ready",
-      "language": "The interview is in Thai",
+      "language": "Choose your interview language before starting",
       "repeat": "Practise as many times as you like (ฝึกได้ไม่จำกัด)",
       "support": "The officer gives you one friendly second chance when an answer needs more detail. This is practice, so take your time."
     },

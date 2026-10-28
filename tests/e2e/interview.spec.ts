@@ -4,7 +4,7 @@ import { loginAs, switchTo } from './helpers';
 import { seedLearnerWithCompany, seedLearnerWithCompleteCompany, seedPassedExam } from './seed';
 
 /**
- * The readiness interview with the fake officer (spec §4.6): it asks the plan's Thai questions,
+ * The readiness interview with the local officer (spec §4.6): it asks the plan in the selected language,
  * marks each answer correct or wrong. The friendly v3 plan always asks all 13 questions, offers
  * one retry and passes at 10 correct.
  */
@@ -68,7 +68,7 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   const guide = page.getByTestId('interview-guide');
   await expect(guide).toContainText('13');
   await expect(guide).toContainText('10');
-  await expect(guide).toContainText('สัมภาษณ์เป็นภาษาไทย');
+  await expect(guide).toContainText('เลือกภาษาสัมภาษณ์ก่อนเริ่ม');
   await expect(guide).toContainText('ฝึกได้ไม่จำกัด');
   await page.getByTestId('interview-start').click();
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
@@ -170,6 +170,26 @@ test('the learner can end the interview early and is told to try again', async (
     'href',
     '/th/interview',
   );
+});
+
+test('the officer keeps the chosen language when the website language changes', async ({
+  page,
+}) => {
+  const loginId = await seedLearnerWithCompany('บริษัท ทดสอบภาษา จำกัด', '2026-07-13');
+  await seedPassedExam(loginId);
+  await loginAs(page, loginId, E2E_PASSWORD);
+  await page.goto('/th/interview');
+  await page.locator('select[name="interviewLanguage"]').selectOption('ms');
+  await page.getByTestId('interview-start').click();
+  await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
+  const sessionId = page.url().split('/').at(-1)!;
+  await expect(page.getByTestId('chat-message').first()).toContainText('Helo');
+  await expect(page.getByTestId('chat-message').first().locator('p')).toHaveAttribute('lang', 'ms');
+  await page.goto(`/en/interview/${sessionId}`);
+  await expect(page.getByTestId('chat-message').first()).toContainText('Helo');
+  await page.getByTestId('chat-input').fill('บริษัท ทดสอบภาษา จำกัด');
+  await page.getByTestId('chat-send').click();
+  await expect(page.getByTestId('chat-message').last()).toContainText('nombor pendaftaran');
 });
 
 test('the chat fits a phone', async ({ page }) => {
