@@ -30,7 +30,7 @@ export function AnswerReview({
 }) {
   return (
     <section
-      className="rise mx-auto w-full max-w-[880px] overflow-hidden rounded-card bg-white shadow-raised"
+      className="rise mx-auto w-full max-w-[1240px] overflow-hidden rounded-card bg-white shadow-raised"
       style={{ '--rise-delay': '240ms' } as CSSProperties}
     >
       <div className="border-b border-brand-100 bg-brand-50 px-5 py-4 md:px-6">
