@@ -2,12 +2,16 @@ import type { Assessment, ConceptId, InterviewPlan, PlanItem } from './types';
 
 export type BinaryReadinessVerdict = 'correct' | 'wrong';
 
-const THAI_DIGITS = /[๐-๙]/g;
+const LOCAL_DIGITS = /[๐-๙௦-௯０-９]/g;
 const POLITE_ENDING = /(ครับ|ค่ะ|คะ|นะครับ|นะคะ)+$/;
 const EVASIVE = /ไม่ทราบ|ไม่รู้|ไม่แน่ใจ|จำไม่ได้/;
 
 const arabicDigits = (value: string) =>
-  value.replace(THAI_DIGITS, (digit) => String(digit.charCodeAt(0) - 0x0e50));
+  value.replace(LOCAL_DIGITS, (digit) => {
+    const code = digit.charCodeAt(0);
+    const zero = code >= 0xff10 ? 0xff10 : code >= 0x0be6 ? 0x0be6 : 0x0e50;
+    return String(code - zero);
+  });
 
 const compact = (value: string) =>
   arabicDigits(value)
@@ -30,13 +34,13 @@ const firstAmount = (value: string): number | undefined => {
     .slice(match.index + match[0].length)
     .trimStart()
     .toLowerCase();
-  const multiplier = /^(ล้าน|million\b|m\b)/.test(suffix)
+  const multiplier = /^(ล้าน|million\b|juta\b|மில்லியன்|m\b)/.test(suffix)
     ? 1_000_000
     : /^(แสน)/.test(suffix)
       ? 100_000
       : /^(หมื่น)/.test(suffix)
         ? 10_000
-        : /^(พัน|thousand\b|k\b)/.test(suffix)
+        : /^(พัน|thousand\b|ribu\b|ஆயிரம்|k\b)/.test(suffix)
           ? 1_000
           : 1;
   return amount * multiplier;
@@ -71,11 +75,23 @@ const looseMeaning = (answer: string, expected: string) => {
 
 const businessMeaning = (answer: string, expected: string) => {
   const stripGeneric = (value: string) =>
-    value.replace(/บริษัท|ธุรกิจ|ผลิตภัณฑ์|สินค้า|บริการ|จำหน่าย|ขาย|ทำ/g, '');
+    value.replace(
+      /บริษัท|ธุรกิจ|ผลิตภัณฑ์|สินค้า|บริการ|จำหน่าย|ขาย|ทำ|menjual|jual|perniagaan|syarikat|produk|perkhidmatan|sell(?:ing)?|business|company|products?|services?|விற்க|விற்பனை|நிறுவன|பொருட்கள்|சேவைகள்|销售|公司|业务|产品|服务/gi,
+      '',
+    );
   return looseMeaning(stripGeneric(answer), stripGeneric(expected));
 };
 
 const addressMatches = (answer: string, expected: string) => {
+  const postcode = /\b\d{5}\b/.exec(arabicDigits(expected))?.[0];
+  const houseNumber = /^\s*(\d+(?:\/\d+)?)/.exec(arabicDigits(expected))?.[1];
+  if (
+    postcode &&
+    houseNumber &&
+    arabicDigits(answer).includes(postcode) &&
+    arabicDigits(answer).includes(houseNumber)
+  )
+    return true;
   const target = compact(expected);
   const parts = arabicDigits(answer)
     .split(/[\s,./_-]+/)
@@ -86,41 +102,27 @@ const addressMatches = (answer: string, expected: string) => {
   return new Set(parts.filter((part) => target.includes(part))).size >= 2;
 };
 
-const signingAuthorityMatches = (answer: string, expected: string) => {
-  const actual = compact(answer)
-    .replaceAll('ลงลายมือชื่อ', 'ลงนาม')
-    .replaceAll('สำคัญของบริษัท', '');
-  const target = compact(expected)
-    .replaceAll('ลงลายมือชื่อ', 'ลงนาม')
-    .replaceAll('สำคัญของบริษัท', '');
-  const [directors = '', authority = ''] = expected.split(' / ');
-  const names = directors
-    .split(',')
-    .map((name) => compact(name).replace(/^(นางสาว|นาย|นาง|ดร|คุณ)/, ''));
-  const namedInAuthority = names.filter(
-    (name) => name.length >= 4 && compact(authority).includes(name),
-  );
-  const allowedNames = namedInAuthority.length ? namedInAuthority : names;
-  const namedSigner = allowedNames.some((name) => name.length >= 4 && actual.includes(name));
-  const roleSigner = namedInAuthority.length === 0 && /กรรมการ/.test(actual);
-  const oneDirectorRequired = /กรรมการหนึ่งคน/.test(target);
-  const twoDirectorsRequired = /กรรมการสองคน/.test(target);
-  const sealRequired = /ตรา/.test(target);
-  return (
-    (namedSigner || roleSigner) &&
-    (!oneDirectorRequired || namedSigner || /กรรมการ(หนึ่งคน|คนเดียว)/.test(actual)) &&
-    (!twoDirectorsRequired ||
-      /กรรมการ(สองคน|สองท่าน|2คน)/.test(actual) ||
-      names.filter((name) => name.length >= 4 && actual.includes(name)).length >= 2) &&
-    (!sealRequired || /ตรา/.test(actual))
-  );
+const directorMatches = (answer: string): boolean => {
+  const actual = compact(answer);
+  if (/ไม่ใช่กรรมการ|notadirector|bukanpengarah|不是董事|இயக்குநர்அல்ல|இயக்குனர்அல்ல/.test(actual))
+    return false;
+  return /กรรมการ|director|pengarah|董事|இயக்குநர்|இயக்குனர்/.test(actual);
+};
+
+const withoutTitle = (value: string) => compact(value).replace(/^(นาย|นางสาว|นาง|ดร|คุณ)/, '');
+
+const personNameMatches = (answer: string, expected: string) => {
+  const actual = withoutTitle(answer);
+  const names = expected
+    .split(' / ')[0]
+    .split(/[,;]+/)
+    .map(withoutTitle)
+    .filter((name) => name.length >= 2);
+  return names.some((name) => actual.includes(name));
 };
 
 const attendeeMatches = (answer: string, expected: string) => {
-  const [name = '', position = ''] = expected.split(' / ');
-  const withoutTitle = (value: string) => compact(value).replace(/^(นาย|นางสาว|นาง|ดร|คุณ)/, '');
-  const actual = withoutTitle(answer);
-  return actual.includes(withoutTitle(name)) && actual.includes(compact(position));
+  return personNameMatches(answer, expected) && directorMatches(answer);
 };
 
 const dateMatches = (answer: string, expected: string) => {
@@ -138,6 +140,20 @@ const dateMatches = (answer: string, expected: string) => {
     ['พฤศจิกายน', 'พ.ย.', 'november', 'nov'],
     ['ธันวาคม', 'ธ.ค.', 'december', 'dec'],
   ];
+  const extraMonthNames = [
+    ['januari', 'ஜனவரி', '一月'],
+    ['februari', 'பிப்ரவரி', '二月'],
+    ['mac', 'மார்ச்', '三月'],
+    ['april', 'ஏப்ரல்', '四月'],
+    ['mei', 'மே', '五月'],
+    ['jun', 'ஜூன்', '六月'],
+    ['julai', 'ஜூலை', '七月'],
+    ['ogos', 'ஆகஸ்ட்', '八月'],
+    ['september', 'செப்டம்பர்', '九月'],
+    ['oktober', 'அக்டோபர்', '十月'],
+    ['november', 'நவம்பர்', '十一月'],
+    ['disember', 'டிசம்பர்', '十二月'],
+  ];
   const dateParts = (value: string) => {
     const numeric = arabicDigits(value).match(/\b(\d{1,4})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/);
     if (numeric) {
@@ -150,8 +166,8 @@ const dateMatches = (answer: string, expected: string) => {
     }
     const values = numbers(value);
     const lower = value.toLowerCase();
-    const index = monthNames.findIndex((aliases) =>
-      aliases.some((alias) =>
+    const index = monthNames.findIndex((aliases, month) =>
+      [...aliases, ...extraMonthNames[month]].some((alias) =>
         /^[a-z]/.test(alias) ? new RegExp(`\\b${alias}\\b`).test(lower) : lower.includes(alias),
       ),
     );
@@ -173,12 +189,52 @@ const dateMatches = (answer: string, expected: string) => {
 
 const accountPurposeMatches = (answer: string) => {
   const actual = compact(answer);
-  const receives = /รับ/.test(actual) && /(ลูกค้า|ชำระ|ยอดขาย)/.test(actual);
+  const hasAny = (keywords: string[]) => keywords.some((keyword) => actual.includes(keyword));
+  // Grade the two required ideas from keyword groups, not a memorized sentence. Latin stems
+  // deliberately cover normal inflections such as receive/received/receiving and pay/paid/paying.
+  const receives =
+    hasAny(['รับ', 'receiv', 'collect', 'accept', 'terima', 'பெற', '收']) &&
+    hasAny([
+      'ลูกค้า',
+      'ชำระ',
+      'ยอดขาย',
+      'customer',
+      'client',
+      'sale',
+      'revenue',
+      'payment',
+      'pelanggan',
+      'வாடிக்கையாள',
+      '客户',
+    ]);
   const pays =
-    /จ่าย/.test(actual) &&
-    /(ค่าใช้จ่าย|บริษัท|กิจการ|ธุรกิจ|ค่าเช่า|ค่าสินค้า|ค่าจ้าง|เงินเดือน|ค่าดำเนินการ)/.test(
-      actual,
-    );
+    hasAny(['จ่าย', 'pay', 'paid', 'cover', 'settle', 'bayar', 'செலுத்த', '付']) &&
+    hasAny([
+      'ค่าใช้จ่าย',
+      'บริษัท',
+      'กิจการ',
+      'ธุรกิจ',
+      'ค่าเช่า',
+      'ค่าสินค้า',
+      'ค่าจ้าง',
+      'เงินเดือน',
+      'ค่าดำเนินการ',
+      'expense',
+      'cost',
+      'bill',
+      'supplier',
+      'rent',
+      'salary',
+      'operation',
+      'company',
+      'business',
+      'perbelanjaan',
+      'syarikat',
+      'செலவ',
+      'நிறுவன',
+      '费用',
+      '公司',
+    ]);
   return receives && pays;
 };
 
@@ -189,25 +245,34 @@ const customerOriginMatches = (answer: string, expected: string) => {
   const origin = separator < 0 ? expected : expected.slice(separator + 3);
   const originText = compact(origin);
   const channels = [
-    ['facebook', 'เฟซบุ๊ก'],
-    ['tiktok', 'ติ๊กต็อก'],
-    ['เว็บไซต์', 'website'],
-    ['แนะนำ', 'บอกต่อ', 'referral'],
-    ['หน้าร้าน', 'เข้ามาที่ร้าน', 'walkin'],
+    ['facebook', 'เฟซบุ๊ก', '脸书', 'முகநூல்'],
+    ['tiktok', 'ติ๊กต็อก', '抖音'],
+    ['เว็บไซต์', 'website', 'laman web', 'இணையதளம்', '网站'],
+    ['แนะนำ', 'บอกต่อ', 'referral', 'rujukan', 'cadangan', 'பரிந்துரை', '推荐'],
+    ['หน้าร้าน', 'เข้ามาที่ร้าน', 'walkin', 'kedai', 'கடை', '门店'],
+    ['social media', 'media sosial', 'சமூக ஊடகம்', '社交媒体'],
   ];
   const matchesGroup = (source: string, words: string[]) =>
-    words.some((word) => source.includes(word)) && words.some((word) => actual.includes(word));
+    words.some((word) => source.includes(compact(word))) &&
+    words.some((word) => actual.includes(compact(word)));
   return channels.some((words) => matchesGroup(originText, words));
 };
 
 /** One deterministic rubric for local testing and non-AI fallbacks. */
-export function evaluateReadinessAnswer(item: PlanItem, answer: string): BinaryReadinessVerdict {
+export function evaluateReadinessAnswer(
+  item: PlanItem,
+  answer: string,
+  translatedExpected?: string,
+  companyNameEn?: string | null,
+): BinaryReadinessVerdict {
   if (answer.trim().length < 2 || EVASIVE.test(answer)) return 'wrong';
   const expected = item.expected;
   let correct = false;
   switch (item.concept) {
     case 'company_name':
-      correct = compact(answer.replace(/\([^)]*[a-z][^)]*\)/gi, '')).endsWith(compact(expected));
+      correct =
+        compact(answer.replace(/\([^)]*[a-z][^)]*\)/gi, '')).endsWith(compact(expected)) ||
+        Boolean(companyNameEn && compact(answer).includes(compact(companyNameEn)));
       break;
     case 'registration_number':
       correct =
@@ -218,10 +283,16 @@ export function evaluateReadinessAnswer(item: PlanItem, answer: string): BinaryR
       break;
     case 'actual_business':
     case 'products_services':
-      correct = businessMeaning(answer, expected);
+      correct =
+        businessMeaning(answer, expected) ||
+        Boolean(
+          translatedExpected &&
+          translatedExpected !== expected &&
+          businessMeaning(answer, translatedExpected),
+        );
       break;
     case 'authorized_representative':
-      correct = signingAuthorityMatches(answer, expected);
+      correct = directorMatches(answer) || personNameMatches(answer, expected);
       break;
     case 'attendee_identity':
       correct = attendeeMatches(answer, expected);
@@ -247,14 +318,16 @@ export function evaluateReadinessAnswer(item: PlanItem, answer: string): BinaryR
 }
 
 const RUBRICS: Record<string, string> = {
-  company_name: 'ตอบชื่อบริษัทภาษาไทยที่จดทะเบียนครบถ้วน โดยไม่สนใจช่องว่างหรือเครื่องหมาย',
+  company_name:
+    'ตอบชื่อบริษัทภาษาไทยที่จดทะเบียนครบถ้วน หรือชื่อภาษาอังกฤษที่บันทึกไว้ โดยไม่สนใจช่องว่างหรือเครื่องหมาย',
   registration_number: 'เลขทะเบียน 13 หลักต้องตรงกัน โดยไม่สนใจช่องว่างหรือขีด',
   registered_address:
     'ที่อยู่โดยรวมถูกต้อง ไม่ต้องครบทุกคำ; จังหวัดและส่วนสำคัญอีกหนึ่งส่วนก็เพียงพอ',
   actual_business: 'คำอธิบายสั้น ๆ ที่ตรงกับธุรกิจหลักก็เพียงพอ ไม่ต้องบอกทุกกิจกรรม',
   products_services: 'บอกสินค้าหรือบริการหลักที่ถูกต้องอย่างน้อยหนึ่งอย่างก็เพียงพอ',
-  authorized_representative: 'ความหมายต้องตรงกับเงื่อนไขผู้ลงนาม รวมจำนวนกรรมการและตราบริษัทถ้ามี',
-  attendee_identity: 'ชื่อผู้เรียนและตำแหน่งต้องตรง โดยยอมรับคำนำหน้าและการเว้นวรรคที่ต่างกัน',
+  authorized_representative: 'ตอบว่ากรรมการ ไม่ต้องบอกเงื่อนไขการลงนามหรือตราบริษัท',
+  attendee_identity:
+    'ชื่อผู้เรียนและตำแหน่งกรรมการต้องตรง โดยยอมรับคำนำหน้าและการเว้นวรรคที่ต่างกัน',
   registration_date: 'วันเดียวกันในรูปปี พ.ศ. หรือ ค.ศ. ถือว่าถูก',
   account_purpose: 'สื่อความหมายทั้งรับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของบริษัท',
   customer_origin:

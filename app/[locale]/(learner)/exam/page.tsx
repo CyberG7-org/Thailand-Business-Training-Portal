@@ -26,7 +26,8 @@ const RESULT_CHIP = {
 export default async function ExamHome({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const user = await requireUser(locale);
-  prepareQuizFactsAfter(user.id);
+  // Tamil and Malay quiz text is manual; visiting their quiz must not queue translation API calls.
+  if (locale === 'en' || locale === 'zh') prepareQuizFactsAfter(user.id);
   const [attempts, passScore] = await Promise.all([
     listMyAttempts(await createSupabaseServerClient(), user.id, 'exam'),
     getPolicy('mcq_pass_score'),
@@ -46,7 +47,7 @@ export default async function ExamHome({ params }: { params: Promise<{ locale: s
   ];
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="exam">
-      <div className="mx-auto grid max-w-[780px] gap-6">
+      <div className="grid w-full gap-6">
         <section
           data-testid="exam-about"
           className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7"

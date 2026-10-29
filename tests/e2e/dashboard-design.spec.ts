@@ -128,3 +128,18 @@ test('the dashboard fits a phone with four direct training actions', async ({ pa
   await page.getByTestId('stage-study').click({ position: { x: 12, y: 118 } });
   await expect(page).toHaveURL(/\/th\/study$/);
 });
+
+test('a phone user can return to the top of a long page', async ({ page }) => {
+  const loginId = await seedLearnerWithCompany('บริษัท ปุ่มกลับด้านบน จำกัด', '2026-07-13');
+  await page.setViewportSize({ width: 390, height: 600 });
+  await loginAs(page, loginId, E2E_PASSWORD);
+
+  const backToTop = page.getByRole('button', { name: 'กลับไปด้านบน' });
+  await expect(backToTop).toBeHidden();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect(backToTop).toBeVisible();
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+
+  await backToTop.click();
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThanOrEqual(1);
+});

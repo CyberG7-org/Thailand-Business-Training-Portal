@@ -2,6 +2,7 @@ import type { Recipe } from '@/lib/domain/mcq/tokens';
 import type { StarterVariant, VariantText } from '@/lib/domain/mcq/variant';
 import { MCQ_STARTER_CONCEPTS } from './mcq-starter-concepts.ts';
 import { TRAINING_SYLLABUS } from './training-syllabus.ts';
+import { starterQuizTranslation } from './mcq-manual-translations.ts';
 
 /**
  * Ten worked examples for the Owner's bank (P17d plan decision 12; D91 removed the one worded
@@ -459,19 +460,31 @@ export const MCQ_STARTER: readonly StarterVariant[] = TRAINING_SYLLABUS.flatMap(
       key: `mcq-v2-${syllabus.conceptKey.replaceAll('_', '-')}-${index + 1}`,
       appliesWhen: null,
       optionRecipes: { ...selected.optionRecipes },
-      texts: Object.fromEntries(
-        (['th', 'en', 'zh'] as const).map((locale) => {
-          const source = selected.texts[locale]!;
-          return [
-            locale,
-            {
-              ...source,
-              prompt: syllabus.quizPrompts[locale][index],
-              options: { ...source.options },
-            },
-          ];
-        }),
-      ),
+      texts: {
+        ...Object.fromEntries(
+          (['th', 'en', 'zh'] as const).map((locale) => {
+            const source = selected.texts[locale]!;
+            return [
+              locale,
+              {
+                ...source,
+                prompt: syllabus.quizPrompts[locale][index],
+                options: { ...source.options },
+              },
+            ];
+          }),
+        ),
+        ms: starterQuizTranslation(
+          syllabus.conceptKey,
+          'ms',
+          `mcq-v2-${syllabus.conceptKey.replaceAll('_', '-')}-${index + 1}`,
+        )!,
+        ta: starterQuizTranslation(
+          syllabus.conceptKey,
+          'ta',
+          `mcq-v2-${syllabus.conceptKey.replaceAll('_', '-')}-${index + 1}`,
+        )!,
+      },
     };
   });
 });

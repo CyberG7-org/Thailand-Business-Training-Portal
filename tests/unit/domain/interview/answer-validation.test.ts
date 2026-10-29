@@ -22,13 +22,9 @@ describe('readiness answers expressed in the learner’s own words', () => {
     );
   });
 
-  it('accepts the named authorized signer without requiring the word sign', () => {
+  it('accepts Director alone without a name, signing condition or seal', () => {
     expect(
-      mark(
-        'authorized_representative',
-        'นายวรีโรจน์ ชาวนารี / นายวรีโรจน์ ชาวนารี',
-        'นายวรีโรจน์ ชาวนารี',
-      ),
+      mark('authorized_representative', 'นายวรีโรจน์ ชาวนารี / นายวรีโรจน์ ชาวนารี', 'กรรมการ'),
     ).toBe('correct');
   });
 
@@ -39,21 +35,29 @@ describe('readiness answers expressed in the learner’s own words', () => {
     expect(mark('authorized_representative', expected, 'ผู้จัดการ')).toBe('wrong');
   });
 
-  it('requires both directors when the registration requires joint signatures', () => {
+  it('accepts a saved authorized person without requiring signing conditions', () => {
     const expected = 'นายหนึ่ง ใจดี, นางสาวสอง ใจดี / กรรมการสองคนลงนามร่วมกัน';
-    expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('wrong');
-    expect(mark('authorized_representative', expected, 'กรรมการสองคนลงนามร่วมกัน')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'กรรมการ')).toBe('correct');
   });
 
-  it('does not accept a director excluded by a named signing authority', () => {
+  it('accepts either a saved authorized person or the director role', () => {
     const expected = 'นายหนึ่ง ใจดี, นางสาวสอง ใจดี / นายหนึ่ง ใจดีลงนาม';
-    expect(mark('authorized_representative', expected, 'นางสาวสอง ใจดี')).toBe('wrong');
-    expect(mark('authorized_representative', expected, 'นายหนึ่ง ใจดี')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'นางสาวสอง ใจดี')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'กรรมการ')).toBe('correct');
+    expect(mark('authorized_representative', expected, 'นายอื่น ใจร้าย')).toBe('wrong');
   });
 
   it('accepts an equivalent director role without requiring the word sign', () => {
     expect(
       mark('authorized_representative', 'นายหนึ่ง ใจดี / กรรมการหนึ่งคนลงนาม', 'กรรมการคนเดียว'),
+    ).toBe('correct');
+  });
+
+  it('accepts the common Tamil director spelling for signer and attendee answers', () => {
+    expect(mark('authorized_representative', 'นายบัณฑิต รติปัจจรกุล', 'இயக்குனர்')).toBe('correct');
+    expect(
+      mark('attendee_identity', 'นายบัณฑิต รติปัจจรกุล', 'นายบัณฑิต รติปัจจรกุล – இயக்குனர்'),
     ).toBe('correct');
   });
 
@@ -87,6 +91,20 @@ describe('readiness answers expressed in the learner’s own words', () => {
         'ใช้รับชำระค่าสินค้า แล้วจ่ายค่าเช่าร้าน',
       ),
     ).toBe('correct');
+    expect(
+      mark(
+        'account_purpose',
+        'รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+        "To be used for the company's financial transactions, receiving money from customers and paying business expenses.",
+      ),
+    ).toBe('correct');
+    expect(
+      mark(
+        'account_purpose',
+        'รับเงินจากลูกค้าและจ่ายค่าใช้จ่ายของกิจการ',
+        'The account is only for receiving customer payments.',
+      ),
+    ).toBe('wrong');
   });
 
   it('accepts one documented way of finding customers without requiring a customer group', () => {

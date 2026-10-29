@@ -12,7 +12,7 @@ export function StartExamButton({ resume }: { resume: boolean }) {
     error: null,
   });
   return (
-    <form action={formAction} className="grid gap-3">
+    <form action={formAction} className="grid justify-items-center gap-3">
       <input type="hidden" name="locale" value={locale} />
       {state.error && (
         <p
@@ -27,7 +27,7 @@ export function StartExamButton({ resume }: { resume: boolean }) {
         type="submit"
         disabled={pending}
         data-testid="start-exam"
-        className="inline-flex min-h-12 items-center justify-center justify-self-start rounded-control bg-brand-600 px-6 text-base font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+        className="inline-flex min-h-12 items-center justify-center justify-self-center rounded-control bg-brand-600 px-6 text-base font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
       >
         {resume ? t('resume') : t('start')}
       </button>

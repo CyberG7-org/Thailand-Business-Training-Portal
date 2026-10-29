@@ -17,7 +17,7 @@ import { assignmentFacts } from '@/lib/domain/facts/snapshot';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { conceptCoverage, type Coverage } from '@/lib/domain/concepts/resolve';
 import { buildFactSheet } from '@/lib/domain/facts/fact-sheet';
-import { formatDate } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
 import { AccountStatusControls, PasswordResetForm } from './account-controls';
 import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { CoveragePanel } from '../../dbd-records/[id]/coverage-panel';
@@ -59,7 +59,7 @@ export default async function UserDetailPage({
         companyNameTh: active.dbd_records.company_name_th,
         issuedOn: active.dbd_records.issued_on,
         availableFromLabel: eligibility
-          ? formatDate(eligibility.available_from, locale as AppLocale)
+          ? formatDisplayDate(eligibility.available_from, locale as AppLocale)
           : null,
       }
     : null;

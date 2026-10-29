@@ -19,8 +19,11 @@ import { getActiveAssignmentForUser } from '@/lib/db/assignments';
 import { toTemplateRecord } from '@/lib/db/assessment';
 import { pinnedFactsFor } from '@/lib/db/pinning';
 import { factTranslationsFor } from '@/lib/db/fact-translations';
+import { studyPlaceNames } from '@/lib/db/study-places';
 import { templateRecordFromSnapshot } from '@/lib/domain/facts/snapshot';
+import { readStructuredData } from '@/lib/domain/dbd-profile';
 import { translatedRecord } from '@/lib/domain/facts/localization';
+import { studyDisplayRecord } from '@/lib/domain/facts/study-display';
 import { renderTemplateLenient } from '@/lib/domain/assessment/template';
 import { getTtsProvider } from '@/lib/integrations/tts';
 import { getVectorStore } from '@/lib/integrations/vector';
@@ -85,6 +88,7 @@ export default async function StudyMaterialPage({
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
   const loc = locale as AppLocale;
+  const language = loc;
   const [materials, t] = await Promise.all([listStudyMaterials(db), getTranslations('study')]);
   const index = materials.findIndex((m) => m.content_key === key);
   if (index < 0) notFound();
@@ -120,20 +124,25 @@ export default async function StudyMaterialPage({
   // Starter cards are maintained in code now that staff cannot edit them. Use the current
   // approved wording even if an environment has not rerun content:starter after deployment.
   const starterCard = BANK_INTERVIEW_CARDS.find((card) => card.contentKey === key)?.localizations[
-    loc
+    language
   ];
   const starterBody = starterCard?.body;
+  const admin = pinned && templateRecord ? createSupabaseAdminClient() : null;
   const translations =
-    pinned && templateRecord
-      ? await factTranslationsFor(
-          createSupabaseAdminClient(),
-          pinned.version.id,
-          templateRecord,
-          loc,
-        )
+    admin && pinned && templateRecord
+      ? await factTranslationsFor(admin, pinned.version.id, templateRecord, language)
       : {};
-  const shownRecord = templateRecord ? translatedRecord(templateRecord, translations) : null;
-  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', shownRecord, loc);
+  const address =
+    pinned?.snapshot.facts.address ??
+    (assignment ? readStructuredData(assignment.dbd_records.structured_data).address : null);
+  const places =
+    language !== 'th' && key === 'bank-interview-1-identity'
+      ? await studyPlaceNames(db, address)
+      : undefined;
+  const shownRecord = templateRecord
+    ? studyDisplayRecord(translatedRecord(templateRecord, translations), language, places)
+    : null;
+  const body = renderTemplateLenient(starterBody ?? localization.body ?? '', shownRecord, language);
 
   // "From your documents" (spec §8, D44): passages of the learner's OWN record for this card's
   // concepts. The assignment is the ownership check; names are read with the service role because
@@ -154,7 +163,8 @@ export default async function StudyMaterialPage({
   }
   const progressById = new Map(progress.map((p) => [p.material_id, p]));
   const mine = progressById.get(material.id) ?? null;
-  const ttsAvailable = loc === 'th' && localization.tts_enabled && getTtsProvider() !== null;
+  const ttsAvailable =
+    language === 'th' && loc === 'th' && localization.tts_enabled && getTtsProvider() !== null;
 
   // Where this card sits in the list, with the same notion of "done" as the list itself.
   const states: SegmentState[] = materials.map((m, i) => {
@@ -176,7 +186,11 @@ export default async function StudyMaterialPage({
     ? {
         key: nextMaterial.content_key,
         index: materials.indexOf(nextMaterial) + 1,
-        title: pickLocalization(nextMaterial, loc)?.title ?? '',
+        title:
+          BANK_INTERVIEW_CARDS.find((card) => card.contentKey === nextMaterial.content_key)
+            ?.localizations[language].title ??
+          pickLocalization(nextMaterial, loc)?.title ??
+          '',
       }
     : null;
 
@@ -255,7 +269,7 @@ export default async function StudyMaterialPage({
               {previous && (
                 <Link
                   data-testid="study-previous"
-                  href={'/study/' + previous.key}
+                  href={`/study/${previous.key}`}
                   className="inline-flex min-h-11 items-center gap-2 rounded-control border border-brand-100 px-3 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
                 >
                   <span className="rotate-180">
@@ -291,7 +305,7 @@ export default async function StudyMaterialPage({
               {next && (
                 <Link
                   data-testid="study-next"
-                  href={'/study/' + next.key}
+                  href={`/study/${next.key}`}
                   className={`${footerLink} ml-auto`}
                 >
                   {t('nextCard', { n: next.index, title: next.title })}

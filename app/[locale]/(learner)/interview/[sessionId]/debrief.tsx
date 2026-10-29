@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { CheckIcon } from '@/components/icons';
 import { Link } from '@/i18n/navigation';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale } from '@/i18n/routing';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
 import { readinessItem } from '@/lib/domain/interview/plan';
 import type { Verdict, VerdictReason } from '@/lib/domain/interview/types';
@@ -71,10 +71,11 @@ export async function Debrief({
   // account or not. The chip, the officer's narrative and the answers below explain why.
   const label = (concept: string) =>
     focusedReview && readinessItem(concept)
-      ? readinessItem(concept)!.question[locale]
+      ? readinessItem(concept)!.question[contentLocale(locale)]
       : concept === 'juristic_id'
         ? t('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale] ?? concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[contentLocale(locale)] ??
+          concept);
 
   return (
     <div className="mx-auto grid max-w-[780px] gap-6">

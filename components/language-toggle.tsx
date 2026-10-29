@@ -12,6 +12,8 @@ const LABELS: Record<AppLocale, string> = {
   th: 'ไทย',
   en: 'English',
   zh: '简体中文',
+  ta: 'தமிழ்',
+  ms: 'Bahasa Melayu',
 };
 
 /** Remembered for the sign-in action; expires quickly so it never outlives the visit. */

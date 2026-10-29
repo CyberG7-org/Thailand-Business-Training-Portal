@@ -4,7 +4,7 @@ The portal has two long-lived Git branches, separate Vercel projects, and separa
 
 | Environment | Git branch | Vercel project | Website | Database |
 | --- | --- | --- | --- | --- |
-| Production | `main` | `thailand-business-training-portal` | `https://thailand-business-training-portal-cyberg7.vercel.app` | Existing production Supabase project |
+| Production | `main` | `thailand-business-training-portal` | `https://thailand-business-training-portal.vercel.app` | Existing production Supabase project |
 | Staging | `staging` | `thailand-business-training-portal-staging` | `https://thailand-business-training-portal-staging.vercel.app` | `Thailand-Business-Training-Portal-Staging` (`coykyocibwaxvamsgccq`) |
 
 The staging Vercel project's Production Branch is `staging`; the production project's Production Branch is `main`. A new push to `staging` creates a production-class deployment **inside the staging project**, allowing its `vercel.json` cron jobs to run. It does not deploy to the customer-facing production project. The staging address is assigned only to the staging project. Vercel deployment protection may require a Vercel account to open generated deployment URLs.

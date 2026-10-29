@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, LOCALES, type AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { MAX_INPUT_CHARS, getInterviewWithTurns, turnBudget } from '@/lib/db/interviews';
 import { getMyCompany } from '@/lib/db/learner';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { BANK_INTERVIEW_CONCEPTS } from '@/lib/domain/bank-interview';
-import { readinessItem } from '@/lib/domain/interview/plan';
+import { questionFor, readinessItem } from '@/lib/domain/interview/plan';
 import type { InterviewPlan, Verdict, VerdictReason } from '@/lib/domain/interview/types';
 import { displayLoginId } from '@/lib/domain/login-id';
 import type { InterviewResultItem } from '@/app/[locale]/(admin)/admin/interviews/session-result-transcript';
@@ -42,6 +42,9 @@ export default async function InterviewSessionPage({
   // RLS already hides other learners' sessions; a manager's own view lives under /admin.
   if (!found || found.session.user_id !== user.id) notFound();
   const { session, turns } = found;
+  const interviewLanguage = LOCALES.includes(session.language as AppLocale)
+    ? (session.language as AppLocale)
+    : 'th';
   const chatTurns: ChatTurn[] = turns.map((r) => ({
     id: r.id,
     role: r.role as ChatTurn['role'],
@@ -58,9 +61,16 @@ export default async function InterviewSessionPage({
       max: turnBudget(plan),
     };
     return (
-      <LearnerShell step="interview" title={t('title')} intro={t('thaiOnly')} back={back}>
+      <LearnerShell
+        step="interview"
+        title={t('title')}
+        intro={t('languageNotice')}
+        back={back}
+        viewportLocked
+      >
         <Chat
           sessionId={session.id}
+          interviewLanguage={interviewLanguage}
           initialTurns={chatTurns}
           maxChars={MAX_INPUT_CHARS}
           initialBudget={budget}
@@ -78,11 +88,12 @@ export default async function InterviewSessionPage({
   const labels = await getTranslations('interview');
   const conceptLabel = (concept: string) =>
     guidedReadiness && readinessItem(concept)
-      ? readinessItem(concept)!.question[locale as AppLocale]
+      ? questionFor(concept, interviewLanguage, readinessItem(concept)!.question.th)
       : concept === 'juristic_id'
         ? labels('concept.juristic_id')
-        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[locale as AppLocale] ??
-          concept);
+        : (BANK_INTERVIEW_CONCEPTS.find((c) => c.id === concept)?.question[
+            contentLocale(interviewLanguage)
+          ] ?? concept);
   const validVerdicts: Verdict[] = [
     'correct',
     'partial',

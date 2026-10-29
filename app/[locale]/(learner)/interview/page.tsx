@@ -42,7 +42,7 @@ export default async function InterviewHome({ params }: { params: Promise<{ loca
 
   return (
     <LearnerShell title={t('title')} intro={t('intro')} step="interview">
-      <div className="mx-auto grid max-w-[780px] gap-6">
+      <div className="grid w-full gap-6">
         <section className="rise rounded-card bg-white px-5 py-6 shadow-raised md:px-8 md:py-7">
           <div data-testid="interview-guide" className="mb-6">
             <div className="flex items-start justify-between gap-4">

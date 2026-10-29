@@ -6,7 +6,8 @@ import { loadLearnerRecords } from '@/lib/db/learner-record';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { bangkokDateOf } from '@/lib/domain/appointments/slots';
 import { displayLoginId } from '@/lib/domain/login-id';
-import { formatDate, todayInBangkok } from '@/lib/domain/thai-date';
+import { todayInBangkok } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
 import { cancelBookingAction } from './actions';
 import { LearnerPicker } from './learner-picker';
 import { MonthCalendar } from './month-calendar';
@@ -112,7 +113,7 @@ export default async function AppointmentsPage({
                 {bookings.map((booking) => (
                   <tr key={booking.id} data-testid={`admin-appointment-${booking.id}`}>
                     <td className="whitespace-nowrap">
-                      {formatDate(bangkokDateOf(booking.starts_at), loc)}
+                      {formatDisplayDate(bangkokDateOf(booking.starts_at), loc)}
                     </td>
                     <td>
                       {displayLoginId(booking.profiles.login_id)}

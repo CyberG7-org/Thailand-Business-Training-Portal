@@ -1,7 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import type { StudyLanguage } from '@/lib/content/bank-interview-cards';
 import { translatableFacts, type FactTranslations } from '@/lib/domain/facts/localization';
 import { GeminiFactTranslator } from '@/lib/integrations/translation/gemini';
 import type { Database, Json } from './database.types';
@@ -13,7 +13,7 @@ export async function cachedFactTranslationsFor(
   admin: SupabaseClient<Database>,
   versionId: string,
   source: Source,
-  locale: AppLocale,
+  locale: StudyLanguage,
 ): Promise<FactTranslations> {
   if (locale === 'th') return {};
   const originals = translatableFacts(source);
@@ -42,7 +42,7 @@ export async function factTranslationsFor(
   admin: SupabaseClient<Database>,
   versionId: string,
   source: Source,
-  locale: AppLocale,
+  locale: StudyLanguage,
 ): Promise<FactTranslations> {
   if (locale === 'th') return {};
   const originals = translatableFacts(source);

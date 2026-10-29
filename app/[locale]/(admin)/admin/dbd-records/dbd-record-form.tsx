@@ -1,7 +1,9 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { formatDate, isISODate, type Locale } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
+import type { AppLocale } from '@/i18n/routing';
+import { isISODate } from '@/lib/domain/thai-date';
 import { useActionState, useEffect, useRef } from 'react';
 import type { DbdRecordRow } from '@/lib/db/dbd-records';
 import {
@@ -175,7 +177,9 @@ export function DbdRecordForm({
     // Dates are shown the way the certificate prints them (Thai users read พ.ศ.); the stored
     // calendar value only serves the bank-date arithmetic and is never displayed.
     const shown =
-      DATE_FIELDS.has(name) && isISODate(value) ? formatDate(value, locale as Locale) : value;
+      DATE_FIELDS.has(name) && isISODate(value)
+        ? formatDisplayDate(value, locale as AppLocale)
+        : value;
     return (
       <label key={name} className={`text-sm ${WIDE_FIELDS.has(name) ? wide : ''}`}>
         <span className={labelText}>{t(`fields.${label}` as 'fields.companyNameTh')}</span>

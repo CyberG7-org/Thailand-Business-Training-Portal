@@ -1,6 +1,6 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale, type ExistingContentLocale } from '@/i18n/routing';
 import {
   evaluateResult,
   renderQuestion,
@@ -20,6 +20,7 @@ import { createSupabaseAdminClient } from './admin';
 import { templateRecordFromSnapshot, type RoleSnapshot } from '@/lib/domain/facts/snapshot';
 import { getActiveAssignmentForUser } from './assignments';
 import { answerKeysFor } from './mcq-attempt';
+import { missingFrozenQuizTranslations } from './mcq-frozen-localization';
 import { pinnedFactsFor } from './pinning';
 import { getVersion, readSnapshot } from './training-versions';
 import type { Database, Json } from './database.types';
@@ -59,7 +60,7 @@ export { toTemplateRecord };
 export async function loadQuestionBank(
   admin: Db,
   pool: AttemptKind,
-  language: AppLocale,
+  language: ExistingContentLocale,
 ): Promise<BankQuestion[]> {
   const { data, error } = await admin
     .from('questions')
@@ -114,7 +115,7 @@ export async function getInProgressAttempt(
 export async function getOrStartAttempt(args: {
   userId: string;
   kind: AttemptKind;
-  language: AppLocale;
+  language: ExistingContentLocale;
   count: number;
   passingMarkPercent?: number;
 }): Promise<AttemptRow> {
@@ -240,16 +241,20 @@ async function templateRecordForAttempt(
  * Grading is by option key, which every approved question mirrors across languages; a question
  * without that language falls back to the attempt's language, then to its snapshot.
  *
- * A question from the Owner's bank (an answer row with a concept, D100) was rendered in all three
- * languages when the attempt started and is read back as it was. The result carries the correct
- * key of every question: a caller showing an open attempt must leave out the unanswered ones.
+ * A question from the Owner's bank (an answer row with a concept, D100) is read from its frozen
+ * language snapshots. Older attempts may reconstruct a missing Tamil/Malay view when the source
+ * choices still match exactly. The correct key remains the one stored when the attempt began.
  */
 export async function localizeAttemptAnswers(
   attempt: AttemptWithAnswers,
   locale: AppLocale,
 ): Promise<Map<string, DisplayedQuestion>> {
   const admin = createSupabaseAdminClient();
-  const languages = Array.from(new Set([locale, attempt.language as AppLocale]));
+  const shownLocale = locale;
+  const legacyLocale = contentLocale(locale);
+  const languages = Array.from(
+    new Set([legacyLocale, contentLocale(attempt.language as AppLocale)]),
+  );
   const banked = attempt.assessment_answers.filter((a) => a.concept_key !== null);
   const [keys, { data: locs }, record] = await Promise.all([
     answerKeysFor(
@@ -263,6 +268,10 @@ export async function localizeAttemptAnswers(
       .in('language', languages),
     templateRecordForAttempt(admin, attempt),
   ]);
+  const restored =
+    shownLocale === 'ms' || shownLocale === 'ta'
+      ? await missingFrozenQuizTranslations(admin, attempt, banked, keys, shownLocale)
+      : new Map();
   const byQuestion = new Map<string, NonNullable<typeof locs>>();
   for (const loc of locs ?? []) {
     byQuestion.set(loc.question_id, [...(byQuestion.get(loc.question_id) ?? []), loc]);
@@ -278,7 +287,10 @@ export async function localizeAttemptAnswers(
     };
     if (answer.concept_key !== null) {
       const key = keys.get(answer.id);
-      const shown = key?.localized[locale] ?? key?.localized[attempt.language as AppLocale];
+      const shown =
+        key?.localized[shownLocale] ??
+        restored.get(answer.id) ??
+        key?.localized[attempt.language as AppLocale];
       out.set(
         answer.question_id,
         key && shown ? { ...shown, correctKey: key.correctKey } : snapshot,
@@ -287,7 +299,7 @@ export async function localizeAttemptAnswers(
     }
     const candidates = byQuestion.get(answer.question_id) ?? [];
     const loc =
-      candidates.find((l) => l.language === locale) ??
+      candidates.find((l) => l.language === legacyLocale) ??
       candidates.find((l) => l.language === attempt.language);
     if (!loc) {
       out.set(answer.question_id, snapshot);
@@ -296,7 +308,9 @@ export async function localizeAttemptAnswers(
     const shown: DisplayedQuestion = {
       ...snapshot,
       correctKey: loc.correct_key as OptionKey,
-      explanation: loc.explanation ? renderTemplateLenient(loc.explanation, record, locale) : null,
+      explanation: loc.explanation
+        ? renderTemplateLenient(loc.explanation, record, legacyLocale)
+        : null,
     };
     if (loc.language !== attempt.language) {
       try {
@@ -310,7 +324,7 @@ export async function localizeAttemptAnswers(
           },
           record,
           attempt.shuffle_seed,
-          locale,
+          legacyLocale,
         );
         const byKey = new Map(rendered.options.map((o) => [o.key, o]));
         const options = (answer.presented_option_order as OptionKey[])
@@ -401,10 +415,11 @@ export async function answerQuestion(args: {
 }): Promise<AnswerFeedback> {
   const admin = createSupabaseAdminClient();
   const attempt = await requireOwnedInProgress(admin, args.userId, args.attemptId);
+  const shownLocale = args.locale ?? (attempt.language as AppLocale);
 
   const { data: answer } = await admin
     .from('assessment_answers')
-    .select('id, selected_key, presented_option_order, concept_key')
+    .select('id, question_id, selected_key, presented_option_order, concept_key')
     .eq('attempt_id', attempt.id)
     .eq('question_id', args.questionId)
     .maybeSingle();
@@ -434,8 +449,21 @@ export async function answerQuestion(args: {
     // A question from the Owner's bank (D100): marked against the key frozen with the attempt.
     const key = (await answerKeysFor(admin, [answer.id])).get(answer.id);
     if (!key) throw new AssessmentError('Question text missing', 'not_found');
+    const restored =
+      (shownLocale === 'ms' || shownLocale === 'ta') && !key.localized[shownLocale]
+        ? (
+            await missingFrozenQuizTranslations(
+              admin,
+              attempt,
+              [answer],
+              new Map([[answer.id, key]]),
+              shownLocale,
+            )
+          ).get(answer.id)
+        : null;
     const shown =
-      key.localized[(args.locale ?? attempt.language) as AppLocale] ??
+      key.localized[shownLocale] ??
+      restored ??
       key.localized[attempt.language as AppLocale] ??
       key.localized.th;
     const isCorrect = key.correctKey === args.selectedKey;
@@ -452,10 +480,10 @@ export async function answerQuestion(args: {
     .from('question_localizations')
     .select('language, correct_key, explanation')
     .eq('question_id', args.questionId)
-    .in('language', [attempt.language, args.locale ?? attempt.language]);
+    .in('language', [contentLocale(attempt.language as AppLocale), contentLocale(shownLocale)]);
   const loc =
-    locs?.find((l) => l.language === (args.locale ?? attempt.language)) ??
-    locs?.find((l) => l.language === attempt.language);
+    locs?.find((l) => l.language === contentLocale(shownLocale)) ??
+    locs?.find((l) => l.language === contentLocale(attempt.language as AppLocale));
   if (!loc) throw new AssessmentError('Question text missing', 'not_found');
 
   const isCorrect = loc.correct_key === args.selectedKey;
@@ -463,7 +491,7 @@ export async function answerQuestion(args: {
     ? renderTemplateLenient(
         loc.explanation,
         await templateRecordForAttempt(admin, attempt),
-        (args.locale ?? attempt.language) as AppLocale,
+        contentLocale(shownLocale),
       )
     : null;
   await record(isCorrect);

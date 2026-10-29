@@ -13,7 +13,7 @@ export type ChangePasswordState = {
 };
 
 const inputSchema = z.object({
-  locale: z.enum(['th', 'en', 'zh']),
+  locale: z.enum(['th', 'en', 'zh', 'ta', 'ms']),
   currentPassword: z.string(),
   newPassword: z.string(),
   confirmPassword: z.string(),

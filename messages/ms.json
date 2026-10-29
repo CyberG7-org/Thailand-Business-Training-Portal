@@ -1,0 +1,1778 @@
+{
+  "app": {
+    "quizLanguageNotice": "Soalan kuiz belum diterjemahkan ke dalam bahasa ini. Soalan akan dipaparkan dalam bahasa Inggeris.",
+    "name": "Portal Latihan Perniagaan",
+    "nameThai": "พอร์ทัลฝึกอบรมธุรกิจ",
+    "language": "Bahasa",
+    "back": "Kembali",
+    "backToTop": "Kembali ke atas",
+    "home": "Utama"
+  },
+  "home": {
+    "title": "Portal Latihan Perniagaan & Pengesahan Bank Thailand",
+    "description": "Sediakan diri untuk pengesahan akaun bank syarikat anda. Kaji sijil DBD anda sendiri, lulus Kuiz, dan jalani Temu Bual dengan pegawai bank simulasi."
+  },
+  "auth": {
+    "title": "Log masuk",
+    "hint": "Gunakan ID log masuk dan kata laluan daripada pentadbir anda.",
+    "loginId": "ID Log Masuk",
+    "password": "Kata Laluan",
+    "submit": "Log masuk",
+    "invalidCredentials": "ID log masuk atau kata laluan tidak sah.",
+    "accountDisabled": "Akaun ini telah dinyahaktifkan. Sila hubungi pentadbir anda.",
+    "signOut": "Log keluar",
+    "showPassword": "Tunjukkan kata laluan",
+    "hidePassword": "Sembunyikan kata laluan"
+  },
+  "profile": {
+    "menu": "Menu profil",
+    "title": "Profil anda",
+    "intro": "Urus kata laluan untuk akaun anda sendiri.",
+    "account": "Akaun",
+    "lastPasswordUpdate": "Kemaskini kata laluan terakhir",
+    "lastPasswordUpdateUnknown": "Tidak direkodkan (sebelum penjejakan bermula)",
+    "bangkokTime": "(Waktu Bangkok)",
+    "changePassword": "Tukar kata laluan",
+    "logOut": "Log keluar",
+    "hint": "Masukkan kata laluan semasa anda dan pilih mana-mana 6–8 aksara untuk yang baharu.",
+    "currentPassword": "Kata laluan semasa",
+    "newPassword": "Kata laluan baharu",
+    "confirmPassword": "Sahkan kata laluan baharu",
+    "save": "Simpan kata laluan baharu",
+    "saving": "Menyimpan…",
+    "success": "Kata laluan anda telah berjaya ditukar.",
+    "requirements": {
+      "min": "Sekurang-kurangnya 6 aksara",
+      "max": "Tidak lebih daripada 8 aksara",
+      "confirmPending": "Masukkan kata laluan baharu sekali lagi untuk mengesahkannya.",
+      "match": "Kata laluan sepadan",
+      "noMatch": "Kata laluan tidak sepadan"
+    },
+    "errors": {
+      "missing": "Isi semua medan kata laluan.",
+      "tooShort": "Kata laluan baharu mesti mempunyai sekurang-kurangnya 6 aksara.",
+      "tooLong": "Kata laluan baharu mesti mempunyai tidak lebih daripada 8 aksara.",
+      "mismatch": "Kata laluan baharu tidak sepadan.",
+      "invalidCurrent": "Kata laluan semasa tidak betul.",
+      "updateFailed": "Tidak dapat menukar kata laluan anda. Sila cuba lagi."
+    }
+  },
+  "dashboard": {
+    "title": "Papan Pemuka",
+    "welcome": "Selamat datang, {name}",
+    "accountLabel": "Akaun pelajar",
+    "mobileIntro": "Lengkapkan latihan anda mengikut urutan.",
+    "actionHints": {
+      "study": "Ketahui tentang syarikat anda",
+      "nameCard": "Lihat dan muat turun kad anda",
+      "exam": "Uji pengetahuan anda",
+      "interview": "Berlatih untuk temu duga bank"
+    },
+    "noCompany": "Tiada syarikat yang diberikan kepada anda lagi. Sila hubungi pentadbir anda.",
+    "company": {
+      "title": "Syarikat anda",
+      "name": "Syarikat",
+      "juristicId": "ID entiti undang-undang",
+      "registeredCapital": "Modal berdaftar",
+      "registeredDate": "Tarikh pendaftaran",
+      "baht": "THB",
+      "address": "Pejabat utama",
+      "directors": "Pengarah",
+      "issuedOn": "Sijil dikeluarkan pada",
+      "openCertificate": "Buka sijil (PDF)",
+      "viewRecord": "Lihat rekod syarikat",
+      "natureOfBusiness": "Apa yang perniagaan lakukan",
+      "productsServices": "Produk / perkhidmatan",
+      "shareholders": "Pemegang saham",
+      "shares": "saham",
+      "businessObjectives": "Objektif perniagaan",
+      "businessActivities": "Aktiviti perniagaan ({count} item)",
+      "itemCount": "{count} item",
+      "website": "Laman web",
+      "facebook": "Facebook",
+      "tag": "Rekod DBD"
+    },
+    "appointment": {
+      "available": "Pengurus anda akan menempah tarikh.",
+      "booked": "Ditempah: {date} dengan {manager}"
+    },
+    "hero": {
+      "kicker": "Persediaan pengesahan bank"
+    },
+    "next": {
+      "study": "Langkah seterusnya anda ialah bahan kajian. Baca kad tentang syarikat anda sebelum Kuiz.",
+      "quiz": "Langkah seterusnya anda ialah kuiz latihan. Ia menunjukkan apa yang perlu disemak sebelum Kuiz.",
+      "exam": "Langkah seterusnya anda ialah Kuiz. Lulus kuiz ini akan membuka kunci Temuduga.",
+      "nameCard": "Langkah seterusnya anda ialah Kad Nama. Lihat atau muat turun selepas Temuduga.",
+      "interview": "Langkah seterusnya ialah Temu Duga. Pilih bahasa sebelum bermula; pegawai akan menggunakan bahasa itu sepanjang sesi.",
+      "appointment": "Anda sudah bersedia. Langkah seterusnya anda ialah janji temu bank.",
+      "done": "Anda telah melengkapkan setiap langkah. Syabas."
+    },
+    "cta": {
+      "open": "Buka {step}",
+      "lastResult": "Semak keputusan terakhir"
+    },
+    "progress": {
+      "ring": "{done} daripada {total} langkah selesai",
+      "stepsDone": "langkah selesai",
+      "noExam": "Belum diambil",
+      "quiz": "Kuiz",
+      "interview": "Temuduga",
+      "passMarkNote": "Markah lulus {mark}",
+      "interviewStatus": {
+        "done": "Sedia",
+        "in_progress": "Sedang berjalan",
+        "available": "Belum bermula",
+        "pending": "Belum bermula",
+        "locked": "Selepas kuiz"
+      }
+    },
+    "steps": {
+      "title": "Langkah anda",
+      "hint": "Lengkapkan mengikut urutan"
+    }
+  },
+  "admin": {
+    "title": "Bahagian",
+    "nav": {
+      "submanagers": "Cipta Subpengurus",
+      "users": "Cipta Pelajar & DBD",
+      "questions": "Bank soalan",
+      "interviews": "Temuduga",
+      "appointments": "Janji Temu Bank",
+      "notifications": "Pemberitahuan",
+      "settings": "Tetapan polisi",
+      "managers": "Pengurus",
+      "learners": "Rekod Pelajar",
+      "businessCategories": "Kategori perniagaan",
+      "exceptions": "Ralat"
+    },
+    "users": {
+      "title": "Cipta pelajar & DBD",
+      "new": "Cipta pelajar",
+      "loginId": "ID Log Masuk",
+      "password": "Kata laluan awal",
+      "newPassword": "Kata laluan baharu",
+      "displayName": "Nama paparan",
+      "role": "Peranan",
+      "status": "Status",
+      "create": "Cipta pengguna",
+      "resetPassword": "Tetapkan semula kata laluan",
+      "passwordUpdated": "Kata laluan dikemas kini",
+      "disable": "Nyahaktifkan akaun",
+      "enable": "Aktifkan akaun",
+      "progression": "Kemajuan",
+      "company": "Syarikat (rekod DBD yang dipelajari oleh pelajar)",
+      "unconfirmedCompany": "{name} — belum disahkan ({status})",
+      "noConfirmedCompany": "Tiada rekod DBD yang disahkan lagi — sahkan rekod syarikat sebelum mencipta pelajar.",
+      "untitledCompany": "(nama syarikat tiada)",
+      "createdFor": "Dicipta {loginId} dan ditugaskan kepada {company}",
+      "team": "Pasukan",
+      "chooseTeam": "Pasukan yang mana?",
+      "noManager": "Cipta pengurus terlebih dahulu — setiap pelajar adalah ahli pasukan.",
+      "appointment": "Jawatan",
+      "contact": {
+        "title": "Butiran hubungan",
+        "phone": "Nombor telefon",
+        "contactEmail": "E-mel",
+        "forCard": "(untuk Kad Nama)",
+        "website": "Laman web",
+        "facebookPage": "Halaman Facebook",
+        "optional": "(pilihan)",
+        "facebookPlaceholder": "Nama halaman atau pautan",
+        "save": "Simpan butiran hubungan",
+        "saved": "Disimpan",
+        "errors": {
+          "phone": "Masukkan nombor telefon mudah alih Thailand, cth. 081-234-5678",
+          "contactEmail": "Masukkan alamat e-mel yang sah",
+          "website": "Masukkan alamat web, cth. example.co.th",
+          "facebookPage": "Masukkan nama halaman atau pautan facebook.comnya"
+        },
+        "emailPlaceholder": "nama@contoh.com"
+      },
+      "version": {
+        "title": "Versi latihan",
+        "pinned": "Pada versi {n}",
+        "none": "Tiada versi ditetapkan lagi — fakta syarikat tidak diversi.",
+        "newer": "Versi {n} adalah lebih baharu.",
+        "current": "Ini adalah versi semasa syarikat.",
+        "move": "Pindah ke versi {n}",
+        "moveHint": "Mulai sekarang pelajar akan belajar dan dinilai berdasarkan versi ini. Ditolak semasa kuiz latihan, Kuiz, atau Temu Bual sedang berjalan.",
+        "roleConfirmed": "Peranan disahkan pada {date}",
+        "roleUnconfirmed": "Peranan belum mempunyai nama: pilih pelajar daripada individu dalam dokumen DBD di atas. Ia akan disahkan secara automatik setelah mempunyai nama.",
+        "messages": {
+          "moved": "Dipindahkan ke versi {n}."
+        },
+        "errors": {
+          "evaluation-in-progress": "Kuiz latihan, Kuiz, atau Temu Bual sedang berjalan; cuba lagi apabila ia selesai.",
+          "not-active": "Itu bukan versi semasa syarikat.",
+          "other-record": "Versi itu milik syarikat lain.",
+          "not-found": "Tidak ditemui.",
+          "no-version": "Syarikat belum mempunyai versi."
+        }
+      },
+      "tabLearner": "Butiran pelajar",
+      "tabCompanies": "Syarikat (DBD)",
+      "signIn": "Log masuk",
+      "signInIntro": "Pelajar menggunakan ini untuk log masuk kali pertama.",
+      "passwordPlaceholder": "Mana-mana 6–8 aksara",
+      "generatePassword": "Jana",
+      "showPassword": "Tunjuk kata laluan",
+      "hidePassword": "Sembunyi kata laluan",
+      "learnerSection": "Pelajar",
+      "name": "Nama",
+      "namePlaceholder": "Nama pelajar",
+      "nameCardSection": "Maklumat kad nama",
+      "companyCard": "Syarikat yang dipelajari oleh pelajar",
+      "chooseConfirmedCompany": "Pilih syarikat yang disahkan…",
+      "notListed": "Tidak tersenarai?",
+      "addInCompanies": "Tambahkan dalam Syarikat (DBD)",
+      "checklist": {
+        "title": "Sebelum anda cipta",
+        "team": "Pasukan dipilih",
+        "company": "Syarikat dipilih",
+        "password": "Kata laluan, 10+ aksara",
+        "name": "Nama penuh",
+        "contact": "Telefon dan e-mel",
+        "done": "selesai",
+        "todo": "masih perlu dilakukan"
+      },
+      "createLearner": "Cipta pelajar",
+      "takenCompany": "{name} — mempunyai seorang pelajar",
+      "noFreeCompany": "Setiap syarikat yang disahkan sudah mempunyai pelajarnya — tambah syarikat dalam Syarikat (DBD).",
+      "companyTaken": "Syarikat ini sudah mempunyai seorang pelajar. Setiap syarikat dikaji oleh seorang pelajar.",
+      "notCreatedByYou": "DBD ini belum dicipta oleh anda."
+    },
+    "learners": {
+      "title": "Rekod Pelajar",
+      "intro": "Setiap pelajar yang dilatih oleh pasukan anda: syarikat mereka, keputusan Kuiz dan Temu Bual, serta janji temu. Untuk menambah pelajar, pergi ke",
+      "toCreate": "Cipta pelajar & DBD",
+      "empty": "Belum ada pelajar.",
+      "readyToAssign": "Sedia untuk Ditetapkan",
+      "deleteLearner": "Padam pelajar",
+      "deleteAccount": "Padam akaun",
+      "deleteLearnerConfirm": "Padam pelajar {loginId}? Akaun dan sejarah latihan mereka akan dipadamkan secara kekal.",
+      "backToRecord": "← Rekod Pelajar",
+      "appointment": {
+        "book": "Tempah tarikh",
+        "change": "Tukar tarikh",
+        "needsQuiz": "Kuiz belum lulus",
+        "needsInterview": "Temu bual belum sedia"
+      },
+      "columns": {
+        "loginId": "ID Log Masuk",
+        "company": "Syarikat (Bahasa Inggeris)",
+        "director": "Pengarah",
+        "registeredOn": "Tarikh Pendaftaran",
+        "mcq": "Kuiz",
+        "chatbot": "Temu Bual",
+        "appointment": "Janji Temu",
+        "actions": "Tindakan"
+      },
+      "results": {
+        "pass": "Lulus",
+        "retest": "Ulang Ujian",
+        "fail": "Gagal",
+        "in_progress": "Dalam proses",
+        "abandoned": "Ditinggalkan"
+      },
+      "history": {
+        "attempt": "Percubaan",
+        "date": "Tarikh",
+        "result": "Keputusan"
+      },
+      "mcq": {
+        "title": "Sejarah Kuiz",
+        "empty": "Belum ada percubaan Kuiz.",
+        "score": "Skor",
+        "review": "Semak",
+        "reviewTitle": "Percubaan Kuiz {no}",
+        "reviewHeading": "Soalan dan jawapan",
+        "backToHistory": "← Sejarah Kuiz"
+      },
+      "chatbot": {
+        "title": "Sejarah Temu Bual",
+        "empty": "Belum ada Temu Bual.",
+        "review": "Perbualan",
+        "backToHistory": "← Sejarah Temu Bual"
+      }
+    },
+    "createDbd": {
+      "title": "Cipta DBD",
+      "intro": "Muat naik satu fail zip syarikat dengan dokumen DBD, invois, perjanjian, dan pautan Facebook atau laman web. Laman web adalah pilihan jika Facebook disertakan. Invois disimpan tetapi tidak dianalisis. Fakta DBD dibaca di latar belakang; penerangan perniagaan dan produk datang dari halaman yang dipautkan. Pilih kategori perniagaan dalam temu bual Bank untuk angka wang yang diluluskan.",
+      "introNoReader": "Muat naik satu fail zip syarikat dengan dokumen DBD dan pautan Facebook atau laman web. Pembacaan automatik tidak disediakan di sini, jadi buka syarikat itu kemudian untuk menyemaknya.",
+      "documents": "Fail zip syarikat",
+      "packPreview": {
+        "title": "Ditemui dalam {name}",
+        "pack": "{count, plural, one {Pek DBD: # fail} other {Pek DBD: # fail}}",
+        "invoices": "{count, plural, =0 {Invois: tiada} one {Invois: #} other {Invois: #}}",
+        "agreements": "{count, plural, =0 {Perjanjian: tiada} one {Perjanjian: # (disimpan, tidak dibaca)} other {Perjanjian: # (disimpan, tidak dibaca)}}",
+        "facebook": "Facebook: {page}",
+        "website": "Laman Web: {site}",
+        "none": "tiada",
+        "ignored": "{count, plural, one {# fail lain ditinggalkan} other {# fail lain ditinggalkan}}"
+      },
+      "submit": "Cipta dan analisis",
+      "byHand": "Masukkan syarikat secara manual",
+      "answersInvalid": "Sila semak butiran ini: {fields}",
+      "created": "Dimuat naik. Dokumen sedang dibaca — syarikat disenaraikan di bawah dan akan mengesahkan sendiri apabila semuanya ditemui.",
+      "createdNoReader": "Dimuat naik. Buka syarikat di bawah untuk mengisi dan mengesahkannya.",
+      "companies": "Syarikat (DBD)",
+      "noCompanies": "Tiada syarikat lagi.",
+      "unnamed": "(nama belum dibaca)",
+      "statuses": {
+        "confirmed_auto": "Dikesahkan secara automatik",
+        "confirmed": "Dikesahkan",
+        "reading": "Membaca dokumen…",
+        "unread": "Tidak dapat dibaca",
+        "attention": "Memerlukan perhatian"
+      },
+      "companiesIntro": "Setiap pelajar mengkaji satu rekod DBD syarikat — bahan kajian, soalan dan tarikh banknya. Hanya syarikat yang disahkan boleh diberikan kepada pelajar.",
+      "search": "Cari syarikat atau pengarah",
+      "noMatch": "Tiada syarikat sepadan dengan “{query}”.",
+      "addCompany": "Cipta DBD Baharu",
+      "addCompanyHint": "Muat naik dokumen DBDnya — ia akan disemak secara automatik dalam 1–3 minit.",
+      "closeAdd": "Tutup",
+      "columns": {
+        "company": "Syarikat (Bahasa Inggeris)",
+        "director": "Pengarah",
+        "juristicId": "ID entiti undang-undang",
+        "registeredOn": "Tarikh Pendaftaran",
+        "team": "Pasukan",
+        "status": "Status",
+        "learner": "Pelajar",
+        "actions": "Tindakan"
+      },
+      "assignLearner": "Tetapkan pelajar",
+      "deleteCompany": "Padam syarikat",
+      "deleteCompanyConfirm": "Padam {name}? Akaun pelajar akan kekal dan bersedia untuk syarikat lain.",
+      "learnerOtherTeam": "Pelajar pasukan lain",
+      "learnerAfterConfirm": "Setelah disahkan"
+    },
+    "loginIdField": {
+      "label": "ID Log Masuk",
+      "hint": "Mana-mana 2 huruf atau digit, cth. AB atau 12. Kod percuma telah diisi — kekalkannya, tekan ↻ untuk yang lain, atau taip sendiri.",
+      "suggest": "Cadangkan kod percuma lain",
+      "checking": "Menyemak…",
+      "available": "Tersedia",
+      "taken": "ID log masuk ini sudah diambil — pilih yang lain",
+      "invalid": "Gunakan tepat 2 huruf atau digit",
+      "noTeam": "Pasukan ini tidak boleh mengambil pelajar baharu",
+      "chooseTeam": "Pilih pasukan dahulu",
+      "hintLearner": "Mana-mana 4 huruf atau digit, cth. ABCD atau 1234. Kod percuma telah diisi — kekalkannya, tekan ↻ untuk yang lain, atau taip sendiri.",
+      "invalidLearner": "Gunakan tepat 4 huruf atau digit",
+      "availableKeep": "✓ Tersedia — kekalkannya, tekan ↻ untuk yang lain, atau taip sendiri"
+    },
+    "dbd": {
+      "sourcePreview": {
+        "kindPdf": "poster PDF",
+        "kindImage": "imej",
+        "title": "Sumber {kind} · semak setiap fakta yang diekstrak",
+        "description": "{kind} profil perniagaan ini bukan sijil rasmi. Pengarah pertama digunakan sebagai jawapan latihan untuk kuasa menandatangani; sahkan sebelum menyimpan. Kategori perniagaan dipilih daripada penerangan dan produk di bawah. Anda boleh membetulkannya dalam Temu Bual Bank sebelum menggunakan anggaran ilustratif.",
+        "openOriginal": "Buka {kind} asal",
+        "uploadedPdf": "PDF maklumat syarikat yang dimuat naik",
+        "uploadedImage": "Imej maklumat syarikat yang dimuat naik",
+        "pineconeIndexing": "Pengindeksan Pinecone: {status}",
+        "checkDetails": "Semak butiran di bawah dan betulkan apa-apa yang salah. Suntingan disimpan secara automatik."
+      },
+      "uploadChoice": {
+        "createCompany": "Cipta syarikat",
+        "chooseWhat": "Pilih apa yang hendak dimuat naik",
+        "image": "Imej",
+        "imageHint": "Muat naik satu imej maklumat syarikat JPG, PNG atau WebP",
+        "pdfPoster": "Poster PDF",
+        "pdfHint": "Muat naik satu PDF dengan profil syarikat dan maklumat produk",
+        "zipFile": "Fail ZIP",
+        "zipHint": "Muat naik dokumen DBD dan pautan laman web atau Facebook",
+        "imageTitle": "Muat naik imej maklumat syarikat",
+        "imageDescription": "Muat naik satu imej yang menunjukkan butiran pendaftaran dan perniagaan. Semak setiap fakta yang diekstrak pada skrin seterusnya; imej ini bukan sijil rasmi DBD.",
+        "chooseImage": "Pilih imej untuk dimuat naik",
+        "browse": "Klik untuk melayari fail anda",
+        "imageLimits": "JPG, PNG atau WebP, sehingga 4 MB. Angka pendapatan dan transaksi datang daripada kategori yang anda pilih selepas muat naik.",
+        "imageUnavailable": "Pembacaan imej memerlukan GEMINI_API_KEY pada pelayan.",
+        "readingImage": "Membaca imej…",
+        "uploadReview": "Muat naik dan semak",
+        "pdfTitle": "Muat naik PDF maklumat syarikat",
+        "pdfDescription": "Muat naik satu poster PDF yang menunjukkan butiran pendaftaran dan perniagaan. Kami mengekstrak fakta yang kelihatan dan mengindeks PDF untuk kajian dan soalan. Semak setiap fakta pada skrin seterusnya; poster bukan sijil rasmi DBD.",
+        "choosePdf": "Pilih poster PDF untuk dimuat naik",
+        "pdfLimits": "PDF, sehingga 4 MB. Pengindeksan Pinecone berjalan di latar belakang selepas muat naik.",
+        "pdfUnavailable": "Pembacaan PDF memerlukan Claude dan Pinecone dikonfigurasi pada pelayan.",
+        "readingPdf": "Membaca PDF…",
+        "uploadPdfReview": "Muat naik PDF dan semak",
+        "zipTitle": "Muat naik fail ZIP syarikat",
+        "zipDescription": "Sertakan PDF DBD dan fail pautan laman web atau Facebook. Pautan akan dipraisi dalam butiran Syarikat selepas muat naik.",
+        "chooseZip": "Pilih fail ZIP untuk dimuat naik",
+        "zipUnavailable": "Pembacaan ZIP tidak dikonfigurasi. Anda boleh memuat naiknya, tetapi PDFnya tidak akan diekstrak secara automatik.",
+        "uploadingZip": "Memuat naik ZIP…",
+        "uploadZipReview": "Muat naik ZIP dan semak"
+      },
+      "title": "Rekod DBD",
+      "new": "Rekod DBD Baharu",
+      "untitled": "(tiada nama syarikat lagi)",
+      "save": "Simpan",
+      "saved": "Disimpan",
+      "autoSave": "Perubahan disimpan secara automatik",
+      "saving": "Menyimpan…",
+      "status": "Status",
+      "dateHint": "Seperti yang tertera pada sijil, cth. 9 เมษายน 2569, 09/04/2569 atau 9 April 2026",
+      "directorsHint": "Seorang pengarah setiap baris: Nama Thai | Nama Inggeris",
+      "documentMissing": "Tiada sijil PDF dimuat naik",
+      "documentUploaded": "Sijil PDF dimuat naik",
+      "upload": "Muat Naik PDF",
+      "uploaded": "Dimuat Naik",
+      "errors": {
+        "no-file": "Pilih fail PDF",
+        "upload-failed": "Fail tidak dapat dimuat naik (sambungan terputus atau bukan fail PDF). Sila cuba lagi.",
+        "invalid-file": "Hanya fail PDF sehingga 30 MB diterima (maksimum 40 fail)",
+        "no-document": "Fail zip tidak mengandungi PDF. Masukkan pek DBD ke dalamnya.",
+        "too-many-files": "Fail zip mengandungi lebih daripada 40 dokumen. Keluarkan sebahagian daripadanya.",
+        "file-too-large": "Satu fail dalam zip melebihi 30 MB. Kecilkan saiznya dan cuba lagi.",
+        "zip-too-large": "Saiz keseluruhan fail zip melebihi 200 MB. Keluarkan beberapa fail.",
+        "cannot-open": "Fail zip ini tidak dapat dibuka. Buat semula dan cuba sekali lagi.",
+        "missing-business-link": "Tambah pautan laman web atau Facebook ke fail zip syarikat sebelum menciptanya.",
+        "answers-required": "Tidak dapat menyimpan: rekod ini telah disahkan, jadi jawapan hubungan dan perniagaannya mesti dilengkapkan terlebih dahulu (lihat di bawah).",
+        "manager-action-needed": "Muat naik memerlukan tindakan Pengurus. Minta Pengurus anda menyemaknya."
+      },
+      "fields": {
+        "companyNameTh": "Nama syarikat (Thai)",
+        "companyNameEn": "Nama syarikat (Inggeris)",
+        "juristicId": "ID entiti undang-undang (13 digit)",
+        "certificateNo": "No. sijil",
+        "documentRef": "Rujukan dokumen",
+        "registeredOn": "Tarikh pendaftaran",
+        "issuedOn": "Sijil dikeluarkan pada",
+        "registeredCapital": "Modal berdaftar (THB)",
+        "headOfficeAddress": "Alamat pejabat utama",
+        "signingAuthority": "Pihak berkuasa penandatangan",
+        "objectivesCount": "Bilangan objektif",
+        "issuingOffice": "Pejabat pengeluar",
+        "registrarName": "Pendaftar",
+        "directors": "Pengarah",
+        "province": "Wilayah",
+        "objectives": "Objektif perniagaan",
+        "businessCategories": "Kategori perniagaan",
+        "totalShares": "Jumlah saham",
+        "parValue": "Nilai par (Baht setiap saham)",
+        "paidUpCapital": "Modal berbayar (Baht)",
+        "shareType": "Jenis saham",
+        "shareholders": "Pemegang saham",
+        "promoters": "Penganjur"
+      },
+      "extract": "Ekstrak daripada PDF",
+      "extracting": "Mengekstrak…",
+      "extracted": "Pengekstrakan selesai — semak nilai yang dicadangkan di bawah, kemudian simpan dan sahkan.",
+      "extractHint": "Membaca semula sijil yang dimuat naik dan hanya mengisi medan yang masih kosong.",
+      "extractionNotConfigured": "Pengekstrakan AI tidak dikonfigurasi (tetapkan ANTHROPIC_API_KEY).",
+      "reviewSuggestions": "Nilai yang dicadangkan daripada sijil ditunjukkan di mana rekod masih kosong. Semak setiap medan — terutamanya yang diserlahkan — kemudian Simpan dan Sahkan.",
+      "suggestedFromDocument": "Dicadangkan daripada dokumen (keyakinan {confidence}%)",
+      "lowConfidenceHint": "keyakinan rendah, sila sahkan",
+      "extractErrors": {
+        "not_configured": "Pengekstrakan AI tidak dikonfigurasi.",
+        "provider": "Perkhidmatan pengekstrakan gagal. Cuba lagi nanti.",
+        "invalid_output": "Hasil pengekstrakan tidak dapat digunakan.",
+        "no_document": "Muat naik sijil PDF terlebih dahulu.",
+        "not_allowed": "Rekod ini tidak boleh diekstrak.",
+        "too_large": "Jumlah dokumen melebihi 30 MB; pisahkan atau mampatkannya"
+      },
+      "uploadFirstTitle": "Muat naik sijil DBD (Thai)",
+      "uploadFirstHint": "Pilih satu fail zip syarikat dengan dokumen DBD dan sekurang-kurangnya pautan Facebook atau laman web. Laman web adalah pilihan jika Facebook disertakan. Semak fakta yang diekstrak selepas itu.",
+      "uploadFirstNoExtraction": "Pembacaan dokumen tidak dikonfigurasi (ANTHROPIC_API_KEY diperlukan). Fail disimpan dan anda mengisi medan di bawah sendiri.",
+      "uploadAndFill": "Muat naik dan isi secara automatik",
+      "uploadingAndReading": "Memuat naik…",
+      "uploadFillsHint": "Tambah lebih banyak dokumen DBD (sijil, lembaran objektif, Bor.Or.Jor.5, Bor.Or.Jor.2); setiap fail dibaca dan hanya medan kosong yang diisi.",
+      "orEnterManually": "Atau masukkan butiran secara manual tanpa fail",
+      "reExtract": "Baca dokumen sekali lagi",
+      "uploadedButNotRead": "Fail telah dimuat naik tetapi tidak dapat dibaca ({reason}). Isi medan sendiri atau cuba baca sekali lagi.",
+      "levels": {
+        "identity": "Tahap 1 — Identiti syarikat (sijil)",
+        "business": "Pemegang saham",
+        "document": "Tahap 3 — Metadata dokumen DBD",
+        "interview": "Tahap 4 — Jawapan temu bual bank (fakta yang tidak dipegang oleh DBD)",
+        "answers": "Hubungan dan perniagaan",
+        "answersIntro": "Semak penerangan perniagaan dan produk yang digunakan dalam kuiz dan temu bual. Butiran hubungan adalah pilihan untuk Kad Nama."
+      },
+      "documentTypes": {
+        "certificate": "Sijil",
+        "objectives_sheet": "Helaian objektif",
+        "shareholder_list": "Senarai pemegang saham (Bor.Or.Jor.5)",
+        "memorandum": "Memorandum (Bor.Or.Jor.2)",
+        "articles": "Artikel persatuan",
+        "other": "Lain-lain",
+        "invoice": "Invois",
+        "agreement": "Perjanjian",
+        "unknown": "Belum diklasifikasikan"
+      },
+      "documentGroups": {
+        "pack": "Pek DBD",
+        "invoice": "Invois (disimpan, tidak dibaca)",
+        "agreement": "Perjanjian (disimpan, tidak dibaca)"
+      },
+      "invoices": {
+        "readAgain": "Baca invois semula",
+        "queued": "Invois sedang dibaca di latar belakang (kira-kira 1–3 minit); muat semula halaman untuk melihat angka.",
+        "failed": "Invois tidak dapat dibaca ({reason}). Klik \"Baca invois semula\".",
+        "notRead": "belum dibaca",
+        "row": "{date} · {total}",
+        "setAside": "Semak invois ini: {reason}",
+        "reasons": {
+          "not_an_invoice": "bukan invois",
+          "no_date": "tiada tarikh dicetak",
+          "no_total": "tiada jumlah dicetak",
+          "not_baht": "bukan dalam baht",
+          "items_do_not_add_up": "item tidak berjumlah kepada jumlah keseluruhan"
+        },
+        "few": "{count, plural, one {Dianggarkan daripada # invois} other {Dianggarkan daripada # invois}}; tambah lagi untuk angka yang lebih stabil.",
+        "none": "Tiada invois lagi. Muat naik di tab Dokumen dan angka di bawah akan dikira daripadanya; sehingga itu, kedua-dua jumlah boleh ditaip di sini."
+      },
+      "invoiceFigures": {
+        "title": "Angka kategori yang diluluskan",
+        "hint": "Anggaran perancangan ilustratif daripada kategori perniagaan yang dipilih, bukan angka syarikat yang disahkan. Semak sebelum menggunakannya untuk KYC bank.",
+        "monthlyRevenue": "Pendapatan bulanan",
+        "averagePerTransaction": "Purata setiap transaksi",
+        "transactionsPerMonth": "Transaksi sebulan",
+        "revenuePerDay": "Pendapatan sehari",
+        "dailyRange": "Hari terendah dan tertinggi",
+        "itemPriceRange": "Item termurah dan termahal",
+        "dates": "Tarikh dilindungi",
+        "used": "{count, plural, one {# invois dibaca} other {# invois dibaca}}",
+        "baht": "{amount} baht",
+        "range": "{low} – {high}"
+      },
+      "links": {
+        "title": "Alamat syarikat",
+        "hint": "Dibaca daripada imej atau ZIP yang dimuat naik apabila tersedia. Betulkan di sini jika perlu; perubahan disimpan secara automatik.",
+        "website": "Laman web",
+        "facebookPage": "Halaman Facebook",
+        "facebookStatus": "Pembacaan Facebook",
+        "read": "Butiran halaman dan siaran terkini dibaca melalui Apify",
+        "unavailable": "Tidak dapat membaca halaman. Simpan alamat untuk cuba lagi.",
+        "notRead": "Belum dibaca. Semak persediaan Apify.",
+        "save": "Simpan alamat",
+        "saved": "Disimpan",
+        "autoSave": "Perubahan disimpan secara automatik",
+        "saving": "Menyimpan…",
+        "invalid": "Masukkan alamat web (contoh: example.co.th) dan nama atau pautan halaman Facebook."
+      },
+      "objectivesHint": "Satu objektif setiap baris; nombor pendahulu dikekalkan, cth. \"1. Untuk mengendalikan…\"",
+      "onePerLine": "Satu setiap baris",
+      "shareholdersHint": "Satu setiap baris: nama | kewarganegaraan | saham",
+      "promotersHint": "Satu setiap baris: nama | kewarganegaraan",
+      "documents": "Dokumen yang dimuat naik",
+      "removeDocument": "Buang",
+      "sourceDocument": "dari {name}",
+      "sourcePage": "halaman {page}",
+      "fileHint": "Satu fail zip syarikat (pek DBD, invois, perjanjian, dan pautan Facebook atau laman web); sehingga 30 MB setiap PDF di dalamnya, 40 fail dan 200 MB secara keseluruhan",
+      "interviewHint": "Hanya apa yang tiada dokumen boleh jawab. Segala yang lain yang ditanya oleh bank akan diisi di bawah tanpa perlu ditaip oleh sesiapa.",
+      "amountHint": "Tulis jumlah dalam angka, contohnya 300,000. Urus niaga setiap bulan dikira daripada dua jumlah tersebut.",
+      "standardAnswers": {
+        "title": "Diisi secara automatik",
+        "hint": "Pelajar diajar jawapan-jawapan ini. Ia datang dari DBD, dari invois, atau adalah sama untuk setiap syarikat; tiada siapa yang menaipnya.",
+        "pending": "Akan diisi setelah jawapan yang dikira daripadanya ditulis"
+      },
+      "interviewFields": {
+        "contact_email": "E-mel syarikat",
+        "contact_phone": "Nombor telefon syarikat",
+        "nature_of_business": "Apa yang perniagaan lakukan (dalam perkataan mudah)",
+        "products_services": "Produk atau perkhidmatan yang dirancang untuk dijual",
+        "account_purpose": "Mengapa syarikat memerlukan akaun bank?",
+        "monthly_volume": "Anggaran aliran masuk/keluar bulanan",
+        "clients_location": "Di manakah pelanggan utama?",
+        "suppliers_location": "Di manakah pembekal utama?",
+        "source_of_funds": "Sumber dana",
+        "business_address": "Tempat perniagaan sebenar",
+        "operations_status": "Adakah syarikat telah memulakan operasi?",
+        "business_purpose": "Mengapa syarikat ditubuhkan?",
+        "main_clients": "Pelanggan utama",
+        "client_origin": "Di mana dan bagaimana pelanggan ditemui",
+        "main_suppliers": "Pembekal utama",
+        "monthly_revenue": "Pendapatan bulanan",
+        "revenue_basis": "Asas angka pendapatan",
+        "average_transaction": "Jumlah purata setiap transaksi",
+        "monthly_transactions": "Urus niaga setiap bulan",
+        "first_incoming_funds": "Dari mana wang pertama masuk ke akaun, dan mengapa",
+        "promptpay_qr_purpose": "Mengapa syarikat memerlukan PromptPay / QR",
+        "customer_examples": "Contoh pelanggan sebenar",
+        "customer_profile": "Jenis pelanggan (jenis, di Thailand atau luar negara)",
+        "transaction_details": "Bagaimana jualan lalu dibayar (kaedah, jumlah biasa)"
+      },
+      "saveInterview": "Simpan jawapan temu bual",
+      "index": {
+        "label": "Indeks carian",
+        "status": {
+          "none": "Tidak diindeks",
+          "queued": "Dalam barisan",
+          "indexing": "Membaca {done}/{total} halaman",
+          "ready": "Sedia ({total} halaman)",
+          "failed": "Gagal",
+          "skipped": "Dilumpuhkan"
+        },
+        "retry": "Cuba lagi",
+        "reindex": "Indeks semula",
+        "hint": "Dokumen dibaca lima halaman pada satu masa di latar belakang (kira-kira seminit setiap larian); muat semula untuk menyegarkan status.",
+        "start": "Indeks",
+        "removeUnavailable": "Dokumen disimpan: indeks carian (Pinecone) tidak dapat dicapai, jadi vektornya tidak dapat dialih keluar terlebih dahulu. Cuba lagi nanti."
+      },
+      "ask": {
+        "title": "Tanya dokumen",
+        "hint": "Jawapan hanya datang dari dokumen yang dimuat naik, dengan halaman — gunakannya untuk menyemak apa yang telah dibaca.",
+        "placeholder": "cth. Berapakah modal berdaftar? / Siapakah pemegang saham?",
+        "submit": "Tanya",
+        "asking": "Mencari…",
+        "passages": "Petikan dari dokumen",
+        "source": "{document} · halaman {page}",
+        "errors": {
+          "empty": "Taip soalan dahulu",
+          "not_indexed": "Dokumen belum diindeks — tunggu sehingga statusnya \"Sedia\"",
+          "unavailable": "Carian dilumpuhkan (VECTOR_PROVIDER tidak dikonfigurasi)"
+        },
+        "noAnswer": "Tiada jawapan model tersedia; menunjukkan petikan yang ditemui"
+      },
+      "deferredFill": "Dokumen terlalu panjang untuk dibaca dalam satu laluan; ia sedang dibaca di latar belakang dan medan akan diisi apabila status indeks adalah \"Sedia\" (muat semula untuk melihatnya).",
+      "readingQueued": "Dokumen sedang dibaca di latar belakang (kira-kira 1–3 minit); muat semula halaman untuk melihat medan yang telah diisi.",
+      "readingFailed": "Dokumen tidak dapat dibaca ({reason}). Sila isi ruangan sendiri atau klik \"Baca dokumen semula\".",
+      "interviewGroups": {
+        "contact": "Hubungan syarikat",
+        "business": "Apa yang perniagaan lakukan",
+        "bank": "Soalan lain bank",
+        "customers": "Pelanggan dan pembekal",
+        "money": "Wang dan transaksi",
+        "moneyTyped": "Wang dan transaksi (ditaip, tiada invois lagi)",
+        "legacy": "Jawapan terdahulu"
+      },
+      "team": "Pasukan",
+      "legacyHint": "Ditulis sebelum penilaian baharu dan masih dicetak pada kad kajian temu duga bank. Jika dibiarkan kosong, ia mengikut jawapan di atas.",
+      "address": {
+        "title": "Alamat berdaftar (seperti yang dibaca mengikut geografi Thailand)",
+        "status": {
+          "resolved": "Diselesaikan ke mukim",
+          "partial": "Diselesaikan sebahagian — semak alamat yang dicetak",
+          "unresolved": "Tidak diselesaikan"
+        },
+        "issues": {
+          "no_address": "Tiada alamat berdaftar lagi",
+          "province_not_found": "Wilayah tidak dapat ditemui",
+          "district_not_found": "Daerah tidak dapat ditemui di wilayah tersebut",
+          "subdistrict_not_found": "Mukim tidak dapat ditemui di daerah tersebut",
+          "postcode_mismatch": "Poskod dokumen berbeza daripada rujukan geografi. Poskod dokumen digunakan."
+        },
+        "parts": {
+          "house_no": "No. rumah",
+          "subdistrict": "Mukim",
+          "district": "Daerah",
+          "province": "Wilayah"
+        },
+        "notStoredYet": "Dipaparkan daripada alamat yang dicetak; ia akan disimpan dengan simpanan seterusnya."
+      },
+      "category": {
+        "title": "Kategori perniagaan",
+        "auto": "Dipilih secara automatik daripada bukti perniagaan",
+        "fallback": "Pilihan sandaran",
+        "fallbackReason": "Penerangan perniagaan yang sepadan tidak mencukupi; ini bukan kategori perniagaan yang disahkan.",
+        "evidence": "Bukti yang sepadan",
+        "manual": "dipilih oleh seseorang",
+        "unmapped": "Tiada kategori lagi",
+        "errors": {
+          "no_text": "Masukkan apa yang perniagaan lakukan atau jual dalam butiran Syarikat",
+          "not_configured": "Pemetaan automatik dimatikan",
+          "no_categories": "Senarai kategori kosong",
+          "choose-category": "Pilih kategori untuk menetapkan angka temu duga bank",
+          "failed": "Pemetaan automatik gagal; semak jawapan perniagaan atau pilih kategori"
+        },
+        "choose": "Pilih kategori",
+        "none": "Pilih…",
+        "set": "Gunakan kategori ini",
+        "remap": "Petakan semula secara automatik"
+      },
+      "coverage": {
+        "title": "Kesediaan penilaian",
+        "introCompany": "Konsep peringkat syarikat yang boleh ditanya mengenai syarikat ini: 29 daripada Kuiz dan 10 daripada Temu Duga. Konsep setiap pelajar sendiri disemak pada halaman mereka.",
+        "introAssignment": "Semua yang akan ditanya kepada pelajar ini: kesemua 30 konsep Kuiz dan kesemua 11 konsep Temu Duga, termasuk konsep mereka sendiri.",
+        "mcq": "Kuiz",
+        "interview": "Temu Duga",
+        "count": "{ready} daripada {total} sedia",
+        "perLearner": "Disemak untuk setiap pelajar: {list}",
+        "allReady": "Setiap konsep mempunyai apa yang diperlukan.",
+        "missingFacts": "Masih hilang",
+        "missingConcepts": "Konsep menunggu: {list}",
+        "whatIsMissing": "Apa yang hilang ({count})"
+      },
+      "facts": {
+        "company_name_th": "Nama syarikat (Thai)",
+        "company_name_en": "Nama syarikat (Inggeris)",
+        "juristic_id": "Nombor pendaftaran badan undang-undang",
+        "registered_on": "Tarikh pendaftaran",
+        "registered_capital": "Modal berdaftar",
+        "directors": "Pengarah",
+        "signing_authority": "Pihak berkuasa menandatangani",
+        "address": "Alamat berdaftar (diselesaikan)",
+        "shareholders": "Pemegang saham (dengan pegangan)",
+        "total_shares": "Jumlah saham",
+        "nature_of_business": "Apa yang perniagaan lakukan",
+        "products_services": "Produk atau perkhidmatan",
+        "business_purpose": "Mengapa syarikat ditubuhkan",
+        "main_clients": "Pelanggan utama",
+        "client_origin": "Asal pelanggan",
+        "main_suppliers": "Pembekal utama",
+        "business_address": "Tempat perniagaan sebenar",
+        "monthly_revenue": "Pendapatan bulanan",
+        "revenue_basis": "Asas angka pendapatan",
+        "average_transaction": "Purata transaksi",
+        "monthly_transactions": "Transaksi setiap bulan",
+        "source_of_funds": "Sumber modal permulaan",
+        "first_incoming_funds": "Dana masuk pertama",
+        "account_purpose": "Mengapa syarikat memerlukan akaun",
+        "promptpay_qr_purpose": "Mengapa PromptPay / QR",
+        "customer_examples": "Contoh pelanggan",
+        "customer_profile": "Profil pelanggan",
+        "transaction_details": "Butiran transaksi",
+        "operations_started": "Mula beroperasi?",
+        "has_existing_customers": "Ada pelanggan?",
+        "has_completed_transactions": "Jualan selesai?",
+        "has_regular_suppliers": "Pembekal tetap?",
+        "learner_is_shareholder": "Pelajar adalah pemegang saham?",
+        "business_category": "Kategori perniagaan",
+        "holder_name": "Nama pelajar seperti dalam dokumen DBD",
+        "position": "Jawatan pelajar",
+        "director_count": "Bilangan pengarah",
+        "shareholder_count": "Bilangan pemegang saham",
+        "my_shares": "Saham pelajar",
+        "my_share_percent": "Peratusan saham pelajar"
+      },
+      "confirmedAutomatically": "Disahkan secara automatik: setiap fakta dibaca daripada dokumen dan sifat perniagaan telah diterangkan.",
+      "versions": {
+        "title": "Versi latihan",
+        "intro": "Pelajar belajar dan dinilai berdasarkan salinan beku fakta-fakta ini. Penyimpanan yang mengubahnya akan menghasilkan versi baharu; tiada siapa yang akan beralih kepadanya sehingga seseorang memindahkan mereka.",
+        "none": "Tiada versi lagi — ia akan diaktifkan apabila tiada apa-apa yang menghalangnya (lihat Ralat).",
+        "active": "Versi {n} — aktif sejak {date}",
+        "complete": "Lengkap pada skop syarikat: setiap satu daripada 29 konsep Kuiz dan 10 konsep Temu Bual diselesaikan.",
+        "incomplete": "Belum lengkap — masih tiada:",
+        "behind": "{count, plural, =0 {Setiap pelajar berada pada versi ini.} one {# pelajar berada pada versi yang lebih lama.} other {# pelajar berada pada versi yang lebih lama.}}",
+        "history": "Sejarah",
+        "status": {
+          "active": "aktif",
+          "superseded": "digantikan",
+          "draft": "draf"
+        }
+      },
+      "recheck": "Semak semula",
+      "acceptance": {
+        "accepted": "Diterima oleh {name}",
+        "acceptedAuto": "Diterima secara automatik: pembacaan adalah bersih dan sifat perniagaan telah ada.",
+        "waiting": "{count, plural, one {# ralat} other {# ralat}} menghalang penerimaan",
+        "blocked": "Belum diterima — selesaikan ralat."
+      },
+      "exceptions": {
+        "title": "Ralat",
+        "intro": "Apa yang ditemui oleh validator. Rekod diterima apabila tiada apa-apa yang menghalang penerimaan; versi latihannya diaktifkan apabila tiada apa-apa yang menghalang versi tersebut. Nota adalah untuk semakan sahaja.",
+        "none": "Tiada apa-apa yang terbuka: rekod adalah bersih.",
+        "groups": {
+          "acceptance": "Menghalang penerimaan",
+          "version": "Menghalang versi latihan",
+          "none": "Untuk semakan"
+        },
+        "kinds": {
+          "missing": "Tiada",
+          "low_confidence": "Keyakinan rendah",
+          "conflict": "Tidak selaras",
+          "invalid": "Tidak sah",
+          "geo_mismatch": "Alamat tidak diselesaikan",
+          "category_review": "Kategori untuk disemak",
+          "render_failure": "Soalan tidak dapat dipaparkan"
+        },
+        "rules": {
+          "check_digit": "Digit semakan tidak sepadan ({value}).",
+          "in_future": "Tarikh adalah pada masa hadapan ({value}).",
+          "before_registration": "Dikeluarkan ({value}) sebelum tarikh pendaftaran ({registered_on}).",
+          "shares_over_total": "Saham pemegang berjumlah {sum}, lebih daripada jumlah {total}.",
+          "shares_under_total": "Saham pemegang berjumlah {sum} daripada {total}; senarai mungkin tidak lengkap.",
+          "percent_over_100": "Peratusan berjumlah {percent}%.",
+          "percent_under_100": "Peratusan berjumlah {percent}%; senarai mungkin tidak lengkap.",
+          "shares_times_par": "Saham × nilai par menghasilkan {expected}, modal menyatakan {actual}.",
+          "count_vs_list": "Sijil menyatakan {count} objektif; {listed} disenaraikan.",
+          "names_not_directors": "Pihak berkuasa penandatangan menamakan seseorang yang bukan pengarah yang disenaraikan.",
+          "confidence": "Dibaca dengan keyakinan {confidence}% (halaman {page}).",
+          "geo": "{issues}",
+          "missing": "Diperlukan oleh: {concepts}",
+          "category": "Padanan terbaik {candidate} pada {confidence}%; pilih atau petakan semula pada panel kategori.",
+          "render_failure": "Kuiz ini tiada soalan yang diluluskan untuk ditanya kepada syarikat ini mengenai konsep ini, jadi pelajar tidak dapat memulakan kuiz. Semak bahawa fakta tersebut ada dalam rekod dan bank soalan mempunyai soalan yang diluluskan untuknya; notis akan ditutup apabila kuiz bermula."
+        },
+        "confirmValue": "Nilai adalah betul",
+        "dismiss": "Tidak berkenaan",
+        "note": "Nota (diperlukan untuk menolak)",
+        "errors": {
+          "not-dismissable": "Fakta yang hilang telah dibekalkan, bukan ditolak.",
+          "already-resolved": "Sudah diselesaikan.",
+          "note-required": "Tulis nota dahulu.",
+          "not-found": "Tidak ditemui."
+        }
+      },
+      "answersMissing": "Masih perlu diisi sebelum rekod ini diterima: {fields}",
+      "tabs": {
+        "details": "Butiran syarikat",
+        "interview": "Temu duga bank",
+        "documents": "Dokumen",
+        "exceptions": "Ralat"
+      },
+      "checks": {
+        "title": "Sebelum ia boleh digunakan",
+        "documents": "Dokumen dibaca",
+        "missing": "Tiada yang hilang",
+        "problems": "Tiada konflik atau ralat",
+        "accepted": "Diterima",
+        "done": "selesai",
+        "todo": "masih perlu dilakukan",
+        "openExceptions": "Lihat ralat"
+      },
+      "addDocuments": "Tambah dokumen",
+      "teamChip": "Pasukan {code}",
+      "uploadNeedsReview": "Muat naik ini tidak dapat diselesaikan. Semak sumber yang disimpan dan betulkan butiran syarikat.",
+      "unfinishedSources": "Sumber daripada muat naik yang belum selesai:"
+    },
+    "assignment": {
+      "title": "Syarikat yang ditugaskan",
+      "choose": "Pilih rekod DBD yang disahkan…",
+      "assign": "Tugaskan",
+      "deactivate": "Buang tugasan",
+      "availableFrom": "Pengesahan bank tersedia dari {date}",
+      "eligibilityPending": "Tarikh kelayakan belum selesai — tarikh pengeluaran sijil tiada",
+      "errors": {
+        "no-record": "Pilih rekod",
+        "already-assigned": "Pelajar ini sudah mempunyai tugasan aktif",
+        "not-confirmed": "Hanya rekod yang disahkan boleh ditugaskan",
+        "company-taken": "Syarikat ini sudah mempunyai seorang pelajar. Setiap syarikat dikaji oleh seorang pelajar."
+      }
+    },
+    "questions": {
+      "title": "Bank soalan",
+      "new": "Soalan baharu",
+      "key": "Kunci",
+      "kind": "Jenis",
+      "pools": "Kumpulan",
+      "poolQuiz": "Kuiz latihan",
+      "poolExam": "Kuiz",
+      "active": "Aktif",
+      "dependencies": "Menggunakan medan rekod",
+      "status": "Status",
+      "languages": "Bahasa",
+      "setStatus": "Tetapkan status",
+      "approvalHint": "Kelulusan memerlukan versi Bahasa Thai, Inggeris dan Cina. Hanya soalan yang diluluskan dan aktif akan digunakan.",
+      "save": "Simpan",
+      "saved": "Disimpan",
+      "missing": "belum ditulis",
+      "prompt": "Soalan",
+      "option": "Pilihan {key}",
+      "correctKey": "Pilihan yang betul",
+      "explanation": "Penjelasan (ditunjukkan apabila salah)",
+      "ttsEnabled": "Dayakan bacaan kuat Bahasa Thai",
+      "saveLanguage": "Simpan bahasa ini",
+      "placeholderHint": "Pemegang tempat yang boleh anda gunakan (varian pengganggu selepas paip):",
+      "generate": "Jana dengan AI",
+      "all": "Semua",
+      "batch": "Kumpulan",
+      "filter": "Tapis",
+      "preview": "Soalan",
+      "approve": "Luluskan",
+      "batchSummary": "Kumpulan ini menghasilkan {produced} soalan; {rejected} ditolak (penyedia: {provider})",
+      "fillMissing": "Isi bahasa yang tiada dengan AI",
+      "filling": "Menterjemah…",
+      "fillMissingHint": "Tiada: {languages}. Diterjemah daripada bahasa sedia ada, mengekalkan pemboleh ubah '{...}' dan pilihan tidak berubah.",
+      "fillDone": "Menambah {count} bahasa. Semak sebelum meluluskan.",
+      "fillErrors": {
+        "not_configured": "AI tidak dikonfigurasi (ANTHROPIC_API_KEY diperlukan)",
+        "provider": "Penyedia AI mengembalikan ralat. Cuba lagi.",
+        "invalid_output": "AI mengembalikan hasil yang tidak sah. Cuba lagi.",
+        "no_material": "Tulis sekurang-kurangnya satu bahasa dahulu"
+      },
+      "sources": "Sumber",
+      "sourceRef": "{document} · halaman {page}"
+    },
+    "notifications": {
+      "title": "Pemberitahuan",
+      "event": "Acara",
+      "channel": "Saluran",
+      "destination": "Destinasi",
+      "status": "Status",
+      "attempts": "Percubaan",
+      "lastError": "Ralat terakhir",
+      "requeue": "Letak semula dalam barisan"
+    },
+    "settings": {
+      "title": "Tetapan polisi",
+      "intro": "Nilai-nilai ini menggerakkan peraturan perniagaan (policy_config). Setiap perubahan diaudit dengan pemilik yang membuatnya.",
+      "save": "Simpan",
+      "saved": "Disimpan",
+      "yes": "Ya",
+      "no": "Tidak",
+      "unlimited": "Tanpa had",
+      "listHint": "Satu setiap baris",
+      "updatedAt": "Terakhir diubah {at}",
+      "options": {
+        "exam_pass_rule": {
+          "any": "Mana-mana percubaan lulus",
+          "latest": "Percubaan terakhir mesti lulus"
+        },
+        "study_completion_tracking": {
+          "viewed": "Apabila dilihat",
+          "completed": "Apabila ditanda selesai"
+        }
+      },
+      "errors": {
+        "required": "Nilai diperlukan",
+        "not_a_number": "Mesti nombor",
+        "unknown_key": "Tetapan tidak diketahui"
+      },
+      "keys": {
+        "bank_eligibility_days": {
+          "label": "Hari sebelum peringkat bank dibuka",
+          "help": "Dikira dari tarikh pengeluaran sijil (BR-002, lalai 45). Mengubahnya akan mengira semula tarikh setiap pelajar."
+        },
+        "bank_access_expiry_days": {
+          "label": "Hari peringkat bank kekal dibuka",
+          "help": "Dikira dari tarikh pembukaan; kosong = tidak pernah tamat tempoh"
+        },
+        "quiz_question_count": {
+          "label": "Soalan setiap kuiz latihan",
+          "help": "Setiap percubaan"
+        },
+        "exam_max_attempts": {
+          "label": "Percubaan Kuiz Maksimum",
+          "help": "Kosong = tanpa had"
+        },
+        "exam_retry_wait_hours": {
+          "label": "Jam untuk menunggu sebelum mengambil semula Kuiz",
+          "help": "0 = ambil semula serta-merta"
+        },
+        "exam_pass_rule": {
+          "label": "Peraturan lulus Kuiz",
+          "help": "Keputusan mana yang menentukan status lulus"
+        },
+        "require_exam_pass_for_name_card": {
+          "label": "Memerlukan kelulusan Kuiz untuk Kad Nama",
+          "help": "Apabila diaktifkan, pelajar mesti lulus Kuiz sebelum membuat kad"
+        },
+        "require_exam_pass_for_interview": {
+          "label": "Kelulusan Kuiz diperlukan sebelum Temu Duga",
+          "help": "Apabila diaktifkan, pelajar mesti lulus Kuiz sebelum memulakan Temu Duga."
+        },
+        "telegram_admin_chat_ids": {
+          "label": "ID sembang Telegram pemilik",
+          "help": "Satu setiap baris"
+        },
+        "email_admin_recipients": {
+          "label": "E-mel pemberitahuan pemilik",
+          "help": "Satu setiap baris"
+        },
+        "study_completion_tracking": {
+          "label": "Peraturan penjejakan penyelesaian pembelajaran",
+          "help": "Kira kad apabila dilihat, atau hanya apabila pelajar menandakannya sebagai selesai"
+        },
+        "appointment_hours_start": {
+          "label": "Waktu temu janji bermula",
+          "help": "Jam pertama yang boleh ditempah pada hari itu, waktu Bangkok, cth. 9"
+        },
+        "appointment_hours_end": {
+          "label": "Waktu temu janji berakhir",
+          "help": "Waktu tempahan berhenti, waktu Bangkok, cth. 16 (slot terakhir berakhir pada waktu itu)"
+        },
+        "appointment_slot_minutes": {
+          "label": "Tempoh slot (minit)",
+          "help": "Berapa lama setiap slot berlangsung, cth. 60"
+        },
+        "appointment_notice_hours": {
+          "label": "Notis (jam)",
+          "help": "Berapa jam sebelum slot pelajar masih boleh menempah atau membatalkan"
+        },
+        "appointment_holidays": {
+          "label": "Cuti bank",
+          "help": "Cuti umum Bank of Thailand, satu tarikh ISO (YYYY-MM-DD) setiap baris, termasuk hari penggantian; tambah senarai tahun hadapan setiap Disember"
+        },
+        "training_auto_accept_confidence_percent": {
+          "label": "Fakta latihan: keyakinan dibaca sebagai pasti (%)",
+          "help": "Fakta yang diekstrak pada atau di atas nilai ini tidak menimbulkan apa-apa. Di bawahnya, pengecualian keyakinan rendah disenaraikan untuk semakan."
+        },
+        "training_review_confidence_percent": {
+          "label": "Fakta latihan: keyakinan di bawah mana seseorang mesti mengesahkan (%)",
+          "help": "Di bawah nilai ini, pengecualian menyekat penerimaan rekod sehingga seseorang mengesahkan nilai tersebut."
+        },
+        "mcq_pass_score": {
+          "label": "Kuiz: jawapan betul yang diperlukan untuk lulus (daripada 30)",
+          "help": "Pelajar juga gagal jika mana-mana daripada sembilan fakta penting syarikat dijawab salah. Terpakai untuk percubaan yang dimulakan selepas perubahan."
+        },
+        "mcq_retest_score": {
+          "label": "Kuiz: jawapan betul untuk ujian semula (daripada 30)",
+          "help": "Dari skor ini sehingga satu di bawah skor lulus, keputusannya adalah Ujian Semula; lebih rendah adalah Gagal."
+        }
+      }
+    },
+    "generate": {
+      "title": "Jana soalan dengan AI",
+      "back": "Bank soalan",
+      "intro": "Soalan-soalan adalah berdasarkan sijil syarikat DBD. Pilih sijil rujukan dan kiraan; model ini merangka soalan aneka pilihan dalam bahasa Thai, Inggeris dan Cina, menggunakan pemboleh ubah supaya setiap pelajar ditanya tentang syarikat mereka sendiri. Semuanya kekal sebagai draf sehingga anda menyemak dan meluluskannya.",
+      "fakeNotice": "Mod ujian: tiada ANTHROPIC_API_KEY, jadi soalan sampel dijana sebagai ganti.",
+      "material": "Bahan sumber",
+      "materialHint": "Bahan tambahan pilihan untuk soalan pengetahuan am: tandakan kad belajar, tampal teks, atau muat naik fail.",
+      "pastedText": "Tampal teks",
+      "pastedHint": "Tampal nota, kandungan pelajaran, atau draf soalan sedia ada anda…",
+      "file": "Muat naik fail",
+      "fileHint": "PDF, DOCX, TXT atau MD (maks 20 MB)",
+      "count": "Bilangan soalan",
+      "templateCount": "Daripada jumlah itu, tanyakan fakta daripada sijil pelajar",
+      "templateHint": "Lalai kepada semua; selebihnya menguji pemahaman dokumen itu sendiri.",
+      "difficulty": "Kesukaran",
+      "difficultyEasy": "Mudah",
+      "difficultyMedium": "Sederhana",
+      "difficultyHard": "Sukar",
+      "pools": "Gunakan dalam",
+      "poolQuiz": "Kuiz latihan",
+      "poolExam": "Kuiz",
+      "focus": "Fokus (pilihan)",
+      "focusHint": "cth. tekankan apa yang ditanya oleh pegawai bank",
+      "generate": "Jana soalan",
+      "generating": "Menjana… (kira-kira 1–3 minit, biarkan halaman ini terbuka)",
+      "errors": {
+        "not_configured": "AI tidak dikonfigurasi (ANTHROPIC_API_KEY diperlukan). Hubungi pentadbir.",
+        "provider": "Penyedia AI mengembalikan ralat. Cuba lagi.",
+        "invalid_output": "AI mengembalikan hasil yang tidak sah. Cuba lagi.",
+        "no_material": "Pilih kad belajar, tampal teks, atau muat naik fail",
+        "pools_required": "Pilih sekurang-kurangnya satu kumpulan",
+        "file_too_large": "Fail melebihi 20 MB",
+        "nothing_produced": "Tiada soalan lulus pengesahan. Cuba lagi."
+      },
+      "reference": "Sijil DBD rujukan",
+      "referenceNone": "Struktur sijil generik (tiada syarikat)",
+      "referenceHint": "AI membaca butiran sijil ini (dan PDFnya apabila dimuat naik) untuk bertanya tentang fakta sebenar, tetapi tidak pernah menyalin nilainya ke dalam soalan — setiap soalan menggunakan pemboleh ubah supaya setiap pelajar ditanya tentang syarikat mereka sendiri."
+    },
+    "role": {
+      "title": "Peranan pelajar dalam syarikat",
+      "hint": "Bank bertanya \"berapa banyak saham yang anda pegang?\", \"apakah jawatan anda?\". Nama diambil daripada dokumen DBD; jawapan lain adalah sama untuk setiap pelajar.",
+      "holderName": "Nama seperti dalam dokumen DBD",
+      "holderHint": "Mesti nama yang dicetak dalam dokumen DBD. Dengan seorang pengarah, ia diisi secara automatik; pilih orang lain hanya jika pelajar ini adalah orang lain.",
+      "position": "Jawatan dalam syarikat",
+      "responsibilities": "Tanggungjawab utama",
+      "relationship": "Hubungan dengan pemegang saham lain",
+      "save": "Simpan peranan",
+      "saved": "Disimpan",
+      "choose": "Pilih orang",
+      "automatic": "Diisi secara automatik: satu-satunya pengarah syarikat.",
+      "fixed": "Sama untuk setiap pelajar",
+      "nameNotInDbd": "Pilih nama yang dicetak dalam dokumen DBD.",
+      "noPeople": "Tiada pengarah atau pemegang saham telah dibaca daripada dokumen lagi."
+    },
+    "submanagers": {
+      "title": "Subpengurus",
+      "new": "Subpengurus Baharu",
+      "loginId": "ID Log Masuk",
+      "suffix": "Sufiks dua aksara",
+      "suffixHint": "Masukkan tepat dua huruf Inggeris atau digit dalam sebarang kombinasi.",
+      "displayName": "Nama paparan",
+      "password": "Kata laluan (6–8 aksara)",
+      "create": "Cipta Subpengurus",
+      "status": "Status",
+      "actions": "Tindakan",
+      "disable": "Gantung",
+      "enable": "Aktifkan semula",
+      "resetPassword": "Set semula kata laluan",
+      "delete": "Padam",
+      "saved": "Disimpan",
+      "empty": "Tiada Subpengurus lagi.",
+      "archiveHint": "Memadam menghentikan akses dan mengalih keluar akaun daripada senarai ini. Rekod dan ID log masuknya dikekalkan secara kekal.",
+      "confirmArchive": "Padam akses Subpengurus ini? Rekod dan ID log masuk mereka akan dikekalkan.",
+      "manager": "Pengurus",
+      "ownerHint": "Subpengurus setiap pasukan. Sebagai Pemilik, anda boleh mencipta satu untuk pasukan mana-mana Pengurus dan menggantung, menetapkan semula atau memadam mana-mana daripada mereka.",
+      "chooseManager": "Pilih Pengurus"
+    },
+    "managers": {
+      "title": "Pengurus",
+      "new": "Pengurus baharu",
+      "displayName": "Nama pemegang",
+      "password": "Kata laluan awal",
+      "create": "Cipta pengurus",
+      "created": "Dicipta {code} untuk {name}",
+      "code": "Kod",
+      "learners": "Pelajar",
+      "records": "Syarikat",
+      "status": "Status",
+      "actions": "Tindakan",
+      "disable": "Gantung",
+      "enable": "Aktifkan semula",
+      "resetPassword": "Set semula kata laluan",
+      "passwordUpdated": "Kata laluan dikemas kini",
+      "suspendHint": "Menggantung pengurus menghentikan log masuk mereka. Pelajar mereka terus belajar dan syarikat mereka kekal kelihatan kepada anda.",
+      "empty": "Tiada pengurus lagi.",
+      "rename": "Namakan Semula"
+    },
+    "interviews": {
+      "title": "Temu Duga",
+      "intro": "Setiap Temu Duga yang dijalankan oleh pelajar pasukan anda, dengan keputusan dan penilaian pegawai bagi setiap jawapan.",
+      "empty": "Tiada temu duga lagi",
+      "learner": "Pelajar",
+      "company": "Syarikat",
+      "started": "Bermula",
+      "status": "Status",
+      "verdict": "Keputusan",
+      "open": "Buka",
+      "detailTitle": "Butiran temu duga",
+      "summaryTitle": "Ringkasan temu duga",
+      "summaryIntro": "Keputusan daripada temu duga berdasarkan dokumen syarikat dan jawapan pelajar.",
+      "overallResult": "Keputusan keseluruhan",
+      "correctAnswers": "Jawapan betul",
+      "readinessStatus": "Status kesediaan",
+      "interviewDate": "Tarikh temu duga",
+      "learnerId": "ID Pelajar",
+      "transcript": "Transkrip",
+      "transcriptTitle": "Transkrip soalan & jawapan",
+      "transcriptIntro": "Semak setiap soalan, jawapan pelajar, dan maklumat yang dijangkakan daripada dokumen syarikat.",
+      "explanation": "Penjelasan",
+      "expectedAnswer": "Jawapan yang dijangkakan",
+      "unanswered": "Tiada jawapan",
+      "assessments": "Penilaian mengikut soalan",
+      "narrative": "Ringkasan pegawai",
+      "noVerdict": "Tiada keputusan lagi",
+      "back": "Kembali ke temu duga",
+      "statuses": {
+        "in_progress": "Sedang berjalan",
+        "completed": "Selesai",
+        "abandoned": "Ditinggalkan"
+      },
+      "verdicts": {
+        "ready": "Sedia — boleh buka akaun",
+        "not_ready": "Belum sedia — belum boleh buka akaun"
+      },
+      "assessment": {
+        "correct": "Betul",
+        "partial": "Betul sebahagian",
+        "wrong": "Salah",
+        "evasive": "Mengelak",
+        "pasted": "Tampal",
+        "off_topic": "Luar topik"
+      }
+    },
+    "appointments": {
+      "title": "Temu janji bank",
+      "intro": "Pengurus memilih satu tarikh bank untuk setiap pelajar yang lulus kuiz dan temu duga.",
+      "bookingTitle": "Tempah untuk pelajar",
+      "bookingIntro": "Pilih pelajar yang sedia, kemudian pilih atau ganti tarikh mereka. Tiada slot masa.",
+      "chooseLearner": "Pelajar",
+      "choose": "Pilih pelajar",
+      "confirmTitle": "Sahkan temu janji bank",
+      "confirmDate": "Tetapkan temu janji bank untuk {learner} pada {date}?",
+      "confirmNo": "Tidak, kembali",
+      "confirmYes": "Ya, sahkan tarikh",
+      "needsQuiz": "Lulus Kuiz dahulu",
+      "needsInterview": "Lulus Temu Duga dahulu",
+      "ownerReadOnly": "Hanya pengurus pemilik yang menempah tarikh pelajar. Pemilik boleh menyemak dan membatalkan temu janji di sini.",
+      "upcoming": "Tarikh ditempah",
+      "prevMonth": "Bulan sebelumnya",
+      "nextMonth": "Bulan seterusnya",
+      "saved": "Tarikh temu janji disimpan",
+      "empty": "Tiada temu janji lagi",
+      "day": "Hari",
+      "time": "Masa",
+      "learner": "Pelajar",
+      "company": "Syarikat",
+      "team": "Pasukan",
+      "cancel": "Batal",
+      "blocks": "Jam yang disekat",
+      "block": "Sekat jam",
+      "unblock": "Nyahsekat",
+      "date": "Tarikh",
+      "fromHour": "Dari (jam)",
+      "toHour": "Hingga (jam)",
+      "reason": "Sebab",
+      "teamFilter": "Pasukan",
+      "adminCalendar": "Kalendar pemilik",
+      "allTeams": "Semua pasukan",
+      "show": "Papar"
+    },
+    "navGroups": {
+      "team": "Pasukan",
+      "content": "Kandungan",
+      "learners": "Pelajar",
+      "system": "Sistem"
+    },
+    "roles": {
+      "submanager": "Subpengurus",
+      "admin": "Pemilik",
+      "manager": "Pengurus",
+      "learner": "Pelajar"
+    },
+    "home": {
+      "intro": "Pilih bahagian untuk diurus. Pengurus hanya melihat pasukan mereka sendiri."
+    },
+    "businessCategories": {
+      "title": "Kategori perniagaan",
+      "intro": "Senarai terkawal yang dipilih oleh pemetaan automatik dan Kuiz mengambil pengganggu perniagaan daripadanya. Bersarakan kategori dengan mematikannya; kunci tidak pernah berubah.",
+      "key": "Kunci",
+      "keyHint": "Huruf kecil, digit dan _; kekal setelah dicipta.",
+      "labelTh": "Label Thai",
+      "labelEn": "Label Inggeris",
+      "labelZh": "Label Cina",
+      "sortOrder": "Susunan",
+      "active": "Aktif",
+      "add": "Tambah kategori",
+      "save": "Simpan",
+      "saved": "Disimpan",
+      "errors": {
+        "duplicate": "Kunci itu sudah wujud",
+        "invalid": "Semak kunci dan isi setiap label",
+        "failed": "Tidak dapat menyimpan"
+      }
+    },
+    "exceptions": {
+      "title": "Ralat",
+      "intro": "Setiap ralat terbuka pada syarikat yang anda jaga, yang menghalang penerimaan terlebih dahulu. Buka syarikat untuk menyelesaikannya.",
+      "empty": "Tiada yang terbuka.",
+      "columns": {
+        "company": "Syarikat",
+        "team": "Pasukan",
+        "kind": "Jenis",
+        "field": "Medan",
+        "blocks": "Menahan",
+        "since": "Sejak"
+      },
+      "blocks": {
+        "acceptance": "penerimaan",
+        "version": "versi",
+        "none": "—"
+      },
+      "count": "{count, plural, =0 {Tiada ralat terbuka} one {# ralat terbuka} other {# ralat terbuka}}"
+    },
+    "filePicker": {
+      "choose": "Pilih fail",
+      "orDrop": "atau lepaskan di sini"
+    },
+    "bank": {
+      "title": "Bank soalan",
+      "intro": "Satu soalan bagi setiap konsep, tiga puluh konsep. Sesuatu konsep sedia apabila ia mempunyai varian yang diluluskan untuk setiap kes.",
+      "ready": "{ready} daripada {total} konsep sedia",
+      "checkCompany": "Semak syarikat",
+      "legacy": "Soalan terdahulu",
+      "loadStarter": "{count, plural, one {Tambah # draf permulaan} other {Tambah # draf permulaan}}",
+      "starterHint": "Soalan permulaan untuk setiap satu daripada tiga puluh konsep. Ia tiba sebagai draf untuk anda baca, edit, luluskan atau bersarakan.",
+      "starterLoaded": "{count, plural, =0 {Tiada apa untuk ditambah} one {# draf telah ditambah} other {# draf telah ditambah}}",
+      "starterFailed": "Gagal menambah draf. Sila cuba lagi.",
+      "approveDrafts": "{count, plural, one {Luluskan # draf yang ditanda} other {Luluskan # draf yang ditanda}}",
+      "approveDraftsHint": "Setiap draf yang dikira di sini mempunyai teks Thai dan mematuhi semua peraturan bank. Baca dahulu: soalan yang diluluskan boleh diajukan kepada pelajar.",
+      "approveDraftsConfirm": "{count, plural, one {Luluskan # draf ini?} other {Luluskan semua # draf ini?}} Mana-mana daripadanya boleh dikembalikan kepada draf kemudian.",
+      "approveDraftsYes": "Ya, luluskan",
+      "approveDraftsCancel": "Batal",
+      "approveDraftsDone": "{count, plural, =0 {Tiada apa yang diluluskan} one {# draf diluluskan} other {# draf diluluskan}}",
+      "approveDraftsFailed": "Gagal meluluskan draf. Sila cuba lagi.",
+      "columns": {
+        "order": "#",
+        "concept": "Konsep",
+        "source": "Sumber",
+        "cases": "Kes",
+        "variants": "Varian"
+      },
+      "critical": "kritikal",
+      "caseAlways": "setiap syarikat",
+      "caseYes": "{fact}: ya",
+      "caseNo": "{fact}: tidak",
+      "covered": "diliputi",
+      "uncovered": "tiada varian yang diluluskan",
+      "counts": "{approved} diluluskan · {draft} draf · {retired} ditamatkan",
+      "statusFacts": {
+        "operations_started": "Operasi telah bermula",
+        "has_existing_customers": "Mempunyai pelanggan",
+        "has_completed_transactions": "Telah menyelesaikan transaksi",
+        "has_regular_suppliers": "Mempunyai pembekal tetap",
+        "learner_is_shareholder": "Pelajar adalah pemegang saham"
+      },
+      "sources": {
+        "DBD_FACT": "Fakta DBD",
+        "BUSINESS_PROFILE": "Profil perniagaan",
+        "DERIVED": "Terbitan",
+        "ROLE": "Peranan pelajar",
+        "KYC_POLICY": "Polisi"
+      },
+      "status": {
+        "draft": "Draf",
+        "approved": "Diluluskan",
+        "retired": "Ditamatkan"
+      },
+      "recipes": {
+        "DIRECT_FACT": "Fakta seadanya",
+        "NUMERIC_VARIATION": "Nombor diubah",
+        "COUNT_VARIATION": "Kiraan diubah",
+        "DATE_VARIATION": "Tarikh diubah",
+        "ID_MUTATION": "Nombor pendaftaran diubah",
+        "GEOGRAPHY_ALTERNATIVE": "Tempat lain",
+        "BUSINESS_ALTERNATIVE": "Perniagaan lain",
+        "STATIC": "Teks tetap",
+        "COMPOSITE_TEMPLATE": "Teks dengan fakta"
+      },
+      "concept": {
+        "back": "Bank soalan",
+        "facts": "Fakta yang mungkin digunakan oleh jawapan yang betul",
+        "noFacts": "Tiada: jawapan yang betul adalah teks polisi yang tetap.",
+        "grammarTitle": "Pemegang tempat dan resipi",
+        "grammar": "Tulis fakta dalam kurungan. Dalam pilihan yang salah, fakta boleh diubah:",
+        "allTokens": "Setiap pemegang tempat",
+        "variants": "Varian",
+        "none": "Tiada varian lagi.",
+        "newVariant": "Varian baharu",
+        "columns": {
+          "key": "Varian",
+          "when": "Untuk",
+          "prompt": "Soalan Thai",
+          "status": "Status"
+        }
+      },
+      "variant": {
+        "new": "Varian baharu",
+        "structure": "Pilihan",
+        "correct": "Betul",
+        "recipe": "Resipi",
+        "appliesWhen": "Dinyatakan untuk",
+        "thai": "Thai (teks yang diluluskan)",
+        "english": "Inggeris (rujukan)",
+        "chinese": "Cina (rujukan)",
+        "malay": "Bahasa Melayu (rujukan)",
+        "tamil": "Bahasa Tamil (rujukan)",
+        "prompt": "Soalan",
+        "option": "Pilihan {key}",
+        "explanation": "Penjelasan yang ditunjukkan selepas jawapan salah",
+        "inheritHint": "Biarkan pilihan kosong untuk mengambil pilihan Thai jika ia hanya mengandungi pemegang tempat.",
+        "save": "Simpan",
+        "saved": "Disimpan",
+        "statusTitle": "Status",
+        "approve": "Luluskan",
+        "toDraft": "Kembali ke draf",
+        "retire": "Nyahaktifkan",
+        "approveHint": "Diluluskan berdasarkan teks Thai. Mengubahnya, pilihan yang betul, resipi atau status yang dinyatakan untuknya akan mengembalikan varian kepada draf."
+      },
+      "issues": {
+        "unknown_concept": "Konsep tidak diketahui",
+        "thai_required": "Teks Thai diperlukan",
+        "prompt_required": "{where}: soalan kosong",
+        "option_required": "{where}: pilihan kosong",
+        "grammar": "{where}: {detail}",
+        "recipe_mismatch": "{where}: teks ini ialah “{detail}”, bukan resipi yang dipilih",
+        "prompt_varies": "{where}: hanya fakta biasa di sini, tiada yang bervariasi",
+        "correct_varies": "{where}: pilihan yang betul tidak boleh mengubah fakta",
+        "correct_foreign_fact": "{where}: pilihan yang betul menggunakan fakta yang bukan milik konsep ini ({detail})",
+        "correct_needs_fact": "{where}: pilihan yang betul mesti menggunakan salah satu fakta konsep",
+        "duplicate_option": "{where}: teks yang sama dengan pilihan {detail}",
+        "applies_when_fact": "Konsep ini tiada perkataan untuk status tersebut",
+        "translation_placeholders": "{where}: mesti kekalkan pemegang tempat Thai ({detail})",
+        "failed": "Gagal menyimpan. Cuba lagi."
+      },
+      "preview": {
+        "title": "Pratonton",
+        "company": "Syarikat",
+        "sample": "Contoh syarikat (fiksyen)",
+        "show": "Papar",
+        "redraw": "Jana semula",
+        "ok": "Boleh ditanya kepada syarikat ini",
+        "fail": "Tidak boleh ditanya kepada syarikat ini: {reason}",
+        "noVersion": "Syarikat ini tiada versi latihan."
+      },
+      "failures": {
+        "no_text": "tiada teks",
+        "not_applicable": "dinyatakan untuk status lain",
+        "missing_fact": "fakta hilang ({detail})",
+        "no_category": "tiada kategori perniagaan dipetakan",
+        "no_alternatives": "tidak cukup alternatif untuk dipilih",
+        "out_of_range": "nilai bervariasi di luar julat ({detail})",
+        "grammar": "pemegang tempat tidak sah ({detail})",
+        "invalid": "varian melanggar peraturan ({detail})",
+        "empty_option": "pilihan menjadi kosong ({detail})",
+        "duplicate_option": "dua pilihan menjadi sama ({detail})"
+      },
+      "check": {
+        "title": "Semak syarikat",
+        "intro": "Apa yang bank yang diluluskan boleh tanya kepada satu syarikat hari ini, konsep demi konsep.",
+        "company": "Syarikat",
+        "choose": "Pilih syarikat",
+        "learner": "Pelajar",
+        "companyOnly": "Syarikat sahaja",
+        "run": "Semak",
+        "none": "Tiada syarikat mempunyai versi latihan lagi.",
+        "summary": "{ok} daripada {total} konsep boleh ditanya",
+        "columns": {
+          "concept": "Konsep",
+          "variant": "Varian",
+          "asks": "Ia akan bertanya",
+          "result": "Keputusan"
+        },
+        "usable": "boleh ditanya",
+        "blocked": "tidak boleh ditanya",
+        "noApproved": "tiada varian yang diluluskan"
+      },
+      "where": {
+        "th": "Bahasa Thai",
+        "en": "Bahasa Inggeris",
+        "zh": "Bahasa Cina",
+        "ms": "Bahasa Melayu",
+        "ta": "Bahasa Tamil",
+        "explanation": "Penerangan"
+      },
+      "grammar": {
+        "unbalanced": "pendakap dibuka atau ditutup tanpa pasangannya",
+        "unknown_token": "pemegang tempat tidak diketahui {raw}",
+        "unknown_recipe": "resipi tidak diketahui dalam {raw}",
+        "recipe_not_for_token": "resipi itu tidak sesuai dengan fakta ini: {raw}",
+        "bad_argument": "hujah resipi tidak sah: {raw}"
+      }
+    }
+  },
+  "stages": {
+    "titles": {
+      "study": "Bahan pembelajaran",
+      "quiz": "Kuiz latihan",
+      "exam": "Kuiz",
+      "nameCard": "Kad Nama",
+      "interview": "Temu Duga",
+      "appointment": "Temu janji bank"
+    },
+    "status": {
+      "locked": "Dikunci",
+      "pending": "Menunggu",
+      "available": "Mula",
+      "in_progress": "Sedang berjalan",
+      "done": "Selesai"
+    },
+    "reasons": {
+      "no_assignment": "Tiada syarikat ditugaskan lagi",
+      "exam_required": "Luluskan Kuiz dahulu",
+      "before_available_from": "Belum tersedia",
+      "expired": "Tempoh akses telah tamat",
+      "missing_issue_date": "Tarikh pengeluaran sijil tiada",
+      "interview_required": "Luluskan Temu duga dahulu"
+    },
+    "open": "Buka",
+    "stepOf": "Langkah {n} daripada {total}",
+    "short": {
+      "study": "Belajar",
+      "quiz": "Latihan",
+      "exam": "Kuiz",
+      "nameCard": "Kad Nama",
+      "interview": "Temu Duga",
+      "appointment": "Tempahan"
+    }
+  },
+  "progression": {
+    "UNASSIGNED": "Tidak ditugaskan",
+    "PROVISIONED": "Disediakan",
+    "LEARNING": "Pembelajaran",
+    "EXAM_PENDING": "Kuiz belum selesai",
+    "EXAM_PASSED": "Kuiz lulus",
+    "WAITING_BANK_ELIGIBILITY": "Menunggu kelayakan bank",
+    "BANK_ELIGIBLE": "Layak bank",
+    "INTERVIEW_STARTED": "Temu duga bermula",
+    "INTERVIEW_READY": "Sedia untuk bank",
+    "APPOINTMENT_BOOKED": "Temu janji ditempah"
+  },
+  "study": {
+    "title": "Bahan pembelajaran",
+    "empty": "Tiada bahan pembelajaran lagi.",
+    "card": "Kad",
+    "notAvailable": "Belum tersedia dalam bahasa ini",
+    "openPdf": "Buka PDF dalam tab baharu",
+    "pdfMissing": "PDF untuk bahasa ini belum dimuat naik lagi.",
+    "markCompleted": "Tandakan sebagai selesai",
+    "completed": "Selesai",
+    "state": {
+      "new": "Baharu",
+      "viewed": "Dilihat",
+      "completed": "Selesai"
+    },
+    "readAloud": {
+      "play": "Baca dengan kuat",
+      "pause": "Jeda",
+      "loading": "Sedang menyediakan audio…",
+      "error": "Audio tidak tersedia buat masa ini."
+    },
+    "evidence": {
+      "title": "Daripada dokumen anda",
+      "hint": "Teks sebenar dokumen DBD syarikat anda untuk topik ini — bandingkan dengan jawapan yang telah anda sediakan.",
+      "source": "{document} · halaman {page}"
+    },
+    "intro": "{count} kad tentang apa yang akan ditanya oleh bank, setiap satu diisi dengan fakta syarikat anda sendiri.",
+    "continue": "Teruskan dengan kad {n}",
+    "continueHere": "teruskan di sini",
+    "continueShort": "Teruskan",
+    "review": "Semak Semula",
+    "openLesson": "Buka",
+    "tabs": {
+      "label": "Peringkat latihan",
+      "home": "Utama",
+      "study": "Belajar",
+      "exam": "Kuiz",
+      "interview": "Temu Duga",
+      "nameCard": "Kad Nama"
+    },
+    "lessons": {
+      "identity": {
+        "title": "Identiti syarikat",
+        "description": "Nama syarikat, tarikh pendaftaran dan butiran penting"
+      },
+      "ownership": {
+        "title": "Modal dan pemegang saham",
+        "description": "Modal berdaftar dan struktur pemilikan"
+      },
+      "business": {
+        "title": "Operasi perniagaan",
+        "description": "Jenis perniagaan dan operasi sebenar"
+      },
+      "role": {
+        "title": "Peranan anda",
+        "description": "Tugas dan tanggungjawab anda dalam syarikat"
+      },
+      "answers": {
+        "title": "Jawab dengan yakin",
+        "description": "Cara menjawab soalan bank"
+      }
+    },
+    "summary": {
+      "ofTotal": "{done} daripada {total}",
+      "ready": "Sedia untuk langkah seterusnya",
+      "remaining": "{count} pelajaran berbaki"
+    },
+    "allDone": "Semua kad selesai",
+    "cardOf": "Kad {n} daripada {total}",
+    "nextCard": "Kad {n}: {title}",
+    "previousCard": "Kad sebelumnya ({n})",
+    "attendQuiz": "Ambil Kuiz"
+  },
+  "quiz": {
+    "title": "Kuiz latihan",
+    "intro": "Soalan latihan tentang syarikat anda dan prosesnya. Anda akan melihat sama ada setiap jawapan betul serta-merta, dengan penjelasan, dan semakan penuh di akhir.",
+    "start": "Mula kuiz latihan",
+    "resume": "Sambung kuiz latihan",
+    "history": "Percubaan sebelumnya",
+    "attemptLine": "Percubaan {no}: {score} / {max}",
+    "progress": "Soalan {position} daripada {total}",
+    "correct": "Betul!",
+    "incorrect": "Salah — jawapan yang betul ialah {key}",
+    "saved": "Jawapan disimpan",
+    "submit": "Hantar kuiz latihan",
+    "reviewTitle": "Semakan kuiz latihan",
+    "scoreLine": "Markah: {score} / {max}",
+    "errors": {
+      "no_assignment": "Tiada syarikat yang diberikan kepada anda lagi.",
+      "no_questions": "Tiada soalan tersedia untuk syarikat anda lagi.",
+      "not_found": "Percubaan ini tidak ditemui.",
+      "not_in_progress": "Percubaan ini sudah ditutup.",
+      "already_answered": "Soalan ini sudah dijawab.",
+      "unanswered": "Sila jawab setiap soalan terlebih dahulu.",
+      "invalid_key": "Pilihan tidak diketahui.",
+      "no_version": "Fakta latihan syarikat anda belum sedia lagi. Minta pengurus anda untuk menyemak rekod."
+    },
+    "answeredOf": "{answered} daripada {total} dijawab",
+    "percentDone": "{percent}% selesai",
+    "jumpNext": "Pergi ke soalan seterusnya yang belum dijawab",
+    "reviewHeading": "Jawapan anda",
+    "reviewIncorrect": "Salah"
+  },
+  "exam": {
+    "title": "Kuiz",
+    "intro": "Menunjukkan bahawa anda tahu syarikat anda seperti yang akan ditanya oleh pihak bank.",
+    "about": {
+      "title": "Cara kuiz ini berfungsi",
+      "questions": "{count} soalan: satu untuk setiap perkara yang ditanya oleh pihak bank tentang syarikat anda.",
+      "marking": "Setiap jawapan ditanda betul atau salah sebaik sahaja anda memilihnya. Jawapan tidak boleh diubah.",
+      "pass": "Lulus: jawab {pass} atau lebih soalan dengan betul.",
+      "retest": "Percubaan terdahulu mungkin menunjukkan keputusan ujian semula.",
+      "fail": "Di bawah {pass}: semak jawapan dan kad belajar, kemudian cuba lagi apabila anda bersedia."
+    },
+    "start": "Mula Kuiz",
+    "resume": "Sambung Kuiz",
+    "history": "Percubaan sebelumnya",
+    "attemptLine": "Percubaan {no}: {score} / {max}",
+    "attemptInProgressLine": "Percubaan {no}",
+    "inProgress": "Sedang Berlangsung",
+    "noFeedbackNote": "Jawapan disimpan semasa anda menjawab; keputusan hanya akan ditunjukkan selepas anda menghantar.",
+    "feedbackNote": "Setiap jawapan ditanda sebaik sahaja anda memilihnya dan tidak boleh diubah. Hantar apabila setiap soalan telah dijawab.",
+    "submit": "Hantar Kuiz",
+    "resultTitle": "Keputusan Kuiz",
+    "pass": "Lulus",
+    "fail": "Tidak lulus",
+    "retest": "Ambil semula",
+    "scoreLine": "Skor: {score} / {max} (markah lulus {passingMark}%)",
+    "scoreLineRule": "Skor: {score} / {max} (lulus pada {pass})",
+    "resultNote": "Soalan yang ditanda ✗ dijawab dengan salah; pilihan hijau adalah jawapan yang betul dan pilihan yang digariskan adalah pilihan anda.",
+    "errors": {
+      "max_attempts": "Anda telah menggunakan semua percubaan yang dibenarkan.",
+      "retry_wait": "Sila tunggu sebelum mengambil semula Kuiz.",
+      "no_assignment": "Tiada syarikat yang ditugaskan kepada anda lagi.",
+      "no_questions": "Tiada soalan Kuiz tersedia untuk syarikat anda lagi.",
+      "not_found": "Percubaan ini tidak ditemui.",
+      "not_in_progress": "Percubaan ini telah ditutup.",
+      "already_answered": "Soalan ini telah dijawab.",
+      "unanswered": "Sila jawab setiap soalan terlebih dahulu.",
+      "invalid_key": "Pilihan tidak diketahui.",
+      "no_version": "Fakta latihan syarikat anda belum siap lagi. Minta pengurus anda untuk menyemak rekod.",
+      "not_ready": "Kuiz belum siap untuk syarikat anda lagi. Pengurus anda telah dimaklumkan."
+    },
+    "meta": {
+      "questions": "Soalan",
+      "passingMark": "Markah lulus",
+      "toPass": "Untuk lulus",
+      "attempt": "Percubaan"
+    },
+    "reviewHeading": "Jawapan anda",
+    "passedNext": "Anda lulus. Temu duga kini dibuka.",
+    "notPassedNext": "Tidak lulus kali ini. Semak jawapan di bawah dan cuba lagi apabila anda bersedia.",
+    "retestNext": "Hampir lulus: {score} daripada {max}. Anda memerlukan {pass} untuk lulus — ambil kuiz semula.",
+    "failNext": "Tidak lulus kali ini. Semak bahan kajian, kemudian ambil kuiz semula.",
+    "failCriticalNext": "Tidak lulus: fakta penting syarikat dijawab salah. Semak bahan kajian, kemudian ambil kuiz semula.",
+    "criticalWrong": "Fakta penting dijawab salah: {list}",
+    "toStudy": "Semak bahan kajian",
+    "toInterview": "Pergi ke Temu Duga",
+    "retake": "Ambil Semula Kuiz"
+  },
+  "interview": {
+    "title": "Temu Duga",
+    "intro": "Temu duga latihan yang mesra menggunakan fakta syarikat yang sama yang anda pelajari.",
+    "languageNotice": "Pegawai akan menggunakan bahasa yang dipilih untuk temu duga ini. Nama dan alamat syarikat kekal seperti dalam rekod.",
+    "chooseLanguage": "Bahasa apa yang anda mahu gunakan sepanjang temu duga?",
+    "languageLocked": "Pilihan bahasa ini kekal sepanjang percubaan ini.",
+    "guide": {
+      "eyebrow": "Sebelum anda mula",
+      "title": "Berlatih mengikut rentak anda sendiri",
+      "questions": "Jawab 13 soalan pendek",
+      "pass": "Dapatkan 10 jawapan betul untuk bersedia",
+      "language": "Pilih bahasa temu duga sebelum bermula",
+      "repeat": "Berlatih seberapa banyak kali yang anda suka (ฝึกได้ไม่จำกัด)",
+      "support": "Pegawai akan memberi anda satu peluang kedua yang mesra apabila jawapan memerlukan lebih banyak butiran. Ini adalah latihan, jadi luangkan masa anda."
+    },
+    "start": "Mula temu duga",
+    "resume": "Teruskan temu duga",
+    "history": "Percubaan sebelumnya",
+    "attemptLine": "Percubaan {no}: {score} / {max}",
+    "attemptInProgressLine": "Percubaan {no}",
+    "verdict": {
+      "ready": "Sedia",
+      "not_ready": "Belum sedia",
+      "abandoned": "Tidak selesai",
+      "in_progress": "Sedang Berlangsung"
+    },
+    "outcome": {
+      "readyTitle": "Sedia untuk langkah seterusnya",
+      "practiceTitle": "Teruskan berlatih — anda hampir berjaya",
+      "ready": {
+        "title": "Keputusan: anda boleh membuka akaun bank",
+        "detail": "Anda sudah bersedia untuk ke bank. Tempah janji temu anda."
+      },
+      "not_ready": {
+        "title": "Keputusan: anda belum boleh membuka akaun bank",
+        "detail": "Semak jawapan yang ditandakan di bawah, kemudian ambil semula temu duga."
+      },
+      "abandoned": {
+        "title": "Tiada keputusan: anda belum boleh membuka akaun bank",
+        "detail": "Temu duga tidak selesai. Ambil semula dari awal."
+      },
+      "scoreReady": "Anda mendapat {score} daripada {maximum}. Anda memerlukan {required} — anda sudah bersedia untuk langkah seterusnya.",
+      "scorePractice": "Anda mendapat {score} daripada {maximum}. Anda memerlukan {required}; semak jawapan di bawah dan cuba lagi."
+    },
+    "chat": {
+      "placeholder": "Taip jawapan anda…",
+      "send": "Hantar",
+      "end": "Tamatkan temu duga",
+      "typing": "Pegawai sedang menaip…",
+      "officer": "Pegawai bank",
+      "you": "Anda",
+      "limit": "Sehingga {max} aksara",
+      "budget": "Mesej {n} daripada {max}"
+    },
+    "debrief": {
+      "title": "Keputusan temu duga",
+      "reasons": "Jawapan anda, satu persatu",
+      "reviewNeeded": "Beberapa jawapan untuk dilatih",
+      "correctValue": "Pada sijil: {value}",
+      "review": "Semak kad",
+      "transcript": "Transkrip",
+      "tryAgain": "Cuba lagi",
+      "toDashboard": "Papan Pemuka"
+    },
+    "assessment": {
+      "correct": "Betul",
+      "partial": "Betul sebahagian",
+      "wrong": "Salah",
+      "evasive": "Mengelak",
+      "pasted": "Ditampal",
+      "off_topic": "Luar topik"
+    },
+    "concept": {
+      "juristic_id": "Nombor pendaftaran"
+    },
+    "errors": {
+      "not_open": "Temu duga belum dibuka.",
+      "not_configured": "Penemu duga tidak dikonfigurasi.",
+      "no_assignment": "Tiada syarikat yang diberikan kepada anda.",
+      "closed": "Temu duga ini telah tamat.",
+      "too_long": "Mesej terlalu panjang.",
+      "not_found": "Temu duga tidak ditemui.",
+      "unknown": "Ada sesuatu yang tidak kena. Sila cuba lagi.",
+      "expired": "Temu duga terbiar terlalu lama. Sila mula semula.",
+      "no_facts": "Rekod syarikat belum mempunyai apa-apa untuk disahkan. Sila tanya pengurus anda.",
+      "no_version": "Fakta latihan syarikat anda belum sedia. Minta pengurus anda untuk menyemak rekod."
+    },
+    "closeReason": {
+      "plan_complete": "Setiap soalan telah ditanya.",
+      "too_many_evasions": "Ditutup selepas jawapan ketiga yang mengelak.",
+      "off_topic_limit": "Ditutup selepas jawapan luar topik yang berulang.",
+      "learner_ended": "Anda menamatkan temu duga lebih awal.",
+      "turn_limit": "Temu duga telah mencapai had mesejnya.",
+      "abandoned": "Temu duga terbiar selama lebih 30 minit dan telah ditinggalkan."
+    }
+  },
+  "appointment": {
+    "title": "Janji temu bank",
+    "intro": "Pengurus anda akan menempah tarikh selepas anda lulus Kuiz dan Temu Duga.",
+    "waiting": {
+      "title": "Pengurus anda akan menempah janji temu",
+      "detail": "Tiada apa-apa untuk dipilih di sini. Pengurus anda akan memilih tarikh bank dan ia akan muncul di halaman ini."
+    },
+    "week": "Minggu {date}",
+    "prevWeek": "Minggu sebelumnya",
+    "nextWeek": "Minggu seterusnya",
+    "holiday": "Cuti umum bank",
+    "noSlots": "Tiada slot kosong",
+    "state": {
+      "free": "Kosong",
+      "booked": "Telah ditempah",
+      "blocked": "Tidak tersedia",
+      "past": "Terlalu awal",
+      "outside_window": "Di luar tempoh anda",
+      "holiday": "Cuti umum bank"
+    },
+    "booked": {
+      "title": "Janji temu anda",
+      "line": "{date} dengan {manager}",
+      "manager": "pengurus anda",
+      "cancel": "Batalkan janji temu",
+      "cancelHint": "Anda boleh membatalkan sehingga {hours} jam sebelum"
+    },
+    "errors": {
+      "not_open": "Tempahan belum dibuka lagi.",
+      "already_booked": "Anda sudah mempunyai janji temu. Batalkannya untuk memilih yang lain.",
+      "slot_unavailable": "Slot itu tidak boleh ditempah.",
+      "slot_taken": "Seseorang baru sahaja mengambil slot itu. Sila pilih yang lain.",
+      "not_found": "Janji temu tidak ditemui.",
+      "too_late": "Terlalu dekat dengan janji temu untuk membatalkan. Tanya pengurus anda.",
+      "forbidden": "Anda tidak boleh melakukan itu.",
+      "unknown": "Sesuatu tidak kena. Sila cuba lagi."
+    }
+  },
+  "nameCard": {
+    "title": "Kad Nama",
+    "intro": "Dibuat untuk anda daripada rekod syarikat anda dan butiran yang diberikan oleh pengurus anda. Pratonton dan muat turun PDF.",
+    "preview": "Pratonton Kad Nama",
+    "previewHint": "Bahagian depan dan belakang ditunjukkan bersama dalam saiz yang lebih besar. Pilih mana-mana bahagian untuk membukanya dalam saiz penuh.",
+    "front": "Depan",
+    "back": "Belakang",
+    "openSide": "Buka saiz penuh",
+    "download": "Muat turun PDF",
+    "meta": "Telefon Bimbit {phone}",
+    "errors": {
+      "no_assignment": "Tiada syarikat yang ditugaskan kepada anda lagi.",
+      "exam_required": "Luluskan Kuiz terlebih dahulu untuk mendapatkan Kad Nama anda.",
+      "missing_fields": "Rekod syarikat anda tiada: {fields}. Minta pengurus anda untuk melengkapkannya.",
+      "no_phone": "Nombor telefon bimbit anda belum diberikan lagi. Minta pengurus anda untuk menambahkannya.",
+      "no_name": "Nama anda belum ada dalam rekod syarikat anda lagi. Minta pengurus anda."
+    }
+  }
+}

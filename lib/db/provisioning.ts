@@ -35,7 +35,7 @@ export const newAccountSchema = z.object({
   role: z.enum(['learner', 'submanager', 'manager', 'admin']).default('learner'),
   managerId: z.uuid().optional(),
   displayName: z.string().trim().max(120).optional(),
-  preferredLanguage: z.enum(['th', 'en', 'zh']).default('th'),
+  preferredLanguage: z.enum(['th', 'en', 'zh', 'ta', 'ms']).default('th'),
 });
 export type NewAccountInput = z.input<typeof newAccountSchema>;
 
@@ -90,7 +90,7 @@ export async function createAccount(
 type NewPerson = {
   password: string;
   displayName?: string;
-  preferredLanguage?: 'th' | 'en' | 'zh';
+  preferredLanguage?: 'th' | 'en' | 'zh' | 'ta' | 'ms';
 };
 
 /** The auth call behind a code; tests substitute it to make the auth service refuse. */

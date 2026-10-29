@@ -4,7 +4,7 @@ import { loginAs, switchTo } from './helpers';
 import { seedLearnerWithCompany, seedLearnerWithCompleteCompany, seedPassedExam } from './seed';
 
 /**
- * The readiness interview with the fake officer (spec §4.6): it asks the plan's Thai questions,
+ * The readiness interview with the local officer (spec §4.6): it asks the plan in the selected language,
  * marks each answer correct or wrong. The friendly v3 plan always asks all 13 questions, offers
  * one retry and passes at 10 correct.
  */
@@ -54,6 +54,53 @@ test('the interview is locked before the exam and open after it', async ({ page 
   await expect(page.getByTestId('interview-start')).toHaveCount(0);
 });
 
+test('the active chat matches the navigation width and keeps its composer visible', async ({
+  page,
+}) => {
+  const loginId = await seedLearnerWithCompany('บริษัท สัมภาษณ์ตรึงช่องตอบ จำกัด', '2026-07-13');
+  await seedPassedExam(loginId);
+  await page.setViewportSize({ width: 1100, height: 946 });
+  await loginAs(page, loginId, E2E_PASSWORD);
+  await page.goto('/en/interview');
+  await page.getByTestId('interview-start').click();
+  await page.waitForURL(/\/en\/interview\/[0-9a-f-]{36}$/);
+
+  const navigation = await page.getByTestId('learner-stage-tabs').boundingBox();
+  const conversation = await page.getByTestId('chat-log').locator('..').boundingBox();
+  expect(Math.abs((navigation?.width ?? 0) - (conversation?.width ?? 0))).toBeLessThanOrEqual(1);
+  await expect(page.getByTestId('chat-input')).toBeInViewport();
+
+  const messages = page.getByTestId('chat-message');
+  for (const answer of [
+    'WARAN TRADE CO., LTD.',
+    '0145569002609',
+    '17/1 Moo 6, Chon Buri 20000',
+    'Wholesale and retail clothing',
+  ]) {
+    const before = await messages.count();
+    await page.getByTestId('chat-input').fill(answer);
+    await page.getByTestId('chat-send').click();
+    await expect(messages).toHaveCount(before + 2);
+  }
+
+  const pageOverflow = await page.evaluate(
+    () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+  );
+  expect(pageOverflow).toBeLessThanOrEqual(1);
+  expect(
+    await page
+      .getByTestId('chat-log')
+      .evaluate((element) => element.scrollHeight > element.clientHeight),
+  ).toBe(true);
+  await expect
+    .poll(() =>
+      page
+        .getByTestId('chat-log')
+        .evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop),
+    )
+    .toBeLessThanOrEqual(1);
+});
+
 test('a learner who evades is not ready, retries with good answers, and becomes ready for good', async ({
   page,
 }, testInfo) => {
@@ -68,7 +115,7 @@ test('a learner who evades is not ready, retries with good answers, and becomes 
   const guide = page.getByTestId('interview-guide');
   await expect(guide).toContainText('13');
   await expect(guide).toContainText('10');
-  await expect(guide).toContainText('สัมภาษณ์เป็นภาษาไทย');
+  await expect(guide).toContainText('เลือกภาษาสัมภาษณ์ก่อนเริ่ม');
   await expect(guide).toContainText('ฝึกได้ไม่จำกัด');
   await page.getByTestId('interview-start').click();
   await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
@@ -170,6 +217,26 @@ test('the learner can end the interview early and is told to try again', async (
     'href',
     '/th/interview',
   );
+});
+
+test('the officer keeps the chosen language when the website language changes', async ({
+  page,
+}) => {
+  const loginId = await seedLearnerWithCompany('บริษัท ทดสอบภาษา จำกัด', '2026-07-13');
+  await seedPassedExam(loginId);
+  await loginAs(page, loginId, E2E_PASSWORD);
+  await page.goto('/th/interview');
+  await page.locator('select[name="interviewLanguage"]').selectOption('ms');
+  await page.getByTestId('interview-start').click();
+  await page.waitForURL(/\/th\/interview\/[0-9a-f-]{36}$/);
+  const sessionId = page.url().split('/').at(-1)!;
+  await expect(page.getByTestId('chat-message').first()).toContainText('Helo');
+  await expect(page.getByTestId('chat-message').first().locator('p')).toHaveAttribute('lang', 'ms');
+  await page.goto(`/en/interview/${sessionId}`);
+  await expect(page.getByTestId('chat-message').first()).toContainText('Helo');
+  await page.getByTestId('chat-input').fill('บริษัท ทดสอบภาษา จำกัด');
+  await page.getByTestId('chat-send').click();
+  await expect(page.getByTestId('chat-message').last()).toContainText('nombor pendaftaran');
 });
 
 test('the chat fits a phone', async ({ page }) => {

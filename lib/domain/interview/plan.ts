@@ -1,5 +1,5 @@
 import { BANK_INTERVIEW_CONCEPTS, type BankInterviewConcept } from '@/lib/domain/bank-interview';
-import type { AppLocale } from '@/i18n/routing';
+import { contentLocale, type AppLocale } from '@/i18n/routing';
 import type {
   Assessment,
   CloseReason,
@@ -38,6 +38,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทชื่อเต็มว่าอะไรคะ',
       en: 'What is your company’s full registered name?',
       zh: '公司的全名是什么？',
+      ms: 'Apakah nama penuh syarikat yang berdaftar?',
+      ta: 'நிறுவனத்தின் முழுப் பதிவு செய்யப்பட்ட பெயர் என்ன?',
     },
     facts: ['company_name_th'],
     cardKey: 'bank-interview-1-identity',
@@ -48,6 +50,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'เลขทะเบียนนิติบุคคลของบริษัทคืออะไรคะ',
       en: 'What is the company registration number?',
       zh: '公司的注册号是什么？',
+      ms: 'Apakah nombor pendaftaran syarikat?',
+      ta: 'நிறுவனத்தின் பதிவெண் என்ன?',
     },
     facts: ['juristic_id'],
     cardKey: 'bank-interview-1-identity',
@@ -58,8 +62,10 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'ที่อยู่จดทะเบียนของบริษัทอยู่ที่ไหนคะ',
       en: 'What is the company’s registered address?',
       zh: '公司的注册地址在哪里？',
+      ms: 'Apakah alamat berdaftar syarikat?',
+      ta: 'நிறுவனத்தின் பதிவு செய்யப்பட்ட முகவரி என்ன?',
     },
-    facts: ['head_office_address'],
+    facts: ['head_office_address', 'province_romanized', 'subdistrict_romanized'],
     cardKey: 'bank-interview-1-identity',
   },
   {
@@ -68,6 +74,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัททำธุรกิจอะไรคะ',
       en: 'What business does the company do?',
       zh: '公司实际经营什么业务？',
+      ms: 'Apakah aktiviti perniagaan syarikat?',
+      ta: 'நிறுவனத்தின் வணிகச் செயல்பாடுகள் என்ன?',
     },
     facts: ['nature_of_business'],
     cardKey: 'bank-interview-3-business',
@@ -78,6 +86,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทขายสินค้าหรือบริการอะไรคะ',
       en: 'What products or services does the company sell?',
       zh: '公司销售哪些产品或服务？',
+      ms: 'Apakah produk atau perkhidmatan yang dijual oleh syarikat?',
+      ta: 'நிறுவனம் எந்தப் பொருட்கள் அல்லது சேவைகளை விற்கிறது?',
     },
     facts: ['products_services'],
     cardKey: 'bank-interview-3-business',
@@ -88,8 +98,10 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'ใครมีอำนาจลงนามแทนบริษัทคะ',
       en: 'Who can sign for the company?',
       zh: '谁有权代表公司签字？',
+      ms: 'Siapa yang boleh menandatangani bagi pihak syarikat?',
+      ta: 'நிறுவனத்தின் சார்பாக யார் கையொப்பமிடலாம்?',
     },
-    facts: ['directors', 'signing_authority'],
+    facts: ['directors'],
     cardKey: 'bank-interview-1-identity',
   },
   {
@@ -98,8 +110,10 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'กรุณาบอกชื่อและตำแหน่งของคุณในบริษัทค่ะ',
       en: 'What is your name and position in the company?',
       zh: '请说出您在公司的姓名和职位。',
+      ms: 'Apakah nama dan jawatan anda dalam syarikat?',
+      ta: 'நிறுவனத்தில் உங்கள் பெயரும் பதவியும் என்ன?',
     },
-    facts: ['my_name', 'my_position'],
+    facts: ['my_name'],
     cardKey: 'bank-interview-2-ownership',
   },
   {
@@ -108,6 +122,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทจดทะเบียนเมื่อวันที่เท่าไรคะ',
       en: 'When was the company registered?',
       zh: '公司是什么时候注册的？',
+      ms: 'Bilakah syarikat didaftarkan?',
+      ta: 'நிறுவனம் எப்போது பதிவு செய்யப்பட்டது?',
     },
     facts: ['registered_on'],
     cardKey: 'bank-interview-1-identity',
@@ -118,6 +134,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทต้องการเปิดบัญชีนี้เพื่ออะไรคะ',
       en: 'Why does the company need this bank account?',
       zh: '公司为什么需要这个银行账户？',
+      ms: 'Mengapakah syarikat memerlukan akaun bank ini?',
+      ta: 'நிறுவனத்திற்கு இந்த வங்கிக் கணக்கு ஏன் தேவை?',
     },
     facts: ['account_purpose'],
     cardKey: 'bank-interview-4-role',
@@ -128,6 +146,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทหาลูกค้าอย่างไรคะ',
       en: 'How do you find your customers?',
       zh: '公司如何寻找客户？',
+      ms: 'Bagaimanakah syarikat mendapatkan pelanggan?',
+      ta: 'நிறுவனம் வாடிக்கையாளர்களை எப்படிப் பெறுகிறது?',
     },
     facts: ['client_origin'],
     cardKey: 'bank-interview-3-business',
@@ -138,6 +158,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'รายได้ต่อเดือนโดยประมาณของบริษัทเท่าไรคะ',
       en: 'What is the company’s estimated monthly revenue?',
       zh: '公司预计每月收入是多少？',
+      ms: 'Berapakah anggaran hasil bulanan syarikat?',
+      ta: 'நிறுவனத்தின் மதிப்பிடப்பட்ட மாத வருமானம் எவ்வளவு?',
     },
     facts: ['monthly_revenue'],
     cardKey: 'bank-interview-4-role',
@@ -148,6 +170,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทมีธุรกรรมทั้งหมดประมาณกี่รายการต่อเดือนคะ',
       en: 'About how many transactions does the company have each month?',
       zh: '公司每月大约有多少笔交易？',
+      ms: 'Kira-kira berapa banyak transaksi syarikat setiap bulan?',
+      ta: 'நிறுவனம் ஒரு மாதத்தில் சுமார் எத்தனை பரிவர்த்தனைகள் செய்கிறது?',
     },
     facts: ['monthly_transactions'],
     cardKey: 'bank-interview-4-role',
@@ -158,6 +182,8 @@ export const READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'ยอดเงินเฉลี่ยต่อธุรกรรมของบริษัทประมาณเท่าไรคะ',
       en: 'What is the company’s estimated average transaction amount?',
       zh: '公司预计平均每笔交易金额是多少？',
+      ms: 'Berapakah anggaran purata amaun setiap transaksi?',
+      ta: 'ஒவ்வொரு பரிவர்த்தனையின் மதிப்பிடப்பட்ட சராசரித் தொகை எவ்வளவு?',
     },
     facts: ['average_transaction'],
     cardKey: 'bank-interview-4-role',
@@ -172,6 +198,8 @@ const LEGACY_READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'ลูกค้าหลักของบริษัทเป็นใครคะ',
       en: 'Who are the company’s main customers?',
       zh: '公司的主要客户是谁？',
+      ms: 'Siapakah pelanggan utama syarikat?',
+      ta: 'நிறுவனத்தின் முக்கிய வாடிக்கையாளர்கள் யார்?',
     },
     facts: ['customer_profile'],
     cardKey: 'bank-interview-3-business',
@@ -182,6 +210,8 @@ const LEGACY_READINESS_ITEMS: readonly ReadinessItemDefinition[] = [
       th: 'บริษัทจะรับและจ่ายเงินอย่างไรคะ',
       en: 'How will the company receive and pay money?',
       zh: '公司将如何收款和付款？',
+      ms: 'Bagaimanakah syarikat menerima dan membuat pembayaran?',
+      ta: 'நிறுவனம் பணத்தை எப்படிப் பெறும், செலுத்தும்?',
     },
     facts: ['transaction_details'],
     cardKey: 'bank-interview-4-role',
@@ -201,7 +231,7 @@ export function questionFor(concept: ConceptId, locale: AppLocale, fallback: str
   if (locale === 'th') return fallback;
   return (
     readinessItem(concept)?.question[locale] ??
-    BANK_INTERVIEW_CONCEPTS.find((item) => item.id === concept)?.question[locale] ??
+    BANK_INTERVIEW_CONCEPTS.find((item) => item.id === concept)?.question[contentLocale(locale)] ??
     fallback
   );
 }

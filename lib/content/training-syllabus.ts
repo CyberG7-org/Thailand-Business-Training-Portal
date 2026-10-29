@@ -1,11 +1,11 @@
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 
 type ThreePrompts = readonly [string, string, string];
 
 export type TrainingSyllabusItem = {
   conceptKey: string;
   card: 1 | 2 | 3 | 4 | 5;
-  quizPrompts: Record<AppLocale, ThreePrompts>;
+  quizPrompts: Record<ExistingContentLocale, ThreePrompts>;
 };
 
 const item = (

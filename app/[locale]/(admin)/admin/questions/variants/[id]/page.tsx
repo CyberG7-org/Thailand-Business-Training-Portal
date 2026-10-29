@@ -16,7 +16,13 @@ import { pageTitle } from '@/i18n/page-title';
 
 export const generateMetadata = pageTitle('admin.nav', 'questions');
 
-const LANGUAGE_LABELS = { th: 'ไทย', en: 'English', zh: '中文' } as const;
+const LANGUAGE_LABELS = {
+  th: 'ไทย',
+  en: 'English',
+  zh: '中文',
+  ms: 'Bahasa Melayu',
+  ta: 'தமிழ்',
+} as const;
 
 export default async function VariantPage({
   params,
