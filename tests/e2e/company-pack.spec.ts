@@ -50,7 +50,7 @@ test('a manager uploads one ZIP: documents and page links are sorted without inv
 
   // What the zip holds, before anything is sent.
   const zipName = `pack-${Date.now()}`;
-  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await page.locator('input[name="uploadMode"][value="zip"]').check();
   await page.getByTestId('create-dbd-zip-files').setInputFiles(companyZip(zipName));
   const preview = page.getByTestId('pack-preview');
   await expect(preview).toHaveAttribute('data-pack', '1');

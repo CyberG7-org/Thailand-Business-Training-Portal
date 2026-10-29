@@ -9,8 +9,8 @@ test('switching language re-renders and persists; the next login lands on it', a
   await expect(page).toHaveURL(/\/th\/dashboard$/);
 
   await page.getByTestId('language-menu-button').click();
-  // Thai, English and Simplified Chinese only: Malay was removed.
-  await expect(page.getByTestId('lang-ms')).toHaveCount(0);
+  await expect(page.getByTestId('lang-ms')).toBeVisible();
+  await expect(page.getByTestId('lang-ta')).toBeVisible();
   await expect(page.getByTestId('lang-th')).toHaveAttribute('aria-checked', 'true');
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);
@@ -46,4 +46,17 @@ test('switching language re-renders and persists; the next login lands on it', a
   await page.getByRole('button', { name: 'Sign out' }).click();
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page).toHaveURL(/\/en\/dashboard$/);
+
+  for (const language of ['ms', 'ta'] as const) {
+    await page.getByTestId('language-menu-button').click();
+    await page.getByTestId(`lang-${language}`).click();
+    await expect(page).toHaveURL(new RegExp(`/${language}/dashboard$`));
+    await expect(page.locator('html')).toHaveAttribute('lang', language);
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      language === 'ms' ? 'Selamat datang' : 'வரவேற்கிறோம்',
+    );
+    await page.getByTestId('language-menu-button').click();
+    await expect(page.getByTestId(`lang-${language}`)).toHaveAttribute('aria-checked', 'true');
+    await page.keyboard.press('Escape');
+  }
 });

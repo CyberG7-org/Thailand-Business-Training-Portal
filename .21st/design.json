@@ -218,6 +218,16 @@
       "date": "2026-10-16",
       "decision": "The owner and manager header uses a compact avatar-and-name profile dropdown with Change password and Sign out actions.",
       "reason": "This adapts the user's 21st.dev profile-dropdown reference to the portal's existing tokens and accessible menu behavior. The catalog search returned HTTP 401; the supplied example informed the layout without adding unrelated demo links or dependencies."
+    },
+    {
+      "date": "2026-10-29",
+      "decision": "Every localized route offers a mobile-only 48px back-to-top button after 400px of document scrolling, with a localized accessible name and reduced-motion behavior.",
+      "reason": "Long learner and manager pages are difficult to navigate back to the header on phones. The shared locale layout provides the behavior consistently without duplicating controls across pages; the 21st.dev catalog search returned HTTP 401, so the implementation reuses the portal's existing icon and brand tokens."
+    },
+    {
+      "date": "2026-10-29",
+      "decision": "Quiz and exam answer-review panels use the learner shell's full 1240px content width, matching the shared stage navigation while remaining fluid on smaller screens.",
+      "reason": "The user requested consistent horizontal alignment between the result content and navigation. The shared AnswerReview component owns both result flows, so one width rule prevents page-specific drift."
     }
   ],
   "evidence": [

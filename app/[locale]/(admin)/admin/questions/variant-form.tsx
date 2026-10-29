@@ -6,7 +6,15 @@ import type { StatusFact } from '@/lib/domain/facts/fact-sheet';
 import { RECIPES } from '@/lib/domain/mcq/tokens';
 import type { VariantIssue } from '@/lib/domain/mcq/validate';
 import { OPTION_KEYS, type Variant } from '@/lib/domain/mcq/variant';
+import { VARIANT_LOCALES } from '@/lib/domain/mcq/variant';
 import { saveVariantAction, type VariantState } from './bank-actions';
+
+const TRANSLATION_LABELS = {
+  en: 'variant.english',
+  zh: 'variant.chinese',
+  ms: 'variant.malay',
+  ta: 'variant.tamil',
+} as const;
 
 const initial: VariantState = { ok: false, failed: false, issues: [], values: null };
 
@@ -70,7 +78,7 @@ export function VariantForm({
   const [state, formAction, pending] = useActionState(saveVariantAction, initial);
   // What was typed in a refused save wins over what is stored.
   const value = (name: string, stored: string) => state.values?.[name] ?? stored;
-  const stored = (language: 'th' | 'en' | 'zh') => variant?.texts[language];
+  const stored = (language: (typeof VARIANT_LOCALES)[number]) => variant?.texts[language];
   const applies = variant?.appliesWhen
     ? `${variant.appliesWhen.fact}:${variant.appliesWhen.value}`
     : '';
@@ -162,7 +170,7 @@ export function VariantForm({
         )}
       </fieldset>
 
-      {(['en', 'zh'] as const).map((language) => (
+      {(['en', 'zh', 'ms', 'ta'] as const).map((language) => (
         <details
           key={language}
           open={Boolean(stored(language)) || Boolean(state.values?.[`${language}_prompt`])}
@@ -170,7 +178,7 @@ export function VariantForm({
           data-testid={`variant-${language}`}
         >
           <summary className="cursor-pointer text-sm font-semibold">
-            {t(language === 'en' ? 'variant.english' : 'variant.chinese')}
+            {t(TRANSLATION_LABELS[language])}
           </summary>
           <div className="mt-3 grid gap-3">
             <label className="text-sm">

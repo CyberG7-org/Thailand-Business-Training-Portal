@@ -27,6 +27,7 @@ export function UploadFirstForm({
 }) {
   const locale = useLocale();
   const t = useTranslations('admin.dbd');
+  const u = useTranslations('admin.dbd.uploadChoice');
   const router = useRouter();
   const [mode, setMode] = useState<'image' | 'pdf' | 'zip'>('image');
   const [imageName, setImageName] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export function UploadFirstForm({
       data-testid={embedded ? 'create-dbd' : 'upload-choice'}
     >
       <fieldset className="grid gap-3 text-sm">
-        <legend className="font-semibold text-ink-900">Choose what to upload</legend>
+        <legend className="font-semibold text-ink-900">{u('chooseWhat')}</legend>
         <div className="grid gap-3 sm:grid-cols-3">
           <label
             className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-card border-2 p-4 transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 ${mode === 'image' ? 'border-brand-600 bg-brand-50' : 'border-ink-100 bg-white hover:border-brand-100'}`}
@@ -72,10 +73,8 @@ export function UploadFirstForm({
               className="accent-brand-600"
             />
             <span className="grid gap-1">
-              <span className="text-base font-semibold text-ink-900">Image</span>
-              <span className="text-xs text-ink-700">
-                Upload one JPG, PNG or WebP company information image
-              </span>
+              <span className="text-base font-semibold text-ink-900">{u('image')}</span>
+              <span className="text-xs text-ink-700">{u('imageHint')}</span>
             </span>
           </label>
           <label
@@ -90,10 +89,8 @@ export function UploadFirstForm({
               className="accent-brand-600"
             />
             <span className="grid gap-1">
-              <span className="text-base font-semibold text-ink-900">PDF poster</span>
-              <span className="text-xs text-ink-700">
-                Upload one PDF with the company profile and product information
-              </span>
+              <span className="text-base font-semibold text-ink-900">{u('pdfPoster')}</span>
+              <span className="text-xs text-ink-700">{u('pdfHint')}</span>
             </span>
           </label>
           <label
@@ -108,10 +105,8 @@ export function UploadFirstForm({
               className="accent-brand-600"
             />
             <span className="grid gap-1">
-              <span className="text-base font-semibold text-ink-900">ZIP file</span>
-              <span className="text-xs text-ink-700">
-                Upload DBD documents and a website or Facebook link
-              </span>
+              <span className="text-base font-semibold text-ink-900">{u('zipFile')}</span>
+              <span className="text-xs text-ink-700">{u('zipHint')}</span>
             </span>
           </label>
         </div>
@@ -119,16 +114,13 @@ export function UploadFirstForm({
       {mode === 'image' ? (
         <form action={action} className={formClass} data-testid="upload-first">
           <input type="hidden" name="locale" value={locale} />
-          <h2 className="font-semibold">Upload company information image</h2>
-          <p className="text-sm text-ink-700">
-            Upload one image showing the registration and business details. Review every extracted
-            fact on the next screen; this image is not an official DBD certificate.
-          </p>
+          <h2 className="font-semibold">{u('imageTitle')}</h2>
+          <p className="text-sm text-ink-700">{u('imageDescription')}</p>
           <label className="relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand-600/50 bg-brand-50 px-4 py-5 text-center transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 hover:bg-brand-100">
             <span className="text-base font-semibold text-brand-700">
-              {imageName ?? 'Choose an image to upload'}
+              {imageName ?? u('chooseImage')}
             </span>
-            <span className="text-xs text-ink-700">Click to browse your files</span>
+            <span className="text-xs text-ink-700">{u('browse')}</span>
             <input
               name="image"
               type="file"
@@ -139,13 +131,10 @@ export function UploadFirstForm({
               onChange={(event) => setImageName(event.target.files?.[0]?.name ?? null)}
             />
           </label>
-          <p className="text-xs text-ink-500">
-            JPG, PNG or WebP, up to 4 MB. Revenue and transaction figures come from the category you
-            choose after upload.
-          </p>
+          <p className="text-xs text-ink-500">{u('imageLimits')}</p>
           {!extractionAvailable && (
             <p role="alert" className="text-sm text-bad-600">
-              Image reading needs GEMINI_API_KEY on the server.
+              {u('imageUnavailable')}
             </p>
           )}
           {state.error && (
@@ -159,23 +148,19 @@ export function UploadFirstForm({
             data-testid={embedded ? 'create-dbd-submit' : 'upload-first-submit'}
             className="staff-btn justify-self-start"
           >
-            {pending ? 'Reading image…' : 'Upload and review'}
+            {pending ? u('readingImage') : u('uploadReview')}
           </button>
         </form>
       ) : mode === 'pdf' ? (
         <form action={pdfAction} className={formClass} data-testid="upload-pdf">
           <input type="hidden" name="locale" value={locale} />
-          <h2 className="font-semibold">Upload company information PDF</h2>
-          <p className="text-sm text-ink-700">
-            Upload one poster PDF showing the registration and business details. We extract the
-            visible facts and index the PDF for study and questions. Review every fact on the next
-            screen; a poster is not an official DBD certificate.
-          </p>
+          <h2 className="font-semibold">{u('pdfTitle')}</h2>
+          <p className="text-sm text-ink-700">{u('pdfDescription')}</p>
           <label className="relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand-600/50 bg-brand-50 px-4 py-5 text-center transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 hover:bg-brand-100">
             <span className="text-base font-semibold text-brand-700">
-              {pdfName ?? 'Choose a PDF poster to upload'}
+              {pdfName ?? u('choosePdf')}
             </span>
-            <span className="text-xs text-ink-700">Click to browse your files</span>
+            <span className="text-xs text-ink-700">{u('browse')}</span>
             <input
               name="pdf"
               type="file"
@@ -186,12 +171,10 @@ export function UploadFirstForm({
               onChange={(event) => setPdfName(event.target.files?.[0]?.name ?? null)}
             />
           </label>
-          <p className="text-xs text-ink-500">
-            PDF, up to 4 MB. Pinecone indexing runs in the background after upload.
-          </p>
+          <p className="text-xs text-ink-500">{u('pdfLimits')}</p>
           {!pdfExtractionAvailable && (
             <p role="alert" className="text-sm text-bad-600">
-              PDF reading needs Claude and Pinecone configured on the server.
+              {u('pdfUnavailable')}
             </p>
           )}
           {pdfState.error && (
@@ -205,7 +188,7 @@ export function UploadFirstForm({
             data-testid={embedded ? 'create-dbd-pdf-submit' : 'upload-pdf-submit'}
             className="staff-btn justify-self-start"
           >
-            {pdfPending ? 'Reading PDF…' : 'Upload PDF and review'}
+            {pdfPending ? u('readingPdf') : u('uploadPdfReview')}
           </button>
         </form>
       ) : (
@@ -217,16 +200,13 @@ export function UploadFirstForm({
           className={formClass}
           data-testid="upload-zip"
         >
-          <h2 className="font-semibold">Upload company ZIP file</h2>
-          <p className="text-sm text-ink-700">
-            Include the DBD PDFs and a website or Facebook link file. The links will be prefilled in
-            Company details after upload.
-          </p>
+          <h2 className="font-semibold">{u('zipTitle')}</h2>
+          <p className="text-sm text-ink-700">{u('zipDescription')}</p>
           <label className="relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-brand-600/50 bg-brand-50 px-4 py-5 text-center transition-colors focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2 hover:bg-brand-100">
             <span className="text-base font-semibold text-brand-700">
-              {zipName ?? 'Choose a ZIP file to upload'}
+              {zipName ?? u('chooseZip')}
             </span>
-            <span className="text-xs text-ink-700">Click to browse your files</span>
+            <span className="text-xs text-ink-700">{u('browse')}</span>
             <input
               name="document"
               type="file"
@@ -241,12 +221,7 @@ export function UploadFirstForm({
             />
           </label>
           {zip.preview && <PackPreviewCard preview={zip.preview} />}
-          {!zipExtractionAvailable && (
-            <p className="text-sm text-ink-700">
-              ZIP reading is not configured. You can upload it, but its PDFs will not be extracted
-              automatically.
-            </p>
-          )}
+          {!zipExtractionAvailable && <p className="text-sm text-ink-700">{u('zipUnavailable')}</p>}
           {zip.state.error && (
             <p role="alert" className="text-sm text-bad-600">
               {zipError ? t(`errors.${zipError}`) : zip.state.error}
@@ -258,7 +233,7 @@ export function UploadFirstForm({
             className="staff-btn justify-self-start"
             data-testid={embedded ? 'create-dbd-zip-submit' : 'upload-zip-submit'}
           >
-            {zip.pending ? 'Uploading ZIP…' : 'Upload ZIP and review'}
+            {zip.pending ? u('uploadingZip') : u('uploadZipReview')}
           </button>
         </form>
       )}

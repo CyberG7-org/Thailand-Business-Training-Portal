@@ -1,9 +1,11 @@
 {
   "app": {
+    "quizLanguageNotice": "The quiz questions are not translated into this language yet. They will appear in English.",
     "name": "Business Training Portal",
     "nameThai": "พอร์ทัลฝึกอบรมธุรกิจ",
     "language": "Language",
     "back": "Back",
+    "backToTop": "Back to top",
     "home": "Home"
   },
   "home": {
@@ -102,7 +104,7 @@
       "quiz": "Your next step is the practice quiz. It shows what to review before the Quiz.",
       "exam": "Your next step is the Quiz. Passing it unlocks the Interview.",
       "nameCard": "Your next step is the Namecard. View or download it after the Interview.",
-      "interview": "Your next step is the Interview. The officer asks about your company, in Thai.",
+      "interview": "Your next step is the Interview. Choose a language before you start; the officer will use it for the whole session.",
       "appointment": "You are ready. Your next step is the bank appointment.",
       "done": "You have completed every step. Well done."
     },
@@ -362,6 +364,48 @@
       "availableKeep": "✓ Available — keep it, press ↻ for another, or type your own"
     },
     "dbd": {
+      "sourcePreview": {
+        "kindPdf": "PDF poster",
+        "kindImage": "image",
+        "title": "Source {kind} · check every extracted fact",
+        "description": "This business-profile {kind} is not an official certificate. The first director is used as the training answer for signing authority; verify it before saving. The business category is selected from the description and products below. You can correct it in Bank Interview before using the illustrative estimates.",
+        "openOriginal": "Open original {kind}",
+        "uploadedPdf": "Uploaded company information PDF",
+        "uploadedImage": "Uploaded company information image",
+        "pineconeIndexing": "Pinecone indexing: {status}",
+        "checkDetails": "Check the details below and correct anything that is wrong. Edits save automatically."
+      },
+      "uploadChoice": {
+        "createCompany": "Create company",
+        "chooseWhat": "Choose what to upload",
+        "image": "Image",
+        "imageHint": "Upload one JPG, PNG or WebP company information image",
+        "pdfPoster": "PDF poster",
+        "pdfHint": "Upload one PDF with the company profile and product information",
+        "zipFile": "ZIP file",
+        "zipHint": "Upload DBD documents and a website or Facebook link",
+        "imageTitle": "Upload company information image",
+        "imageDescription": "Upload one image showing the registration and business details. Review every extracted fact on the next screen; this image is not an official DBD certificate.",
+        "chooseImage": "Choose an image to upload",
+        "browse": "Click to browse your files",
+        "imageLimits": "JPG, PNG or WebP, up to 4 MB. Revenue and transaction figures come from the category you choose after upload.",
+        "imageUnavailable": "Image reading needs GEMINI_API_KEY on the server.",
+        "readingImage": "Reading image…",
+        "uploadReview": "Upload and review",
+        "pdfTitle": "Upload company information PDF",
+        "pdfDescription": "Upload one poster PDF showing the registration and business details. We extract the visible facts and index the PDF for study and questions. Review every fact on the next screen; a poster is not an official DBD certificate.",
+        "choosePdf": "Choose a PDF poster to upload",
+        "pdfLimits": "PDF, up to 4 MB. Pinecone indexing runs in the background after upload.",
+        "pdfUnavailable": "PDF reading needs Claude and Pinecone configured on the server.",
+        "readingPdf": "Reading PDF…",
+        "uploadPdfReview": "Upload PDF and review",
+        "zipTitle": "Upload company ZIP file",
+        "zipDescription": "Include the DBD PDFs and a website or Facebook link file. The links will be prefilled in Company details after upload.",
+        "chooseZip": "Choose a ZIP file to upload",
+        "zipUnavailable": "ZIP reading is not configured. You can upload it, but its PDFs will not be extracted automatically.",
+        "uploadingZip": "Uploading ZIP…",
+        "uploadZipReview": "Upload ZIP and review"
+      },
       "title": "DBD records",
       "new": "New DBD record",
       "untitled": "(no company name yet)",
@@ -1284,6 +1328,8 @@
         "thai": "Thai (the text that is approved)",
         "english": "English (reference)",
         "chinese": "Chinese (reference)",
+        "malay": "Malay (reference)",
+        "tamil": "Tamil (reference)",
         "prompt": "Question",
         "option": "Option {key}",
         "explanation": "Explanation shown after a wrong answer",
@@ -1358,6 +1404,8 @@
         "th": "Thai",
         "en": "English",
         "zh": "Chinese",
+        "ms": "Malay",
+        "ta": "Tamil",
         "explanation": "Explanation"
       },
       "grammar": {
@@ -1578,13 +1626,15 @@
   "interview": {
     "title": "Interview",
     "intro": "A friendly practice interview using the same company facts you studied.",
-    "thaiOnly": "The officer speaks Thai. Please answer in Thai.",
+    "languageNotice": "The officer will speak the language chosen for this interview. Company names and addresses remain as recorded.",
+    "chooseLanguage": "What language would you like for the entire interview?",
+    "languageLocked": "Your choice stays the same throughout this attempt.",
     "guide": {
       "eyebrow": "Before you start",
       "title": "Practise at your own pace",
       "questions": "Answer 13 short questions",
       "pass": "Get 10 correct to be ready",
-      "language": "The interview is in Thai",
+      "language": "Choose your interview language before starting",
       "repeat": "Practise as many times as you like (ฝึกได้ไม่จำกัด)",
       "support": "The officer gives you one friendly second chance when an answer needs more detail. This is practice, so take your time."
     },

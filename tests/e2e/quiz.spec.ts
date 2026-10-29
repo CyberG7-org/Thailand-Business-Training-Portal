@@ -46,7 +46,7 @@ test('admin authors a personalized question; learner takes the quiz with instant
   await expect(page.getByTestId('question-dependencies')).toContainText('company_name_th');
   await page.locator('select[name="status"]').selectOption('approved');
   await page.getByTestId('set-status').click();
-  await expect(page.getByTestId('question-status')).toHaveText('approved');
+  await expect(page.getByTestId('question-status')).toHaveText('อนุมัติแล้ว');
   await page.getByTestId('staff-profile-trigger').click();
   await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 

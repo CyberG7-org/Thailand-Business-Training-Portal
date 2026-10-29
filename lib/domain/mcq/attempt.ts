@@ -60,14 +60,18 @@ export function buildAttemptQuestions(
     const localized: LocalizedQuestion = { th: present(check.rendered!) };
     for (const locale of VARIANT_LOCALES) {
       if (locale === 'th') continue;
+      if (!variant.texts[locale]) {
+        localized[locale] = localized.en ?? localized.th;
+        continue;
+      }
       const view = renderVariant(
         variant,
         localizedFacts[locale] ? { ...ctx, facts: localizedFacts[locale] } : ctx,
         variantSeed,
         locale,
       );
-      // A translation that cannot be rendered shows the Thai question: the one that was approved.
-      localized[locale] = view.ok ? present(view.rendered) : localized.th;
+      // If a translation cannot be rendered, retain the approved English or Thai snapshot.
+      localized[locale] = view.ok ? present(view.rendered) : (localized.en ?? localized.th);
     }
     return {
       conceptKey: check.conceptKey,

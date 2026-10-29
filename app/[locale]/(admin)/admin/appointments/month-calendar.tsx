@@ -5,7 +5,13 @@ import { monthGrid, shiftMonth } from '@/lib/domain/appointments/month';
 import type { ISODate } from '@/lib/domain/thai-date';
 import { BookDateForm } from './book-date-form';
 
-const LOCALES: Record<AppLocale, string> = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
+const LOCALES: Record<AppLocale, string> = {
+  th: 'th-TH',
+  en: 'en-GB',
+  zh: 'zh-CN',
+  ta: 'ta-IN',
+  ms: 'ms-MY',
+};
 
 export async function MonthCalendar({
   learnerId,

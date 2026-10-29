@@ -230,14 +230,14 @@ export default async function DbdRecordPage({
               {sourceImage && (
                 <div className="staff-card grid gap-3">
                   <h2 className="font-semibold">
-                    Source {sourcePdf ? 'PDF poster' : 'image'} · check every extracted fact
+                    {t('sourcePreview.title', {
+                      kind: sourcePdf ? t('sourcePreview.kindPdf') : t('sourcePreview.kindImage'),
+                    })}
                   </h2>
                   <p className="text-sm text-ink-700">
-                    This business-profile {sourcePdf ? 'PDF poster' : 'image'} is not an official
-                    certificate. The first director is used as the training answer for signing
-                    authority; verify it before saving. The business category is selected from the
-                    description and products below. You can correct it in Bank Interview before
-                    using the illustrative estimates.
+                    {t('sourcePreview.description', {
+                      kind: sourcePdf ? t('sourcePreview.kindPdf') : t('sourcePreview.kindImage'),
+                    })}
                   </p>
                   {signedImage?.signedUrl && (
                     <a
@@ -246,20 +246,22 @@ export default async function DbdRecordPage({
                       rel="noreferrer"
                       className="staff-link w-fit"
                     >
-                      Open original {sourcePdf ? 'PDF' : 'image'}
+                      {t('sourcePreview.openOriginal', {
+                        kind: sourcePdf ? t('sourcePreview.kindPdf') : t('sourcePreview.kindImage'),
+                      })}
                     </a>
                   )}
                   {signedImage?.signedUrl && sourcePdf && (
                     <iframe
                       src={signedImage.signedUrl}
-                      title="Uploaded company information PDF"
+                      title={t('sourcePreview.uploadedPdf')}
                       className="h-[700px] w-full rounded-lg border border-ink-100"
                     />
                   )}
                   {signedImage?.signedUrl && !sourcePdf && (
                     <Image
                       src={signedImage.signedUrl}
-                      alt="Uploaded company information"
+                      alt={t('sourcePreview.uploadedImage')}
                       width={900}
                       height={1200}
                       unoptimized
@@ -268,14 +270,11 @@ export default async function DbdRecordPage({
                   )}
                   {posterDocument && (
                     <p className="text-sm text-ink-700" data-testid="poster-index-status">
-                      Pinecone indexing: {posterDocument.index_status}
+                      {t('sourcePreview.pineconeIndexing', { status: posterDocument.index_status })}
                       {posterDocument.index_error ? ` (${posterDocument.index_error})` : ''}
                     </p>
                   )}
-                  <p className="staff-notice-info">
-                    Check the details below and correct anything that is wrong. Edits save
-                    automatically.
-                  </p>
+                  <p className="staff-notice-info">{t('sourcePreview.checkDetails')}</p>
                 </div>
               )}
               {suggestions && <p className="staff-notice-warn">{t('reviewSuggestions')}</p>}

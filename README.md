@@ -1,7 +1,7 @@
 # Thailand Business Training & Bank Verification Portal
 
-Provisioned-login training portal: DBD-linked study, quiz, exam, Thai name card, a Thai
-readiness interview with a local, rules-based Thai officer, and the DBD+45-day bank-appointment unlock.
+Provisioned-login training portal: DBD-linked study, quiz, exam, Thai name card, a five-language
+readiness interview with a local, rules-based bank officer, and the DBD+45-day bank-appointment unlock.
 Spec: `docs/superpowers/specs/`.
 
 ## Documentation

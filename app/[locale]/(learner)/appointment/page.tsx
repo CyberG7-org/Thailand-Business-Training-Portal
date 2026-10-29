@@ -4,7 +4,7 @@ import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
 import { myUpcomingAppointment } from '@/lib/db/appointments';
 import { bangkokDateOf } from '@/lib/domain/appointments/slots';
-import { formatDate } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
 import { pageTitle } from '@/i18n/page-title';
 
 export const generateMetadata = pageTitle('stages.titles', 'appointment');
@@ -28,7 +28,7 @@ export default async function AppointmentPage({ params }: { params: Promise<{ lo
         <p className="text-base leading-[1.75] text-ink-900">
           {mine
             ? t('booked.line', {
-                date: formatDate(bangkokDateOf(mine.starts_at), locale as AppLocale),
+                date: formatDisplayDate(bangkokDateOf(mine.starts_at), locale as AppLocale),
                 manager: mine.managerName ?? t('booked.manager'),
               })
             : t('waiting.detail')}

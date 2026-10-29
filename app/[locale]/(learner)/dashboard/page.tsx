@@ -17,7 +17,7 @@ import type { Director } from '@/lib/domain/dbd-record';
 import { displayLoginId } from '@/lib/domain/login-id';
 import { stageStatuses, type StageInfo } from '@/lib/domain/progression';
 import { LEARNER_STAGES, currentStage } from '@/lib/domain/stage-progress';
-import { formatDate } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
 import { CompanyCard, type CompanyDetail } from './company-card';
 import { Hero } from './hero';
 import { ProgressCard } from './progress-card';
@@ -31,6 +31,8 @@ const NUMBER_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-US',
   zh: 'zh-CN',
+  ta: 'ta-IN',
+  ms: 'ms-MY',
 };
 const DASHBOARD_STAGES = LEARNER_STAGES.filter((key) => key !== 'appointment');
 
@@ -151,7 +153,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
     ? [
         {
           label: t('company.registeredDate'),
-          value: company.registered_on ? formatDate(company.registered_on, loc) : '—',
+          value: company.registered_on ? formatDisplayDate(company.registered_on, loc) : '—',
           icon: 'date',
           testId: 'company-detail-date',
         },

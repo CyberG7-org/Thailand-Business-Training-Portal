@@ -1,17 +1,21 @@
 import type { ConceptGroup } from '@/lib/domain/bank-interview';
+import type { ExistingContentLocale } from '@/i18n/routing';
 
-export type StarterCard = {
+export const STUDY_LANGUAGES = ['th', 'en', 'zh', 'ms', 'ta'] as const;
+export type StudyLanguage = (typeof STUDY_LANGUAGES)[number];
+
+export type StarterCard<L extends StudyLanguage = ExistingContentLocale> = {
   contentKey: string;
   sortOrder: number;
   conceptGroup: ConceptGroup | null;
-  localizations: Record<'th' | 'en' | 'zh', { title: string; body: string }>;
+  localizations: Record<L, { title: string; body: string }>;
 };
 
 /**
  * Five direct cheat sheets covering every assessed concept. The optional customer channel text
  * is rendered by locale, so a company without a website never gets an empty website label.
  */
-export const BANK_INTERVIEW_CARDS: StarterCard[] = [
+export const BANK_INTERVIEW_CARDS: StarterCard<StudyLanguage>[] = [
   {
     contentKey: 'bank-interview-1-identity',
     sortOrder: 10,
@@ -23,14 +27,16 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | What to remember | Your company answer |
 |---|---|
-| Full registered name | **{company_name_th}** ({company_name_en}) |
+| Company name (as provided in English) | **{company_name_en}** |
 | 13-digit registration number | {juristic_id} |
 | Registration date | {registered_on} |
 | Registered address | {head_office_address} |
+| Province | {province} |
+| Subdistrict | {subdistrict} |
 | Directors | {directors_count} — {directors} |
 | Who can sign for the company | {signing_authority} |
 
-**The bank may ask:** What is the full registered name? What are the registration number and date? Where is the company registered? Who are the directors and who can sign?
+**The bank may ask:** What is the full registered name? What are the registration number and date? Where is the company registered? Who are the directors? What is the position of the person who can sign? Answer: director.
 
 **Remember:** use the full name and exact numbers from the documents. The registered address can differ from the real place of business.`,
       },
@@ -40,14 +46,16 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
 |---|---|
-| ชื่อเต็มที่จดทะเบียน | **{company_name_th}** ({company_name_en}) |
+| ชื่อบริษัทภาษาอังกฤษตามเอกสาร | **{company_name_en}** |
 | เลขทะเบียน 13 หลัก | {juristic_id} |
 | วันที่จดทะเบียน | {registered_on} |
 | ที่อยู่จดทะเบียน | {head_office_address} |
+| จังหวัด | {province} |
+| ตำบล/แขวง | {subdistrict} |
 | กรรมการ | {directors_count} คน — {directors} |
 | ผู้มีอำนาจลงนาม | {signing_authority} |
 
-**ธนาคารอาจถาม:** ชื่อเต็ม เลขทะเบียน วันที่จดทะเบียน ที่อยู่ กรรมการ และผู้มีอำนาจลงนามคืออะไร
+**ธนาคารอาจถาม:** ชื่อเต็ม เลขทะเบียน วันที่จดทะเบียน ที่อยู่ และกรรมการคือใคร ผู้ที่มีอำนาจลงนามมีตำแหน่งอะไร ตอบ: กรรมการ
 
 **จำไว้:** ชื่อและตัวเลขต้องตรงเอกสาร ที่อยู่จดทะเบียนอาจไม่ใช่สถานที่ทำธุรกิจจริง`,
       },
@@ -57,16 +65,56 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | 要记住的内容 | 您公司的答案 |
 |---|---|
-| 完整注册名称 | **{company_name_th}**（{company_name_en}） |
+| 文件中的英文公司名称 | **{company_name_en}** |
 | 13 位注册号 | {juristic_id} |
 | 注册日期 | {registered_on} |
 | 注册地址 | {head_office_address} |
+| 府 | {province} |
+| 分区/乡 | {subdistrict} |
 | 董事 | {directors_count} 位 — {directors} |
 | 有权代表公司签字的人 | {signing_authority} |
 
-**银行可能会问：** 完整名称、注册号、注册日期、注册地址、董事和签字权是什么？
+**银行可能会问：** 完整名称、注册号、注册日期、注册地址和董事是谁？有权签字的人担任什么职位？回答：董事。
 
 **记住：** 名称和数字必须与文件一致。注册地址可能与实际经营地点不同。`,
+      },
+      ms: {
+        title: 'Identiti syarikat dan pengarah (1/5)',
+        body: `Hafal maklumat ini tepat seperti dalam dokumen syarikat.
+
+| Perkara yang perlu diingat | Jawapan syarikat anda |
+|---|---|
+| Nama syarikat dalam bahasa Inggeris pada dokumen | **{company_name_en}** |
+| Nombor pendaftaran 13 digit | {juristic_id} |
+| Tarikh pendaftaran | {registered_on} |
+| Alamat berdaftar | {head_office_address} |
+| Wilayah | {province} |
+| Mukim (tambon/khwaeng) | {subdistrict} |
+| Pengarah | {directors_count} orang — {directors} |
+| Syarat menandatangani bagi pihak syarikat | {signing_authority} |
+
+**Soalan yang mungkin ditanya oleh pegawai bank:** Apakah nama berdaftar penuh, nombor dan tarikh pendaftaran, serta alamat berdaftar? Siapakah pengarah? Apakah jawatan orang yang boleh menandatangani bagi pihak syarikat?
+
+**Ingat:** Jawapan ringkas tentang jawatan penandatangan ialah pengarah. Untuk urusan sebenar, ikut syarat tandatangan dan cop seperti dalam dokumen. Nama dan nombor mesti tepat; alamat berdaftar mungkin berbeza daripada lokasi perniagaan sebenar.`,
+      },
+      ta: {
+        title: 'நிறுவன அடையாளமும் இயக்குநர்களும் (1/5)',
+        body: `நிறுவன ஆவணங்களில் உள்ளபடியே இந்த விவரங்களை நினைவில் கொள்ளுங்கள்.
+
+| நினைவில் கொள்ள வேண்டியது | உங்கள் நிறுவனத்தின் பதில் |
+|---|---|
+| ஆவணத்தில் உள்ள ஆங்கில நிறுவனப் பெயர் | **{company_name_en}** |
+| 13 இலக்க பதிவெண் | {juristic_id} |
+| பதிவு செய்யப்பட்ட திகதி | {registered_on} |
+| பதிவு செய்யப்பட்ட முகவரி | {head_office_address} |
+| மாகாணம் | {province} |
+| துணை மாவட்டம் (tambon/khwaeng) | {subdistrict} |
+| இயக்குநர்கள் | {directors_count} பேர் — {directors} |
+| நிறுவனத்தின் சார்பில் கையொப்பமிடும் நிபந்தனை | {signing_authority} |
+
+**வங்கியாளர் கேட்கக்கூடும் கேள்விகள்:** நிறுவனத்தின் முழுப் பெயர், பதிவெண், பதிவு செய்யப்பட்ட திகதி, முகவரி, இயக்குநர்கள் யார்? நிறுவனத்தின் சார்பில் கையொப்பமிடுபவரின் பதவி என்ன?
+
+**நினைவில் கொள்க:** பதவி பற்றிய சுருக்கமான பதில் இயக்குநர். உண்மையான ஆவணங்களில் உள்ள கையொப்பம் மற்றும் முத்திரை நிபந்தனையைப் பின்பற்றுங்கள். பெயர்களும் எண்களும் ஆவணங்களுடன் பொருந்த வேண்டும்; பதிவு முகவரி வணிகம் நடைபெறும் இடத்திலிருந்து வேறுபடலாம்.`,
       },
     },
   },
@@ -132,6 +180,44 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 **记住：** 注册资本 ÷ 每股价值 = 总股份。可用自己的话说明工作，但事实必须一致。`,
       },
+      ms: {
+        title: 'Modal, pemegang saham dan peranan anda (2/5)',
+        body: `Ketahui siapa yang memiliki syarikat dan tugas anda di dalamnya.
+
+| Perkara yang perlu diingat | Jawapan anda |
+|---|---|
+| Modal berdaftar | {registered_capital} baht |
+| Berapa saham yang anda pegang? | {my_shares} saham ({my_share_percent}%) |
+| Jumlah saham | {total_shares} saham |
+| Nilai sesaham | {par_value} baht |
+| Pemegang saham | {shareholders_count} orang — {shareholders} |
+| Nama dan jawatan anda | {my_name} — {my_position} |
+| Tugas harian anda | {my_responsibilities} |
+| Hubungan dengan pemegang saham lain | {my_relationship} |
+
+**Soalan yang mungkin ditanya oleh pegawai bank:** Berapakah modal syarikat? Berapa orang pemegang saham? Berapa saham yang anda miliki? Apakah jawatan dan tugas harian anda?
+
+**Ingat:** Modal berdaftar ÷ nilai sesaham = jumlah saham. Terangkan tugas dengan kata-kata sendiri, tetapi pastikan fakta konsisten.`,
+      },
+      ta: {
+        title: 'மூலதனம், பங்குதாரர்கள் மற்றும் உங்கள் பங்கு (2/5)',
+        body: `நிறுவனத்தின் உரிமையாளர்கள் யார், அதில் நீங்கள் என்ன செய்கிறீர்கள் என்பதை அறிந்திருங்கள்.
+
+| நினைவில் கொள்ள வேண்டியது | உங்கள் பதில் |
+|---|---|
+| பதிவு செய்யப்பட்ட மூலதனம் | {registered_capital} பாட் |
+| உங்களிடம் எத்தனை பங்குகள் உள்ளன? | {my_shares} பங்குகள் ({my_share_percent}%) |
+| மொத்தப் பங்குகள் | {total_shares} பங்குகள் |
+| ஒரு பங்கின் மதிப்பு | {par_value} பாட் |
+| பங்குதாரர்கள் | {shareholders_count} பேர் — {shareholders} |
+| உங்கள் பெயரும் பதவியும் | {my_name} — {my_position} |
+| உங்கள் அன்றாடப் பொறுப்புகள் | {my_responsibilities} |
+| மற்ற பங்குதாரர்களுடனான உறவு | {my_relationship} |
+
+**வங்கியாளர் கேட்கக்கூடும் கேள்விகள்:** நிறுவனத்தின் மூலதனம் எவ்வளவு? எத்தனை பங்குதாரர்கள் உள்ளனர்? உங்களிடம் எத்தனை பங்குகள் உள்ளன? உங்கள் பதவியும் அன்றாடப் பணியும் என்ன?
+
+**நினைவில் கொள்க:** பதிவு செய்யப்பட்ட மூலதனம் ÷ ஒரு பங்கின் மதிப்பு = மொத்தப் பங்குகள். உங்கள் பணியைச் சொந்த வார்த்தைகளில் விளக்கலாம்; உண்மைகள் மாறக்கூடாது.`,
+      },
     },
   },
   {
@@ -145,7 +231,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | What to remember | Your company answer |
 |---|---|
-| What the company actually does | {nature_of_business} |
+| The Company’s Business Activities | {nature_of_business} |
 | Products or services | {products_services} |
 | Why the company was established | {business_purpose} |
 | Main customers | {main_clients} |
@@ -165,7 +251,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | สิ่งที่ต้องจำ | คำตอบของบริษัทคุณ |
 |---|---|
-| บริษัททำอะไรจริง | {nature_of_business} |
+| ลักษณะการดำเนินธุรกิจของบริษัท | {nature_of_business} |
 | สินค้าหรือบริการ | {products_services} |
 | เหตุผลที่จัดตั้งบริษัท | {business_purpose} |
 | ลูกค้าหลัก | {main_clients} |
@@ -185,7 +271,7 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 | 要记住的内容 | 您公司的答案 |
 |---|---|
-| 公司实际做什么 | {nature_of_business} |
+| 公司的主要业务 | {nature_of_business} |
 | 产品或服务 | {products_services} |
 | 公司成立的目的 | {business_purpose} |
 | 主要客户 | {main_clients} |
@@ -198,6 +284,46 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 **银行会问：** 公司做什么业务？主要销售什么？公司如何寻找客户？最后一个问题只需说出一个真实的获客渠道，不必列出全部。
 
 **记住：** 实际业务应与注册目的相符。没有网站时，不要提到网站。`,
+      },
+      ms: {
+        title: 'Perniagaan, pelanggan dan pembekal (3/5)',
+        body: `Terangkan perniagaan sebenar dalam satu atau dua ayat yang mudah.
+
+| Perkara yang perlu diingat | Jawapan syarikat anda |
+|---|---|
+| Aktiviti Perniagaan Syarikat | {nature_of_business} |
+| Produk atau perkhidmatan | {products_services} |
+| Tujuan syarikat ditubuhkan | {business_purpose} |
+| Pelanggan utama | {main_clients} |
+| Cara syarikat mencari pelanggan | {customer_channels} |
+| Pembekal utama | {main_suppliers} — {suppliers_location} |
+| Lokasi perniagaan sebenar | {business_address} |
+| Kategori perniagaan berdaftar | {business_categories} |
+| Adakah perniagaan sudah bermula? | {operations_status} |
+
+**Soalan yang mungkin ditanya oleh pegawai bank:** Apakah perniagaan syarikat? Apakah produk atau perkhidmatan utama? Bagaimana syarikat mencari pelanggan? Untuk soalan terakhir, sebut satu saluran sebenar sahaja; tidak perlu menyenaraikan semuanya.
+
+**Ingat:** Aktiviti sebenar mesti sepadan dengan objektif berdaftar. Jika tiada laman web, jangan sebut laman web.`,
+      },
+      ta: {
+        title: 'வணிகம், வாடிக்கையாளர்கள் மற்றும் வழங்குநர்கள் (3/5)',
+        body: `நிறுவனத்தின் உண்மையான வணிகத்தை ஒன்று அல்லது இரண்டு எளிய வாக்கியங்களில் விளக்குங்கள்.
+
+| நினைவில் கொள்ள வேண்டியது | உங்கள் நிறுவனத்தின் பதில் |
+|---|---|
+| நிறுவனத்தின் வணிகச் செயல்பாடுகள் | {nature_of_business} |
+| பொருட்கள் அல்லது சேவைகள் | {products_services} |
+| நிறுவனம் தொடங்கப்பட்ட நோக்கம் | {business_purpose} |
+| முக்கிய வாடிக்கையாளர்கள் | {main_clients} |
+| வாடிக்கையாளர்களை எப்படிப் பெறுகிறீர்கள் | {customer_channels} |
+| முக்கிய வழங்குநர்கள் | {main_suppliers} — {suppliers_location} |
+| வணிகம் நடைபெறும் இடம் | {business_address} |
+| பதிவு செய்யப்பட்ட வணிக வகைகள் | {business_categories} |
+| வணிகம் தொடங்கிவிட்டதா? | {operations_status} |
+
+**வங்கியாளர் கேட்கக்கூடும் கேள்விகள்:** நிறுவனம் என்ன வணிகம் செய்கிறது? முக்கியப் பொருட்கள் அல்லது சேவைகள் யாவை? வாடிக்கையாளர்களை எப்படி அடைகிறது? கடைசிக் கேள்விக்கு உண்மையான ஒரு வழியை மட்டும் சொன்னால் போதும்.
+
+**நினைவில் கொள்க:** உண்மையான வணிகம் பதிவு செய்யப்பட்ட நோக்கங்களுடன் பொருந்த வேண்டும். இணையதளம் இல்லையெனில் அதைச் சொல்ல வேண்டாம்.`,
       },
     },
   },
@@ -275,6 +401,52 @@ export const BANK_INTERVIEW_CARDS: StarterCard[] = [
 
 **记住：** 这些是按业务类别确定的估算数字，可以回答接近的金额。`,
       },
+      ms: {
+        title: 'Wang dan transaksi (4/5)',
+        body: `Hafal tiga anggaran berdasarkan kategori perniagaan syarikat yang diluluskan. Angka ini bukan dikira daripada invois.
+
+| Perkara yang perlu diingat | Jawapan syarikat anda |
+|---|---|
+| Anggaran hasil bulanan | {monthly_revenue} |
+| Purata amaun setiap transaksi | {average_transaction} |
+| Anggaran bilangan transaksi sebulan | {monthly_transactions} |
+| Anggaran aliran wang bulanan | {monthly_volume} |
+| Sumber modal permulaan | {source_of_funds} |
+| Wang pertama yang masuk ke akaun | {first_incoming_funds} |
+| Tujuan akaun diperlukan | {account_purpose} |
+| Sebab memerlukan PromptPay atau QR | {promptpay_qr_purpose} |
+| Corak transaksi yang dijangka | {transaction_details} |
+
+**Soalan yang mungkin ditanya oleh pegawai bank:**
+1. Berapakah anggaran hasil bulanan syarikat? Jawapan: **{monthly_revenue}**.
+2. Berapakah anggaran jumlah transaksi sebulan? Jawapan: **{monthly_transactions}**.
+3. Berapakah anggaran purata amaun setiap transaksi? Jawapan: **{average_transaction}**.
+
+**Ingat:** Ini anggaran mengikut kategori perniagaan. Nyatakan angka lebih kurang; sedikit perbezaan tidak mengapa.`,
+      },
+      ta: {
+        title: 'பணமும் பரிவர்த்தனைகளும் (4/5)',
+        body: `அங்கீகரிக்கப்பட்ட வணிக வகையின் அடிப்படையில் உள்ள இந்த மூன்று மதிப்பீடுகளை நினைவில் கொள்ளுங்கள். அவை விலைப்பட்டியல்களிலிருந்து கணக்கிடப்படவில்லை.
+
+| நினைவில் கொள்ள வேண்டியது | உங்கள் நிறுவனத்தின் பதில் |
+|---|---|
+| மதிப்பிடப்பட்ட மாத வருவாய் | {monthly_revenue} |
+| ஒரு பரிவர்த்தனைக்கான சராசரித் தொகை | {average_transaction} |
+| மாதத்திற்கு மதிப்பிடப்பட்ட பரிவர்த்தனைகள் | {monthly_transactions} |
+| மாதாந்திர பணப் போக்குவரத்து | {monthly_volume} |
+| தொடக்க நிதியின் மூலம் | {source_of_funds} |
+| கணக்கில் முதலில் வரும் பணம் | {first_incoming_funds} |
+| வங்கிக் கணக்கு ஏன் தேவை | {account_purpose} |
+| PromptPay அல்லது QR ஏன் தேவை | {promptpay_qr_purpose} |
+| எதிர்பார்க்கப்படும் பரிவர்த்தனை முறை | {transaction_details} |
+
+**வங்கியாளர் கேட்கக்கூடும் கேள்விகள்:**
+1. நிறுவனத்தின் மதிப்பிடப்பட்ட மாத வருவாய் எவ்வளவு? பதில்: **{monthly_revenue}**.
+2. மாதத்திற்கு மதிப்பிடப்பட்ட மொத்தப் பரிவர்த்தனைகள் எத்தனை? பதில்: **{monthly_transactions}**.
+3. ஒரு பரிவர்த்தனைக்கான சராசரித் தொகை எவ்வளவு? பதில்: **{average_transaction}**.
+
+**நினைவில் கொள்க:** இவை வணிக வகையை அடிப்படையாகக் கொண்ட மதிப்பீடுகள். தோராயமான தொகையைக் கூறலாம்.`,
+      },
     },
   },
   {
@@ -329,6 +501,38 @@ You do not need difficult words. Clear, honest and consistent answers are enough
 **四步回答：** 听完问题；先直接回答；需要时补充一句说明；不确定时请工作人员重复—不要猜。
 
 不需要复杂词语。清楚、诚实、前后一致就足够了。`,
+      },
+      ms: {
+        title: 'Keselamatan bank dan jawapan yakin (5/5)',
+        body: `Gunakan jawapan yang selamat dan mudah.
+
+| Soalan yang mungkin ditanya oleh pegawai bank | Jawapan yang baik |
+|---|---|
+| Siapa mengawal perbankan internet? | Pengarah syarikat yang diberi kuasa mengawalnya. |
+| Siapa menyimpan telefon untuk menerima OTP? | Orang yang diberi kuasa menyimpan dan mengawalnya. |
+| Bagaimana anda menerangkan pindahan wang? | Nyatakan siapa membayar siapa, sebabnya, jumlah dan tarikh. |
+| Dokumen apa yang menyokong bayaran? | Invois, perjanjian, resit atau dokumen perniagaan yang sepadan. |
+| Bagaimana jika bank menyemak? | Pastikan semua jawapan selaras dengan dokumen dan aktiviti sebenar. |
+
+**Jawab dalam empat langkah:** dengar soalan sampai habis; beri jawapan terus dahulu; tambah satu penjelasan ringkas jika perlu; minta pegawai ulangi jika tidak pasti—jangan meneka.
+
+Tidak perlu menggunakan perkataan yang sukar. Jawapan yang jelas, jujur dan konsisten sudah memadai.`,
+      },
+      ta: {
+        title: 'வங்கிப் பாதுகாப்பும் நம்பிக்கையான பதில்களும் (5/5)',
+        body: `பாதுகாப்பான, எளிய பதில்களைப் பயன்படுத்துங்கள்.
+
+| வங்கியாளர் கேட்கக்கூடும் கேள்விகள் | நல்ல பதில் |
+|---|---|
+| இணைய வங்கியை யார் கட்டுப்படுத்துகிறார்கள்? | அங்கீகரிக்கப்பட்ட நிறுவன இயக்குநர் கட்டுப்படுத்துகிறார். |
+| OTP பெறும் தொலைபேசி யாரிடம் இருக்கும்? | அங்கீகரிக்கப்பட்ட நபர் அதை வைத்துக் கட்டுப்படுத்துகிறார். |
+| பணப் பரிமாற்றத்தை எப்படி விளக்குவீர்கள்? | யார் யாருக்குப் பணம் செலுத்தினார், ஏன், தொகை மற்றும் திகதி ஆகியவற்றைக் கூறுங்கள். |
+| பணம் செலுத்தியதற்கான ஆதாரம் என்ன? | விலைப்பட்டியல், ஒப்பந்தம், ரசீது அல்லது பொருந்தும் வணிக ஆவணம். |
+| வங்கி சரிபார்த்தால் என்ன செய்வீர்கள்? | எல்லாப் பதில்களும் ஆவணங்களுக்கும் உண்மையான செயல்பாட்டுக்கும் பொருந்தட்டும். |
+
+**நான்கு படிகளில் பதிலளியுங்கள்:** கேள்வியை முழுவதும் கேளுங்கள்; நேரடியாகப் பதில் சொல்லுங்கள்; தேவைப்பட்டால் சிறிய விளக்கம் சேர்க்கவும்; புரியாவிட்டால் மீண்டும் கேட்கச் சொல்லுங்கள்—ஊகிக்க வேண்டாம்.
+
+கடினமான சொற்கள் தேவையில்லை. தெளிவான, உண்மையான, சீரான பதில்கள் போதும்.`,
       },
     },
   },

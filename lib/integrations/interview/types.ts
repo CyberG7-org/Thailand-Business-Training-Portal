@@ -14,6 +14,8 @@ export type TurnInput = {
   /** The language for the officer's next line; Thai remains the canonical fact language. */
   language?: AppLocale;
   facts: FactSheet;
+  /** Previously saved company translations only; never fetched from an API here. */
+  translatedFacts?: FactSheet;
   plan: InterviewPlan;
   /** The turns so far, ending with the officer's last question; empty on the opening turn. */
   transcript: Turn[];

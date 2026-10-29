@@ -11,7 +11,8 @@ import { suggestSuffix } from '@/lib/db/provisioning';
 import { createSupabaseServerClient } from '@/lib/db/server';
 import { companyStatus } from '@/lib/domain/auto-confirm';
 import { displayLoginId, learnerPrefix } from '@/lib/domain/login-id';
-import { formatDate, type Locale } from '@/lib/domain/thai-date';
+import { formatDisplayDate } from '@/i18n/format-date';
+import type { AppLocale } from '@/i18n/routing';
 import { getDbdExtractor } from '@/lib/integrations/extraction';
 import { companyPdfAvailable } from '@/lib/integrations/extraction/company-pdf';
 import type { CompanyRow } from './companies-panel';
@@ -67,7 +68,9 @@ export default async function CreateLearnerAndDbdPage({
           companies={companies}
           rows={rows.map((r) => ({
             ...r,
-            registeredOn: r.registeredOn ? formatDate(r.registeredOn, locale as Locale) : null,
+            registeredOn: r.registeredOn
+              ? formatDisplayDate(r.registeredOn, locale as AppLocale)
+              : null,
           }))}
           teams={null}
           ownLoginId={parent.login_id}
@@ -157,7 +160,7 @@ export default async function CreateLearnerAndDbdPage({
     director: Array.isArray(r.directors)
       ? ((r.directors[0] as { name_th?: string } | undefined)?.name_th ?? null)
       : null,
-    registeredOn: r.registered_on ? formatDate(r.registered_on, locale as Locale) : null,
+    registeredOn: r.registered_on ? formatDisplayDate(r.registered_on, locale as AppLocale) : null,
     status: companyStatus(r, reading.get(r.id) ?? null),
     teamCode: r.team_id ? (teamCodeOf?.get(r.team_id) ?? null) : null,
     learner: learnerOf(r.id),

@@ -16,7 +16,7 @@ test('DBD creation offers image or ZIP upload and no manual entry', async ({ pag
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
   await expect(page.getByTestId('upload-first-file')).toHaveAttribute('accept', /image\/jpeg/);
-  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await page.locator('input[name="uploadMode"][value="zip"]').check();
   await expect(page.getByTestId('upload-zip-file')).toHaveAttribute('accept', /\.zip/);
   await expect(page.getByTestId('manual-form-toggle')).toHaveCount(0);
   await expect(page.locator('input[name="company_name_th"]')).toHaveCount(0);

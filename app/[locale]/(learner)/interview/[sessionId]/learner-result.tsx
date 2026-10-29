@@ -18,6 +18,8 @@ const DATE_LOCALES: Record<AppLocale, string> = {
   th: 'th-TH',
   en: 'en-GB',
   zh: 'zh-CN',
+  ta: 'ta-IN',
+  ms: 'ms-MY',
 };
 
 export async function LearnerResult({

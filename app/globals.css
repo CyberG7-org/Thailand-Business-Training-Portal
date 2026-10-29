@@ -279,6 +279,7 @@
   .study-article td {
     padding: 12px 14px;
     vertical-align: top;
+    white-space: pre-line;
     border-bottom: 1px solid var(--color-ink-100);
   }
   .study-article td:first-child {

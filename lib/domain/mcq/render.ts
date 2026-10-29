@@ -176,7 +176,8 @@ function resolve(p: Placeholder, ctx: RenderContext, locale: Locale, draws: Draw
       const own = ctx.geo[kind];
       return own ? geoLabel(own, locale) : missing();
     }
-    if (kind === 'category') return ownCategory(ctx)[locale];
+    if (kind === 'category')
+      return ownCategory(ctx)[locale === 'ms' || locale === 'ta' ? 'en' : locale];
     const n = numberOf(p.token, facts);
     return n === null ? missing() : formatQuantity(kind, n, locale);
   }
@@ -215,7 +216,7 @@ function resolve(p: Placeholder, ctx: RenderContext, locale: Locale, draws: Draw
         ctx.categories.filter((c) => c.active && c.key !== own.key),
       );
       if (!pick) throw new RenderFailure('no_alternatives', p.raw);
-      return pick[locale];
+      return pick[locale === 'ms' || locale === 'ta' ? 'en' : locale];
     }
   }
 }

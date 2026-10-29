@@ -300,7 +300,7 @@ describe('the starter drafts in the bank', () => {
     const loaded = (await listVariants(asOwner)).filter((v) => keys.includes(v.key));
     expect(loaded).toHaveLength(starters.length);
     expect(loaded.every((v) => v.status === 'draft')).toBe(true);
-    expect(loaded.every((v) => Object.keys(v.texts).length === 3)).toBe(true);
+    expect(loaded.every((v) => Object.keys(v.texts).length === 5)).toBe(true);
 
     // The Owner edits one; loading again does not put the starter text back.
     const capital = loaded.find((v) => v.key === key('mcq-v2-registered-capital-1'))!;

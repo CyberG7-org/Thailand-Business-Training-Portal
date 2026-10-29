@@ -1,9 +1,11 @@
 {
   "app": {
+    "quizLanguageNotice": "测验题目尚未翻译成此语言，将以英语显示。",
     "name": "商业培训门户",
     "nameThai": "พอร์ทัลฝึกอบรมธุรกิจ",
     "language": "语言",
     "back": "返回",
+    "backToTop": "返回顶部",
     "home": "首页"
   },
   "home": {
@@ -102,7 +104,7 @@
       "quiz": "下一步是练习测验，帮助你了解测验前需要复习的内容。",
       "exam": "下一步是测验。通过后即可解锁面试。",
       "nameCard": "下一步是名片。面试后可查看或下载名片。",
-      "interview": "下一步是面试。面试官会用泰语询问贵公司的情况。",
+      "interview": "下一步是面试。开始前请选择语言，面试官将在整个面试中使用该语言。",
       "appointment": "你已准备好。下一步是预约银行。",
       "done": "你已完成所有步骤，做得好。"
     },
@@ -362,6 +364,48 @@
       "availableKeep": "✓ 可以使用——直接使用、按 ↻ 换一个，或自行输入"
     },
     "dbd": {
+      "sourcePreview": {
+        "kindPdf": "PDF海报",
+        "kindImage": "图片",
+        "title": "来源{kind} · 检查所有提取的事实",
+        "description": "此业务资料{kind}并非官方证书。第一位董事被用作签署权限的培训答案；请在保存前进行验证。业务类别是从下面的描述和产品中选择的。您可以在使用说明性估算之前在“银行访谈”中进行更正。",
+        "openOriginal": "打开原始{kind}",
+        "uploadedPdf": "已上传的公司信息PDF",
+        "uploadedImage": "已上传的公司信息图片",
+        "pineconeIndexing": "Pinecone 索引：{status}",
+        "checkDetails": "检查以下详细信息并更正任何错误。编辑会自动保存。"
+      },
+      "uploadChoice": {
+        "createCompany": "创建公司",
+        "chooseWhat": "选择要上传的内容",
+        "image": "图片",
+        "imageHint": "上传一张JPG、PNG或WebP格式的公司信息图片",
+        "pdfPoster": "PDF海报",
+        "pdfHint": "上传一份包含公司简介和产品信息的PDF文件",
+        "zipFile": "ZIP文件",
+        "zipHint": "上传DBD文件以及网站或Facebook链接",
+        "imageTitle": "上传公司信息图片",
+        "imageDescription": "上传一张显示注册和业务详情的图片。在下一屏幕上查看所有提取的事实；此图片并非官方DBD证书。",
+        "chooseImage": "选择要上传的图片",
+        "browse": "点击浏览您的文件",
+        "imageLimits": "JPG、PNG或WebP格式，最大4 MB。收入和交易数据来自您上传后选择的类别。",
+        "imageUnavailable": "图片读取需要在服务器上配置GEMINI_API_KEY。",
+        "readingImage": "正在读取图片…",
+        "uploadReview": "上传并审核",
+        "pdfTitle": "上传公司信息PDF",
+        "pdfDescription": "上传一份显示注册和业务详情的海报PDF。我们将提取可见事实并为学习和提问索引该PDF。在下一屏幕上查看所有事实；海报并非官方DBD证书。",
+        "choosePdf": "选择要上传的PDF海报",
+        "pdfLimits": "PDF格式，最大4 MB。Pinecone索引将在上传后在后台运行。",
+        "pdfUnavailable": "PDF读取需要在服务器上配置Claude和Pinecone。",
+        "readingPdf": "正在读取PDF…",
+        "uploadPdfReview": "上传PDF并审核",
+        "zipTitle": "上传公司ZIP文件",
+        "zipDescription": "包含DBD PDF文件以及网站或Facebook链接文件。上传后，链接将预填充到公司详情中。",
+        "chooseZip": "选择要上传的ZIP文件",
+        "zipUnavailable": "ZIP读取未配置。您可以上传，但其PDF文件不会自动提取。",
+        "uploadingZip": "正在上传ZIP…",
+        "uploadZipReview": "上传ZIP并审核"
+      },
       "title": "DBD 记录",
       "new": "新建 DBD 记录",
       "untitled": "（尚无公司名称）",
@@ -1284,6 +1328,8 @@
         "thai": "泰文（据此批准）",
         "english": "英文（参考）",
         "chinese": "中文（参考）",
+        "malay": "马来文（参考）",
+        "tamil": "泰米尔文（参考）",
         "prompt": "题目",
         "option": "选项 {key}",
         "explanation": "答错后显示的解释",
@@ -1358,6 +1404,8 @@
         "th": "泰文",
         "en": "英文",
         "zh": "中文",
+        "ms": "马来文",
+        "ta": "泰米尔文",
         "explanation": "解释"
       },
       "grammar": {
@@ -1578,13 +1626,15 @@
   "interview": {
     "title": "面试",
     "intro": "使用您学过的公司资料，进行轻松友好的模拟面试。",
-    "thaiOnly": "面试官使用泰语，请用泰语回答。",
+    "languageNotice": "银行工作人员将使用本次面试选定的语言。公司名称和地址保留登记原文。",
+    "chooseLanguage": "您希望用哪种语言完成整个面试？",
+    "languageLocked": "本次面试开始后将一直使用所选语言。",
     "guide": {
       "eyebrow": "开始之前",
       "title": "按自己的节奏练习",
       "questions": "回答 13 个简短问题",
       "pass": "答对 10 题即可通过",
-      "language": "面试使用泰语",
+      "language": "开始前选择面试语言",
       "repeat": "可不限次数练习（ฝึกได้ไม่จำกัด）",
       "support": "如果回答需要补充，专员会友好地再问一次。这只是练习，请从容作答。"
     },

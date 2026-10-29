@@ -1,4 +1,4 @@
-import type { AppLocale } from '@/i18n/routing';
+import type { ExistingContentLocale } from '@/i18n/routing';
 import type { DbdReferenceRecord } from './dbd-reference';
 import type { ReferencePassage } from './passages';
 
@@ -12,7 +12,7 @@ export type GeneratedLocalization = {
 };
 
 /** Admin-authored question translations are still approved in the three existing languages. */
-export type ApprovedQuestionLocale = 'th' | 'en' | 'zh';
+export type ApprovedQuestionLocale = ExistingContentLocale;
 
 /** One question in all three languages, as the model returns it. */
 export type GeneratedQuestion = {
@@ -43,16 +43,18 @@ export type GenerateInput = {
 };
 
 export type TranslateInput = {
-  sourceLanguage: AppLocale;
+  sourceLanguage: ApprovedQuestionLocale;
   source: GeneratedLocalization;
-  targetLanguages: AppLocale[];
+  targetLanguages: ApprovedQuestionLocale[];
 };
 
 export interface QuestionGenerator {
   readonly name: string;
   readonly model: string | null;
   generate(input: GenerateInput): Promise<GeneratedQuestion[]>;
-  translate(input: TranslateInput): Promise<Partial<Record<AppLocale, GeneratedLocalization>>>;
+  translate(
+    input: TranslateInput,
+  ): Promise<Partial<Record<ApprovedQuestionLocale, GeneratedLocalization>>>;
 }
 
 export class QuestionGenError extends Error {
