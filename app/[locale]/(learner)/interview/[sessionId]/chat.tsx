@@ -40,10 +40,11 @@ export function Chat({
   const [draft, setDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const endRef = useRef<HTMLDivElement>(null);
+  const chatLogRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: 'end' });
+    const chatLog = chatLogRef.current;
+    if (chatLog) chatLog.scrollTop = chatLog.scrollHeight;
   }, [turns, pending]);
 
   const send = () => {
@@ -89,6 +90,7 @@ export function Chat({
     <div className="grid h-full min-h-0 w-full grid-rows-[minmax(0,1fr)] gap-4">
       <section className="rise min-h-0 overflow-hidden rounded-card bg-white shadow-raised">
         <ol
+          ref={chatLogRef}
           data-testid="chat-log"
           aria-live="polite"
           className="grid h-full min-h-0 gap-3 overflow-y-auto px-4 pt-5 pb-40 md:px-6 md:pb-44"
@@ -123,7 +125,6 @@ export function Chat({
               {t('chat.typing')}
             </li>
           )}
-          <div ref={endRef} aria-hidden="true" />
         </ol>
       </section>
       <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-12">

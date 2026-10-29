@@ -92,6 +92,13 @@ test('the active chat matches the navigation width and keeps its composer visibl
       .getByTestId('chat-log')
       .evaluate((element) => element.scrollHeight > element.clientHeight),
   ).toBe(true);
+  await expect
+    .poll(() =>
+      page
+        .getByTestId('chat-log')
+        .evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop),
+    )
+    .toBeLessThanOrEqual(1);
 });
 
 test('a learner who evades is not ready, retries with good answers, and becomes ready for good', async ({
