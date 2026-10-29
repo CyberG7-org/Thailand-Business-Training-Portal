@@ -9,7 +9,7 @@ test('an uploaded pack is indexed by the cron in slices and the admin can ask it
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
-  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await page.locator('input[name="uploadMode"][value="zip"]').check();
   await page
     .getByTestId('upload-zip-file')
     .setInputFiles(companyZip('tests/fixtures/three-pages.pdf'));

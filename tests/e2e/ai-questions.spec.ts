@@ -39,5 +39,5 @@ test('admin writes a Thai-only question and fills the other languages with AI (f
   // Now approvable: three languages exist.
   await page.locator('select[name="status"]').selectOption('approved');
   await page.getByTestId('set-status').click();
-  await expect(page.getByTestId('question-status')).toHaveText('approved');
+  await expect(page.getByTestId('question-status')).toHaveText('อนุมัติแล้ว');
 });

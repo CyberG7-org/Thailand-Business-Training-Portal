@@ -13,7 +13,7 @@ test('uploading a ZIP extracts certificate facts without inventing business natu
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/dbd-records/new');
-  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await page.locator('input[name="uploadMode"][value="zip"]').check();
   await page.getByTestId('upload-zip-file').setInputFiles(companyZip());
   await page.getByTestId('upload-zip-submit').click();
   await page.waitForURL(/\/th\/admin\/dbd-records\/[0-9a-f-]{36}\?extraction=queued/);

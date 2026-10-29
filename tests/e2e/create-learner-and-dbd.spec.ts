@@ -325,24 +325,24 @@ test('a manager can choose image, PDF or ZIP company intake', async ({ page }) =
     'accept',
     'image/jpeg,image/png,image/webp',
   );
-  await expect(page.getByText('Choose an image to upload')).toBeVisible();
-  await expect(page.getByTestId('create-dbd')).toContainText('Upload company information image');
-  await page.getByRole('radio', { name: 'PDF poster' }).check();
+  await expect(page.getByText('เลือกรูปภาพที่จะอัปโหลด')).toBeVisible();
+  await expect(page.getByTestId('create-dbd')).toContainText('อัปโหลดรูปภาพข้อมูลบริษัท');
+  await page.locator('input[name="uploadMode"][value="pdf"]').check();
   await expect(page.getByTestId('create-dbd-pdf-files')).toHaveAttribute(
     'accept',
     '.pdf,application/pdf',
   );
-  await expect(page.getByText('Choose a PDF poster to upload')).toBeVisible();
-  await expect(page.getByTestId('create-dbd')).toContainText('Upload company information PDF');
+  await expect(page.getByText('เลือกโปสเตอร์ PDF ที่จะอัปโหลด')).toBeVisible();
+  await expect(page.getByTestId('create-dbd')).toContainText('อัปโหลดไฟล์ PDF ข้อมูลบริษัท');
   await expect(page.getByTestId('upload-pdf')).not.toContainText('GEMINI_API_KEY');
-  await page.getByRole('radio', { name: 'ZIP file' }).check();
+  await page.locator('input[name="uploadMode"][value="zip"]').check();
   await expect(page.getByTestId('create-dbd-zip-files')).toHaveAttribute(
     'accept',
     '.zip,application/zip,application/x-zip-compressed',
   );
-  await expect(page.getByText('Choose a ZIP file to upload')).toBeVisible();
+  await expect(page.getByText('เลือกไฟล์ ZIP ที่จะอัปโหลด')).toBeVisible();
   await expect(page.getByTestId('create-dbd')).toContainText(
-    'The links will be prefilled in Company details',
+    'ลิงก์จะถูกกรอกล่วงหน้าในรายละเอียดบริษัท',
   );
 });
 
