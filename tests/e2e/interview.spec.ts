@@ -54,6 +54,23 @@ test('the interview is locked before the exam and open after it', async ({ page 
   await expect(page.getByTestId('interview-start')).toHaveCount(0);
 });
 
+test('the active chat matches the navigation width and keeps its composer visible', async ({
+  page,
+}) => {
+  const loginId = await seedLearnerWithCompany('บริษัท สัมภาษณ์ตรึงช่องตอบ จำกัด', '2026-07-13');
+  await seedPassedExam(loginId);
+  await page.setViewportSize({ width: 1100, height: 420 });
+  await loginAs(page, loginId, E2E_PASSWORD);
+  await page.goto('/en/interview');
+  await page.getByTestId('interview-start').click();
+  await page.waitForURL(/\/en\/interview\/[0-9a-f-]{36}$/);
+
+  const navigation = await page.getByTestId('learner-stage-tabs').boundingBox();
+  const conversation = await page.getByTestId('chat-log').locator('..').boundingBox();
+  expect(Math.abs((navigation?.width ?? 0) - (conversation?.width ?? 0))).toBeLessThanOrEqual(1);
+  await expect(page.getByTestId('chat-input')).toBeInViewport();
+});
+
 test('a learner who evades is not ready, retries with good answers, and becomes ready for good', async ({
   page,
 }, testInfo) => {

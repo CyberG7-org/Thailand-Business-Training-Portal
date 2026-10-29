@@ -86,12 +86,12 @@ export function Chat({
   };
 
   return (
-    <div className="mx-auto grid max-w-[780px] gap-4">
+    <div className="grid w-full gap-4 pb-40 md:pb-44">
       <section className="rise rounded-card bg-white shadow-raised">
         <ol
           data-testid="chat-log"
           aria-live="polite"
-          className="grid gap-3 px-4 py-5 md:max-h-[60vh] md:overflow-y-auto md:px-6"
+          className="grid max-h-[min(60dvh,44rem)] gap-3 overflow-y-auto px-4 py-5 md:px-6"
         >
           {turns.map((turn) => (
             <li
@@ -126,59 +126,61 @@ export function Chat({
           <div ref={endRef} aria-hidden="true" />
         </ol>
       </section>
-      {error && (
-        <p
-          role="alert"
-          className="rounded-control bg-bad-50 px-3.5 py-2.5 text-sm font-medium text-bad-600"
-        >
-          {t(`errors.${error}` as never)}
-        </p>
-      )}
-      <div className="glass-strong sticky bottom-2 rounded-card p-3 md:static md:p-4">
-        <textarea
-          data-testid="chat-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              send();
-            }
-          }}
-          maxLength={maxChars}
-          rows={2}
-          lang={interviewLanguage}
-          placeholder={t('chat.placeholder')}
-          aria-label={t('chat.placeholder')}
-          className="w-full resize-none rounded-control border border-ink-300 bg-white px-3.5 py-2.5 text-base leading-[1.6] text-ink-900 placeholder:text-ink-500"
-        />
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-xs text-ink-500 tabular-nums">
-            <span data-testid="chat-budget">
-              {t('chat.budget', { n: budget.used + 1, max: budget.max })}
+      <div className="fixed inset-x-0 bottom-0 z-30 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-12">
+        <div className="glass-strong mx-auto w-full max-w-[1240px] rounded-card p-3 shadow-raised md:p-4">
+          {error && (
+            <p
+              role="alert"
+              className="mb-3 rounded-control bg-bad-50 px-3.5 py-2.5 text-sm font-medium text-bad-600"
+            >
+              {t(`errors.${error}` as never)}
+            </p>
+          )}
+          <textarea
+            data-testid="chat-input"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            maxLength={maxChars}
+            rows={2}
+            lang={interviewLanguage}
+            placeholder={t('chat.placeholder')}
+            aria-label={t('chat.placeholder')}
+            className="w-full resize-none rounded-control border border-ink-300 bg-white px-3.5 py-2.5 text-base leading-[1.6] text-ink-900 placeholder:text-ink-500"
+          />
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs text-ink-500 tabular-nums">
+              <span data-testid="chat-budget">
+                {t('chat.budget', { n: budget.used + 1, max: budget.max })}
+              </span>
+              {' · '}
+              {t('chat.limit', { max: maxChars })}
             </span>
-            {' · '}
-            {t('chat.limit', { max: maxChars })}
-          </span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              data-testid="chat-end"
-              onClick={end}
-              disabled={pending}
-              className="inline-flex min-h-11 items-center rounded-control border border-ink-300 px-4 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-60"
-            >
-              {t('chat.end')}
-            </button>
-            <button
-              type="button"
-              data-testid="chat-send"
-              onClick={send}
-              disabled={pending || draft.trim().length === 0}
-              className="inline-flex min-h-11 items-center rounded-control bg-brand-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
-            >
-              {t('chat.send')}
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                data-testid="chat-end"
+                onClick={end}
+                disabled={pending}
+                className="inline-flex min-h-11 items-center rounded-control border border-ink-300 px-4 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50 disabled:opacity-60"
+              >
+                {t('chat.end')}
+              </button>
+              <button
+                type="button"
+                data-testid="chat-send"
+                onClick={send}
+                disabled={pending || draft.trim().length === 0}
+                className="inline-flex min-h-11 items-center rounded-control bg-brand-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-60"
+              >
+                {t('chat.send')}
+              </button>
+            </div>
           </div>
         </div>
       </div>

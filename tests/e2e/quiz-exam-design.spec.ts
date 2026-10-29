@@ -36,6 +36,15 @@ test('the Business Knowledge Quiz shows the meta chip and marks an answer like t
   const loginId = await seedQuizReadyLearner(`บริษัท สอบใหม่ ${Date.now()} จำกัด`);
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/th/exam');
+  const cardBox = await page.getByTestId('exam-about').boundingBox();
+  const startBox = await page.getByTestId('start-exam').boundingBox();
+  expect(
+    Math.abs(
+      (startBox?.x ?? 0) +
+        (startBox?.width ?? 0) / 2 -
+        ((cardBox?.x ?? 0) + (cardBox?.width ?? 0) / 2),
+    ),
+  ).toBeLessThanOrEqual(1);
   await page.getByTestId('start-exam').click();
   await page.waitForURL(/\/th\/exam\/[0-9a-f-]{36}$/);
 
