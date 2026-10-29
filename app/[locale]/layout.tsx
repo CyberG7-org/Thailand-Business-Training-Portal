@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/auth/session';
 import { IBM_Plex_Sans_Thai, Trirong } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { htmlLang, routing } from '@/i18n/routing';
+import { BackToTopButton } from '@/components/back-to-top-button';
 import '../globals.css';
 
 // Design handoff, Step 0: Trirong for headings and key numbers, IBM Plex Sans Thai for the body.
@@ -49,7 +50,10 @@ export default async function LocaleLayout({
   return (
     <html lang={htmlLang(locale)} className={`${trirong.variable} ${plexThai.variable}`}>
       <body className="min-h-screen bg-white text-ink-900 antialiased">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          {children}
+          <BackToTopButton />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
