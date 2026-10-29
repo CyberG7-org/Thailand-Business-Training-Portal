@@ -59,7 +59,7 @@ test('the active chat matches the navigation width and keeps its composer visibl
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท สัมภาษณ์ตรึงช่องตอบ จำกัด', '2026-07-13');
   await seedPassedExam(loginId);
-  await page.setViewportSize({ width: 1100, height: 420 });
+  await page.setViewportSize({ width: 1100, height: 946 });
   await loginAs(page, loginId, E2E_PASSWORD);
   await page.goto('/en/interview');
   await page.getByTestId('interview-start').click();
@@ -69,6 +69,29 @@ test('the active chat matches the navigation width and keeps its composer visibl
   const conversation = await page.getByTestId('chat-log').locator('..').boundingBox();
   expect(Math.abs((navigation?.width ?? 0) - (conversation?.width ?? 0))).toBeLessThanOrEqual(1);
   await expect(page.getByTestId('chat-input')).toBeInViewport();
+
+  const messages = page.getByTestId('chat-message');
+  for (const answer of [
+    'WARAN TRADE CO., LTD.',
+    '0145569002609',
+    '17/1 Moo 6, Chon Buri 20000',
+    'Wholesale and retail clothing',
+  ]) {
+    const before = await messages.count();
+    await page.getByTestId('chat-input').fill(answer);
+    await page.getByTestId('chat-send').click();
+    await expect(messages).toHaveCount(before + 2);
+  }
+
+  const pageOverflow = await page.evaluate(
+    () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+  );
+  expect(pageOverflow).toBeLessThanOrEqual(1);
+  expect(
+    await page
+      .getByTestId('chat-log')
+      .evaluate((element) => element.scrollHeight > element.clientHeight),
+  ).toBe(true);
 });
 
 test('a learner who evades is not ready, retries with good answers, and becomes ready for good', async ({

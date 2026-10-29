@@ -61,7 +61,13 @@ export default async function InterviewSessionPage({
       max: turnBudget(plan),
     };
     return (
-      <LearnerShell step="interview" title={t('title')} intro={t('languageNotice')} back={back}>
+      <LearnerShell
+        step="interview"
+        title={t('title')}
+        intro={t('languageNotice')}
+        back={back}
+        viewportLocked
+      >
         <Chat
           sessionId={session.id}
           interviewLanguage={interviewLanguage}

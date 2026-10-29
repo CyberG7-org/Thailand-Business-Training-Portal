@@ -86,12 +86,12 @@ export function Chat({
   };
 
   return (
-    <div className="grid w-full gap-4 pb-40 md:pb-44">
-      <section className="rise rounded-card bg-white shadow-raised">
+    <div className="grid h-full min-h-0 w-full grid-rows-[minmax(0,1fr)] gap-4">
+      <section className="rise min-h-0 overflow-hidden rounded-card bg-white shadow-raised">
         <ol
           data-testid="chat-log"
           aria-live="polite"
-          className="grid max-h-[min(60dvh,44rem)] gap-3 overflow-y-auto px-4 py-5 md:px-6"
+          className="grid h-full min-h-0 gap-3 overflow-y-auto px-4 pt-5 pb-40 md:px-6 md:pb-44"
         >
           {turns.map((turn) => (
             <li

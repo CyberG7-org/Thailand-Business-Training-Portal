@@ -35,6 +35,7 @@ export async function LearnerShell({
   stageNavigation = 'automatic',
   headerVariant = 'default',
   mainClassName = '',
+  viewportLocked = false,
   children,
 }: {
   /** The page title in the band; the dashboard passes `hero` instead. */
@@ -64,6 +65,8 @@ export async function LearnerShell({
   stageNavigation?: 'automatic' | 'page';
   headerVariant?: 'default' | 'study';
   mainClassName?: string;
+  /** Keep an interaction surface within the viewport and let its own content region scroll. */
+  viewportLocked?: boolean;
   children: ReactNode;
 }) {
   const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
@@ -73,13 +76,14 @@ export async function LearnerShell({
     usesPrimaryLayout && statuses !== null && stageNavigation === 'automatic';
   const effectiveHeaderVariant = usesPrimaryLayout ? 'study' : headerVariant;
   const effectiveHideBack = hideBack || usesPrimaryLayout;
-  return (
+  const shell = (
     <>
       <div
         className={
           'band px-4 pt-4 md:rounded-b-[36px] md:px-6 md:pb-10 ' +
           (home ? 'dashboard-home-band rounded-b-[24px] pb-4' : 'rounded-b-[28px] pb-8') +
-          (tone === 'gold' ? ' band-gold' : '')
+          (tone === 'gold' ? ' band-gold' : '') +
+          (viewportLocked ? ' shrink-0' : '')
         }
       >
         <ShellHeader user={user} compact={home} variant={effectiveHeaderVariant} />
@@ -109,7 +113,7 @@ export async function LearnerShell({
         {bandFooter}
       </div>
       <main
-        className={`${home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'} ${mainClassName}`}
+        className={`${home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'} ${viewportLocked ? 'min-h-0 flex-1 overflow-hidden' : ''} ${mainClassName}`}
       >
         {home ? (
           <div className="mx-auto grid w-full max-w-[1240px] gap-6">
@@ -117,9 +121,11 @@ export async function LearnerShell({
             {children}
           </div>
         ) : usesPrimaryLayout ? (
-          <div className="mx-auto grid w-full max-w-[1240px] gap-6">
+          <div
+            className={`mx-auto grid w-full max-w-[1240px] gap-6 ${viewportLocked ? 'h-full grid-rows-[auto_minmax(0,1fr)]' : ''}`}
+          >
             {showsAutomaticStageTabs && <LearnerStageTabs current={step} statuses={statuses} />}
-            <div className="min-w-0">{children}</div>
+            <div className={`min-w-0 ${viewportLocked ? 'min-h-0' : ''}`}>{children}</div>
           </div>
         ) : (
           <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-6">
@@ -129,5 +135,10 @@ export async function LearnerShell({
         )}
       </main>
     </>
+  );
+  return viewportLocked ? (
+    <div className="flex h-dvh flex-col overflow-hidden">{shell}</div>
+  ) : (
+    shell
   );
 }
