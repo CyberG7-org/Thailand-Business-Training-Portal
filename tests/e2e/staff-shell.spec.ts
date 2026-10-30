@@ -129,7 +129,7 @@ test('the desktop staff sidebar collapses, persists, and owns the upward profile
 
   await page.getByRole('button', { name: 'Collapse menu' }).click();
   await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
-  expect((await sidebar.boundingBox())?.width).toBe(64);
+  await expect.poll(async () => (await sidebar.boundingBox())?.width).toBe(64);
   await expect(profileMenu).toBeHidden();
   await expect(
     sidebar.getByRole('link', { name: 'Create Learner & DBD', exact: true }),
@@ -145,8 +145,8 @@ test('the desktop staff sidebar collapses, persists, and owns the upward profile
 test('the mobile staff header opens a focus-trapped drawer and closes it after navigation', async ({
   page,
 }) => {
-  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.setViewportSize({ width: 390, height: 844 });
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/en/admin/users');
 
   const header = page.getByTestId('shell-header');
