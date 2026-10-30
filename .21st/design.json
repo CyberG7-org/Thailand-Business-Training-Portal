@@ -228,6 +228,11 @@
       "date": "2026-10-29",
       "decision": "Quiz and exam answer-review panels use the learner shell's full 1240px content width, matching the shared stage navigation while remaining fluid on smaller screens.",
       "reason": "The user requested consistent horizontal alignment between the result content and navigation. The shared AnswerReview component owns both result flows, so one width rule prevents page-specific drift."
+    },
+    {
+      "date": "2026-10-30",
+      "decision": "The staff header removes the BT monogram and uses a two-row mobile grid with matching 140px language and profile controls and matching 140px dropdown panels, then collapses to a left/right desktop row. The two accessible menus share one active-menu owner.",
+      "reason": "This matches the supplied manager-header handoff at both breakpoints and makes menu mutual exclusion explicit while reusing the portal's established tokens and dropdown behavior. The 21st.dev catalog search returned HTTP 401, so no unverified external component was added."
     }
   ],
   "evidence": [

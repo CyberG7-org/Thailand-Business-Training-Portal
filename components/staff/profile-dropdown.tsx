@@ -1,7 +1,7 @@
 'use client';
 
-import { CaretDownIcon, KeyIcon, SignOutIcon } from '@phosphor-icons/react/dist/ssr';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { CaretDownIcon, SignOutIcon, UserIcon } from '@phosphor-icons/react/dist/ssr';
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { signOutAction } from '@/app/[locale]/(auth)/login/actions';
 import { Link } from '@/i18n/navigation';
 
@@ -11,14 +11,28 @@ export function ProfileDropdown({
   initials,
   locale,
   labels,
+  className = '',
+  open: controlledOpen,
+  onOpenChange,
 }: {
   name: string;
   loginId: string;
   initials: string;
   locale: string;
-  labels: { profile: string; changePassword: string; signOut: string };
+  labels: { profile: string; profileSettings: string; signOut: string };
+  className?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setInternalOpen(next);
+      onOpenChange?.(next);
+    },
+    [onOpenChange],
+  );
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -32,7 +46,7 @@ export function ProfileDropdown({
     };
     document.addEventListener('pointerdown', closeOnOutsideClick);
     return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
-  }, [open]);
+  }, [open, setOpen]);
 
   function onMenuKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === 'Escape') {
@@ -60,7 +74,7 @@ export function ProfileDropdown({
   return (
     <div
       ref={rootRef}
-      className="relative min-w-0"
+      className={`relative min-w-0 ${className}`}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
       }}
@@ -72,7 +86,7 @@ export function ProfileDropdown({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen(!open)}
         onKeyDown={(event) => {
           if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
@@ -80,16 +94,16 @@ export function ProfileDropdown({
           }
         }}
         data-testid="staff-profile-trigger"
-        className="flex min-h-11 min-w-0 items-center gap-2 rounded-control border border-brand-100/80 bg-white/55 px-2.5 text-left text-ink-900 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+        className="flex h-11 w-[140px] items-center gap-2 rounded-control border border-brand-900 bg-brand-900 py-0 pr-3 pl-[5px] text-left text-white transition-colors hover:border-brand-700 hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-100"
       >
         <span
           aria-hidden="true"
-          className="grid size-8 shrink-0 place-items-center rounded-full bg-gold-100 text-xs font-semibold text-brand-900"
+          className="grid size-8 shrink-0 place-items-center rounded-[6px] bg-gold-100 text-sm font-semibold text-brand-900"
         >
           {initials}
         </span>
-        <span className="hidden max-w-36 truncate text-sm font-medium sm:block">{name}</span>
-        <CaretDownIcon className="size-4 shrink-0 text-ink-500" aria-hidden="true" />
+        <span className="flex-1 truncate text-sm font-medium">{labels.profile}</span>
+        <CaretDownIcon className="size-3.5 shrink-0 text-brand-100" aria-hidden="true" />
       </button>
       {open && (
         <div
@@ -98,7 +112,7 @@ export function ProfileDropdown({
           role="menu"
           aria-label={labels.profile}
           onKeyDown={onMenuKeyDown}
-          className="absolute top-full right-0 z-50 mt-2 w-60 rounded-card border border-ink-100 bg-white p-2 shadow-raised"
+          className="absolute top-full right-0 z-50 mt-1.5 w-[140px] rounded-[12px] border border-ink-100 bg-white p-1.5 shadow-menu"
         >
           <div className="border-b border-ink-100 px-3 py-2.5">
             <p className="truncate text-sm font-semibold text-brand-900">{name}</p>
@@ -108,10 +122,10 @@ export function ProfileDropdown({
             href="/admin/profile"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="mt-1 flex min-h-11 items-center gap-2.5 rounded-control px-3 text-sm font-medium text-ink-900 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-600"
+            className="mt-1 flex min-h-11 items-center gap-2 rounded-control px-2 text-xs font-medium text-ink-900 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-600"
           >
-            <KeyIcon className="size-4 text-brand-600" aria-hidden="true" />
-            {labels.changePassword}
+            <UserIcon className="size-4 text-brand-700" aria-hidden="true" />
+            <span className="min-w-0 leading-tight">{labels.profileSettings}</span>
           </Link>
           <div className="my-1 border-t border-ink-100" />
           <form action={signOutAction}>
@@ -119,7 +133,7 @@ export function ProfileDropdown({
             <button
               type="submit"
               role="menuitem"
-              className="flex min-h-11 w-full items-center gap-2.5 rounded-control bg-bad-50 px-3 text-left text-sm font-medium text-bad-600 hover:bg-bad-50/70 focus-visible:outline-2 focus-visible:outline-bad-600"
+              className="flex min-h-11 w-full items-center gap-2 rounded-control bg-bad-50 px-2 text-left text-xs font-medium text-bad-600 hover:bg-bad-50/70 focus-visible:outline-2 focus-visible:outline-bad-600"
             >
               <SignOutIcon className="size-4" aria-hidden="true" />
               {labels.signOut}

@@ -101,6 +101,70 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await expect(nav).not.toContainText('การแจ้งเตือน');
 });
 
+test('the staff header follows the two-row mobile layout and keeps one accessible menu open', async ({
+  page,
+}) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/th/admin');
+
+  const header = page.getByTestId('shell-header');
+  const title = header.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true });
+  const language = page.getByTestId('language-menu-button');
+  const profile = page.getByTestId('staff-profile-trigger');
+  await expect(header.getByText('BT', { exact: true })).toHaveCount(0);
+
+  const [titleBox, languageBox, profileBox] = await Promise.all([
+    title.boundingBox(),
+    language.boundingBox(),
+    profile.boundingBox(),
+  ]);
+  expect(languageBox?.width).toBe(140);
+  expect(languageBox?.height).toBe(44);
+  expect(profileBox?.width).toBe(140);
+  expect(profileBox?.height).toBe(44);
+  expect(languageBox!.x).toBeGreaterThan(titleBox!.x);
+  expect(profileBox!.x).toBe(languageBox!.x);
+  expect(profileBox!.y).toBeGreaterThan(languageBox!.y);
+
+  await language.click();
+  const listbox = page.getByRole('listbox', { name: 'ภาษา' });
+  await expect(listbox).toBeVisible();
+  expect((await listbox.boundingBox())?.width).toBe(140);
+  await expect(listbox.getByRole('option')).toHaveText([
+    'ไทย',
+    'English',
+    '简体中文',
+    'தமிழ்',
+    'Malay',
+  ]);
+
+  await page.keyboard.press('Escape');
+  await expect(language).toBeFocused();
+  await profile.click();
+  const profileMenu = page.getByRole('menu', { name: 'โปรไฟล์' });
+  await expect(profileMenu).toBeVisible();
+  expect((await profileMenu.boundingBox())?.width).toBe(140);
+
+  await language.focus();
+  await page.keyboard.press('Enter');
+  await expect(profileMenu).toBeHidden();
+  await expect(listbox).toBeVisible();
+  await page.keyboard.press('Escape');
+  await profile.click();
+  await page.keyboard.press('Escape');
+  await expect(profileMenu).toBeHidden();
+  await expect(profile).toBeFocused();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const [desktopLanguage, desktopProfile] = await Promise.all([
+    language.boundingBox(),
+    profile.boundingBox(),
+  ]);
+  expect(Math.abs(desktopLanguage!.y - desktopProfile!.y)).toBeLessThanOrEqual(1);
+  expect(desktopProfile!.x).toBeGreaterThan(desktopLanguage!.x);
+});
+
 test('every list page fits a phone', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.setViewportSize({ width: 390, height: 844 });
