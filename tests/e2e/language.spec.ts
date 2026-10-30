@@ -17,7 +17,8 @@ test('switching language re-renders and persists; the next login lands on it', a
   await expect(page.getByRole('heading', { name: `Welcome, ${loginId}` })).toBeVisible();
   await expect(page.getByTestId('stage-interview-status')).toHaveText('Locked');
 
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/en\/login$/);
 
   // Log in from the Thai login page: the stored preference (en) wins.
@@ -34,7 +35,8 @@ test('switching language re-renders and persists; the next login lands on it', a
   await expect(page.getByTestId('lang-zh')).toHaveCount(0);
 
   // A language chosen on the login page itself beats the stored preference and is persisted.
-  await page.getByRole('button', { name: '退出登录' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: '退出登录' }).click();
   await expect(page).toHaveURL(/\/zh\/login$/);
   await page.getByTestId('language-menu-button').click();
   await page.getByTestId('lang-en').click();
@@ -43,7 +45,8 @@ test('switching language re-renders and persists; the next login lands on it', a
   await page.locator('input[name="password"]').fill(E2E_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await loginAs(page, loginId, E2E_PASSWORD);
   await expect(page).toHaveURL(/\/en\/dashboard$/);
 

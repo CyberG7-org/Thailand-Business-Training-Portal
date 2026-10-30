@@ -19,7 +19,8 @@ test('a learner cannot open another learner’s attempts, results, calls, or adm
   await page.getByTestId('start-quiz').click();
   await page.waitForURL(/\/th\/quiz\/[0-9a-f-]{36}$/);
   const attemptId = page.url().split('/').pop()!;
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 
   await loginAs(page, intruder, E2E_PASSWORD);
   for (const path of [
