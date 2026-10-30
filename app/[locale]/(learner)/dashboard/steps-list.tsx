@@ -17,12 +17,14 @@ export function StepsList({
   hint,
   openLabel,
   hints,
+  stepLabels,
 }: {
   rows: StageRow[];
   title: string;
   hint: string;
   openLabel: string;
   hints: Partial<Record<StageRow['key'], string>>;
+  stepLabels: string[];
 }) {
   const iconFor = (key: StageRow['key']) => {
     const className = 'size-6';
@@ -34,7 +36,7 @@ export function StepsList({
   };
   return (
     <section data-testid="dashboard-steps" className="rise">
-      <div className="mb-3 hidden items-center justify-between gap-3 md:flex">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="font-display text-[18px] leading-[1.45] font-semibold text-brand-900 md:text-[22px]">
           {title}
         </h2>
@@ -50,6 +52,14 @@ export function StepsList({
               : 'transition-colors hover:bg-brand-50';
           const mobileAction = row.key !== 'appointment';
           const mobileBorder = row.current ? 'border-brand-600' : 'border-ink-100';
+          const tileTone =
+            row.key === 'study'
+              ? 'bg-brand-100 text-brand-700'
+              : row.key === 'exam'
+                ? 'bg-gold-100 text-gold-700'
+                : row.key === 'interview'
+                  ? 'bg-ink-100 text-ink-700'
+                  : 'bg-ok-50 text-ok-600';
           return (
             <li
               key={row.key}
@@ -60,17 +70,21 @@ export function StepsList({
               className={`relative flex min-h-[148px] flex-col items-start gap-2 rounded-card border bg-white p-3 shadow-glass focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-brand-600 md:min-h-[174px] md:p-5 ${mobileAction ? '' : 'hidden'} ${mobileBorder} ${tone}`}
             >
               <div className="flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className={`grid size-10 place-items-center rounded-[12px] ${row.current ? 'bg-brand-100 text-brand-700' : locked ? 'bg-ink-100 text-ink-500' : row.info.status === 'done' ? 'bg-ok-50 text-ok-600' : 'bg-gold-100 text-gold-700'}`}
-                >
-                  {iconFor(row.key)}
-                </span>
-                <span
-                  className="grid size-6 place-items-center rounded-full bg-brand-900 text-xs font-semibold text-white md:hidden"
-                  aria-label={`${i + 1}`}
-                >
-                  {i + 1}
+                <span className={`grid size-10 place-items-center rounded-[12px] ${tileTone}`}>
+                  <span
+                    data-testid={`stage-icon-${row.key}`}
+                    className="hidden md:block"
+                    aria-hidden="true"
+                  >
+                    {iconFor(row.key)}
+                  </span>
+                  <span
+                    data-testid={`stage-number-${row.key}`}
+                    className="font-display text-xl font-semibold tabular-nums md:hidden"
+                    aria-label={stepLabels[i]}
+                  >
+                    {i + 1}
+                  </span>
                 </span>
               </div>
               <div className="mt-1 min-w-0">

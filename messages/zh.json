@@ -12,7 +12,12 @@
     "profile": "个人资料",
     "profileSettings": "个人资料设置",
     "signOut": "退出登录",
-    "language": "语言"
+    "language": "语言",
+    "collapseMenu": "折叠菜单",
+    "expandMenu": "展开菜单",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单",
+    "training": "培训"
   },
   "home": {
     "title": "泰国商业培训与银行验证门户",
@@ -135,7 +140,8 @@
     },
     "steps": {
       "title": "你的步骤",
-      "hint": "请按顺序完成"
+      "hint": "请按顺序完成",
+      "stepN": "第 {n} 步"
     }
   },
   "admin": {

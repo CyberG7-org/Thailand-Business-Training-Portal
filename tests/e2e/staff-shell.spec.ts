@@ -26,13 +26,14 @@ test('the admin sees every section in the sidebar with the current one marked', 
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto('/th/admin/users');
-  // The header carries the app's name alone; the chip beside it names the owner.
+  // The sidebar carries the app name and the current staff role.
   const header = page.getByTestId('shell-header');
+  const sidebar = page.getByTestId('staff-sidebar');
   await expect(
-    header.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true }),
+    sidebar.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true }),
   ).toBeVisible();
-  await expect(header).not.toContainText('·');
-  await expect(header).toContainText('เจ้าของ');
+  await expect(sidebar).toContainText('เจ้าของ');
+  await expect(header).not.toContainText('เจ้าของ');
   await expect(header).not.toContainText('ผู้ดูแลระบบ');
   const nav = page.getByTestId('staff-nav');
   await expect(nav).toBeVisible();
@@ -72,10 +73,11 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   const code = await createManager(page, 'ผู้จัดการแถบข้าง', MANAGER_PASSWORD);
   await switchTo(page, code.toLowerCase(), MANAGER_PASSWORD);
   const header = page.getByTestId('shell-header');
+  const sidebar = page.getByTestId('staff-sidebar');
   await expect(
-    header.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true }),
+    sidebar.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true }),
   ).toBeVisible();
-  await expect(header).not.toContainText('·');
+  await expect(sidebar).toContainText('ผู้จัดการ');
   await expect(header).toContainText('ผู้จัดการ');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('ผู้จัดการ');
   const nav = page.getByTestId('staff-nav');
@@ -101,68 +103,84 @@ test('a manager sees only the sections they may open', async ({ page }) => {
   await expect(nav).not.toContainText('การแจ้งเตือน');
 });
 
-test('the staff header follows the two-row mobile layout and keeps one accessible menu open', async ({
+test('the desktop staff sidebar collapses, persists, and owns the upward profile menu', async ({
+  page,
+}) => {
+  await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/en/admin/users');
+
+  const header = page.getByTestId('shell-header');
+  const sidebar = page.getByTestId('staff-sidebar');
+  const profile = page.getByTestId('staff-profile-trigger');
+  await expect(sidebar).toContainText('Business Training Portal');
+  await expect(sidebar).toContainText('Owner');
+  await expect(header).not.toContainText('Owner');
+  expect((await sidebar.boundingBox())?.width).toBe(248);
+
+  await profile.click();
+  const profileMenu = page.getByRole('menu', { name: 'Profile' });
+  await expect(profileMenu).toBeVisible();
+  const [menuBox, profileBox] = await Promise.all([
+    profileMenu.boundingBox(),
+    profile.boundingBox(),
+  ]);
+  expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(profileBox!.y);
+
+  await page.getByRole('button', { name: 'Collapse menu' }).click();
+  await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
+  expect((await sidebar.boundingBox())?.width).toBe(64);
+  await expect(profileMenu).toBeHidden();
+  await expect(
+    sidebar.getByRole('link', { name: 'Create Learner & DBD', exact: true }),
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
+  expect((await sidebar.boundingBox())?.width).toBe(64);
+  await page.getByRole('button', { name: 'Expand menu' }).click();
+  await expect(sidebar).toHaveAttribute('data-collapsed', 'false');
+});
+
+test('the mobile staff header opens a focus-trapped drawer and closes it after navigation', async ({
   page,
 }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/th/admin');
+  await page.goto('/en/admin/users');
 
   const header = page.getByTestId('shell-header');
-  const title = header.getByRole('link', { name: 'พอร์ทัลฝึกอบรมธุรกิจ', exact: true });
+  const drawer = page.getByTestId('staff-sidebar');
+  const openMenu = page.getByRole('button', { name: 'Open menu' });
   const language = page.getByTestId('language-menu-button');
-  const profile = page.getByTestId('staff-profile-trigger');
-  await expect(header.getByText('BT', { exact: true })).toHaveCount(0);
+  await expect(header).toContainText('Business Training Portal');
+  await expect(drawer).toBeHidden();
+  expect((await language.boundingBox())?.width).toBe(76);
+  expect((await language.boundingBox())?.height).toBe(44);
 
-  const [titleBox, languageBox, profileBox] = await Promise.all([
-    title.boundingBox(),
-    language.boundingBox(),
-    profile.boundingBox(),
-  ]);
-  expect(languageBox?.width).toBe(140);
-  expect(languageBox?.height).toBe(44);
-  expect(profileBox?.width).toBe(140);
-  expect(profileBox?.height).toBe(44);
-  expect(languageBox!.x).toBeGreaterThan(titleBox!.x);
-  expect(profileBox!.x).toBe(languageBox!.x);
-  expect(profileBox!.y).toBeGreaterThan(languageBox!.y);
-
-  await language.click();
-  const listbox = page.getByRole('listbox', { name: 'ภาษา' });
-  await expect(listbox).toBeVisible();
-  expect((await listbox.boundingBox())?.width).toBe(140);
-  await expect(listbox.getByRole('option')).toHaveText([
-    'ไทย',
-    'English',
-    '简体中文',
-    'தமிழ்',
-    'Malay',
-  ]);
+  await openMenu.click();
+  await expect(drawer).toBeVisible();
+  await expect(page.getByTestId('staff-drawer-scrim')).toBeVisible();
+  expect((await drawer.boundingBox())?.width).toBe(288);
+  await expect(drawer.getByRole('button', { name: 'Close menu' })).toBeFocused();
+  await page.getByTestId('staff-profile-trigger').focus();
+  await page.keyboard.press('Tab');
+  await expect(
+    drawer.getByRole('link', { name: 'Business Training Portal', exact: true }),
+  ).toBeFocused();
 
   await page.keyboard.press('Escape');
-  await expect(language).toBeFocused();
-  await profile.click();
-  const profileMenu = page.getByRole('menu', { name: 'โปรไฟล์' });
-  await expect(profileMenu).toBeVisible();
-  expect((await profileMenu.boundingBox())?.width).toBe(140);
+  await expect(drawer).toBeHidden();
+  await expect(openMenu).toBeFocused();
 
-  await language.focus();
-  await page.keyboard.press('Enter');
-  await expect(profileMenu).toBeHidden();
-  await expect(listbox).toBeVisible();
-  await page.keyboard.press('Escape');
-  await profile.click();
-  await page.keyboard.press('Escape');
-  await expect(profileMenu).toBeHidden();
-  await expect(profile).toBeFocused();
-
-  await page.setViewportSize({ width: 1280, height: 900 });
-  const [desktopLanguage, desktopProfile] = await Promise.all([
-    language.boundingBox(),
-    profile.boundingBox(),
-  ]);
-  expect(Math.abs(desktopLanguage!.y - desktopProfile!.y)).toBeLessThanOrEqual(1);
-  expect(desktopProfile!.x).toBeGreaterThan(desktopLanguage!.x);
+  await openMenu.click();
+  await drawer.getByRole('link', { name: 'Learner Record', exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/learners$/, { timeout: 15_000 });
+  await expect(drawer).toBeHidden();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
 });
 
 test('every list page fits a phone', async ({ page }) => {
@@ -170,7 +188,8 @@ test('every list page fits a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   for (const path of LIST_PAGES) {
     await page.goto(path);
-    await expect(page.getByTestId('staff-nav'), path).toBeVisible();
+    await expect(page.getByTestId('staff-sidebar'), path).toBeHidden();
+    await expect(page.getByRole('button', { name: 'เปิดเมนู' }), path).toBeVisible();
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );

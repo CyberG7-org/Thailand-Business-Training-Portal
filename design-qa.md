@@ -1,76 +1,104 @@
-# Manager Header Design QA
+# Manager layout design QA
 
-**Source visual truth**
+## Source of truth
 
-- `C:\Users\cyber\Downloads\Thailand Business Training Portal design\design_handoff_manager_header\screens\01-overview.png`
-- `C:\Users\cyber\Downloads\Thailand Business Training Portal design\design_handoff_manager_header\screens\02-mobile-language-open.png`
-- `C:\Users\cyber\Downloads\Thailand Business Training Portal design\design_handoff_manager_header\screens\03-mobile-profile-open.png`
-- `C:\Users\cyber\AppData\Local\Temp\codex-clipboard-29287948-bbdf-47e2-bbec-52a3cf61a206.png` — user-highlighted language-menu width mismatch.
-- `C:\Users\cyber\AppData\Local\Temp\codex-clipboard-c9235c10-f3f2-49b0-a9dc-42207774d1d7.png` — user-highlighted profile-menu width mismatch.
-- Source captures: 920 × 540 px each.
+- Handoff: `C:\Users\cyber\Downloads\design_handoff_manager_layout\README.md`
+- Desktop states: `screens/01-desktop-expanded.png`, `screens/02-desktop-profile-menu.png`, and `screens/03-desktop-collapsed.png` (906 × 540 each)
+- Mobile states: `screens/04-mobile-closed.png`, `screens/05-mobile-drawer.png`, and `screens/06-mobile-drawer-profile.png` (924 × 540 each; the supplied mobile canvas places the 267 px application viewport at the left)
 
-**Rendered implementation**
+## Browser-rendered implementation evidence
 
-- `design-qa-evidence/implementation-mobile-overview.png` — 390 × 190 px crop.
-- `design-qa-evidence/implementation-mobile-language.png` — 390 × 340 px crop.
-- `design-qa-evidence/implementation-mobile-profile.png` — 390 × 340 px crop.
-- `design-qa-evidence/implementation-desktop-overview.png` — 1280 × 150 px crop.
-- `design-qa-evidence/implementation-mobile-language-equal-width.png` — current in-app Browser capture.
-- `design-qa-evidence/implementation-mobile-profile-equal-width.png` — current in-app Browser capture.
-- Browser-rendered at `http://localhost:3000/th/admin`.
-- Mobile viewport: 390 × 844 CSS px, device scale factor 1.
-- Desktop viewport: 1280 × 900 CSS px, device scale factor 1.
+All implementation captures were produced from the optimized production build while authenticated as a manager on `/en/admin/submanagers`.
 
-**Comparison evidence**
+- `design-qa-evidence/manager-layout-desktop-expanded.png` — 1280 × 900, expanded sidebar
+- `design-qa-evidence/manager-layout-desktop-profile.png` — 1280 × 900, profile menu open upward
+- `design-qa-evidence/manager-layout-desktop-collapsed.png` — 1280 × 900, collapsed sidebar
+- `design-qa-evidence/manager-layout-mobile-closed.png` — 390 × 844, drawer closed
+- `design-qa-evidence/manager-layout-mobile-drawer.png` — 390 × 844, drawer open with scrim
+- `design-qa-evidence/manager-layout-mobile-profile.png` — 390 × 844, drawer and upward profile menu open
 
-- `design-qa-evidence/comparison-mobile-header.png` combines all three source states with the equivalent mobile implementation states in one 1340 × 1620 px image.
-- `design-qa-evidence/comparison-desktop-header.png` combines the source overview with the desktop implementation in one 1280 × 820 px image.
-- `design-qa-evidence/comparison-equal-width-menus.png` combines the two user-provided mismatch references with the corrected 140 px menu states in one 860 × 740 px image.
-- No density normalization was needed: implementation captures use DPR 1. The handoff is a presentation board rather than a 1:1 viewport capture, so comparisons use visible component proportions, alignment, typography, colors, and interaction states rather than pixel-difference scoring.
+## Comparison evidence
 
-**State**
+- `design-qa-evidence/manager-layout-comparison-desktop.png` — full expanded-shell comparison. The handoff and implementation are normalized to 540 px high and shown side by side.
+- `design-qa-evidence/manager-layout-comparison-mobile-drawer.png` — focused drawer comparison. The handoff's 267 px application area and the implementation's 288 px drawer are normalized to 540 px high and shown side by side.
 
-- Authenticated Owner/staff shell in Thai.
-- Closed header, language listbox open, profile menu open, and desktop closed header.
-- Primary interactions tested: language and profile open/close, mutual exclusion, five language options, arrow-key semantics, Escape close, focus restoration, fixed trigger/menu dimensions, and responsive alignment.
-- Browser console warnings/errors checked: none.
+The focused comparison is used for mobile because the supplied 924 × 540 handoff image intentionally leaves most of its canvas blank to demonstrate the drawer/scrim relationship. Other states were checked individually against their paired handoff screenshots.
 
-**Findings**
+## Findings
 
-- No actionable P0, P1, or P2 mismatch.
-- Fonts and typography: the implementation uses the existing Trirong display face and IBM Plex Sans Thai body stack, with the requested 15 px mobile title, 20 px desktop title, and 14 px controls. Thai content naturally wraps differently from the English mock; hierarchy and optical weight remain equivalent.
-- Spacing and layout rhythm: mobile uses the specified two-column/two-row grid, 16 px column gap, 12 px row gap, 16/16/16/20 padding, 16 px radius, fixed 140 × 44 px controls, and matching 140 px dropdown surfaces. Desktop uses the specified horizontal layout and 12 px action gap.
-- Colors and visual tokens: the existing brand, ink, gold, border, glass, focus, danger, and elevation tokens visibly match the handoff. No raw component colors were introduced.
-- Image quality and asset fidelity: the target contains no required raster artwork or logo. The requested BT monogram removal is complete; interface icons use the project's existing vector icon library.
-- Copy and content: localized app title, role, profile actions, and language aria label are present in all five enabled locales. Native language labels appear in the requested order and use “Malay” as specified.
+- Desktop hierarchy, spacing, active navigation treatment, compact breadcrumb header, language control, and bottom-anchored profile match the supplied structure.
+- The application uses the specified 248 px expanded and 64 px collapsed desktop widths. Collapse state persists in local storage.
+- The mobile drawer is 288 px, keeps the active item visible, applies a scrim, traps keyboard focus, closes with Escape or route navigation, and restores focus after dismissing it.
+- Profile actions remain inside the sidebar and open upward in both desktop and mobile states.
+- Existing role-based navigation and real page content are preserved; the handoff's placeholder content is intentionally replaced by the working submanager form.
+- The implementation retains the project's established fonts, tokens, Phosphor icon set, and 44 px minimum interactive targets.
+- No P0, P1, or P2 visual mismatch remains.
 
-**Focused region comparison**
+## Iteration history
 
-- Separate overview, language-listbox, and profile-menu captures were required because menu typography, row height, checkmark, icons, solid surfaces, and overlap are too small to judge in the full board. Each state was compared in `comparison-mobile-header.png`.
-- The mobile menu overlap is intentional and matches the supplied handoff: menus stack above the second header row and page content.
-- The equal-width follow-up uses a focused comparison because panel-to-trigger edge alignment is the only changed visual invariant. Both menu edges now align exactly with their 140 px trigger edges, and the longest Thai profile action remains readable without overflow.
+1. Replaced the horizontal staff navigation with the full-height responsive shell and preserved the existing role permissions.
+2. Added desktop collapse persistence, compact header breadcrumbs, mobile drawer focus management, and upward profile menus.
+3. Fixed route navigation so the drawer closes only after the selected page changes.
+4. Updated record-side layout assertions for the new full-height application sidebar.
+5. Verified all six states in the in-app browser and at exact Playwright viewports.
+6. Re-captured the final evidence from a production build to exclude development-only overlays.
 
-**Comparison history**
+## Final result
 
-- Pass 1: no P0/P1/P2 findings. The first complete combined comparison used browser-rendered overview and both open-menu states; no visual fix was required after this pass.
-- Desktop follow-up: confirmed the single-line title/role stack and right-aligned 140 px controls against the desktop target; no additional finding.
-- Equal-width follow-up: the user identified the wider 160 px language and 220 px profile panels as a mismatch. Both panels were changed to 140 px, action spacing/type was tightened without clipping, fresh in-app Browser captures were compared in `comparison-equal-width-menus.png`, and the finding is resolved.
+passed
 
-**Open Questions**
+# Learner layout design QA
 
-- None.
+## Source of truth
 
-**Implementation Checklist**
+- Handoff: `C:\Users\cyber\Downloads\design_handoff_learner_layout\README.md`
+- Desktop states: `screens/01-desktop-home.png` through `screens/07-desktop-profile-menu.png`
+- Mobile states: `screens/08-mobile-home.png` through `screens/11-mobile-interview.png`
 
-- [x] Match mobile and desktop compositions.
-- [x] Preserve accessible listbox/menu keyboard behavior.
-- [x] Ensure only one menu can be open.
-- [x] Localize new header labels in all enabled locales.
-- [x] Verify browser rendering, console, responsive geometry, and focused interaction states.
-- [x] Match each dropdown panel width to its 140 px trigger.
+## Browser-rendered implementation evidence
 
-**Follow-up Polish**
+All implementation captures were produced from the optimized production build while authenticated as a learner.
 
-- None required for this handoff.
+- `design-qa-evidence/learner-layout-desktop-home.png` — 1280 × 900, expanded dashboard
+- `design-qa-evidence/learner-layout-desktop-collapsed.png` — 1280 × 900, collapsed sidebar
+- `design-qa-evidence/learner-layout-desktop-profile.png` — 1280 × 900, profile menu open upward
+- `design-qa-evidence/learner-layout-desktop-study.png` — 1280 × 900, study
+- `design-qa-evidence/learner-layout-desktop-quiz.png` — 1280 × 900, quiz
+- `design-qa-evidence/learner-layout-desktop-interview.png` — 1280 × 900, interview
+- `design-qa-evidence/learner-layout-desktop-namecard.png` — 1280 × 900, namecard
+- `design-qa-evidence/learner-layout-mobile-home.png` — 390 × 844, dashboard with drawer closed
+- `design-qa-evidence/learner-layout-mobile-drawer.png` — 390 × 844, drawer open with scrim
+- `design-qa-evidence/learner-layout-mobile-profile.png` — 390 × 844, drawer and profile menu open
+- `design-qa-evidence/learner-layout-mobile-interview.png` — 390 × 844, interview
+
+## Comparison evidence
+
+- `design-qa-evidence/learner-layout-comparison-desktop-home.png` — supplied desktop dashboard and production implementation, normalized to equal comparison canvases and shown side by side
+- `design-qa-evidence/learner-layout-comparison-mobile-drawer.png` — supplied mobile drawer and production implementation, normalized and shown side by side
+- `design-qa-evidence/learner-layout-comparison-mobile-profile.png` — supplied mobile profile state and production implementation, normalized and shown side by side
+
+The supplied handoff images are presentation canvases rather than raw viewport captures, so the comparisons preserve each source's aspect ratio within equal-size tiles. Exact implementation dimensions are listed above.
+
+## Findings
+
+- The learner experience now uses one shared shell across dashboard, study, quiz, interview, and namecard routes; the obsolete horizontal stage navigation is removed.
+- Desktop navigation uses the specified 248 px expanded and 64 px collapsed widths, with collapse state persisted as `learner-sidebar-collapsed`.
+- The 56 px header provides route-aware breadcrumbs and the existing language control without duplicating learner identity in the header.
+- The mobile drawer is 288 px wide, applies a scrim, traps focus, closes on Escape or route navigation, and restores focus to its trigger.
+- Profile actions stay anchored to the bottom of the sidebar and open upward. Profile settings remains visibly present but correctly disabled because no learner profile route exists.
+- Dashboard stage cards retain icons on desktop and use compact numbered markers on mobile, matching the handoff's responsive hierarchy.
+- Existing learner content, progress logic, route permissions, interview viewport locking, and 44 px minimum interactive targets are preserved.
+- The 21st review reported only heuristic fixed-width and token notices. Each flagged max-width is guarded by `w-full` or a responsive container, the 288 px drawer is intentionally fixed by the handoff, and no horizontal overflow was found at 390 px.
+- No P0, P1, or P2 visual mismatch remains.
+
+## Iteration history
+
+1. Consolidated learner navigation into a shared responsive shell while preserving the existing page bodies and server-owned route data.
+2. Added route-aware breadcrumbs, desktop collapse persistence, mobile focus management, and upward profile behavior.
+3. Reworked the dashboard's mobile hierarchy to match the supplied navy hero, progress card, and numbered step tiles.
+4. Updated learner journey assertions to target the shared sidebar rather than the removed horizontal tabs.
+5. Corrected the disabled profile item's contrast while retaining honest disabled semantics.
+6. Verified 21 affected learner E2E scenarios, 694 unit tests, formatting, lint, TypeScript, and the production build.
+7. Captured and visually inspected the final production states at 1280 × 900 and 390 × 844.
 
 final result: passed

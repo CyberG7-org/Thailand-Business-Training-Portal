@@ -54,7 +54,7 @@ test('the interview is locked before the exam and open after it', async ({ page 
   await expect(page.getByTestId('interview-start')).toHaveCount(0);
 });
 
-test('the active chat matches the navigation width and keeps its composer visible', async ({
+test('the active chat fills the learner content width and keeps its composer visible', async ({
   page,
 }) => {
   const loginId = await seedLearnerWithCompany('บริษัท สัมภาษณ์ตรึงช่องตอบ จำกัด', '2026-07-13');
@@ -65,9 +65,9 @@ test('the active chat matches the navigation width and keeps its composer visibl
   await page.getByTestId('interview-start').click();
   await page.waitForURL(/\/en\/interview\/[0-9a-f-]{36}$/);
 
-  const navigation = await page.getByTestId('learner-stage-tabs').boundingBox();
+  const main = await page.locator('[data-scroll-root]').boundingBox();
   const conversation = await page.getByTestId('chat-log').locator('..').boundingBox();
-  expect(Math.abs((navigation?.width ?? 0) - (conversation?.width ?? 0))).toBeLessThanOrEqual(1);
+  expect(conversation?.width ?? 0).toBeGreaterThanOrEqual((main?.width ?? 0) - 100);
   await expect(page.getByTestId('chat-input')).toBeInViewport();
 
   const messages = page.getByTestId('chat-message');

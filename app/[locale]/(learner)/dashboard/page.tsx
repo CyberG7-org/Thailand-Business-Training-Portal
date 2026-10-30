@@ -246,6 +246,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
           title={t('steps.title')}
           hint={t('steps.hint')}
           openLabel={ts('open')}
+          stepLabels={rows.map((_, index) => t('steps.stepN', { n: index + 1 }))}
           hints={{
             study: t('actionHints.study'),
             nameCard: t('actionHints.nameCard'),

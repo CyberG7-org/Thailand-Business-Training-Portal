@@ -12,7 +12,12 @@
     "profile": "Profile",
     "profileSettings": "Profile settings",
     "signOut": "Sign out",
-    "language": "Language"
+    "language": "Language",
+    "collapseMenu": "Collapse menu",
+    "expandMenu": "Expand menu",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "training": "Training"
   },
   "home": {
     "title": "Thailand Business Training & Bank Verification Portal",
@@ -135,7 +140,8 @@
     },
     "steps": {
       "title": "Your steps",
-      "hint": "Complete them in order"
+      "hint": "Complete them in order",
+      "stepN": "Step {n}"
     }
   },
   "admin": {

@@ -32,13 +32,13 @@ test('a passed exam gets the gold band, the medallion and the way to the intervi
     '/th/dashboard',
   );
   await expect(page.getByTestId('answers-heading')).toHaveText('คำตอบของคุณ');
-  const navigation = await page.getByTestId('learner-stage-tabs').boundingBox();
+  const main = await page.locator('[data-scroll-root]').boundingBox();
   const answers = await page
     .getByTestId('answers-heading')
     .locator('..')
     .locator('..')
     .boundingBox();
-  expect(Math.abs((navigation?.width ?? 0) - (answers?.width ?? 0))).toBeLessThanOrEqual(1);
+  expect(answers?.width ?? 0).toBeGreaterThanOrEqual((main?.width ?? 0) - 100);
 });
 
 test('a failed exam keeps the blue band, shows the warn tag and offers a retake', async ({

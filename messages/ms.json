@@ -12,7 +12,12 @@
     "profile": "Profil",
     "profileSettings": "Tetapan profil",
     "signOut": "Log keluar",
-    "language": "Bahasa"
+    "language": "Bahasa",
+    "collapseMenu": "Runtuhkan menu",
+    "expandMenu": "Kembangkan menu",
+    "openMenu": "Buka menu",
+    "closeMenu": "Tutup menu",
+    "training": "Latihan"
   },
   "home": {
     "title": "Portal Latihan Perniagaan & Pengesahan Bank Thailand",
@@ -135,7 +140,8 @@
     },
     "steps": {
       "title": "Langkah anda",
-      "hint": "Lengkapkan mengikut urutan"
+      "hint": "Lengkapkan mengikut urutan",
+      "stepN": "Langkah {n}"
     }
   },
   "admin": {

@@ -4,7 +4,7 @@ import { loginAs } from './helpers';
 import { ensureStarterCards, seedLearnerWithCompany } from './seed';
 
 /**
- * The mobile-first study list: progress first, five fixed stage tabs and compact lesson rows.
+ * The mobile-first study list: progress first, shared sidebar navigation and compact lesson rows.
  * Opening a card counts under the default "viewed" tracking, so the next Continue action moves on.
  */
 test('the study list shows progress, points at the next card, and moves on when a card is done', async ({
@@ -21,11 +21,16 @@ test('the study list shows progress, points at the next card, and moves on when 
   await expect(page.getByTestId('study-summary')).toContainText(`0 จาก ${total}`);
   await expect(page.getByTestId('study-segments').locator('[data-state]')).toHaveCount(total);
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
-  await expect(
-    page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
-  ).toHaveCount(5);
-  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
+  const nav = page.getByTestId('learner-shell-nav');
+  await expect(nav.getByRole('link')).toHaveCount(5);
+  await expect(nav.getByRole('link', { name: 'หน้าหลัก', exact: true })).toHaveAttribute(
+    'href',
+    '/th/dashboard',
+  );
+  await expect(nav.getByRole('link', { name: 'เรียนรู้', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
   await expect(rows.first()).toContainText(`1/${total}`);
   await expect(rows.first()).toHaveAttribute('data-current', 'true');
   await expect(rows.first()).toHaveAttribute('href', /\/th\/study\//);
@@ -56,7 +61,8 @@ test('the study list fits a phone', async ({ page }) => {
   await page.goto('/th/study');
   await expect(page.locator('[data-testid^="study-item-"][data-current="true"]')).toBeVisible();
   await expect(page.getByTestId('nav-back')).toHaveCount(0);
-  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
+  await expect(page.getByTestId('learner-stage-tabs')).toHaveCount(0);
+  await expect(page.getByTestId('learner-shell-header')).toBeVisible();
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
