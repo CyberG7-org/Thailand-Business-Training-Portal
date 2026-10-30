@@ -137,7 +137,7 @@ test('the desktop staff sidebar collapses, persists, and owns the upward profile
 
   await page.reload();
   await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
-  expect((await sidebar.boundingBox())?.width).toBe(64);
+  await expect.poll(async () => (await sidebar.boundingBox())?.width).toBe(64);
   await page.getByRole('button', { name: 'Expand menu' }).click();
   await expect(sidebar).toHaveAttribute('data-collapsed', 'false');
 });
