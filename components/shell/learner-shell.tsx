@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getCurrentUser } from '@/lib/auth/session';
+import { initialsOf } from '@/lib/domain/initials';
+import { displayLoginId } from '@/lib/domain/login-id';
 import type { StageKey } from '@/lib/domain/progression';
 import { BackPill } from './back-pill';
-import { LearnerNav } from './learner-nav';
-import { isPrimaryStage, LearnerStageTabs } from './learner-stage-tabs';
-import { ShellHeader } from './shell-header';
+import { isPrimaryStage } from './learner-primary-stages';
+import { LearnerShellClient } from './learner-shell-client';
 import { cachedStageStatuses } from './stage-status';
 import { StepSegments } from './step-segments';
 
@@ -32,8 +33,6 @@ export async function LearnerShell({
   tone = 'blue',
   hideBack = false,
   hideSubBar = false,
-  stageNavigation = 'automatic',
-  headerVariant = 'default',
   mainClassName = '',
   viewportLocked = false,
   children,
@@ -61,35 +60,37 @@ export async function LearnerShell({
   hideBack?: boolean;
   /** Remove the entire row between the header and title. */
   hideSubBar?: boolean;
-  /** Study's overview places its completion summary before the shared navigation. */
-  stageNavigation?: 'automatic' | 'page';
-  headerVariant?: 'default' | 'study';
   mainClassName?: string;
   /** Keep an interaction surface within the viewport and let its own content region scroll. */
   viewportLocked?: boolean;
   children: ReactNode;
 }) {
-  const [user, t] = await Promise.all([getCurrentUser(), getTranslations('app')]);
+  const [user, t, tHeader, tRoles, tTabs, tDashboard, tStages, locale] = await Promise.all([
+    getCurrentUser(),
+    getTranslations('app'),
+    getTranslations('header'),
+    getTranslations('admin.roles'),
+    getTranslations('study.tabs'),
+    getTranslations('dashboard'),
+    getTranslations('stages'),
+    getLocale(),
+  ]);
   const statuses = user ? await cachedStageStatuses(user.id) : null;
   const usesPrimaryLayout = isPrimaryStage(step);
-  const showsAutomaticStageTabs =
-    usesPrimaryLayout && statuses !== null && stageNavigation === 'automatic';
-  const effectiveHeaderVariant = usesPrimaryLayout ? 'study' : headerVariant;
   const effectiveHideBack = hideBack || usesPrimaryLayout;
   const shell = (
     <>
       <div
         className={
-          'band px-4 pt-4 md:rounded-b-[36px] md:px-6 md:pb-10 ' +
+          'band px-4 md:rounded-b-[36px] md:px-6 md:pb-10 ' +
           (home ? 'dashboard-home-band rounded-b-[24px] pb-4' : 'rounded-b-[28px] pb-8') +
           (tone === 'gold' ? ' band-gold' : '') +
           (viewportLocked ? ' shrink-0' : '')
         }
       >
-        <ShellHeader user={user} compact={home} variant={effectiveHeaderVariant} />
         {!home && !hideSubBar && (
           <div
-            className={`mt-8 flex flex-wrap items-center gap-4 ${effectiveHideBack ? 'justify-end' : 'justify-between'}`}
+            className={`flex flex-wrap items-center gap-4 pt-4 ${effectiveHideBack ? 'justify-end' : 'justify-between'}`}
           >
             {!effectiveHideBack && (
               <BackPill home="/dashboard" label={back?.label ?? t('back')} href={back?.href} />
@@ -112,33 +113,63 @@ export async function LearnerShell({
         )}
         {bandFooter}
       </div>
-      <main
+      <div
         className={`${home ? 'px-3 py-4 md:px-12 md:py-7' : 'px-4 py-6 md:px-12 md:py-7'} ${viewportLocked ? 'min-h-0 flex-1 overflow-hidden' : ''} ${mainClassName}`}
       >
         {home ? (
-          <div className="mx-auto grid w-full max-w-[1240px] gap-6">
-            {statuses && <LearnerStageTabs current="home" statuses={statuses} />}
-            {children}
-          </div>
+          <div className="mx-auto grid w-full max-w-[1240px] gap-6">{children}</div>
         ) : usesPrimaryLayout ? (
           <div
-            className={`mx-auto grid w-full max-w-[1240px] gap-6 ${viewportLocked ? 'h-full grid-rows-[auto_minmax(0,1fr)]' : ''}`}
+            className={`mx-auto grid w-full max-w-[1240px] gap-6 ${viewportLocked ? 'h-full min-h-0' : ''}`}
           >
-            {showsAutomaticStageTabs && <LearnerStageTabs current={step} statuses={statuses} />}
             <div className={`min-w-0 ${viewportLocked ? 'min-h-0' : ''}`}>{children}</div>
           </div>
         ) : (
-          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[236px_minmax(0,1fr)] lg:gap-6">
-            <LearnerNav current={step} statuses={statuses} />
+          <div className="mx-auto grid w-full max-w-[1240px] grid-cols-[minmax(0,1fr)] gap-5">
             <div className="min-w-0">{children}</div>
           </div>
         )}
-      </main>
+      </div>
     </>
   );
-  return viewportLocked ? (
-    <div className="flex h-dvh flex-col overflow-hidden">{shell}</div>
-  ) : (
-    shell
+  const profileName = user?.displayName ?? (user ? displayLoginId(user.loginId) : t('name'));
+  return (
+    <LearnerShellClient
+      labels={{
+        appName: t('name'),
+        role: tRoles('learner'),
+        home: tTabs('home'),
+        study: tTabs('study'),
+        exam: tTabs('exam'),
+        interview: tTabs('interview'),
+        nameCard: tTabs('nameCard'),
+        training: tHeader('training'),
+        language: tHeader('language'),
+        collapseMenu: tHeader('collapseMenu'),
+        expandMenu: tHeader('expandMenu'),
+        openMenu: tHeader('openMenu'),
+        closeMenu: tHeader('closeMenu'),
+        profile: tHeader('profile'),
+        profileSettings: tHeader('profileSettings'),
+        signOut: tHeader('signOut'),
+        learnerAccount: tDashboard('accountLabel'),
+      }}
+      profile={{
+        name: profileName,
+        loginId: user ? displayLoginId(user.loginId) : '',
+        initials: initialsOf(user?.displayName, user?.loginId ?? t('name')),
+        locale,
+      }}
+      statuses={{
+        study: statuses?.study.status,
+        exam: statuses?.exam.status,
+        interview: statuses?.interview.status,
+        nameCard: statuses?.nameCard.status,
+      }}
+      fallbackPageLabel={step ? tStages(`titles.${step}` as 'titles.study') : tTabs('home')}
+      viewportLocked={viewportLocked}
+    >
+      {shell}
+    </LearnerShellClient>
   );
 }

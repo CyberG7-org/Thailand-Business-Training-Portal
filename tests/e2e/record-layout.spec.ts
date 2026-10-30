@@ -4,10 +4,10 @@ import { loginAs } from './helpers';
 import { seedLearnerWithCompleteCompany, setProvenance } from './seed';
 
 /**
- * A company record (the owner, 2026-10-02): where it stands sits under the sidebar, so the tabs
- * and the Level 4 answers take the page's full width; the column belongs to this page alone.
+ * A company record (the owner, 2026-10-02): where it stands sits in the content area beside the
+ * answers; the column belongs to this page alone while the application sidebar remains full-height.
  */
-test('the status column sits under the sidebar and leaves with the record', async ({ page }) => {
+test('the status column sits beside the record and leaves with it', async ({ page }) => {
   test.setTimeout(90_000);
   const learner = await seedLearnerWithCompleteCompany(`บริษัท คอลัมน์ข้าง ${Date.now()} จำกัด`, {
     category: true,
@@ -22,14 +22,16 @@ test('the status column sits under the sidebar and leaves with the record', asyn
   await expect(side.getByTestId('coverage-panel')).toBeVisible();
   await expect(side.getByTestId('training-versions')).toBeVisible();
 
-  // Under the sidebar, in its column; the answers fill the width beside it.
-  const nav = (await page.getByTestId('staff-nav').boundingBox())!;
+  // The application sidebar owns the viewport edge; the record column and answers share main.
+  const sidebar = (await page.getByTestId('staff-sidebar').boundingBox())!;
   const column = (await side.boundingBox())!;
   const answers = (await page.getByTestId('interview-answers').boundingBox())!;
-  expect(Math.abs(column.x - nav.x)).toBeLessThan(2);
-  expect(column.width).toBeLessThanOrEqual(nav.width + 1);
-  expect(column.y).toBeGreaterThan(nav.y + nav.height);
-  expect(answers.x).toBeGreaterThan(nav.x + nav.width);
+  expect(sidebar.x).toBe(0);
+  expect(sidebar.y).toBe(0);
+  expect(sidebar.height).toBe(page.viewportSize()!.height);
+  expect(column.x).toBeGreaterThanOrEqual(sidebar.x + sidebar.width);
+  expect(column.width).toBeLessThanOrEqual(236);
+  expect(answers.x).toBeGreaterThanOrEqual(column.x + column.width);
   expect(answers.x + answers.width).toBeGreaterThan(page.viewportSize()!.width - 40);
 
   // A card in the column still opens a tab.
@@ -38,12 +40,14 @@ test('the status column sits under the sidebar and leaves with the record', asyn
   await expect(page).toHaveURL(/[?&]tab=exceptions/);
   await expect(page.getByTestId('exception-low_confidence-registered_capital')).toBeVisible();
 
-  // Another page has nothing under the sidebar, and its sidebar stays pinned.
+  // Another page has no record-only column; the application sidebar remains full-height.
   await page
     .getByTestId('staff-nav')
     .getByRole('link', { name: 'ข้อผิดพลาด', exact: true })
     .click();
   await expect(page).toHaveURL(/\/th\/admin\/exceptions/);
   await expect(side).toHaveCount(0);
-  await expect(page.getByTestId('staff-nav').locator('..')).toHaveCSS('position', 'sticky');
+  expect((await page.getByTestId('staff-sidebar').boundingBox())!.height).toBe(
+    page.viewportSize()!.height,
+  );
 });

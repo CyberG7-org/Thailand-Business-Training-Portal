@@ -64,7 +64,9 @@ test('study is done once every card is opened', async ({ page }) => {
   await expect(page.locator('[data-testid^="study-item-"][data-current="true"]')).toHaveCount(0);
   const total = await studyItems.count();
   await expect(page.getByTestId('study-summary')).toContainText(`${total}/${total}`);
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
+  await expect(
+    page.getByTestId('learner-shell-nav').getByRole('link', { name: 'เรียนรู้', exact: true }),
+  ).toHaveAttribute('aria-current', 'page');
 });
 
 test("a card not written in the reader's language is not waited for", async ({ page }) => {

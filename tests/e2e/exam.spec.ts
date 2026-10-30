@@ -116,7 +116,8 @@ test('the quiz says what it is, marks each answer at once, and a pass is notifie
 
   await page.goto('/th/dashboard');
   await expect(page.getByTestId('stage-exam-status')).toHaveText('เสร็จสิ้น');
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 
   // The cron endpoint rejects unauthenticated calls and drains the queue with the secret.
   expect((await request.get('/api/cron/notifications')).status()).toBe(401);
@@ -187,7 +188,8 @@ test('a company the bank cannot ask does not start the quiz, and its record says
   await page.getByTestId('start-exam').click();
   await expect(page.getByTestId('exam-error')).toContainText('ยังไม่พร้อม');
   await expect(page).toHaveURL(/\/th\/exam$/);
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
 
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.goto(`/th/admin/dbd-records/${await recordIdOf(learner)}`);

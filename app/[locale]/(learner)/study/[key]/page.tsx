@@ -96,7 +96,7 @@ export default async function StudyMaterialPage({
   const localization = pickLocalization(material, loc);
   if (!localization) {
     return (
-      <LearnerShell title={t('title')} step="study" hideBack headerVariant="study">
+      <LearnerShell title={t('title')} step="study" hideBack>
         <div className="grid gap-5">
           <section className="rounded-card bg-white px-6 py-5 shadow-raised">
             <p data-testid="study-not-available" className="text-sm text-ink-700">
@@ -209,7 +209,6 @@ export default async function StudyMaterialPage({
     <LearnerShell
       step="study"
       hideBack
-      headerVariant="study"
       subBarRight={<CardSegments label={t('cardOf', { n: index + 1, total })} states={states} />}
       hero={
         <>

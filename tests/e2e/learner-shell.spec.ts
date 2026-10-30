@@ -3,97 +3,120 @@ import { E2E_PASSWORD } from './fixtures';
 import { loginAs } from './helpers';
 import { seedLearnerWithCompany } from './seed';
 
-/**
- * The primary learner pages use the dashboard glass header on desktop, keep the compact header
- * on phones, and share the five-destination navigation. Home replaces the old Back control.
- */
-test('primary learner pages share the focused navigation on desktop', async ({ page }) => {
-  const loginId = await seedLearnerWithCompany('บริษัท เชลล์ร่วม จำกัด', '2026-07-13');
+test('the desktop learner shell owns navigation, breadcrumbs, and the upward profile menu', async ({
+  page,
+}) => {
+  const loginId = await seedLearnerWithCompany('บริษัท เชลล์ผู้เรียน จำกัด', '2026-07-13');
+  await page.setViewportSize({ width: 1280, height: 900 });
   await loginAs(page, loginId, E2E_PASSWORD);
-  await expect(page).toHaveURL(/\/th\/dashboard$/);
-  await expect(page.getByTestId('shell-header')).toBeVisible();
-  await expect(page.getByTestId('nav-back')).toHaveCount(0);
-  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('aria-current', 'page');
+  await page.goto('/en/dashboard');
 
-  await page.goto('/th/study');
-  await expect(page.getByTestId('shell-header')).toHaveClass(/glass/);
-  await expect(page.getByTestId('nav-back')).toHaveCount(0);
-  await expect(page.getByTestId('step-segments')).toHaveCount(0);
-  await expect(
-    page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
-  ).toHaveCount(5);
-  expect(
-    await page
-      .getByTestId('learner-stage-tabs')
-      .locator('[data-testid^="learner-stage-tab-"]')
-      .evaluateAll((items) => items.map((item) => item.getAttribute('data-testid'))),
-  ).toEqual([
-    'learner-stage-tab-home',
-    'learner-stage-tab-study',
-    'learner-stage-tab-exam',
-    'learner-stage-tab-interview',
-    'learner-stage-tab-nameCard',
+  const sidebar = page.getByTestId('learner-sidebar');
+  const header = page.getByTestId('learner-shell-header');
+  const nav = page.getByTestId('learner-shell-nav');
+  const profile = page.getByTestId('learner-profile-trigger');
+  await expect(sidebar).toBeVisible();
+  expect((await sidebar.boundingBox())?.width).toBe(248);
+  await expect(sidebar).toContainText('Business Training Portal');
+  await expect(sidebar).toContainText('Learner');
+  await expect(header).toContainText('Home');
+  await expect(header).not.toContainText(loginId);
+  await expect(nav.getByRole('link')).toHaveText([
+    'Home',
+    'Study',
+    'Quiz',
+    'Interview',
+    'Namecard',
   ]);
-  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('เอกสารเรียนรู้');
+  await expect(nav.getByRole('link', { name: 'Home', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.getByTestId('learner-stage-tabs')).toHaveCount(0);
 
-  await expect(page.getByTestId('learner-nav')).toHaveCount(0);
-  await page.getByTestId('learner-stage-tab-nameCard').click();
-  await expect(page).toHaveURL(/\/th\/name-card$/);
-  await expect(page.getByTestId('step-segments')).toContainText('ขั้นตอนที่ 4 จาก 5');
-  await expect(page.getByTestId('step-segments').locator('[data-state]')).toHaveCount(5);
-  await expect(page.getByTestId('nav-back')).toHaveCount(0);
-  await expect(page.getByTestId('shell-header')).toHaveAttribute('data-variant', 'study');
-  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
-  await expect(page.getByTestId('learner-nav')).toHaveCount(0);
-  await page.getByTestId('learner-stage-tab-home').click();
-  await expect(page).toHaveURL(/\/th\/dashboard$/);
-  await expect(page.getByTestId('learner-nav')).toHaveCount(0);
+  await profile.click();
+  const profileMenu = page.getByRole('menu', { name: 'Profile' });
+  await expect(profileMenu).toBeVisible();
+  const [menuBox, profileBox] = await Promise.all([
+    profileMenu.boundingBox(),
+    profile.boundingBox(),
+  ]);
+  expect(menuBox!.y + menuBox!.height).toBeLessThanOrEqual(profileBox!.y);
 
-  await page.goto('/th/study');
-  await page.getByTestId('nav-home').click();
-  await expect(page).toHaveURL(/\/th\/dashboard$/);
+  await page.getByRole('button', { name: 'Collapse menu' }).click();
+  await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
+  await expect.poll(async () => (await sidebar.boundingBox())?.width).toBe(64);
+  await expect(profileMenu).toBeHidden();
+
+  await page.reload();
+  await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
+  await page.getByRole('button', { name: 'Expand menu' }).click();
+  await nav.getByRole('link', { name: 'Study', exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/study$/);
+  await expect(header).toContainText('Training');
+  await expect(header).toContainText('Study');
+  await expect(nav.getByRole('link', { name: 'Study', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
 });
 
-test('the shell fits a phone: no horizontal page scroll and a usable header', async ({ page }) => {
-  const loginId = await seedLearnerWithCompany('บริษัท จอเล็ก จำกัด', '2026-07-13');
+test('the mobile learner drawer traps focus, closes after navigation, and uses numbered steps', async ({
+  page,
+}) => {
+  const loginId = await seedLearnerWithCompany('บริษัท ลิ้นชักผู้เรียน จำกัด', '2026-07-13');
   await page.setViewportSize({ width: 390, height: 844 });
   await loginAs(page, loginId, E2E_PASSWORD);
-  await page.goto('/th/study');
-  await expect(page.getByTestId('shell-header')).toBeVisible();
-  await expect(page.getByTestId('nav-back')).toHaveCount(0);
-  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
-  await expect(page.getByTestId('learner-stage-tab-home')).toBeVisible();
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
+  await page.goto('/en/dashboard');
 
-  for (const [route, current] of [
-    ['/th/exam', 'exam'],
-    ['/th/interview', 'interview'],
-    ['/th/name-card', 'nameCard'],
-  ] as const) {
-    await page.goto(route);
-    const tabs = page.getByTestId('learner-stage-tabs');
-    await expect(page.getByTestId('shell-header')).toHaveAttribute('data-variant', 'study');
-    await expect(page.getByTestId('nav-back')).toHaveCount(0);
-    await expect(tabs).toBeVisible();
-    await expect(tabs.locator('[data-testid^="learner-stage-tab-"]')).toHaveCount(5);
-    await expect(tabs.locator('[data-testid^="learner-stage-tab-"]').first()).toHaveAttribute(
-      'data-testid',
-      'learner-stage-tab-home',
-    );
-    await expect(page.getByTestId(`learner-stage-tab-${current}`)).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+  const header = page.getByTestId('learner-shell-header');
+  const drawer = page.getByTestId('learner-sidebar');
+  const openMenu = page.getByRole('button', { name: 'Open menu' });
+  const language = page.getByTestId('language-menu-button');
+  await expect(header).toContainText('Business Training Portal');
+  await expect(drawer).toBeHidden();
+  expect((await language.boundingBox())?.width).toBe(76);
+  expect((await language.boundingBox())?.height).toBe(44);
+
+  for (const key of ['study', 'exam', 'interview', 'nameCard']) {
+    await expect(page.getByTestId(`stage-number-${key}`)).toBeVisible();
+    await expect(page.getByTestId(`stage-icon-${key}`)).toBeHidden();
   }
-  await page.setViewportSize({ width: 320, height: 700 });
+
+  await openMenu.click();
+  await expect(drawer).toBeVisible();
+  await expect(page.getByTestId('learner-drawer-scrim')).toBeVisible();
+  expect((await drawer.boundingBox())?.width).toBe(288);
+  await expect(drawer.getByRole('button', { name: 'Close menu' })).toBeFocused();
+  await page.getByTestId('learner-profile-trigger').focus();
+  await page.keyboard.press('Tab');
   await expect(
-    page.getByTestId('learner-stage-tabs').locator('[data-testid^="learner-stage-tab-"]'),
-  ).toHaveCount(5);
-  await expect(page.getByTestId('learner-stage-tabs').locator('svg').first()).toBeHidden();
+    drawer.getByRole('link', { name: 'Business Training Portal', exact: true }),
+  ).toBeFocused();
+
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+  await expect(openMenu).toBeFocused();
+
+  await openMenu.click();
+  await drawer.getByRole('link', { name: 'Study', exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/study$/, { timeout: 15_000 });
+  await expect(drawer).toBeHidden();
+  await expect(page.getByTestId('learner-stage-tabs')).toHaveCount(0);
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test('desktop dashboard step cards retain their icons', async ({ page }) => {
+  const loginId = await seedLearnerWithCompany('บริษัท ไอคอนผู้เรียน จำกัด', '2026-07-13');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await loginAs(page, loginId, E2E_PASSWORD);
+  await page.goto('/en/dashboard');
+
+  for (const key of ['study', 'exam', 'interview', 'nameCard']) {
+    await expect(page.getByTestId(`stage-icon-${key}`)).toBeVisible();
+    await expect(page.getByTestId(`stage-number-${key}`)).toBeHidden();
+  }
 });

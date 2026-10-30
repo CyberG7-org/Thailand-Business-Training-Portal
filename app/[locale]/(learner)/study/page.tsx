@@ -2,8 +2,6 @@ import type { CSSProperties } from 'react';
 import { CheckCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import { getTranslations } from 'next-intl/server';
 import { LearnerShell } from '@/components/shell/learner-shell';
-import { LearnerStageTabs } from '@/components/shell/learner-stage-tabs';
-import { cachedStageStatuses } from '@/components/shell/stage-status';
 import { Link } from '@/i18n/navigation';
 import type { AppLocale } from '@/i18n/routing';
 import { requireUser } from '@/lib/auth/session';
@@ -47,11 +45,10 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
   const { locale } = await params;
   const user = await requireUser(locale);
   const db = await createSupabaseServerClient();
-  const [materials, progress, tracking, statuses, t, assignment] = await Promise.all([
+  const [materials, progress, tracking, t, assignment] = await Promise.all([
     listStudyMaterials(db),
     getMyStudyProgress(db, user.id),
     getPolicy('study_completion_tracking'),
-    cachedStageStatuses(user.id),
     getTranslations('study'),
     getActiveAssignmentForUser(db, user.id),
   ]);
@@ -111,8 +108,6 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
       intro={total > 0 ? t('intro', { count: total }) : undefined}
       step="study"
       hideSubBar
-      stageNavigation="page"
-      headerVariant="study"
       mainClassName="bg-gradient-to-b from-brand-50 to-white"
     >
       <div className="relative z-10 -mt-14 grid gap-5 lg:mt-0">
@@ -162,8 +157,6 @@ export default async function StudyListPage({ params }: { params: Promise<{ loca
             })}
           </div>
         </aside>
-
-        <LearnerStageTabs current="study" statuses={statuses} />
 
         <section className="rise grid gap-3" style={rise('80ms')}>
           {total === 0 && <p className="px-6 py-5 text-sm text-ink-700">{t('empty')}</p>}

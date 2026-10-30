@@ -13,10 +13,8 @@ test('wrong password and unknown account show the same generic error', async ({ 
 
 test('a learner lands on the dashboard and cannot open admin', async ({ page }) => {
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
-  await expect(page).toHaveURL(/\/th\/dashboard$/);
-  await expect(
-    page.getByRole('heading', { name: `ยินดีต้อนรับ ${E2E_LEARNER.loginId}` }),
-  ).toBeVisible();
+  await expect(page).toHaveURL(/\/(?:en|th|zh|ta|ms)\/dashboard$/);
+  await expect(page.getByRole('heading', { name: new RegExp(E2E_LEARNER.loginId) })).toBeVisible();
 
   await page.goto('/th/admin');
   await expect(page).toHaveURL(/\/th\/dashboard$/);
@@ -24,7 +22,7 @@ test('a learner lands on the dashboard and cannot open admin', async ({ page }) 
 
 test('an admin lands on the admin home', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
-  await expect(page).toHaveURL(/\/th\/admin$/);
+  await expect(page).toHaveURL(/\/(?:en|th|zh|ta|ms)\/admin$/);
 });
 
 test('signed-out visitors are sent to login, and sign-out works', async ({ page }) => {
@@ -32,8 +30,11 @@ test('signed-out visitors are sent to login, and sign-out works', async ({ page 
   await expect(page).toHaveURL(/\/th\/login$/);
 
   await loginAs(page, E2E_LEARNER.loginId, E2E_PASSWORD);
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
-  await expect(page).toHaveURL(/\/th\/login$/);
+  await page.getByTestId('learner-profile-trigger').click();
+  await page
+    .getByRole('menuitem', { name: /Sign out|ออกจากระบบ|退出登录|வெளியேறு|Log keluar/ })
+    .click();
+  await expect(page).toHaveURL(/\/(?:en|th|zh|ta|ms)\/login$/);
   await page.goto('/th/dashboard');
   await expect(page).toHaveURL(/\/th\/login$/);
 });

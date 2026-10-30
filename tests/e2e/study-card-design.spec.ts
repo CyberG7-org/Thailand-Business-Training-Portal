@@ -18,9 +18,15 @@ test('a card shows its place in the list, leads to the next card, and the list r
   const total = await page.locator('[data-testid^="study-item-"]').count();
   await page.locator('[data-testid^="study-item-"][data-current="true"]').click();
   await expect(page.getByTestId('study-title')).toBeVisible();
-  await expect(page.getByTestId('learner-stage-tabs')).toBeAttached();
-  await expect(page.getByTestId('learner-stage-tab-home')).toHaveAttribute('href', '/th/dashboard');
-  await expect(page.getByTestId('learner-stage-tab-study')).toHaveAttribute('aria-current', 'page');
+  const nav = page.getByTestId('learner-shell-nav');
+  await expect(nav.getByRole('link', { name: 'หน้าหลัก', exact: true })).toHaveAttribute(
+    'href',
+    '/th/dashboard',
+  );
+  await expect(nav.getByRole('link', { name: 'เรียนรู้', exact: true })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
   await expect(page.getByTestId('study-previous')).toHaveCount(0);
 
   const segments = page.getByTestId('card-segments');
@@ -71,7 +77,8 @@ test('on a phone the card table stacks and nothing overflows', async ({ page }) 
   const key = await seedStudyCard();
   await page.goto('/th/study/' + key);
   await expect(page.getByTestId('study-body')).toBeVisible();
-  await expect(page.getByTestId('learner-stage-tabs')).toBeVisible();
+  await expect(page.getByTestId('learner-stage-tabs')).toHaveCount(0);
+  await expect(page.getByTestId('learner-shell-header')).toBeVisible();
   const table = page.getByTestId('study-body').locator('table').first();
   await expect(table).toBeVisible();
   await expect(table.locator('thead')).toBeHidden();

@@ -51,7 +51,8 @@ test('a card waits for the record, but phone is optional', async ({ page }) => {
   await expect(page.getByTestId('card-blocked')).toContainText('head_office_address');
   await expect(page.getByTestId('card-preview')).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'ออกจากระบบ' }).click();
+  await page.getByTestId('learner-profile-trigger').click();
+  await page.getByRole('menuitem', { name: 'ออกจากระบบ' }).click();
   const noPhone = await seedLearnerWithCompany('บริษัท ไม่มีเบอร์ จำกัด', '2026-07-13', ADDRESS);
   await loginAs(page, noPhone, E2E_PASSWORD);
   await expect(page.getByTestId('stage-nameCard-status')).toHaveText('เสร็จสิ้น');

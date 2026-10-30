@@ -17,6 +17,14 @@ const LABELS: Record<AppLocale, string> = {
   ms: 'Malay',
 };
 
+const COMPACT_LABELS: Record<AppLocale, string> = {
+  th: 'TH',
+  en: 'EN',
+  zh: '中文',
+  ta: 'TA',
+  ms: 'MS',
+};
+
 /** Remembered for the sign-in action; expires quickly so it never outlives the visit. */
 function rememberChoice(locale: AppLocale) {
   document.cookie = `${LANGUAGE_CHOICE_COOKIE}=${locale}; path=/; max-age=900; SameSite=Lax`;
@@ -27,6 +35,7 @@ export function LanguageToggle({
   label,
   className = '',
   tone = 'default',
+  compact = false,
   open: controlledOpen,
   onOpenChange,
 }: {
@@ -127,7 +136,7 @@ export function LanguageToggle({
           }
         }}
         data-testid="language-menu-button"
-        className={`flex items-center justify-between gap-2 border font-medium shadow-control transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-60 ${tone === 'staff' ? 'h-11 w-[140px] rounded-control border-ink-300 bg-white py-0 pr-3 pl-3.5 text-sm text-brand-900 hover:bg-brand-50' : `min-h-10 w-[116px] rounded-[10px] px-3 text-xs text-white hover:bg-brand-700 sm:w-[154px] sm:text-sm ${tone === 'login' ? 'border-white/30 bg-brand-900' : 'border-brand-900/15 bg-brand-900'}`}`}
+        className={`flex items-center justify-between gap-2 border font-medium shadow-control transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-60 ${tone === 'staff' ? `h-11 rounded-control border-ink-300 bg-white py-0 text-sm text-brand-900 hover:bg-brand-50 ${compact ? 'w-[76px] px-2.5' : 'w-[140px] pr-3 pl-3.5'}` : `min-h-10 w-[116px] rounded-[10px] px-3 text-xs text-white hover:bg-brand-700 sm:w-[154px] sm:text-sm ${tone === 'login' ? 'border-white/30 bg-brand-900' : 'border-brand-900/15 bg-brand-900'}`}`}
       >
         {tone === 'staff' && (
           <GlobeIcon className="size-4 shrink-0 text-brand-700" aria-hidden="true" />
@@ -136,17 +145,19 @@ export function LanguageToggle({
           lang={locale === 'zh' ? 'zh-Hans' : locale}
           className={`truncate ${tone === 'staff' ? 'flex-1 text-left' : ''}`}
         >
-          {LABELS[locale]}
+          {compact ? COMPACT_LABELS[locale] : LABELS[locale]}
         </span>
-        <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-4 shrink-0">
-          <path
-            d="m3 6 5 5 5-5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {!compact && (
+          <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" className="size-4 shrink-0">
+            <path
+              d="m3 6 5 5 5-5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
       </button>
       {open && (
         <div

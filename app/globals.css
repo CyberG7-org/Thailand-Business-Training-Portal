@@ -371,26 +371,6 @@
       linear-gradient(165deg, var(--color-brand-900) 0%, var(--color-brand-700) 100%);
   }
 
-  @media (max-width: 767px) {
-    /* Primary learner pages keep their compact phone header, but use the dashboard's full
-       glass account header from the desktop breakpoint upward. */
-    .learner-primary-header {
-      padding-right: 0;
-      padding-left: 0;
-      background: transparent;
-      border-color: transparent;
-      box-shadow: none;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-    }
-
-    .dashboard-home-band {
-      background: var(--color-brand-50);
-      color: var(--color-ink-900);
-      border-bottom: 1px solid var(--color-brand-100);
-    }
-  }
-
   /* The staff area (admin and manager screens): the learner portal's tokens, denser. Pages
      render inside `main.staff`; the classes below are the shared patterns every page uses —
      titles, cards, tables that scroll sideways on a phone, solid inputs, buttons, tags and
@@ -398,7 +378,7 @@
   .staff h1,
   .staff-title {
     font-family: var(--font-display);
-    font-size: 26px;
+    font-size: 22px;
     line-height: 1.4;
     font-weight: 600;
     color: var(--color-brand-900);
@@ -422,6 +402,19 @@
     font-size: 14px;
     line-height: 1.7;
     color: var(--color-ink-700);
+  }
+  .staff-content {
+    display: grid;
+    gap: 16px;
+  }
+  .staff-side:empty {
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .staff-content:has(.staff-side:not(:empty)) {
+      grid-template-columns: 236px minmax(0, 1fr);
+      gap: 24px;
+    }
   }
   .staff-card {
     background: var(--color-white);
