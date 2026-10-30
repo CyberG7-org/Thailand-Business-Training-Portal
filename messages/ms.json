@@ -8,6 +8,12 @@
     "backToTop": "Kembali ke atas",
     "home": "Utama"
   },
+  "header": {
+    "profile": "Profil",
+    "profileSettings": "Tetapan profil",
+    "signOut": "Log keluar",
+    "language": "Bahasa"
+  },
   "home": {
     "title": "Portal Latihan Perniagaan & Pengesahan Bank Thailand",
     "description": "Sediakan diri untuk pengesahan akaun bank syarikat anda. Kaji sijil DBD anda sendiri, lulus Kuiz, dan jalani Temu Bual dengan pegawai bank simulasi."

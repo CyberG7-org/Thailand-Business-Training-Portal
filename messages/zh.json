@@ -8,6 +8,12 @@
     "backToTop": "返回顶部",
     "home": "首页"
   },
+  "header": {
+    "profile": "个人资料",
+    "profileSettings": "个人资料设置",
+    "signOut": "退出登录",
+    "language": "语言"
+  },
   "home": {
     "title": "泰国商业培训与银行验证门户",
     "description": "为贵公司的银行账户验证做好准备：研读公司的 DBD 登记证明，通过测验，并与模拟银行专员进行面试。"

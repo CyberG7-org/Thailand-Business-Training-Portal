@@ -8,6 +8,12 @@
     "backToTop": "Back to top",
     "home": "Home"
   },
+  "header": {
+    "profile": "Profile",
+    "profileSettings": "Profile settings",
+    "signOut": "Sign out",
+    "language": "Language"
+  },
   "home": {
     "title": "Thailand Business Training & Bank Verification Portal",
     "description": "Prepare for your company's bank account verification. Study your own DBD certificate, pass the Quiz, and take the Interview with a simulated bank officer."

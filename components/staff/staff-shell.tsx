@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { LanguageToggle } from '@/components/language-toggle';
 import { Link } from '@/i18n/navigation';
 import type { CurrentUser } from '@/lib/auth/session';
 import { initialsOf } from '@/lib/domain/initials';
 import { displayLoginId } from '@/lib/domain/login-id';
-import { ProfileDropdown } from './profile-dropdown';
+import { StaffHeaderActions } from './staff-header-actions';
 import { StaffNav } from './staff-nav';
 
 /**
@@ -28,7 +27,7 @@ export async function StaffShell({
     getLocale(),
     getTranslations('app'),
     getTranslations('admin'),
-    getTranslations('profile'),
+    getTranslations('header'),
   ]);
   const role =
     user.role === 'admin' ? 'admin' : user.role === 'submanager' ? 'submanager' : 'manager';
@@ -37,37 +36,33 @@ export async function StaffShell({
       <div className="band px-4 pt-4 pb-5 md:px-6">
         <header
           data-testid="shell-header"
-          className="glass relative z-20 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card py-2.5 pr-3 pl-4 text-ink-900 shadow-[0_8px_24px_rgb(12_26_58/0.18)]"
+          className="glass relative z-20 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 rounded-card py-4 pr-4 pl-5 text-ink-900 shadow-header md:flex md:justify-between md:gap-6 md:py-3.5 md:pr-4 md:pl-6"
         >
-          <Link href="/admin" className="flex items-center gap-3 rounded-control">
-            <span
-              aria-hidden="true"
-              className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-brand-900 font-display text-base font-semibold text-gold-100 shadow-[inset_0_0_0_1px_rgb(200_150_62/0.6)]"
+          <div className="contents md:flex md:min-w-0 md:flex-1 md:flex-col md:items-start md:gap-1">
+            <Link
+              href="/admin"
+              className="col-start-1 row-start-1 min-w-0 rounded-control font-display text-[15px] leading-[1.4] font-semibold text-brand-900 md:text-xl md:whitespace-nowrap"
             >
-              BT
-            </span>
-            {/* The app's name alone, as on the learner's header; the chip beside it names the role. */}
-            <span className="font-display text-[17px] leading-[1.4] font-semibold text-brand-900">
               {t('name')}
+            </Link>
+            <span className="col-start-1 row-start-2 justify-self-start rounded-full bg-brand-100 px-2.5 py-px text-sm leading-[1.7] font-medium text-brand-700">
+              {ta(`roles.${role}`)}
             </span>
-          </Link>
-          <span className="mr-auto rounded-full bg-brand-100 px-2.5 py-px text-xs font-semibold text-brand-700">
-            {ta(`roles.${role}`)}
-          </span>
-          <LanguageToggle label={t('language')} />
-          <div className="min-w-0 border-l border-brand-700/20 pl-3">
-            <ProfileDropdown
-              name={user.displayName ?? displayLoginId(user.loginId)}
-              loginId={displayLoginId(user.loginId)}
-              initials={initialsOf(user.displayName, user.loginId)}
-              locale={locale}
-              labels={{
-                profile: tp('menu'),
-                changePassword: tp('changePassword'),
-                signOut: tp('logOut'),
-              }}
-            />
           </div>
+          <StaffHeaderActions
+            languageLabel={tp('language')}
+            profile={{
+              name: user.displayName ?? displayLoginId(user.loginId),
+              loginId: displayLoginId(user.loginId),
+              initials: initialsOf(user.displayName, user.loginId),
+              locale,
+              labels: {
+                profile: tp('profile'),
+                profileSettings: tp('profileSettings'),
+                signOut: tp('signOut'),
+              },
+            }}
+          />
         </header>
       </div>
       <div className="mx-auto grid max-w-[1440px] grid-cols-[minmax(0,1fr)] gap-5 px-4 py-5 md:grid-cols-[236px_minmax(0,1fr)] md:gap-6 md:px-6 md:py-6">

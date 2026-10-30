@@ -6,8 +6,8 @@ import { seedManager } from './seed';
 test('the owner profile menu offers password change and sign out', async ({ page }) => {
   await loginAs(page, E2E_ADMIN.loginId, E2E_PASSWORD);
   await page.getByTestId('staff-profile-trigger').click();
-  await expect(page.getByRole('menuitem', { name: 'เปลี่ยนรหัสผ่าน' })).toBeVisible();
-  await page.getByRole('menuitem', { name: 'เปลี่ยนรหัสผ่าน' }).click();
+  await expect(page.getByRole('menuitem', { name: 'การตั้งค่าโปรไฟล์' })).toBeVisible();
+  await page.getByRole('menuitem', { name: 'การตั้งค่าโปรไฟล์' }).click();
   await expect(page).toHaveURL(/\/th\/admin\/profile$/);
   await expect(page.getByTestId('last-password-update')).toBeVisible();
   await page.getByTestId('staff-profile-trigger').click();
@@ -49,7 +49,7 @@ test('a manager must know their current password to change it', async ({ page })
   const nextPassword = 'Next123!';
   await loginAs(page, manager.loginId, E2E_PASSWORD);
   await page.getByTestId('staff-profile-trigger').click();
-  await page.getByRole('menuitem', { name: 'เปลี่ยนรหัสผ่าน' }).click();
+  await page.getByRole('menuitem', { name: 'การตั้งค่าโปรไฟล์' }).click();
 
   const form = page.getByTestId('change-password-form');
   await form.locator('[name="currentPassword"]').fill('wrong-password');

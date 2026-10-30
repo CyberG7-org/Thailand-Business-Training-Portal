@@ -11,7 +11,7 @@ test('switching language re-renders and persists; the next login lands on it', a
   await page.getByTestId('language-menu-button').click();
   await expect(page.getByTestId('lang-ms')).toBeVisible();
   await expect(page.getByTestId('lang-ta')).toBeVisible();
-  await expect(page.getByTestId('lang-th')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('lang-th')).toHaveAttribute('aria-selected', 'true');
   await page.getByTestId('lang-en').click();
   await expect(page).toHaveURL(/\/en\/dashboard$/);
   await expect(page.getByRole('heading', { name: `Welcome, ${loginId}` })).toBeVisible();
@@ -29,7 +29,7 @@ test('switching language re-renders and persists; the next login lands on it', a
   await expect(page).toHaveURL(/\/zh\/dashboard$/);
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-Hans');
   await page.getByTestId('language-menu-button').click();
-  await expect(page.getByTestId('lang-zh')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByTestId('lang-zh')).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Escape');
   await expect(page.getByTestId('lang-zh')).toHaveCount(0);
 
@@ -56,7 +56,7 @@ test('switching language re-renders and persists; the next login lands on it', a
       language === 'ms' ? 'Selamat datang' : 'வரவேற்கிறோம்',
     );
     await page.getByTestId('language-menu-button').click();
-    await expect(page.getByTestId(`lang-${language}`)).toHaveAttribute('aria-checked', 'true');
+    await expect(page.getByTestId(`lang-${language}`)).toHaveAttribute('aria-selected', 'true');
     await page.keyboard.press('Escape');
   }
 });
